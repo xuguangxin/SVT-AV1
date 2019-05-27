@@ -3155,6 +3155,29 @@ EB_API EbErrorType eb_svt_enc_set_parameter(
 
     return return_error;
 }
+
+EbErrorType encode_stream_header_av1(EbBufferHeaderType *packet, SequenceControlSet *scs_ptr)
+{
+    OutputBitstreamUnit unit;
+    Bitstream bs;
+    EbErrorType ret;
+
+    //this is ugly, we are not suppose know detail about OutputBitstreamUnit and Bitstream
+    //but it still better than use bitstream_ctor. If we use it, we can only release memory at end of lifetime.
+    memset(&unit, 0, sizeof(unit));
+    unit.size = packet->n_alloc_len;
+    unit.written_bits_count = 0;
+    unit.buffer_begin_av1 = unit.buffer_av1 = packet->p_buffer;
+
+    memset(&bs, 0, sizeof(bs));
+    bs.output_bitstream_ptr = &unit;
+    ret = encode_sps_av1(&bs, scs_ptr);
+    if (ret == EB_ErrorNone) {
+        packet->n_filled_len = unit.buffer_av1 - unit.buffer_begin_av1;
+    }
+    return ret;
+}
+
 #if defined(__linux__) || defined(__APPLE__)
 __attribute__((visibility("default")))
 #endif
@@ -3162,10 +3185,39 @@ EB_API EbErrorType eb_svt_enc_stream_header(
     EbComponentType           *svt_enc_component,
     EbBufferHeaderType        **output_stream_ptr){
 
-    EbErrorType             return_error = EB_ErrorNone;
-    UNUSED(svt_enc_component);
-    UNUSED(output_stream_ptr);
-    return return_error;
+    EbErrorType             ret = EB_ErrorNone;
+    EbEncHandle             *enc_handle_ptr;
+    EbObjectWrapper         *ouput_wrapper;
+    EbBufferHeaderType      *packet;
+    SequenceControlSet      *sps;
+    if (!output_stream_ptr) {
+        SVT_LOG("output_stream_ptr is null");
+        return EB_ErrorBadParameter;
+    }
+    if (!svt_enc_component || !(svt_enc_component->p_component_private)) {
+        SVT_LOG("component is null");
+        return EB_ErrorInvalidComponent;
+    }
+
+    enc_handle_ptr = (EbEncHandle*)svt_enc_component->p_component_private;
+
+    eb_get_empty_object(
+        (enc_handle_ptr->output_stream_buffer_producer_fifo_ptr_dbl_array[0])[0],
+            &ouput_wrapper);
+
+    packet = (EbBufferHeaderType*)ouput_wrapper->object_ptr;
+    packet->wrapper_ptr = (void*)ouput_wrapper;
+
+    sps = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr;
+    ret = encode_stream_header_av1(packet, sps);
+    if (ret != EB_ErrorNone) {
+        SVT_LOG("encode stream header failed error = %d", ret);
+        eb_svt_release_out_buffer(&packet);
+        *output_stream_ptr = NULL;
+        return ret;
+    }
+    *output_stream_ptr = packet;
+    return ret;
 }
 //
 #if defined(__linux__) || defined(__APPLE__)

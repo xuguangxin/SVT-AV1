@@ -442,7 +442,7 @@ typedef struct EbSvtAv1EncConfiguration
      *
      * Parameter:
      * @ *svt_enc_component   Encoder handler.
-     * @ **output_stream_ptr  Output buffer. */
+     * @ **output_stream_ptr  Output buffer, user need call eb_svt_release_out_buffer to release the buffer */
     EB_API EbErrorType eb_svt_enc_stream_header(
         EbComponentType           *svt_enc_component,
         EbBufferHeaderType       **output_stream_ptr);
