@@ -16,7 +16,7 @@ EbErrorType enc_dec_segments_ctor(
 {
     uint32_t row_index;
     EncDecSegments *segments_ptr;
-    EB_MALLOC(EncDecSegments*, segments_ptr, sizeof(EncDecSegments), EB_N_PTR);
+    EB_ALLOC_OBJECT(EncDecSegments*, segments_ptr, sizeof(EncDecSegments), EB_N_PTR);
 
     *segments_dbl_ptr = segments_ptr;
 

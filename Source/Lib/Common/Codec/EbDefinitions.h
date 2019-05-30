@@ -2292,6 +2292,10 @@ EB_ADD_MEM(pointer, n_elements, pointer_class, lib_semaphore_count, eb_destroy_s
 pointer = eb_create_mutex(); \
 EB_ADD_MEM(pointer, n_elements, pointer_class, lib_mutex_count, eb_destroy_mutex);
 
+#define EB_ALLOC_OBJECT(type, pointer, n_elements, pointer_class) \
+    EB_MALLOC(type, pointer, n_elements, pointer_class)
+
+
 #define EB_MEMORY() \
 printf("Total Number of Mallocs in Library: %d\n", lib_malloc_count); \
 printf("Total Number of Threads in Library: %d\n", lib_thread_count); \

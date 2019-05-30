@@ -24,7 +24,7 @@ EbErrorType neighbor_array_unit_ctor32(
     uint32_t   type_mask)
 {
     NeighborArrayUnit32 *na_unit_ptr;
-    EB_MALLOC(NeighborArrayUnit32*, na_unit_ptr, sizeof(NeighborArrayUnit32), EB_N_PTR);
+    EB_ALLOC_OBJECT(NeighborArrayUnit32*, na_unit_ptr, sizeof(NeighborArrayUnit32), EB_N_PTR);
 
     *na_unit_dbl_ptr = na_unit_ptr;
     na_unit_ptr->unit_size = (uint8_t)(unit_size);
@@ -64,7 +64,7 @@ EbErrorType neighbor_array_unit_ctor(
     uint32_t   type_mask)
 {
     NeighborArrayUnit *na_unit_ptr;
-    EB_MALLOC(NeighborArrayUnit*, na_unit_ptr, sizeof(NeighborArrayUnit), EB_N_PTR);
+    EB_ALLOC_OBJECT(NeighborArrayUnit*, na_unit_ptr, sizeof(NeighborArrayUnit), EB_N_PTR);
 
     *na_unit_dbl_ptr = na_unit_ptr;
     na_unit_ptr->unit_size = (uint8_t)(unit_size);

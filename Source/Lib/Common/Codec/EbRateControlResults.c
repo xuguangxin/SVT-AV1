@@ -13,7 +13,7 @@ EbErrorType rate_control_results_ctor(
     EbPtr object_init_data_ptr)
 {
     RateControlResults *context_ptr;
-    EB_MALLOC(RateControlResults*, context_ptr, sizeof(RateControlResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(RateControlResults*, context_ptr, sizeof(RateControlResults), EB_N_PTR);
     *object_dbl_ptr = (EbPtr)context_ptr;
 
     object_init_data_ptr = 0;

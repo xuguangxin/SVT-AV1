@@ -24,7 +24,7 @@ EbErrorType mode_decision_context_ctor(
     (void)color_format;
 
     ModeDecisionContext *context_ptr;
-    EB_MALLOC(ModeDecisionContext*, context_ptr, sizeof(ModeDecisionContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(ModeDecisionContext*, context_ptr, sizeof(ModeDecisionContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     // Input/Output System Resource Manager FIFOs
@@ -48,7 +48,7 @@ EbErrorType mode_decision_context_ctor(
     }
 
     // Transform and Quantization Buffers
-    EB_MALLOC(EbTransQuantBuffers*, context_ptr->trans_quant_buffers_ptr, sizeof(EbTransQuantBuffers), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbTransQuantBuffers*, context_ptr->trans_quant_buffers_ptr, sizeof(EbTransQuantBuffers), EB_N_PTR);
 
     return_error = eb_trans_quant_buffers_ctor(
         context_ptr->trans_quant_buffers_ptr);
@@ -62,7 +62,7 @@ EbErrorType mode_decision_context_ctor(
     EB_MALLOC(uint64_t*, context_ptr->full_cost_skip_ptr, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
     EB_MALLOC(uint64_t*, context_ptr->full_cost_merge_ptr, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
     // Candidate Buffers
-    EB_MALLOC(ModeDecisionCandidateBuffer**, context_ptr->candidate_buffer_ptr_array, sizeof(ModeDecisionCandidateBuffer*) * (MAX_NFL + 1 + 1), EB_N_PTR);
+    EB_ALLOC_OBJECT(ModeDecisionCandidateBuffer**, context_ptr->candidate_buffer_ptr_array, sizeof(ModeDecisionCandidateBuffer*) * (MAX_NFL + 1 + 1), EB_N_PTR);
 
     for (bufferIndex = 0; bufferIndex < (MAX_NFL + 1 + 1); ++bufferIndex) {
         return_error = mode_decision_candidate_buffer_ctor(

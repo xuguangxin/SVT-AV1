@@ -32,7 +32,7 @@ EbErrorType resource_coordination_context_ctor(
     uint32_t instance_index;
 
     ResourceCoordinationContext *context_ptr;
-    EB_MALLOC(ResourceCoordinationContext*, context_ptr, sizeof(ResourceCoordinationContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(ResourceCoordinationContext*, context_ptr, sizeof(ResourceCoordinationContext), EB_N_PTR);
 
     *context_dbl_ptr = context_ptr;
 

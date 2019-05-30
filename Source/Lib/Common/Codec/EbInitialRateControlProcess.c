@@ -353,7 +353,7 @@ EbErrorType initial_rate_control_context_ctor(
     EbFifo                     *initialrate_control_results_output_fifo_ptr)
 {
     InitialRateControlContext *context_ptr;
-    EB_MALLOC(InitialRateControlContext*, context_ptr, sizeof(InitialRateControlContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(InitialRateControlContext*, context_ptr, sizeof(InitialRateControlContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
     context_ptr->motion_estimation_results_input_fifo_ptr = motion_estimation_results_input_fifo_ptr;
     context_ptr->initialrate_control_results_output_fifo_ptr = initialrate_control_results_output_fifo_ptr;

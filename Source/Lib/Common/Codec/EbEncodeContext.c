@@ -19,7 +19,7 @@ EbErrorType encode_context_ctor(
     EbErrorType return_error = EB_ErrorNone;
 
     EncodeContext *encode_context_ptr;
-    EB_MALLOC(EncodeContext*, encode_context_ptr, sizeof(EncodeContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(EncodeContext*, encode_context_ptr, sizeof(EncodeContext), EB_N_PTR);
     *object_dbl_ptr = (EbPtr)encode_context_ptr;
 
     object_init_data_ptr = 0;

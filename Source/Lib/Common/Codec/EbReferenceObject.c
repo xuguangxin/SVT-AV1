@@ -135,7 +135,7 @@ EbErrorType eb_reference_object_ctor(
     EbPictureBufferDescInitData    *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
     EbPictureBufferDescInitData    pictureBufferDescInitData16BitPtr = *pictureBufferDescInitDataPtr;
     EbErrorType return_error = EB_ErrorNone;
-    EB_MALLOC(EbReferenceObject*, referenceObject, sizeof(EbReferenceObject), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbReferenceObject*, referenceObject, sizeof(EbReferenceObject), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)referenceObject;
 
@@ -190,7 +190,7 @@ EbErrorType eb_pa_reference_object_ctor(
     EbPaReferenceObject               *paReferenceObject;
     EbPictureBufferDescInitData       *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
     EbErrorType return_error = EB_ErrorNone;
-    EB_MALLOC(EbPaReferenceObject*, paReferenceObject, sizeof(EbPaReferenceObject), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbPaReferenceObject*, paReferenceObject, sizeof(EbPaReferenceObject), EB_N_PTR);
     *object_dbl_ptr = (EbPtr)paReferenceObject;
 
     // Reference picture constructor

@@ -179,7 +179,7 @@ EbErrorType mode_decision_candidate_buffer_ctor(
     EbErrorType return_error = EB_ErrorNone;
     // Allocate Buffer
     ModeDecisionCandidateBuffer *bufferPtr;
-    EB_MALLOC(ModeDecisionCandidateBuffer*, bufferPtr, sizeof(ModeDecisionCandidateBuffer), EB_N_PTR);
+    EB_ALLOC_OBJECT(ModeDecisionCandidateBuffer*, bufferPtr, sizeof(ModeDecisionCandidateBuffer), EB_N_PTR);
     *buffer_dbl_ptr = bufferPtr;
 
     // Init Picture Data

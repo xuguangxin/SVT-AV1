@@ -6390,7 +6390,7 @@ EbErrorType in_loop_me_context_ctor(
     uint32_t                   listIndex;
     uint32_t                   refPicIndex;
 
-    EB_MALLOC(SsMeContext*, *object_dbl_ptr, sizeof(SsMeContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(SsMeContext*, *object_dbl_ptr, sizeof(SsMeContext), EB_N_PTR);
 
     // Intermediate LCU-sized buffer to retain the input samples
     (*object_dbl_ptr)->sb_buffer_stride = MAX_SB_SIZE;

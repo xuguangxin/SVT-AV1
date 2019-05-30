@@ -49,7 +49,7 @@ EbErrorType picture_analysis_context_ctor(
     EbFifo *picture_analysis_results_output_fifo_ptr)
 {
     PictureAnalysisContext *context_ptr;
-    EB_MALLOC(PictureAnalysisContext*, context_ptr, sizeof(PictureAnalysisContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureAnalysisContext*, context_ptr, sizeof(PictureAnalysisContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     context_ptr->resource_coordination_results_input_fifo_ptr = resource_coordination_results_input_fifo_ptr;

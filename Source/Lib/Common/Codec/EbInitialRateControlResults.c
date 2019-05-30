@@ -11,7 +11,7 @@ EbErrorType initial_rate_control_results_ctor(
     EbPtr object_init_data_ptr)
 {
     InitialRateControlResults *object_ptr;
-    EB_MALLOC(InitialRateControlResults *, object_ptr, sizeof(InitialRateControlResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(InitialRateControlResults *, object_ptr, sizeof(InitialRateControlResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)object_ptr;
     object_init_data_ptr = 0;

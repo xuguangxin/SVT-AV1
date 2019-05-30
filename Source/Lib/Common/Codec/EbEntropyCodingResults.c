@@ -13,7 +13,7 @@ EbErrorType entropy_coding_results_ctor(
     EbPtr object_init_data_ptr)
 {
     EntropyCodingResults *context_ptr;
-    EB_MALLOC(EntropyCodingResults*, context_ptr, sizeof(EntropyCodingResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(EntropyCodingResults*, context_ptr, sizeof(EntropyCodingResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)context_ptr;
 

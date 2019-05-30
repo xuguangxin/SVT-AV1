@@ -12,7 +12,7 @@ EbErrorType resource_coordination_result_ctor(
     EbPtr object_init_data_ptr)
 {
     ResourceCoordinationResults *object_ptr;
-    EB_MALLOC(ResourceCoordinationResults*, object_ptr, sizeof(ResourceCoordinationResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(ResourceCoordinationResults*, object_ptr, sizeof(ResourceCoordinationResults), EB_N_PTR);
 
     *object_dbl_ptr = object_ptr;
 

@@ -10,7 +10,7 @@ EbErrorType input_queue_entry_ctor(
     InputQueueEntry      **entry_dbl_ptr)
 {
     InputQueueEntry *entryPtr;
-    EB_MALLOC(InputQueueEntry*, entryPtr, sizeof(InputQueueEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(InputQueueEntry*, entryPtr, sizeof(InputQueueEntry), EB_N_PTR);
     *entry_dbl_ptr = entryPtr;
 
     entryPtr->input_object_ptr = (EbObjectWrapper*)EB_NULL;
@@ -26,7 +26,7 @@ EbErrorType reference_queue_entry_ctor(
     ReferenceQueueEntry  **entry_dbl_ptr)
 {
     ReferenceQueueEntry *entryPtr;
-    EB_MALLOC(ReferenceQueueEntry*, entryPtr, sizeof(ReferenceQueueEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(ReferenceQueueEntry*, entryPtr, sizeof(ReferenceQueueEntry), EB_N_PTR);
     *entry_dbl_ptr = entryPtr;
 
     entryPtr->reference_object_ptr = (EbObjectWrapper*)EB_NULL;

@@ -185,7 +185,7 @@ void rate_control_layer_reset_part2(
 EbErrorType high_level_rate_control_context_ctor(
     HighLevelRateControlContext **entry_dbl_ptr) {
     HighLevelRateControlContext *entry_ptr;
-    EB_MALLOC(HighLevelRateControlContext*, entry_ptr, sizeof(HighLevelRateControlContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(HighLevelRateControlContext*, entry_ptr, sizeof(HighLevelRateControlContext), EB_N_PTR);
     *entry_dbl_ptr = entry_ptr;
 
     return EB_ErrorNone;
@@ -194,7 +194,7 @@ EbErrorType high_level_rate_control_context_ctor(
 EbErrorType rate_control_layer_context_ctor(
     RateControlLayerContext **entry_dbl_ptr) {
     RateControlLayerContext *entry_ptr;
-    EB_MALLOC(RateControlLayerContext*, entry_ptr, sizeof(RateControlLayerContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(RateControlLayerContext*, entry_ptr, sizeof(RateControlLayerContext), EB_N_PTR);
 
     *entry_dbl_ptr = entry_ptr;
 
@@ -210,7 +210,7 @@ EbErrorType rate_control_interval_param_context_ctor(
     uint32_t temporal_index;
     EbErrorType return_error = EB_ErrorNone;
     RateControlIntervalParamContext *entry_ptr;
-    EB_MALLOC(RateControlIntervalParamContext*, entry_ptr, sizeof(RateControlIntervalParamContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(RateControlIntervalParamContext*, entry_ptr, sizeof(RateControlIntervalParamContext), EB_N_PTR);
 
     *entry_dbl_ptr = entry_ptr;
 
@@ -248,7 +248,7 @@ EbErrorType rate_control_coded_frames_stats_context_ctor(
     CodedFramesStatsEntry **entry_dbl_ptr,
     uint64_t                picture_number) {
     CodedFramesStatsEntry *entry_ptr;
-    EB_MALLOC(CodedFramesStatsEntry*, entry_ptr, sizeof(CodedFramesStatsEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(CodedFramesStatsEntry*, entry_ptr, sizeof(CodedFramesStatsEntry), EB_N_PTR);
 
     *entry_dbl_ptr = entry_ptr;
 
@@ -273,7 +273,7 @@ EbErrorType rate_control_context_ctor(
 
     EbErrorType return_error = EB_ErrorNone;
     RateControlContext *context_ptr;
-    EB_MALLOC(RateControlContext  *, context_ptr, sizeof(RateControlContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(RateControlContext  *, context_ptr, sizeof(RateControlContext), EB_N_PTR);
 
     *context_dbl_ptr = context_ptr;
 

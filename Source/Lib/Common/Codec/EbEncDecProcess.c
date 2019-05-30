@@ -91,7 +91,7 @@ EbErrorType enc_dec_context_ctor(
     (void)max_input_luma_height;
     EbErrorType return_error = EB_ErrorNone;
     EncDecContext *context_ptr;
-    EB_MALLOC(EncDecContext*, context_ptr, sizeof(EncDecContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(EncDecContext*, context_ptr, sizeof(EncDecContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     context_ptr->is16bit = is16bit;

@@ -663,7 +663,7 @@ EbErrorType mode_decision_configuration_context_ctor(
 {
     ModeDecisionConfigurationContext *context_ptr;
 
-    EB_MALLOC(ModeDecisionConfigurationContext*, context_ptr, sizeof(ModeDecisionConfigurationContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(ModeDecisionConfigurationContext*, context_ptr, sizeof(ModeDecisionConfigurationContext), EB_N_PTR);
 
     *context_dbl_ptr = context_ptr;
 

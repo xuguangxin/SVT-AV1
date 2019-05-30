@@ -10,7 +10,7 @@ EbErrorType picture_decision_reorder_entry_ctor(
     PictureDecisionReorderEntry   **entry_dbl_ptr,
     uint32_t                            picture_number)
 {
-    EB_MALLOC(PictureDecisionReorderEntry*, *entry_dbl_ptr, sizeof(PictureDecisionReorderEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureDecisionReorderEntry*, *entry_dbl_ptr, sizeof(PictureDecisionReorderEntry), EB_N_PTR);
 
     (*entry_dbl_ptr)->picture_number = picture_number;
     (*entry_dbl_ptr)->parent_pcs_wrapper_ptr = (EbObjectWrapper *)EB_NULL;

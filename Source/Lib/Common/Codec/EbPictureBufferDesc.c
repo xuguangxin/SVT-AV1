@@ -37,7 +37,7 @@ EbErrorType eb_picture_buffer_desc_ctor(
     if (pictureBufferDescInitDataPtr->bit_depth > EB_8BIT && pictureBufferDescInitDataPtr->bit_depth <= EB_16BIT && pictureBufferDescInitDataPtr->split_mode == EB_TRUE)
         bytesPerPixel = 1;
 
-    EB_MALLOC(EbPictureBufferDesc*, pictureBufferDescPtr, sizeof(EbPictureBufferDesc), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbPictureBufferDesc*, pictureBufferDescPtr, sizeof(EbPictureBufferDesc), EB_N_PTR);
 
     // Allocate the PictureBufferDesc Object
     *object_dbl_ptr = (EbPtr)pictureBufferDescPtr;
@@ -138,7 +138,7 @@ EbErrorType eb_recon_picture_buffer_desc_ctor(
 
     uint32_t bytesPerPixel = (pictureBufferDescInitDataPtr->bit_depth == EB_8BIT) ? 1 : 2;
 
-    EB_MALLOC(EbPictureBufferDesc*, pictureBufferDescPtr, sizeof(EbPictureBufferDesc), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbPictureBufferDesc*, pictureBufferDescPtr, sizeof(EbPictureBufferDesc), EB_N_PTR);
 
     // Allocate the PictureBufferDesc Object
     *object_dbl_ptr = (EbPtr)pictureBufferDescPtr;

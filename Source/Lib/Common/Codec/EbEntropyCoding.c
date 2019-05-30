@@ -1705,9 +1705,9 @@ EbErrorType bitstream_ctor(
     uint32_t buffer_size)
 {
     EbErrorType return_error = EB_ErrorNone;
-    EB_MALLOC(Bitstream*, *bitstream_dbl_ptr, sizeof(Bitstream), EB_N_PTR);
+    EB_ALLOC_OBJECT(Bitstream*, *bitstream_dbl_ptr, sizeof(Bitstream), EB_N_PTR);
 
-    EB_MALLOC(EbPtr, (*bitstream_dbl_ptr)->output_bitstream_ptr, sizeof(OutputBitstreamUnit), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbPtr, (*bitstream_dbl_ptr)->output_bitstream_ptr, sizeof(OutputBitstreamUnit), EB_N_PTR);
 
     return_error = output_bitstream_unit_ctor(
         (OutputBitstreamUnit *)(*bitstream_dbl_ptr)->output_bitstream_ptr,
@@ -1721,7 +1721,7 @@ EbErrorType entropy_coder_ctor(
     uint32_t buffer_size)
 {
     EbErrorType return_error = EB_ErrorNone;
-    EB_MALLOC(EntropyCoder*, *entropy_coder_dbl_ptr, sizeof(EntropyCoder), EB_N_PTR);
+    EB_ALLOC_OBJECT(EntropyCoder*, *entropy_coder_dbl_ptr, sizeof(EntropyCoder), EB_N_PTR);
 
     EB_MALLOC(EbPtr, (*entropy_coder_dbl_ptr)->cabac_encode_context_ptr, sizeof(CabacEncodeContext), EB_N_PTR);
 

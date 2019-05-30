@@ -10,7 +10,7 @@ EbErrorType pa_reference_queue_entry_ctor(
     PaReferenceQueueEntry   **entry_dbl_ptr)
 {
     PaReferenceQueueEntry *entryPtr;
-    EB_MALLOC(PaReferenceQueueEntry*, entryPtr, sizeof(PaReferenceQueueEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(PaReferenceQueueEntry*, entryPtr, sizeof(PaReferenceQueueEntry), EB_N_PTR);
     *entry_dbl_ptr = entryPtr;
 
     entryPtr->input_object_ptr = (EbObjectWrapper*)EB_NULL;

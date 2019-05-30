@@ -816,7 +816,7 @@ EbErrorType DlfResultsCtor(
     EbPtr object_init_data_ptr)
 {
     DlfResults *context_ptr;
-    EB_MALLOC(DlfResults*, context_ptr, sizeof(DlfResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(DlfResults*, context_ptr, sizeof(DlfResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)context_ptr;
 
@@ -829,7 +829,7 @@ EbErrorType CdefResultsCtor(
     EbPtr object_init_data_ptr)
 {
     CdefResults *context_ptr;
-    EB_MALLOC(CdefResults*, context_ptr, sizeof(CdefResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(CdefResults*, context_ptr, sizeof(CdefResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)context_ptr;
 
@@ -843,7 +843,7 @@ EbErrorType RestResultsCtor(
     EbPtr object_init_data_ptr)
 {
     RestResults *context_ptr;
-    EB_MALLOC(RestResults*, context_ptr, sizeof(RestResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(RestResults*, context_ptr, sizeof(RestResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)context_ptr;
 
@@ -3410,7 +3410,7 @@ EbErrorType EbInputBufferHeaderCtor(
 {
     EbBufferHeaderType* inputBuffer;
     SequenceControlSet        *sequence_control_set_ptr = (SequenceControlSet*)objectInitDataPtr;
-    EB_MALLOC(EbBufferHeaderType*, inputBuffer, sizeof(EbBufferHeaderType), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbBufferHeaderType*, inputBuffer, sizeof(EbBufferHeaderType), EB_N_PTR);
     *objectDblPtr = (EbPtr)inputBuffer;
     // Initialize Header
     inputBuffer->size = sizeof(EbBufferHeaderType);
@@ -3435,7 +3435,7 @@ EbErrorType EbOutputBufferHeaderCtor(
     uint32_t n_stride = (uint32_t)(EB_OUTPUTSTREAMBUFFERSIZE_MACRO(config->source_width * config->source_height));  //TBC
     EbBufferHeaderType* outBufPtr;
 
-    EB_MALLOC(EbBufferHeaderType*, outBufPtr, sizeof(EbBufferHeaderType), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbBufferHeaderType*, outBufPtr, sizeof(EbBufferHeaderType), EB_N_PTR);
     *objectDblPtr = (EbPtr)outBufPtr;
 
     // Initialize Header
@@ -3468,7 +3468,7 @@ EbErrorType EbOutputReconBufferHeaderCtor(
     const uint32_t tenBit = (sequence_control_set_ptr->static_config.encoder_bit_depth > 8);
     const uint32_t frameSize = (luma_size + chroma_size) << tenBit;
 
-    EB_MALLOC(EbBufferHeaderType*, recon_buffer, sizeof(EbBufferHeaderType), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbBufferHeaderType*, recon_buffer, sizeof(EbBufferHeaderType), EB_N_PTR);
     *objectDblPtr = (EbPtr)recon_buffer;
 
     // Initialize Header

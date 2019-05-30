@@ -1039,7 +1039,7 @@ EbErrorType intra_open_loop_reference_samples_ctor(
     IntraReferenceSamplesOpenLoop **context_dbl_ptr)
 {
     IntraReferenceSamplesOpenLoop *context_ptr;
-    EB_MALLOC(IntraReferenceSamplesOpenLoop*, context_ptr, sizeof(IntraReferenceSamplesOpenLoop), EB_N_PTR);
+    EB_ALLOC_OBJECT(IntraReferenceSamplesOpenLoop*, context_ptr, sizeof(IntraReferenceSamplesOpenLoop), EB_N_PTR);
 
     *context_dbl_ptr = context_ptr;
 

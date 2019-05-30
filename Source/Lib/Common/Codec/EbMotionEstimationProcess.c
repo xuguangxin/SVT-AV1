@@ -419,7 +419,7 @@ EbErrorType motion_estimation_context_ctor(
 
     EbErrorType return_error = EB_ErrorNone;
     MotionEstimationContext_t *context_ptr;
-    EB_MALLOC(MotionEstimationContext_t*, context_ptr, sizeof(MotionEstimationContext_t), EB_N_PTR);
+    EB_ALLOC_OBJECT(MotionEstimationContext_t*, context_ptr, sizeof(MotionEstimationContext_t), EB_N_PTR);
 
     *context_dbl_ptr = context_ptr;
 

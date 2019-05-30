@@ -37,7 +37,7 @@ EbErrorType entropy_coding_context_ctor(
     EbBool                  is16bit)
 {
     EntropyCodingContext *context_ptr;
-    EB_MALLOC(EntropyCodingContext*, context_ptr, sizeof(EntropyCodingContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(EntropyCodingContext*, context_ptr, sizeof(EntropyCodingContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     context_ptr->is16bit = is16bit;

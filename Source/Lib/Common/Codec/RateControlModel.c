@@ -61,7 +61,7 @@ static const size_t DEFAULT_REF_INTER_PICTURE_COMPRESSION_RATIO[64] = {
 EbErrorType    rate_control_model_ctor(EbRateControlModel **object_doubble_ptr) {
     EbRateControlModel  *model_ptr;
 
-    EB_MALLOC(EbRateControlModel*, model_ptr, sizeof(EbRateControlModel), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbRateControlModel*, model_ptr, sizeof(EbRateControlModel), EB_N_PTR);
     *object_doubble_ptr = (void*)model_ptr;
 
     EB_MEMSET(model_ptr, 0, sizeof(EbRateControlModel));
@@ -75,7 +75,7 @@ EbErrorType rate_control_model_init(EbRateControlModel *model_ptr, SequenceContr
     uint32_t                number_of_frame = (uint32_t)sequenceControlSetPtr->static_config.frames_to_be_encoded;
     EbRateControlGopInfo    *gop_infos;
 
-    EB_MALLOC(EbRateControlGopInfo*, gop_infos, sizeof(EbRateControlModel) * number_of_frame, EB_N_PTR);
+    EB_ALLOC_OBJECT(EbRateControlGopInfo*, gop_infos, sizeof(EbRateControlModel) * number_of_frame, EB_N_PTR);
     memset(gop_infos, 0, sizeof(EbRateControlModel) * number_of_frame);
 
     model_ptr->desired_bitrate = sequenceControlSetPtr->static_config.target_bit_rate;

@@ -67,7 +67,7 @@ EbErrorType cdef_context_ctor(
     (void)max_input_luma_height;
 
     CdefContext_t *context_ptr;
-    EB_MALLOC(CdefContext_t*, context_ptr, sizeof(CdefContext_t), EB_N_PTR);
+    EB_ALLOC_OBJECT(CdefContext_t*, context_ptr, sizeof(CdefContext_t), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     // Input/Output System Resource Manager FIFOs

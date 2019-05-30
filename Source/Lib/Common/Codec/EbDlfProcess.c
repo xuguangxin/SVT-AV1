@@ -40,7 +40,7 @@ EbErrorType dlf_context_ctor(
 {
     EbErrorType return_error = EB_ErrorNone;
     DlfContext *context_ptr;
-    EB_MALLOC(DlfContext*, context_ptr, sizeof(DlfContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(DlfContext*, context_ptr, sizeof(DlfContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     // Input/Output System Resource Manager FIFOs

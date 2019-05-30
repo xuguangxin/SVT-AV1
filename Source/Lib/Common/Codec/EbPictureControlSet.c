@@ -66,7 +66,7 @@ EbErrorType me_sb_results_ctor(
     uint32_t  puIndex;
     MeLcuResults *objectPtr;
 
-    EB_MALLOC(MeLcuResults*, objectPtr, sizeof(MeLcuResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(MeLcuResults*, objectPtr, sizeof(MeLcuResults), EB_N_PTR);
 
     *objectDblPtr = objectPtr;
 
@@ -125,7 +125,7 @@ EbErrorType picture_control_set_ctor(
     const uint16_t subsampling_x = (initDataPtr->color_format == EB_YUV444 ? 1 : 2) - 1;
     const uint16_t subsampling_y = (initDataPtr->color_format >= EB_YUV422 ? 1 : 2) - 1;
 
-    EB_MALLOC(PictureControlSet*, object_ptr, sizeof(PictureControlSet), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureControlSet*, object_ptr, sizeof(PictureControlSet), EB_N_PTR);
 
     // Init Picture Init data
     input_picture_buffer_desc_init_data.max_width = initDataPtr->picture_width;
@@ -926,7 +926,7 @@ EbErrorType picture_parent_control_set_ctor(
     uint32_t regionInPictureWidthIndex;
     uint32_t regionInPictureHeightIndex;
 
-    EB_MALLOC(PictureParentControlSet*, object_ptr, sizeof(PictureParentControlSet), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureParentControlSet*, object_ptr, sizeof(PictureParentControlSet), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)object_ptr;
     object_ptr->sequence_control_set_wrapper_ptr = (EbObjectWrapper *)EB_NULL;

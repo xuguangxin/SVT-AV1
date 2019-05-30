@@ -69,7 +69,7 @@ EbErrorType rest_context_ctor(
 {
     EbErrorType return_error = EB_ErrorNone;
     RestContext *context_ptr;
-    EB_MALLOC(RestContext*, context_ptr, sizeof(RestContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(RestContext*, context_ptr, sizeof(RestContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     // Input/Output System Resource Manager FIFOs

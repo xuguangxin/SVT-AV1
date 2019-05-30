@@ -34,7 +34,7 @@ EbErrorType largest_coding_unit_ctor(
     EbPictureBufferDescInitData coeffInitData;
 
     LargestCodingUnit *largestCodingUnitPtr;
-    EB_MALLOC(LargestCodingUnit*, largestCodingUnitPtr, sizeof(LargestCodingUnit), EB_N_PTR);
+    EB_ALLOC_OBJECT(LargestCodingUnit*, largestCodingUnitPtr, sizeof(LargestCodingUnit), EB_N_PTR);
 
     *larget_coding_unit_dbl_ptr = largestCodingUnitPtr;
 

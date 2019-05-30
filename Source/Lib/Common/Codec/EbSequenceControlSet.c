@@ -40,7 +40,7 @@ EbErrorType eb_sequence_control_set_ctor(
     EbSequenceControlSetInitData *scsInitData = (EbSequenceControlSetInitData*)object_init_data_ptr;
     uint32_t segment_index;
     SequenceControlSet *sequence_control_set_ptr;
-    EB_MALLOC(SequenceControlSet*, sequence_control_set_ptr, sizeof(SequenceControlSet), EB_N_PTR);
+    EB_ALLOC_OBJECT(SequenceControlSet*, sequence_control_set_ptr, sizeof(SequenceControlSet), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)sequence_control_set_ptr;
 
@@ -366,7 +366,7 @@ EbErrorType eb_sequence_control_set_instance_ctor(
 {
     EbSequenceControlSetInitData scsInitData;
     EbErrorType return_error = EB_ErrorNone;
-    EB_MALLOC(EbSequenceControlSetInstance*, *object_dbl_ptr, sizeof(EbSequenceControlSetInstance), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbSequenceControlSetInstance*, *object_dbl_ptr, sizeof(EbSequenceControlSetInstance), EB_N_PTR);
 
     scsInitData.sb_size = 64;
 
@@ -393,7 +393,7 @@ extern EbErrorType sb_params_ctor(
     SequenceControlSet *sequence_control_set_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
-    EB_MALLOC(SbParams*, sequence_control_set_ptr->sb_params_array, sizeof(SbParams) * ((MAX_PICTURE_WIDTH_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz) * ((MAX_PICTURE_HEIGHT_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz), EB_N_PTR);
+    EB_ALLOC_OBJECT(SbParams*, sequence_control_set_ptr->sb_params_array, sizeof(SbParams) * ((MAX_PICTURE_WIDTH_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz) * ((MAX_PICTURE_HEIGHT_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz), EB_N_PTR);
     return return_error;
 }
 

@@ -232,7 +232,7 @@ EbErrorType picture_decision_context_ctor(
     PictureDecisionContext *context_ptr;
     uint32_t arrayIndex;
     uint32_t arrayRow, arrowColumn;
-    EB_MALLOC(PictureDecisionContext*, context_ptr, sizeof(PictureDecisionContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureDecisionContext*, context_ptr, sizeof(PictureDecisionContext), EB_N_PTR);
     *context_dbl_ptr = context_ptr;
 
     context_ptr->picture_analysis_results_input_fifo_ptr = picture_analysis_results_input_fifo_ptr;

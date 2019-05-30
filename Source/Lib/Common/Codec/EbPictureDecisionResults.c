@@ -12,7 +12,7 @@ EbErrorType picture_decision_result_ctor(
     EbPtr object_init_data_ptr)
 {
     PictureDecisionResults *object_ptr;
-    EB_MALLOC(PictureDecisionResults *, object_ptr, sizeof(PictureDecisionResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureDecisionResults *, object_ptr, sizeof(PictureDecisionResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)object_ptr;
     object_init_data_ptr = 0;

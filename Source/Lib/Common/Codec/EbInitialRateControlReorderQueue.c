@@ -10,7 +10,7 @@ EbErrorType initial_rate_control_reorder_entry_ctor(
     InitialRateControlReorderEntry   **entry_dbl_ptr,
     uint32_t                          picture_number)
 {
-    EB_MALLOC(InitialRateControlReorderEntry*, *entry_dbl_ptr, sizeof(InitialRateControlReorderEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(InitialRateControlReorderEntry*, *entry_dbl_ptr, sizeof(InitialRateControlReorderEntry), EB_N_PTR);
 
     (*entry_dbl_ptr)->picture_number = picture_number;
     (*entry_dbl_ptr)->parent_pcs_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
@@ -22,7 +22,7 @@ EbErrorType hl_rate_control_histogram_entry_ctor(
     HlRateControlHistogramEntry   **entry_dbl_ptr,
     uint32_t                          picture_number)
 {
-    EB_MALLOC(HlRateControlHistogramEntry*, *entry_dbl_ptr, sizeof(HlRateControlHistogramEntry), EB_N_PTR);
+    EB_ALLOC_OBJECT(HlRateControlHistogramEntry*, *entry_dbl_ptr, sizeof(HlRateControlHistogramEntry), EB_N_PTR);
 
     (*entry_dbl_ptr)->picture_number = picture_number;
     (*entry_dbl_ptr)->life_count = 0;

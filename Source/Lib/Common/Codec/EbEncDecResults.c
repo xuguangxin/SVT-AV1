@@ -12,7 +12,7 @@ EbErrorType enc_dec_results_ctor(
     EbPtr object_init_data_ptr)
 {
     EncDecResults *context_ptr;
-    EB_MALLOC(EncDecResults*, context_ptr, sizeof(EncDecResults), EB_N_PTR);
+    EB_ALLOC_OBJECT(EncDecResults*, context_ptr, sizeof(EncDecResults), EB_N_PTR);
 
     *object_dbl_ptr = (EbPtr)context_ptr;
 

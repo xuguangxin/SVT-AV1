@@ -65,7 +65,7 @@ EbErrorType picture_manager_context_ctor(
     EbFifo                **picture_control_set_fifo_ptr_array)
 {
     PictureManagerContext *context_ptr;
-    EB_MALLOC(PictureManagerContext*, context_ptr, sizeof(PictureManagerContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(PictureManagerContext*, context_ptr, sizeof(PictureManagerContext), EB_N_PTR);
 
     *context_dbl_ptr = context_ptr;
 

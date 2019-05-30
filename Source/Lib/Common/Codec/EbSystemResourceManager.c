@@ -89,7 +89,7 @@ static EbErrorType EbCircularBufferCtor(
     uint32_t bufferIndex;
     EbCircularBuffer *bufferPtr;
 
-    EB_MALLOC(EbCircularBuffer*, bufferPtr, sizeof(EbCircularBuffer), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbCircularBuffer*, bufferPtr, sizeof(EbCircularBuffer), EB_N_PTR);
 
     *buffer_dbl_ptr = bufferPtr;
 
@@ -193,7 +193,7 @@ static EbErrorType EbMuxingQueueCtor(
     uint32_t processIndex;
     EbErrorType     return_error = EB_ErrorNone;
 
-    EB_MALLOC(EbMuxingQueue *, queue_ptr, sizeof(EbMuxingQueue), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbMuxingQueue *, queue_ptr, sizeof(EbMuxingQueue), EB_N_PTR);
     *queueDblPtr = queue_ptr;
 
     queue_ptr->process_total_count = process_total_count;
@@ -217,7 +217,7 @@ static EbErrorType EbMuxingQueueCtor(
     EB_MALLOC(EbFifo**, queue_ptr->process_fifo_ptr_array, sizeof(EbFifo*) * queue_ptr->process_total_count, EB_N_PTR);
 
     for (processIndex = 0; processIndex < queue_ptr->process_total_count; ++processIndex) {
-        EB_MALLOC(EbFifo*, queue_ptr->process_fifo_ptr_array[processIndex], sizeof(EbFifo) * queue_ptr->process_total_count, EB_N_PTR);
+        EB_ALLOC_OBJECT(EbFifo*, queue_ptr->process_fifo_ptr_array[processIndex], sizeof(EbFifo) * queue_ptr->process_total_count, EB_N_PTR);
         return_error = EbFifoCtor(
             queue_ptr->process_fifo_ptr_array[processIndex],
             0,
@@ -440,7 +440,7 @@ EbErrorType eb_system_resource_ctor(
     // Allocate the System Resource
     EbSystemResource *resource_ptr;
 
-    EB_MALLOC(EbSystemResource*, resource_ptr, sizeof(EbSystemResource), EB_N_PTR);
+    EB_ALLOC_OBJECT(EbSystemResource*, resource_ptr, sizeof(EbSystemResource), EB_N_PTR);
     *resource_dbl_ptr = resource_ptr;
 
     resource_ptr->object_total_count = object_total_count;
@@ -450,7 +450,7 @@ EbErrorType eb_system_resource_ctor(
 
     // Initialize each wrapper
     for (wrapperIndex = 0; wrapperIndex < resource_ptr->object_total_count; ++wrapperIndex) {
-        EB_MALLOC(EbObjectWrapper*, resource_ptr->wrapper_ptr_pool[wrapperIndex], sizeof(EbObjectWrapper), EB_N_PTR);
+        EB_ALLOC_OBJECT(EbObjectWrapper*, resource_ptr->wrapper_ptr_pool[wrapperIndex], sizeof(EbObjectWrapper), EB_N_PTR);
         resource_ptr->wrapper_ptr_pool[wrapperIndex]->live_count = 0;
         resource_ptr->wrapper_ptr_pool[wrapperIndex]->release_enable = EB_TRUE;
         resource_ptr->wrapper_ptr_pool[wrapperIndex]->system_resource_ptr = resource_ptr;

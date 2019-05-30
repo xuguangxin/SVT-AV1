@@ -805,7 +805,7 @@ static EbErrorType PredictionStructureCtor(
     uint32_t                  steadyStatePicCount;
 
     PredictionStructure  *predictionStructurePtr;
-    EB_MALLOC(PredictionStructure*, predictionStructurePtr, sizeof(PredictionStructure), EB_N_PTR);
+    EB_ALLOC_OBJECT(PredictionStructure*, predictionStructurePtr, sizeof(PredictionStructure), EB_N_PTR);
     *predictionStructureDblPtr = predictionStructurePtr;
     memset(predictionStructurePtr, 0, sizeof(PredictionStructure));
 
@@ -1657,7 +1657,7 @@ EbErrorType prediction_structure_group_ctor(
     EbErrorType    return_error = EB_ErrorNone;
 
     PredictionStructureGroup *predictionStructureGroupPtr;
-    EB_MALLOC(PredictionStructureGroup*, predictionStructureGroupPtr, sizeof(PredictionStructureGroup), EB_N_PTR);
+    EB_ALLOC_OBJECT(PredictionStructureGroup*, predictionStructureGroupPtr, sizeof(PredictionStructureGroup), EB_N_PTR);
     *predictionStructureGroupDblPtr = predictionStructureGroupPtr;
 
     if (enc_mode > ENC_M0) {
@@ -1707,4 +1707,3 @@ EbErrorType prediction_structure_group_ctor(
 
     return EB_ErrorNone;
 }
-

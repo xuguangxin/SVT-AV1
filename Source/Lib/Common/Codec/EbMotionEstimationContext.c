@@ -29,7 +29,7 @@ EbErrorType me_context_ctor(
     uint32_t                   pu_index;
     uint32_t                   meCandidateIndex;
 
-    EB_MALLOC(MeContext*, *object_dbl_ptr, sizeof(MeContext), EB_N_PTR);
+    EB_ALLOC_OBJECT(MeContext*, *object_dbl_ptr, sizeof(MeContext), EB_N_PTR);
 
     // Intermediate LCU-sized buffer to retain the input samples
     (*object_dbl_ptr)->sb_buffer_stride = BLOCK_SIZE_64;
