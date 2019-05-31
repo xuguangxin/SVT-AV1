@@ -35,23 +35,37 @@ void eb_remove_mem_entry(void* ptr, EbPtrType type);
     do { \
         if (!p) { \
             fprintf(stderr,"allocate memory failed, at %s, L%d", __FILE__, __LINE__); \
-            return EB_ErrorInsufficientResources; \
+        } else { \
+            EB_ADD_MEM_ENTRY(p, type, size); \
         } \
-        EB_ADD_MEM_ENTRY(p, type, size); \
     } while (0)
 
-#define EB_MALLOC1(pointer, size) \
+#define EB_NO_THROW_MALLOC(pointer, size) \
     do { \
         void* p = malloc(size); \
         EB_ADD_MEM1(p, size, EB_N_PTR); \
         *(void**)&(pointer) = p; \
     } while (0)
 
-#define EB_CALLOC1(pointer, count, size) \
-    do {\
+#define EB_MALLOC1(pointer, size) \
+    do { \
+        EB_NO_THROW_MALLOC(pointer, size); \
+        if (!(pointer)) \
+            return EB_ErrorInsufficientResources; \
+    } while (0)
+
+#define EB_NO_THROW_CALLOC(pointer, count, size) \
+    do { \
         void* p = calloc(count, size); \
         EB_ADD_MEM1(p, count * size, EB_N_PTR); \
         *(void**)&(pointer) = p; \
+    } while (0)
+
+#define EB_CALLOC1(pointer, count, size) \
+    do { \
+        EB_NO_THROW_CALLOC(pointer, count, size); \
+        if (!(pointer)) \
+            return EB_ErrorInsufficientResources; \
     } while (0)
 
 #define EB_FREE(pointer) \
