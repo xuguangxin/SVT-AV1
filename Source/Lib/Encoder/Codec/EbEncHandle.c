@@ -52,6 +52,7 @@
 #include "EbDlfProcess.h"
 #include "EbCdefProcess.h"
 #include "EbRestProcess.h"
+#include "EbObject.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -653,19 +654,25 @@ void lib_svt_encoder_send_error_exit(
     uint32_t                 error_code);
 
 /**********************************
+* Encoder Library Handle Deonstructor
+**********************************/
+static void eb_enc_handle_dctor(EbPtr p)
+{
+    EbEncHandle *enc_handle_ptr = (EbEncHandle *)p;
+    EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
+    //we can't use EB_FREE_PTR_ARRAY here(yet), since sequence_control_set_instance_array[i] has constructor
+    EB_FREE(enc_handle_ptr->sequence_control_set_instance_array);
+}
+
+/**********************************
 * Encoder Library Handle Constructor
 **********************************/
 static EbErrorType eb_enc_handle_ctor(
-    EbEncHandle **encHandleDblPtr,
+    EbEncHandle *enc_handle_ptr,
     EbComponentType * ebHandlePtr)
 {
     EbErrorType return_error = EB_ErrorNone;
-    // Allocate Memory
-    EbEncHandle *enc_handle_ptr = (EbEncHandle*)malloc(sizeof(EbEncHandle));
 
-    *encHandleDblPtr          = enc_handle_ptr;
-    if (enc_handle_ptr == (EbEncHandle*)EB_NULL)
-        return EB_ErrorInsufficientResources;
     enc_handle_ptr->memory_map                = (EbMemoryMapEntry*)malloc(sizeof(EbMemoryMapEntry));
     enc_handle_ptr->memory_map_index          = 0;
     enc_handle_ptr->total_lib_memory          = sizeof(EbComponentType) + sizeof(EbEncHandle) + sizeof(EbMemoryMapEntry);
@@ -682,117 +689,25 @@ static EbErrorType eb_enc_handle_ctor(
     if (memory_map == (EbMemoryMapEntry*)EB_NULL)
         return EB_ErrorInsufficientResources;
 
+    enc_handle_ptr->dctor = eb_enc_handle_dctor;
+
     return_error = InitThreadManagmentParams();
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
-    enc_handle_ptr->memory_map->prev_entry                                = EB_NULL;
     enc_handle_ptr->encode_instance_total_count                           = EB_EncodeInstancesTotalCount;
     enc_handle_ptr->compute_segments_total_count_array                    = EB_ComputeSegmentInitCount;
     // Config Set Count
     enc_handle_ptr->sequence_control_set_pool_total_count                 = EB_SequenceControlSetPoolInitCount;
 
-    // Sequence Control Set Buffers
-    enc_handle_ptr->sequence_control_set_pool_ptr                         = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->sequence_control_set_pool_producer_fifo_ptr_array     = (EbFifo**)EB_NULL;
-
-    // Picture Buffers
-    enc_handle_ptr->reference_picture_pool_ptr_array                      = (EbSystemResource**)EB_NULL;
-    enc_handle_ptr->pa_reference_picture_pool_ptr_array                   = (EbSystemResource**)EB_NULL;
-
-    // Overlay input picture
-    enc_handle_ptr->overlay_input_picture_pool_ptr_array = (EbSystemResource**)EB_NULL;
-    enc_handle_ptr->overlay_input_picture_pool_producer_fifo_ptr_dbl_array = (EbFifo***)EB_NULL;
-    // Picture Buffer Producer Fifos
-    enc_handle_ptr->reference_picture_pool_producer_fifo_ptr_dbl_array    = (EbFifo***)EB_NULL;
-    enc_handle_ptr->pa_reference_picture_pool_producer_fifo_ptr_dbl_array = (EbFifo***)EB_NULL;
-
-    // Threads
-    enc_handle_ptr->resource_coordination_thread_handle             = (EbHandle)EB_NULL;
-    enc_handle_ptr->picture_analysis_thread_handle_array            = (EbHandle*)EB_NULL;
-    enc_handle_ptr->picture_decision_thread_handle                  = (EbHandle)EB_NULL;
-    enc_handle_ptr->motion_estimation_thread_handle_array           = (EbHandle*)EB_NULL;
-    enc_handle_ptr->initial_rate_control_thread_handle              = (EbHandle)EB_NULL;
-    enc_handle_ptr->source_based_operations_thread_handle_array     = (EbHandle*)EB_NULL;
-    enc_handle_ptr->picture_manager_thread_handle                   = (EbHandle)EB_NULL;
-    enc_handle_ptr->rate_control_thread_handle                      = (EbHandle)EB_NULL;
-    enc_handle_ptr->mode_decision_configuration_thread_handle_array = (EbHandle*)EB_NULL;
-    enc_handle_ptr->enc_dec_thread_handle_array                     = (EbHandle*)EB_NULL;
-    enc_handle_ptr->entropy_coding_thread_handle_array              = (EbHandle*)EB_NULL;
-    enc_handle_ptr->packetization_thread_handle                     = (EbHandle)EB_NULL;
-    enc_handle_ptr->dlf_thread_handle_array                         = (EbHandle*)EB_NULL;
-    enc_handle_ptr->cdef_thread_handle_array                        = (EbHandle*)EB_NULL;
-    enc_handle_ptr->rest_thread_handle_array                        = (EbHandle*)EB_NULL;
-
-    // Contexts
-    enc_handle_ptr->resource_coordination_context_ptr             = (EbPtr)EB_NULL;
-    enc_handle_ptr->picture_analysis_context_ptr_array            = (EbPtr*)EB_NULL;
-    enc_handle_ptr->picture_decision_context_ptr                  = (EbPtr)EB_NULL;
-    enc_handle_ptr->motion_estimation_context_ptr_array           = (EbPtr*)EB_NULL;
-    enc_handle_ptr->initial_rate_control_context_ptr              = (EbPtr)EB_NULL;
-    enc_handle_ptr->source_based_operations_context_ptr_array     = (EbPtr*)EB_NULL;
-    enc_handle_ptr->picture_manager_context_ptr                   = (EbPtr)EB_NULL;
-    enc_handle_ptr->rate_control_context_ptr                      = (EbPtr)EB_NULL;
-    enc_handle_ptr->mode_decision_configuration_context_ptr_array = (EbPtr*)EB_NULL;
-    enc_handle_ptr->enc_dec_context_ptr_array                     = (EbPtr*)EB_NULL;
-    enc_handle_ptr->entropy_coding_context_ptr_array              = (EbPtr*)EB_NULL;
-    enc_handle_ptr->dlf_context_ptr_array                         = (EbPtr*)EB_NULL;
-    enc_handle_ptr->cdef_context_ptr_array                        = (EbPtr*)EB_NULL;
-    enc_handle_ptr->rest_context_ptr_array                        = (EbPtr*)EB_NULL;
-    enc_handle_ptr->packetization_context_ptr                     = (EbPtr)EB_NULL;
-
-    // System Resource Managers
-    enc_handle_ptr->input_buffer_resource_ptr                  = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->output_stream_buffer_resource_ptr_array    = (EbSystemResource**)EB_NULL;
-    enc_handle_ptr->resource_coordination_results_resource_ptr = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->picture_analysis_results_resource_ptr      = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->picture_decision_results_resource_ptr      = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->motion_estimation_results_resource_ptr     = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->initial_rate_control_results_resource_ptr  = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->picture_demux_results_resource_ptr         = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->rate_control_tasks_resource_ptr            = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->rate_control_results_resource_ptr          = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->enc_dec_tasks_resource_ptr                 = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->enc_dec_results_resource_ptr               = (EbSystemResource*)EB_NULL;
-    enc_handle_ptr->entropy_coding_results_resource_ptr        = (EbSystemResource*)EB_NULL;
-
-    // Inter-Process Producer Fifos
-    enc_handle_ptr->input_buffer_producer_fifo_ptr_array                  = (EbFifo**)EB_NULL;
-    enc_handle_ptr->output_stream_buffer_producer_fifo_ptr_dbl_array      = (EbFifo***)EB_NULL;
-    enc_handle_ptr->resource_coordination_results_producer_fifo_ptr_array = (EbFifo**)EB_NULL;
-    enc_handle_ptr->picture_demux_results_producer_fifo_ptr_array         = (EbFifo**)EB_NULL;
-    enc_handle_ptr->picture_manager_results_producer_fifo_ptr_array       = (EbFifo**)EB_NULL;
-    enc_handle_ptr->rate_control_tasks_producer_fifo_ptr_array            = (EbFifo**)EB_NULL;
-    enc_handle_ptr->rate_control_results_producer_fifo_ptr_array          = (EbFifo**)EB_NULL;
-    enc_handle_ptr->enc_dec_tasks_producer_fifo_ptr_array                 = (EbFifo**)EB_NULL;
-    enc_handle_ptr->enc_dec_results_producer_fifo_ptr_array               = (EbFifo**)EB_NULL;
-    enc_handle_ptr->entropy_coding_results_producer_fifo_ptr_array        = (EbFifo**)EB_NULL;
-    enc_handle_ptr->dlf_results_producer_fifo_ptr_array                   = (EbFifo**)EB_NULL;
-    enc_handle_ptr->cdef_results_producer_fifo_ptr_array                  = (EbFifo**)EB_NULL;
-    enc_handle_ptr->rest_results_producer_fifo_ptr_array                  = (EbFifo**)EB_NULL;
-    enc_handle_ptr->dlf_results_consumer_fifo_ptr_array                   = (EbFifo**)EB_NULL;
-    enc_handle_ptr->cdef_results_consumer_fifo_ptr_array                  = (EbFifo**)EB_NULL;
-    enc_handle_ptr->rest_results_consumer_fifo_ptr_array                  = (EbFifo**)EB_NULL;
-
-    // Inter-Process Consumer Fifos
-    enc_handle_ptr->input_buffer_consumer_fifo_ptr_array                  = (EbFifo**)EB_NULL;
-    enc_handle_ptr->output_stream_buffer_consumer_fifo_ptr_dbl_array      = (EbFifo***)EB_NULL;
-    enc_handle_ptr->resource_coordination_results_consumer_fifo_ptr_array = (EbFifo**)EB_NULL;
-    enc_handle_ptr->picture_demux_results_consumer_fifo_ptr_array         = (EbFifo**)EB_NULL;
-    enc_handle_ptr->rate_control_tasks_consumer_fifo_ptr_array            = (EbFifo**)EB_NULL;
-    enc_handle_ptr->rate_control_results_consumer_fifo_ptr_array          = (EbFifo**)EB_NULL;
-    enc_handle_ptr->enc_dec_tasks_consumer_fifo_ptr_array                 = (EbFifo**)EB_NULL;
-    enc_handle_ptr->enc_dec_results_consumer_fifo_ptr_array               = (EbFifo**)EB_NULL;
-    enc_handle_ptr->entropy_coding_results_consumer_fifo_ptr_array        = (EbFifo**)EB_NULL;
-
     // Initialize Callbacks
-    EB_MALLOC(EbCallback**, enc_handle_ptr->app_callback_ptr_array, sizeof(EbCallback*) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
-    EB_MALLOC(EbCallback*, enc_handle_ptr->app_callback_ptr_array[0], sizeof(EbCallback), EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
+    EB_MALLOC1(enc_handle_ptr->app_callback_ptr_array[0], sizeof(EbCallback));
     enc_handle_ptr->app_callback_ptr_array[0]->ErrorHandler = lib_svt_encoder_send_error_exit;
     enc_handle_ptr->app_callback_ptr_array[0]->handle = ebHandlePtr;
 
     // Initialize Sequence Control Set Instance Array
-    EB_MALLOC(EbSequenceControlSetInstance**, enc_handle_ptr->sequence_control_set_instance_array, sizeof(EbSequenceControlSetInstance*) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
     return_error = eb_sequence_control_set_instance_ctor(&enc_handle_ptr->sequence_control_set_instance_array[0]);
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
@@ -1909,8 +1824,11 @@ EbErrorType eb_h265_enc_component_de_init(EbComponentType  *svt_enc_component)
 {
     EbErrorType       return_error = EB_ErrorNone;
 
-    if (svt_enc_component->p_component_private)
-        free((EbEncHandle *)svt_enc_component->p_component_private);
+    if (svt_enc_component->p_component_private) {
+        EbEncHandle* handle = (EbEncHandle*)svt_enc_component->p_component_private;
+        EB_DELETE(handle);
+        svt_enc_component->p_component_private = NULL;
+    }
     else
         return_error = EB_ErrorUndefined;
     return return_error;
@@ -3331,6 +3249,7 @@ EbErrorType init_svt_av1_encoder_handle(
 {
     EbErrorType       return_error = EB_ErrorNone;
     EbComponentType  *svt_enc_component = (EbComponentType*)hComponent;
+    EbEncHandle      *handle;
 
     printf("SVT [version]:\tSVT-AV1 Encoder Lib v%d.%d.%d\n", SVT_VERSION_MAJOR, SVT_VERSION_MINOR, SVT_VERSION_PATCHLEVEL);
 #if ( defined( _MSC_VER ) && (_MSC_VER < 1910) )
@@ -3351,10 +3270,8 @@ EbErrorType init_svt_av1_encoder_handle(
     // Set Component Size & Version
     svt_enc_component->size = sizeof(EbComponentType);
 
-    // Encoder Private Handle Ctor
-    return_error = (EbErrorType)eb_enc_handle_ctor(
-        (EbEncHandle**) &(svt_enc_component->p_component_private),
-        svt_enc_component);
+    EB_NEW(handle, eb_enc_handle_ctor, svt_enc_component);
+    svt_enc_component->p_component_private = handle;
 
     return return_error;
 }

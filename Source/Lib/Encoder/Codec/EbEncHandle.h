@@ -15,12 +15,14 @@
 #include "EbResourceCoordinationResults.h"
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
+#include "EbObject.h"
 
 /**************************************
  * Component Private Data
  **************************************/
 typedef struct EbEncHandle
 {
+    EbDctor                                   dctor;
     // Encode Instances & Compute Segments
     uint32_t                                  encode_instance_total_count;
     uint32_t                                  compute_segments_total_count_array;
