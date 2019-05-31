@@ -1800,6 +1800,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
 #if DISPLAY_MEMORY
     EB_MEMORY();
 #endif
+    eb_print_memory_usage();
+
     return return_error;
 }
 
@@ -1878,26 +1880,25 @@ EB_API EbErrorType eb_init_handle(
          return EB_ErrorBadParameter;
 
     *p_handle = (EbComponentType*)malloc(sizeof(EbComponentType));
-    if (*p_handle != (EbComponentType*)NULL) {
-        // Init Component OS objects (threads, semaphores, etc.)
-        // also links the various Component control functions
-        return_error = init_svt_av1_encoder_handle(*p_handle);
-
-        if (return_error == EB_ErrorNone)
-            ((EbComponentType*)(*p_handle))->p_application_private = p_app_data;
-        else if (return_error == EB_ErrorInsufficientResources) {
-            eb_deinit_encoder((EbComponentType*)NULL);
-            *p_handle = (EbComponentType*)NULL;
-        }
-        else
-            return_error = EB_ErrorInvalidComponent;
-    }
-    else {
+    if (*p_handle == (EbComponentType*)NULL) {
         SVT_LOG("Error: Component Struct Malloc Failed\n");
         return_error = EB_ErrorInsufficientResources;
     }
-    return_error = eb_svt_enc_init_parameter(config_ptr);
+    // Init Component OS objects (threads, semaphores, etc.)
+    // also links the various Component control functions
+    return_error = init_svt_av1_encoder_handle(*p_handle);
 
+    if (return_error == EB_ErrorNone) {
+        ((EbComponentType*)(*p_handle))->p_application_private = p_app_data;
+        return_error = eb_svt_enc_init_parameter(config_ptr);
+    }
+    if (return_error != EB_ErrorNone) {
+        eb_deinit_encoder(*p_handle);
+        free(*p_handle);
+        *p_handle = NULL;
+        return return_error;
+    }
+    eb_increase_component_count();
     return return_error;
 }
 
@@ -1930,6 +1931,7 @@ EB_API EbErrorType eb_deinit_handle(
         return_error = eb_h265_enc_component_de_init(svt_enc_component);
 
         free(svt_enc_component);
+        eb_decrease_component_count();
     }
     else
         return_error = EB_ErrorInvalidComponent;

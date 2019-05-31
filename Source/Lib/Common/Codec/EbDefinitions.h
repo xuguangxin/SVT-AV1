@@ -2182,7 +2182,8 @@ typedef enum EbPtrType
     EB_A_PTR        = 1,     // malloc'd pointer aligned
     EB_MUTEX        = 2,     // mutex
     EB_SEMAPHORE    = 3,     // semaphore
-    EB_THREAD       = 4      // thread handle
+    EB_THREAD       = 4,      // thread handle
+    EB_PTR_TYPE_TOTAL,
 } EbPtrType;
 
 typedef struct EbMemoryMapEntry
