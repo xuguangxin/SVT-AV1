@@ -30,6 +30,7 @@ extern EbErrorType initial_rate_control_reorder_entry_ctor(
  ************************************************/
 typedef struct HlRateControlHistogramEntry
 {
+    EbDctor                           dctor;
     uint64_t                          picture_number;
     int16_t                          life_count;
     EbBool                         passed_to_hlrc;
@@ -49,7 +50,7 @@ typedef struct HlRateControlHistogramEntry
 } HlRateControlHistogramEntry;
 
 extern EbErrorType hl_rate_control_histogram_entry_ctor(
-    HlRateControlHistogramEntry   **entry_dbl_ptr,
+    HlRateControlHistogramEntry        *entry_ptr,
     uint32_t                            picture_number);
 
 #endif //EbInitialRateControlReorderQueue_h
