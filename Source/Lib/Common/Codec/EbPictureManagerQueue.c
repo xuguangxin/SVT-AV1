@@ -7,18 +7,9 @@
 #include "EbPictureManagerQueue.h"
 
 EbErrorType input_queue_entry_ctor(
-    InputQueueEntry      **entry_dbl_ptr)
+    InputQueueEntry      *entryPtr)
 {
-    InputQueueEntry *entryPtr;
-    EB_ALLOC_OBJECT(InputQueueEntry*, entryPtr, sizeof(InputQueueEntry), EB_N_PTR);
-    *entry_dbl_ptr = entryPtr;
-
-    entryPtr->input_object_ptr = (EbObjectWrapper*)EB_NULL;
-    entryPtr->reference_entry_index = 0;
-    entryPtr->dependent_count = 0;
-    entryPtr->list0_ptr = (ReferenceList*)EB_NULL;
-    entryPtr->list1_ptr = (ReferenceList*)EB_NULL;
-
+    (void)entryPtr;
     return EB_ErrorNone;
 }
 

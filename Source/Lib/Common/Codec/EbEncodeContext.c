@@ -17,7 +17,7 @@ static void encode_context_dctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(obj->picture_decision_reorder_queue, PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->picture_manager_reorder_queue, PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH);
     EB_FREE(obj->pre_assignment_buffer);
-    EB_FREE(obj->input_picture_queue);
+    EB_DELETE_PTR_ARRAY(obj->input_picture_queue, INPUT_QUEUE_MAX_DEPTH);
     EB_FREE(obj->reference_picture_queue);
     EB_FREE(obj->picture_decision_pa_reference_queue);
     EB_FREE(obj->initial_rate_control_reorder_queue);
@@ -62,10 +62,7 @@ EbErrorType encode_context_ctor(
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->input_picture_queue, INPUT_QUEUE_MAX_DEPTH);
 
     for (pictureIndex = 0; pictureIndex < INPUT_QUEUE_MAX_DEPTH; ++pictureIndex) {
-        return_error = input_queue_entry_ctor(
-            &(encode_context_ptr->input_picture_queue[pictureIndex]));
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
+         EB_NEW(encode_context_ptr->input_picture_queue[pictureIndex], input_queue_entry_ctor);
     }
 
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->reference_picture_queue, REFERENCE_QUEUE_MAX_DEPTH);
