@@ -364,6 +364,7 @@ extern EbErrorType derive_input_resolution(
 static void eb_sequence_control_set_instance_dctor(EbPtr p)
 {
    EbSequenceControlSetInstance* obj = (EbSequenceControlSetInstance*)p;
+   EB_DELETE(obj->encode_context_ptr);
 }
 
 EbErrorType eb_sequence_control_set_instance_ctor(
@@ -374,13 +375,7 @@ EbErrorType eb_sequence_control_set_instance_ctor(
 
     object_dbl_ptr->dctor = eb_sequence_control_set_instance_dctor;
 
-    scsInitData.sb_size = 64;
-
-    return_error = encode_context_ctor(
-        (void **) &object_dbl_ptr->encode_context_ptr,
-        EB_NULL);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+    EB_NEW(object_dbl_ptr->encode_context_ptr, encode_context_ctor, EB_NULL);
     scsInitData.encode_context_ptr = object_dbl_ptr->encode_context_ptr;
 
     scsInitData.sb_size = 64;
