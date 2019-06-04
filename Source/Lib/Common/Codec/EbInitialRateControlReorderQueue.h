@@ -10,18 +10,19 @@
 #include "EbSystemResourceManager.h"
 #include "EbRateControlTables.h"
 #include "EbPictureControlSet.h"
-
+#include "EbObject.h"
 /************************************************
  * Initial Rate Control Reorder Queue Entry
  ************************************************/
 typedef struct InitialRateControlReorderEntry
 {
+    EbDctor                      dctor;
     uint64_t                          picture_number;
     EbObjectWrapper              *parent_pcs_wrapper_ptr;
 } InitialRateControlReorderEntry;
 
 extern EbErrorType initial_rate_control_reorder_entry_ctor(
-    InitialRateControlReorderEntry   **entry_dbl_ptr,
+    InitialRateControlReorderEntry        *entry_ptr,
     uint32_t                               picture_number);
 
 /************************************************

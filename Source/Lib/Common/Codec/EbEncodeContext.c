@@ -20,7 +20,7 @@ static void encode_context_dctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(obj->input_picture_queue, INPUT_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->reference_picture_queue, REFERENCE_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->picture_decision_pa_reference_queue, PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH);
-    EB_FREE(obj->initial_rate_control_reorder_queue);
+    EB_DELETE_PTR_ARRAY(obj->initial_rate_control_reorder_queue, INITIAL_RATE_CONTROL_REORDER_QUEUE_MAX_DEPTH);
     EB_FREE(obj->hl_rate_control_historgram_queue);
     EB_FREE(obj->packetization_reorder_queue);
     EB_FREE(obj->md_rate_estimation_array);
@@ -80,11 +80,9 @@ EbErrorType encode_context_ctor(
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->initial_rate_control_reorder_queue, INITIAL_RATE_CONTROL_REORDER_QUEUE_MAX_DEPTH);
 
     for (pictureIndex = 0; pictureIndex < INITIAL_RATE_CONTROL_REORDER_QUEUE_MAX_DEPTH; ++pictureIndex) {
-        return_error = initial_rate_control_reorder_entry_ctor(
-            &(encode_context_ptr->initial_rate_control_reorder_queue[pictureIndex]),
+        EB_NEW(encode_context_ptr->initial_rate_control_reorder_queue[pictureIndex],
+            initial_rate_control_reorder_entry_ctor,
             pictureIndex);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->hl_rate_control_historgram_queue, HIGH_LEVEL_RATE_CONTROL_HISTOGRAM_QUEUE_MAX_DEPTH);
