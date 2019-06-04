@@ -361,30 +361,36 @@ extern EbErrorType derive_input_resolution(
     return return_error;
 }
 
+static void eb_sequence_control_set_instance_dctor(EbPtr p)
+{
+   EbSequenceControlSetInstance* obj = (EbSequenceControlSetInstance*)p;
+}
+
 EbErrorType eb_sequence_control_set_instance_ctor(
-    EbSequenceControlSetInstance **object_dbl_ptr)
+    EbSequenceControlSetInstance *object_dbl_ptr)
 {
     EbSequenceControlSetInitData scsInitData;
     EbErrorType return_error = EB_ErrorNone;
-    EB_ALLOC_OBJECT(EbSequenceControlSetInstance*, *object_dbl_ptr, sizeof(EbSequenceControlSetInstance), EB_N_PTR);
+
+    object_dbl_ptr->dctor = eb_sequence_control_set_instance_dctor;
 
     scsInitData.sb_size = 64;
 
     return_error = encode_context_ctor(
-        (void **) &(*object_dbl_ptr)->encode_context_ptr,
+        (void **) &object_dbl_ptr->encode_context_ptr,
         EB_NULL);
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
-    scsInitData.encode_context_ptr = (*object_dbl_ptr)->encode_context_ptr;
+    scsInitData.encode_context_ptr = object_dbl_ptr->encode_context_ptr;
 
     scsInitData.sb_size = 64;
 
     return_error = eb_sequence_control_set_ctor(
-        (void **) &(*object_dbl_ptr)->sequence_control_set_ptr,
+        (void **) &object_dbl_ptr->sequence_control_set_ptr,
         (void *)&scsInitData);
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
-    EB_CREATEMUTEX(EbHandle*, (*object_dbl_ptr)->config_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATEMUTEX(EbHandle*, object_dbl_ptr->config_mutex, sizeof(EbHandle), EB_MUTEX);
 
     return EB_ErrorNone;
 }

@@ -24,6 +24,7 @@
 #include "EbEncodeContext.h"
 #include "EbPredictionStructure.h"
 #include "noise_model.h"
+#include "EbObject.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -231,6 +232,7 @@ extern "C" {
 
     typedef struct EbSequenceControlSetInstance
     {
+        EbDctor                  dctor;
         EncodeContext            *encode_context_ptr;
         SequenceControlSet       *sequence_control_set_ptr;
         EbHandle                    config_mutex;
@@ -248,7 +250,7 @@ extern "C" {
         SequenceControlSet *src);
 
     extern EbErrorType eb_sequence_control_set_instance_ctor(
-        EbSequenceControlSetInstance **object_dbl_ptr);
+        EbSequenceControlSetInstance *object_dbl_ptr);
 
     extern EbErrorType sb_params_ctor(
         SequenceControlSet *sequence_control_set_ptr);

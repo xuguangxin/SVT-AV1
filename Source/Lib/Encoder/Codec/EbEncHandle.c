@@ -660,8 +660,7 @@ static void eb_enc_handle_dctor(EbPtr p)
 {
     EbEncHandle *enc_handle_ptr = (EbEncHandle *)p;
     EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
-    //we can't use EB_FREE_PTR_ARRAY here(yet), since sequence_control_set_instance_array[i] has constructor
-    EB_FREE(enc_handle_ptr->sequence_control_set_instance_array);
+    EB_DELETE_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
 }
 
 /**********************************
@@ -708,9 +707,7 @@ static EbErrorType eb_enc_handle_ctor(
 
     // Initialize Sequence Control Set Instance Array
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
-    return_error = eb_sequence_control_set_instance_ctor(&enc_handle_ptr->sequence_control_set_instance_array[0]);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+    EB_NEW(enc_handle_ptr->sequence_control_set_instance_array[0], eb_sequence_control_set_instance_ctor);
     return EB_ErrorNone;
 }
 
