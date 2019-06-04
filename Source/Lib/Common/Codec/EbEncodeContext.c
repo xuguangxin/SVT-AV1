@@ -22,7 +22,7 @@ static void encode_context_dctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(obj->picture_decision_pa_reference_queue, PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->initial_rate_control_reorder_queue, INITIAL_RATE_CONTROL_REORDER_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->hl_rate_control_historgram_queue, HIGH_LEVEL_RATE_CONTROL_HISTOGRAM_QUEUE_MAX_DEPTH);
-    EB_FREE(obj->packetization_reorder_queue);
+    EB_DELETE_PTR_ARRAY(obj->packetization_reorder_queue, PACKETIZATION_REORDER_QUEUE_MAX_DEPTH);
     EB_FREE(obj->md_rate_estimation_array);
     EB_FREE(obj->rate_control_tables_array);
 }
@@ -98,11 +98,9 @@ EbErrorType encode_context_ctor(
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->packetization_reorder_queue, PACKETIZATION_REORDER_QUEUE_MAX_DEPTH);
 
     for (pictureIndex = 0; pictureIndex < PACKETIZATION_REORDER_QUEUE_MAX_DEPTH; ++pictureIndex) {
-        return_error = packetization_reorder_entry_ctor(
-            &(encode_context_ptr->packetization_reorder_queue[pictureIndex]),
+        EB_NEW(encode_context_ptr->packetization_reorder_queue[pictureIndex],
+            packetization_reorder_entry_ctor,
             pictureIndex);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     encode_context_ptr->current_input_poc = -1;
@@ -115,7 +113,7 @@ EbErrorType encode_context_ctor(
     encode_context_ptr->td_needed = EB_TRUE;
 
     // MD Rate Estimation Array
-    EB_ALLOC_PTR_ARRAY(encode_context_ptr->md_rate_estimation_array, TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS);
+    EB_CALLOC1(encode_context_ptr->md_rate_estimation_array, TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS);
 
     memset(encode_context_ptr->md_rate_estimation_array, 0, sizeof(MdRateEstimationContext) * TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS);
 
