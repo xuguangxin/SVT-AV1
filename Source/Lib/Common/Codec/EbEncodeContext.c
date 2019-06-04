@@ -121,9 +121,9 @@ EbErrorType encode_context_ctor(
     // Temporal Filter
 
     // Rate Control Bit Tables
-    EB_ALLOC_PTR_ARRAY(encode_context_ptr->rate_control_tables_array, TOTAL_NUMBER_OF_INITIAL_RC_TABLES_ENTRY);
+    EB_MALLOC1(encode_context_ptr->rate_control_tables_array, TOTAL_NUMBER_OF_INITIAL_RC_TABLES_ENTRY*sizeof(RateControlTables));
 
-    return_error = rate_control_tables_ctor(encode_context_ptr->rate_control_tables_array);
+    return_error = rate_control_tables_init(encode_context_ptr->rate_control_tables_array);
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     // RC Rate Table Update Mutex
