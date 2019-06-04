@@ -40,6 +40,8 @@ extern "C" {
      ************************************************/
     typedef struct ReferenceQueueEntry
     {
+        EbDctor         dctor;
+
         uint64_t         picture_number;
         uint64_t         decode_order;
         EbObjectWrapper *reference_object_ptr;
@@ -91,7 +93,7 @@ extern "C" {
         InputQueueEntry *entry_dbl_ptr);
 
     extern EbErrorType reference_queue_entry_ctor(
-        ReferenceQueueEntry  **entry_dbl_ptr);
+        ReferenceQueueEntry  *entry_dbl_ptr);
 
 #ifdef __cplusplus
 }
