@@ -113,11 +113,9 @@ EbErrorType encode_context_ctor(
     encode_context_ptr->td_needed = EB_TRUE;
 
     // MD Rate Estimation Array
-    EB_CALLOC1(encode_context_ptr->md_rate_estimation_array, TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS);
+    EB_CALLOC1(encode_context_ptr->md_rate_estimation_array, TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS, sizeof(MdRateEstimationContext));
 
-    memset(encode_context_ptr->md_rate_estimation_array, 0, sizeof(MdRateEstimationContext) * TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS);
-
-    return_error = md_rate_estimation_context_ctor(encode_context_ptr->md_rate_estimation_array);
+    return_error = md_rate_estimation_context_init(encode_context_ptr->md_rate_estimation_array);
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     // Temporal Filter
