@@ -15,7 +15,7 @@ static void encode_context_dctor(EbPtr p)
 {
     EncodeContext* obj = (EncodeContext*)p;
     EB_DELETE_PTR_ARRAY(obj->picture_decision_reorder_queue, PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH);
-    EB_FREE(obj->picture_manager_reorder_queue);
+    EB_DELETE_PTR_ARRAY(obj->picture_manager_reorder_queue, PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH);
     EB_FREE(obj->pre_assignment_buffer);
     EB_FREE(obj->input_picture_queue);
     EB_FREE(obj->reference_picture_queue);
@@ -54,11 +54,7 @@ EbErrorType encode_context_ctor(
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->picture_manager_reorder_queue,  PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH);
 
     for (pictureIndex = 0; pictureIndex < PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH; ++pictureIndex) {
-        return_error = picture_manager_reorder_entry_ctor(
-            &(encode_context_ptr->picture_manager_reorder_queue[pictureIndex]),
-            pictureIndex);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
+        EB_NEW(encode_context_ptr->picture_manager_reorder_queue[pictureIndex], picture_manager_reorder_entry_ctor, pictureIndex);
     }
 
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->pre_assignment_buffer, PRE_ASSIGNMENT_MAX_DEPTH);
