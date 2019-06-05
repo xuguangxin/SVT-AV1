@@ -396,6 +396,51 @@ EbErrorType eb_object_inc_live_count(
     return return_error;
 }
 
+//ugly hack
+typedef struct DctorAble
+{
+    EbDctor dctor;
+} DctorAble;
+
+void eb_object_wrapper_dctor(EbPtr p)
+{
+    EbObjectWrapper* wrapper = (EbObjectWrapper*)p;
+    if (wrapper->object_destroyer) {
+        //customized destoryer
+        if (wrapper->object_ptr)
+            wrapper->object_destroyer(wrapper->object_ptr);
+    }
+    else {
+        //hack....
+        DctorAble* obj= (DctorAble*)wrapper->object_ptr;
+        EB_DELETE(obj);
+    }
+}
+
+static EbErrorType eb_object_wrapper_ctor(EbObjectWrapper* wrapper,
+    EbSystemResource    *resource,
+    EbCreator           object_creator,
+    EbPtr               object_init_data_ptr,
+    EbDctor             object_destroyer)
+{
+    EbErrorType ret;
+
+    wrapper->dctor = eb_object_wrapper_dctor;
+    ret = object_creator(&wrapper->object_ptr, object_init_data_ptr);
+    if (ret != EB_ErrorNone)
+        return ret;
+    wrapper->release_enable = EB_TRUE;
+    wrapper->system_resource_ptr = resource;
+    wrapper->object_destroyer = object_destroyer;
+    return EB_ErrorNone;
+}
+
+static void eb_system_resource_dctor(EbPtr p)
+{
+    EbSystemResource* obj = (EbSystemResource*)p;
+    EB_DELETE_PTR_ARRAY(obj->wrapper_ptr_pool, obj->object_total_count);
+}
+
 /*********************************************************************
  * eb_system_resource_ctor
  *   Constructor for EbSystemResource.  Fully constructs all members
@@ -423,46 +468,34 @@ EbErrorType eb_object_inc_live_count(
  *     pointer to data block to be used during the construction of
  *     the object. object_init_data_ptr is passed to object_ctor when
  *     object_ctor is called.
+ *   object_destroyer
+ *     object destroyer, will call dctor if this is null
  *********************************************************************/
 EbErrorType eb_system_resource_ctor(
-    EbSystemResource **resource_dbl_ptr,
+    EbSystemResource *resource_ptr,
     uint32_t               object_total_count,
     uint32_t               producer_process_total_count,
     uint32_t               consumer_process_total_count,
     EbFifo          ***producer_fifo_ptr_array_ptr,
     EbFifo          ***consumer_fifo_ptr_array_ptr,
     EbBool              full_fifo_enabled,
-    EbCreator             object_ctor,
-    EbPtr               object_init_data_ptr)
+    EbCreator           object_creator,
+    EbPtr               object_init_data_ptr,
+    EbDctor             object_destroyer)
 {
     uint32_t wrapperIndex;
     EbErrorType return_error = EB_ErrorNone;
-    // Allocate the System Resource
-    EbSystemResource *resource_ptr;
-
-    EB_ALLOC_OBJECT(EbSystemResource*, resource_ptr, sizeof(EbSystemResource), EB_N_PTR);
-    *resource_dbl_ptr = resource_ptr;
+    resource_ptr->dctor = eb_system_resource_dctor;
 
     resource_ptr->object_total_count = object_total_count;
 
     // Allocate array for wrapper pointers
-    EB_MALLOC(EbObjectWrapper**, resource_ptr->wrapper_ptr_pool, sizeof(EbObjectWrapper*) * resource_ptr->object_total_count, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(resource_ptr->wrapper_ptr_pool, resource_ptr->object_total_count);
 
     // Initialize each wrapper
     for (wrapperIndex = 0; wrapperIndex < resource_ptr->object_total_count; ++wrapperIndex) {
-        EB_ALLOC_OBJECT(EbObjectWrapper*, resource_ptr->wrapper_ptr_pool[wrapperIndex], sizeof(EbObjectWrapper), EB_N_PTR);
-        resource_ptr->wrapper_ptr_pool[wrapperIndex]->live_count = 0;
-        resource_ptr->wrapper_ptr_pool[wrapperIndex]->release_enable = EB_TRUE;
-        resource_ptr->wrapper_ptr_pool[wrapperIndex]->system_resource_ptr = resource_ptr;
-
-        // Call the Constructor for each element
-        if (object_ctor) {
-            return_error = object_ctor(
-                &resource_ptr->wrapper_ptr_pool[wrapperIndex]->object_ptr,
-                object_init_data_ptr);
-            if (return_error == EB_ErrorInsufficientResources)
-                return EB_ErrorInsufficientResources;
-        }
+        EB_NEW(resource_ptr->wrapper_ptr_pool[wrapperIndex], eb_object_wrapper_ctor, resource_ptr,
+            object_creator, object_init_data_ptr, object_destroyer);
     }
 
     // Initialize the Empty Queue

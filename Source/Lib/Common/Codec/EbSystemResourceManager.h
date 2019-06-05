@@ -8,6 +8,7 @@
 
 #include "EbDefinitions.h"
 #include "EbThreads.h"
+#include "EbObject.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,6 +25,9 @@ extern "C" {
       *********************************************************************/
     typedef struct EbObjectWrapper
     {
+        EbDctor                   dctor;
+
+        EbDctor                   object_destroyer;
         // object_ptr - pointer to the object being managed.
         void                     *object_ptr;
 
@@ -111,6 +115,7 @@ extern "C" {
      *********************************************************************/
     typedef struct EbSystemResource
     {
+        EbDctor               dctor;
         // object_total_count - A count of the number of objects contained in the
         //   System Resoruce.
         uint32_t              object_total_count;
@@ -209,7 +214,7 @@ extern "C" {
      *     object_ctor is called.
      *********************************************************************/
     extern EbErrorType eb_system_resource_ctor(
-        EbSystemResource **resource_dbl_ptr,
+        EbSystemResource  *resource_ptr,
         uint32_t            object_total_count,
         uint32_t            producer_process_total_count,
         uint32_t            consumer_process_total_count,
@@ -217,7 +222,8 @@ extern "C" {
         EbFifo         ***consumer_fifo_ptr_array_ptr,
         EbBool              full_fifo_enabled,
         EbCreator             object_ctor,
-        EbPtr               object_init_data_ptr);
+        EbPtr               object_init_data_ptr,
+        EbDctor             object_destroyer);
 
     /*********************************************************************
      * EbSystemResourceGetEmptyObject
