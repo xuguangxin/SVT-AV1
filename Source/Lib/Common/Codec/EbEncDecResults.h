@@ -25,18 +25,21 @@ extern "C" {
 
     typedef struct DlfResults
     {
+        EbDctor         dctor;
         EbObjectWrapper *picture_control_set_wrapper_ptr;
         uint32_t         segment_index;
     } DlfResults;
 
     typedef struct CdefResults
     {
+        EbDctor         dctor;
         EbObjectWrapper *picture_control_set_wrapper_ptr;
         uint32_t         segment_index;
     } CdefResults;
 
     typedef struct RestResults
     {
+        EbDctor         dctor;
         EbObjectWrapper *picture_control_set_wrapper_ptr;
         uint32_t         completed_lcu_row_index_start;
         uint32_t         completed_lcu_row_count;

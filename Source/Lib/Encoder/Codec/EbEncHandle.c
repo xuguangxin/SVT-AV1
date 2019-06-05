@@ -724,14 +724,10 @@ EbErrorType EbOutputBufferHeaderCreator(
     EbPtr objectInitDataPtr);
 
 EbErrorType DlfResultsCtor(
-    EbPtr *object_dbl_ptr,
+    DlfResults *context_ptr,
     EbPtr object_init_data_ptr)
 {
-    DlfResults *context_ptr;
-    EB_ALLOC_OBJECT(DlfResults*, context_ptr, sizeof(DlfResults), EB_N_PTR);
-
-    *object_dbl_ptr = (EbPtr)context_ptr;
-
+    (void)context_ptr;
     (void)object_init_data_ptr;
 
     return EB_ErrorNone;
@@ -741,18 +737,20 @@ EbErrorType DlfResultsCreator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
 {
-    return DlfResultsCtor(object_dbl_ptr, object_init_data_ptr);
+    DlfResults* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, DlfResultsCtor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }
 
 EbErrorType CdefResultsCtor(
-    EbPtr *object_dbl_ptr,
+    CdefResults *context_ptr,
     EbPtr object_init_data_ptr)
 {
-    CdefResults *context_ptr;
-    EB_ALLOC_OBJECT(CdefResults*, context_ptr, sizeof(CdefResults), EB_N_PTR);
-
-    *object_dbl_ptr = (EbPtr)context_ptr;
-
+    (void)context_ptr;
     (void)object_init_data_ptr;
 
     return EB_ErrorNone;
@@ -762,18 +760,20 @@ EbErrorType CdefResultsCreator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
 {
-    return CdefResultsCtor(object_dbl_ptr, object_init_data_ptr);
+    CdefResults* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, CdefResultsCtor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }
 
 EbErrorType RestResultsCtor(
-    EbPtr *object_dbl_ptr,
+    RestResults *context_ptr,
     EbPtr object_init_data_ptr)
 {
-    RestResults *context_ptr;
-    EB_ALLOC_OBJECT(RestResults*, context_ptr, sizeof(RestResults), EB_N_PTR);
-
-    *object_dbl_ptr = (EbPtr)context_ptr;
-
+    (void)context_ptr;
     (void)object_init_data_ptr;
 
     return EB_ErrorNone;
@@ -783,7 +783,13 @@ EbErrorType RestResultsCreator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
 {
-    return RestResultsCtor(object_dbl_ptr, object_init_data_ptr);
+    RestResults* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, RestResultsCtor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }
 
 void init_fn_ptr(void);
