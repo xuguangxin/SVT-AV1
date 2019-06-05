@@ -194,14 +194,11 @@ EbErrorType eb_reference_object_creator(
  *  the descriptor.
  *****************************************/
 EbErrorType eb_pa_reference_object_ctor(
-    EbPtr  *object_dbl_ptr,
+    EbPaReferenceObject  *paReferenceObject,
     EbPtr   object_init_data_ptr)
 {
-    EbPaReferenceObject               *paReferenceObject;
     EbPictureBufferDescInitData       *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
     EbErrorType return_error = EB_ErrorNone;
-    EB_ALLOC_OBJECT(EbPaReferenceObject*, paReferenceObject, sizeof(EbPaReferenceObject), EB_N_PTR);
-    *object_dbl_ptr = (EbPtr)paReferenceObject;
 
     // Reference picture constructor
     return_error = eb_picture_buffer_desc_ctor(
@@ -249,5 +246,11 @@ EbErrorType eb_pa_reference_object_creator(
     EbPtr  *object_dbl_ptr,
     EbPtr   object_init_data_ptr)
 {
-    return eb_pa_reference_object_ctor(object_dbl_ptr, object_init_data_ptr);
+    EbPaReferenceObject* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, eb_pa_reference_object_ctor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }

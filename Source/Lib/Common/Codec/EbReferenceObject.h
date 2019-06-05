@@ -42,6 +42,7 @@ typedef struct EbReferenceObjectDescInitData {
 
 typedef struct EbPaReferenceObject
 {
+    EbDctor                      dctor;
     EbPictureBufferDesc          *input_padded_picture_ptr;
     EbPictureBufferDesc          *quarter_decimated_picture_ptr;
     EbPictureBufferDesc          *sixteenth_decimated_picture_ptr;
