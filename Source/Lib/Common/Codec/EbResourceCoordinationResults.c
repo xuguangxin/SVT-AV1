@@ -21,3 +21,10 @@ EbErrorType resource_coordination_result_ctor(
 
     return EB_ErrorNone;
 }
+
+EbErrorType resource_coordination_result_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return resource_coordination_result_ctor(object_dbl_ptr, object_init_data_ptr);
+}

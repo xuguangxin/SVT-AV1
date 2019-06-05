@@ -22,3 +22,10 @@ EbErrorType rate_control_tasks_ctor(
 
     return EB_ErrorNone;
 }
+
+EbErrorType rate_control_tasks_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return rate_control_tasks_ctor(object_dbl_ptr, object_init_data_ptr);
+}

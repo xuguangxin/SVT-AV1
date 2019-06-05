@@ -22,3 +22,10 @@ EbErrorType motion_estimation_results_ctor(
     (void)(object_init_data_ptr);
     return EB_ErrorNone;
 }
+
+EbErrorType motion_estimation_results_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return motion_estimation_results_ctor(object_dbl_ptr, object_init_data_ptr);
+}

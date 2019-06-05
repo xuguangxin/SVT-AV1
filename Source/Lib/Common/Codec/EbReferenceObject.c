@@ -177,6 +177,13 @@ EbErrorType eb_reference_object_ctor(
     return EB_ErrorNone;
 }
 
+EbErrorType eb_reference_object_creator(
+    EbPtr  *object_dbl_ptr,
+    EbPtr   object_init_data_ptr)
+{
+    return eb_reference_object_ctor(object_dbl_ptr, object_init_data_ptr);
+}
+
 /*****************************************
  * eb_pa_reference_object_ctor
  *  Initializes the Buffer Descriptor's
@@ -233,4 +240,11 @@ EbErrorType eb_pa_reference_object_ctor(
     }
 
     return EB_ErrorNone;
+}
+
+EbErrorType eb_pa_reference_object_creator(
+    EbPtr  *object_dbl_ptr,
+    EbPtr   object_init_data_ptr)
+{
+    return eb_pa_reference_object_ctor(object_dbl_ptr, object_init_data_ptr);
 }

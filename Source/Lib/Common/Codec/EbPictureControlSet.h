@@ -14575,11 +14575,11 @@ extern "C" {
     /**************************************
      * Extern Function Declarations
      **************************************/
-    extern EbErrorType picture_control_set_ctor(
+    extern EbErrorType picture_control_set_creator(
         EbPtr *object_dbl_ptr,
         EbPtr  object_init_data_ptr);
 
-    extern EbErrorType picture_parent_control_set_ctor(
+    extern EbErrorType picture_parent_control_set_creator(
         EbPtr *object_dbl_ptr,
         EbPtr  object_init_data_ptr);
 

@@ -241,6 +241,10 @@ extern "C" {
     /**************************************
      * Extern Function Declarations
      **************************************/
+    extern EbErrorType eb_sequence_control_set_creator(
+        EbPtr *object_dbl_ptr,
+        EbPtr object_init_data_ptr);
+
     extern EbErrorType eb_sequence_control_set_ctor(
         EbPtr *object_dbl_ptr,
         EbPtr  object_init_data_ptr);

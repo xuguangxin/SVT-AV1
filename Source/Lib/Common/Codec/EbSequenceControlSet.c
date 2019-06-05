@@ -224,6 +224,13 @@ EbErrorType eb_sequence_control_set_ctor(
     return EB_ErrorNone;
 }
 
+EbErrorType eb_sequence_control_set_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return eb_sequence_control_set_ctor(object_dbl_ptr, object_init_data_ptr);
+}
+
 /************************************************
  * Sequence Control Set Copy
  ************************************************/

@@ -24,3 +24,10 @@ EbErrorType picture_results_ctor(
 
     return EB_ErrorNone;
 }
+
+EbErrorType picture_results_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return picture_results_ctor(object_dbl_ptr, object_init_data_ptr);
+}

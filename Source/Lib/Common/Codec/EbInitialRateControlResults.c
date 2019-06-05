@@ -19,3 +19,10 @@ EbErrorType initial_rate_control_results_ctor(
 
     return EB_ErrorNone;
 }
+
+EbErrorType initial_rate_control_results_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return initial_rate_control_results_ctor(object_dbl_ptr, object_init_data_ptr);
+}

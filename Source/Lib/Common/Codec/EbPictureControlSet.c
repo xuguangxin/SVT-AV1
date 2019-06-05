@@ -911,6 +911,13 @@ EbErrorType picture_control_set_ctor(
     return EB_ErrorNone;
 }
 
+EbErrorType picture_control_set_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return picture_control_set_ctor(object_dbl_ptr, object_init_data_ptr);
+}
+
 EbErrorType picture_parent_control_set_ctor(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
@@ -1119,4 +1126,11 @@ EbErrorType picture_parent_control_set_ctor(
     }
 
     return return_error;
+}
+
+EbErrorType picture_parent_control_set_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return picture_parent_control_set_ctor(object_dbl_ptr, object_init_data_ptr);
 }

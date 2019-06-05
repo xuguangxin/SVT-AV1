@@ -2119,11 +2119,11 @@ semaphores, mutexs, etc.
 */
 typedef void * EbHandle;
 
-/** The EbCtor type is used to define the eBrisk object constructors.
+/**
 object_ptr is a EbPtr to the object being constructed.
 object_init_data_ptr is a EbPtr to a data structure used to initialize the object.
 */
-typedef EbErrorType(*EbCtor)(
+typedef EbErrorType(*EbCreator)(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr);
 

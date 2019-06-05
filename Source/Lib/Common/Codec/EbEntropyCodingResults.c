@@ -21,3 +21,10 @@ EbErrorType entropy_coding_results_ctor(
 
     return EB_ErrorNone;
 }
+
+EbErrorType entropy_coding_results_creator(
+    EbPtr *object_dbl_ptr,
+    EbPtr object_init_data_ptr)
+{
+    return entropy_coding_results_ctor(object_dbl_ptr, object_init_data_ptr);
+}

@@ -47,7 +47,7 @@ extern "C" {
     /**************************************
      * Extern Function Declarations
      **************************************/
-    extern EbErrorType enc_dec_results_ctor(
+    extern EbErrorType enc_dec_results_creator(
         EbPtr *object_dbl_ptr,
         EbPtr object_init_data_ptr);
 

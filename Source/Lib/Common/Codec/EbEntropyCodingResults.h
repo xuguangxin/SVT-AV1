@@ -25,7 +25,7 @@ extern "C" {
     /**************************************
      * Extern Function Declarations
      **************************************/
-    extern EbErrorType entropy_coding_results_ctor(
+    extern EbErrorType entropy_coding_results_creator(
         EbPtr *object_dbl_ptr,
         EbPtr object_init_data_ptr);
 

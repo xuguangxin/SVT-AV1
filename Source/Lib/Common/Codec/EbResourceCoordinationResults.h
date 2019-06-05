@@ -25,7 +25,7 @@ extern "C" {
     /**************************************
      * Extern Function Declarations
      **************************************/
-    extern EbErrorType resource_coordination_result_ctor(
+    extern EbErrorType resource_coordination_result_creator(
         EbPtr *object_dbl_ptr,
         EbPtr  object_init_data_ptr);
 

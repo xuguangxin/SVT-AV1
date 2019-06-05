@@ -41,7 +41,7 @@ typedef struct PictureResultInitData {
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType picture_results_ctor(
+extern EbErrorType picture_results_creator(
     EbPtr *object_dbl_ptr,
     EbPtr  object_init_data_ptr);
 

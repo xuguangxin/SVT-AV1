@@ -432,7 +432,7 @@ EbErrorType eb_system_resource_ctor(
     EbFifo          ***producer_fifo_ptr_array_ptr,
     EbFifo          ***consumer_fifo_ptr_array_ptr,
     EbBool              full_fifo_enabled,
-    EbCtor              object_ctor,
+    EbCreator             object_ctor,
     EbPtr               object_init_data_ptr)
 {
     uint32_t wrapperIndex;

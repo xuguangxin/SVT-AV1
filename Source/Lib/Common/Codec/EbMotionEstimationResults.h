@@ -27,7 +27,7 @@ extern "C" {
     /**************************************
      * Extern Function Declarations
      **************************************/
-    extern EbErrorType motion_estimation_results_ctor(
+    extern EbErrorType motion_estimation_results_creator(
         EbPtr *object_dbl_ptr,
         EbPtr object_init_data_ptr);
 
