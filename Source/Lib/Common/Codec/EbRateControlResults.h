@@ -9,6 +9,7 @@
 #include "EbDefinitions.h"
 #include "EbSystemResourceManager.h"
 #include "EbPictureControlSet.h"
+#include "EbObject.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,6 +17,7 @@ extern "C" {
  * Process Results
  **************************************/
 typedef struct RateControlResults {
+    EbDctor         dctor;
     EbObjectWrapper *picture_control_set_wrapper_ptr;
 } RateControlResults;
 
