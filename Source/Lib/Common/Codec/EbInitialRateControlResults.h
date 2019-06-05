@@ -8,11 +8,13 @@
 
 #include "EbDefinitions.h"
 #include "EbSystemResourceManager.h"
+#include "EbObject.h"
 
 /**************************************
  * Process Results
  **************************************/
 typedef struct InitialRateControlResults {
+    EbDctor                      dctor;
     EbObjectWrapper   *picture_control_set_wrapper_ptr;
 } InitialRateControlResults;
 
