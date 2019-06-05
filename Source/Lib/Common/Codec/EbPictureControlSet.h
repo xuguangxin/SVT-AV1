@@ -13698,6 +13698,7 @@ extern "C" {
 
     typedef struct PictureControlSet
     {
+        EbDctor                            dctor;
         EbObjectWrapper                    *sequence_control_set_wrapper_ptr;
 
         EbPictureBufferDesc                *recon_picture_ptr;

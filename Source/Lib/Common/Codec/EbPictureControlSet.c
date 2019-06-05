@@ -101,10 +101,9 @@ EbErrorType me_sb_results_ctor(
     return EB_ErrorNone;
 }
 EbErrorType picture_control_set_ctor(
-    EbPtr *object_dbl_ptr,
+    PictureControlSet *object_ptr,
     EbPtr object_init_data_ptr)
 {
-    PictureControlSet *object_ptr;
     PictureControlSetInitData *initDataPtr = (PictureControlSetInitData*)object_init_data_ptr;
 
     EbPictureBufferDescInitData input_picture_buffer_desc_init_data;
@@ -124,8 +123,6 @@ EbErrorType picture_control_set_ctor(
     EbBool is16bit = initDataPtr->bit_depth > 8 ? EB_TRUE : EB_FALSE;
     const uint16_t subsampling_x = (initDataPtr->color_format == EB_YUV444 ? 1 : 2) - 1;
     const uint16_t subsampling_y = (initDataPtr->color_format >= EB_YUV422 ? 1 : 2) - 1;
-
-    EB_ALLOC_OBJECT(PictureControlSet*, object_ptr, sizeof(PictureControlSet), EB_N_PTR);
 
     // Init Picture Init data
     input_picture_buffer_desc_init_data.max_width = initDataPtr->picture_width;
@@ -153,8 +150,6 @@ EbErrorType picture_control_set_ctor(
     coeffBufferDescInitData.bot_padding = PAD_VALUE;
 
     coeffBufferDescInitData.split_mode = EB_FALSE;
-
-    *object_dbl_ptr = (EbPtr)object_ptr;
 
     object_ptr->sequence_control_set_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
 
@@ -915,7 +910,13 @@ EbErrorType picture_control_set_creator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
 {
-    return picture_control_set_ctor(object_dbl_ptr, object_init_data_ptr);
+    PictureControlSet* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, picture_control_set_ctor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }
 
 EbErrorType picture_parent_control_set_ctor(
