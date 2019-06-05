@@ -8,6 +8,7 @@
 
 #include "EbDefinitions.h"
 #include "EbSystemResourceManager.h"
+#include "EbObject.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -16,6 +17,7 @@ extern "C" {
      **************************************/
     typedef struct EncDecResults
     {
+        EbDctor         dctor;
         EbObjectWrapper *picture_control_set_wrapper_ptr;
         uint32_t         completed_lcu_row_index_start;
         uint32_t         completed_lcu_row_count;
