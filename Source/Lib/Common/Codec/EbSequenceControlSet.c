@@ -34,15 +34,11 @@
         pipeline, it cannot be changed on the fly or you will have pipeline coherency problems.
  ***************************************************************************************************/
 EbErrorType eb_sequence_control_set_ctor(
-    EbPtr *object_dbl_ptr,
+    SequenceControlSet *sequence_control_set_ptr,
     EbPtr object_init_data_ptr)
 {
     EbSequenceControlSetInitData *scsInitData = (EbSequenceControlSetInitData*)object_init_data_ptr;
     uint32_t segment_index;
-    SequenceControlSet *sequence_control_set_ptr;
-    EB_ALLOC_OBJECT(SequenceControlSet*, sequence_control_set_ptr, sizeof(SequenceControlSet), EB_N_PTR);
-
-    *object_dbl_ptr = (EbPtr)sequence_control_set_ptr;
 
     sequence_control_set_ptr->static_config.sb_sz = 64;
     sequence_control_set_ptr->static_config.partition_depth = 4;
@@ -59,17 +55,8 @@ EbErrorType eb_sequence_control_set_ctor(
     // Encode Context
     if (scsInitData != EB_NULL)
         sequence_control_set_ptr->encode_context_ptr = scsInitData->encode_context_ptr;
-    else
-        sequence_control_set_ptr->encode_context_ptr = (EncodeContext *)EB_NULL;
-    sequence_control_set_ptr->conformance_window_flag = 0;
 
     // Profile & ID
-    sequence_control_set_ptr->sps_id = 0;
-    sequence_control_set_ptr->vps_id = 0;
-    sequence_control_set_ptr->profile_space = 0;
-    sequence_control_set_ptr->profile_idc = 0;
-    sequence_control_set_ptr->level_idc = 0;
-    sequence_control_set_ptr->tier_idc = 0;
     sequence_control_set_ptr->chroma_format_idc = EB_YUV420;
     sequence_control_set_ptr->max_temporal_layers = 1;
 
@@ -77,13 +64,6 @@ EbErrorType eb_sequence_control_set_ctor(
     sequence_control_set_ptr->subsampling_y = 1;
     sequence_control_set_ptr->subsampling_x = 1;
 
-    // Picture Dimensions
-    sequence_control_set_ptr->seq_header.max_frame_width = 0;
-    sequence_control_set_ptr->seq_header.max_frame_height = 0;
-
-    sequence_control_set_ptr->chroma_width = 0;
-    sequence_control_set_ptr->chroma_height = 0;
-    sequence_control_set_ptr->frame_rate = 0;
     sequence_control_set_ptr->encoder_bit_depth = 8;
 
     // Bitdepth
@@ -92,8 +72,6 @@ EbErrorType eb_sequence_control_set_ctor(
 
     // GOP Structure
     sequence_control_set_ptr->max_ref_count = 1;
-    sequence_control_set_ptr->intra_period_length = 0;
-    sequence_control_set_ptr->intra_refresh_type = 0;
 
     // LCU
     sequence_control_set_ptr->sb_sz = 64;
@@ -172,14 +150,7 @@ EbErrorType eb_sequence_control_set_ctor(
     // 1 - force to integer
     // 2 - adaptive
 
-    sequence_control_set_ptr->seq_header.enable_filter_intra = 0;
-    sequence_control_set_ptr->seq_header.enable_intra_edge_filter = 0;
-
-    sequence_control_set_ptr->seq_header.enable_interintra_compound = 0;
-    sequence_control_set_ptr->seq_header.enable_masked_compound = 0;
-
     sequence_control_set_ptr->seq_header.order_hint_info.enable_ref_frame_mvs = 1;
-    sequence_control_set_ptr->seq_header.enable_superres = 0;
 #if NO_ENCDEC || SHUT_FILTERING
     sequence_control_set_ptr->enable_cdef = 0;
 
@@ -189,36 +160,7 @@ EbErrorType eb_sequence_control_set_ctor(
     sequence_control_set_ptr->seq_header.enable_restoration = 1;
 #endif
 
-    sequence_control_set_ptr->seq_header.film_grain_params_present = 0;
-    sequence_control_set_ptr->film_grain_denoise_strength = 0;
-
-    sequence_control_set_ptr->seq_header.reduced_still_picture_header = 0;
-    sequence_control_set_ptr->seq_header.still_picture = 0;
-    sequence_control_set_ptr->seq_header.timing_info.timing_info_present = 0;
-    sequence_control_set_ptr->seq_header.operating_points_cnt_minus_1 = 0;
-    sequence_control_set_ptr->seq_header.decoder_model_info_present_flag = 0;
-    sequence_control_set_ptr->seq_header.initial_display_delay_present_flag  = 0;
-
-    for (int32_t i = 0; i < MAX_NUM_OPERATING_POINTS; i++) {
-        sequence_control_set_ptr->seq_header.operating_point[i].op_idc = 0;
-        sequence_control_set_ptr->level[i].major = 0;
-        sequence_control_set_ptr->level[i].minor = 0;
-        sequence_control_set_ptr->seq_header.operating_point[i].seq_tier = 0;
-    }
-    sequence_control_set_ptr->seq_header.color_config.mono_chrome = 0;
-    sequence_control_set_ptr->seq_header.film_grain_params_present = 0;
     sequence_control_set_ptr->film_grain_random_seed = 7391;
-#if ADP_STATS_PER_LAYER
-    uint8_t temporal_layer_index;
-    for (temporal_layer_index = 0; temporal_layer_index < 5; temporal_layer_index++) {
-        sequence_control_set_ptr->total_count[temporal_layer_index] = 0;
-        sequence_control_set_ptr->sq_search_count[temporal_layer_index] = 0;
-        sequence_control_set_ptr->sq_non4_search_count[temporal_layer_index] = 0;
-        sequence_control_set_ptr->mdc_count[temporal_layer_index] = 0;
-        sequence_control_set_ptr->pred_count[temporal_layer_index] = 0;
-        sequence_control_set_ptr->pred1_nfl_count[temporal_layer_index] = 0;
-    }
-#endif
     sequence_control_set_ptr->reference_count = 4;
 
     return EB_ErrorNone;
@@ -228,7 +170,12 @@ EbErrorType eb_sequence_control_set_creator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
 {
-    return eb_sequence_control_set_ctor(object_dbl_ptr, object_init_data_ptr);
+    SequenceControlSet* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, eb_sequence_control_set_ctor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+    return EB_ErrorNone;
 }
 
 /************************************************
@@ -372,6 +319,7 @@ static void eb_sequence_control_set_instance_dctor(EbPtr p)
 {
    EbSequenceControlSetInstance* obj = (EbSequenceControlSetInstance*)p;
    EB_DELETE(obj->encode_context_ptr);
+   EB_DELETE(obj->sequence_control_set_ptr);
 }
 
 EbErrorType eb_sequence_control_set_instance_ctor(
@@ -387,11 +335,7 @@ EbErrorType eb_sequence_control_set_instance_ctor(
 
     scsInitData.sb_size = 64;
 
-    return_error = eb_sequence_control_set_ctor(
-        (void **) &object_dbl_ptr->sequence_control_set_ptr,
-        (void *)&scsInitData);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+    EB_NEW(object_dbl_ptr->sequence_control_set_ptr, eb_sequence_control_set_ctor, (void *)&scsInitData);
     EB_CREATEMUTEX(EbHandle*, object_dbl_ptr->config_mutex, sizeof(EbHandle), EB_MUTEX);
 
     return EB_ErrorNone;

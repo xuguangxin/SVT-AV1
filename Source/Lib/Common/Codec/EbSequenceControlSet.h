@@ -34,6 +34,7 @@ extern "C" {
      ************************************/
     typedef struct SequenceControlSet
     {
+        EbDctor                                 dctor;
         EbSvtAv1EncConfiguration                static_config;
 
         // Encoding Context
@@ -246,7 +247,7 @@ extern "C" {
         EbPtr object_init_data_ptr);
 
     extern EbErrorType eb_sequence_control_set_ctor(
-        EbPtr *object_dbl_ptr,
+        SequenceControlSet* object,
         EbPtr  object_init_data_ptr);
 
     extern EbErrorType copy_sequence_control_set(
