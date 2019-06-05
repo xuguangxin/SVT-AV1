@@ -919,10 +919,9 @@ EbErrorType picture_control_set_creator(
 }
 
 EbErrorType picture_parent_control_set_ctor(
-    EbPtr *object_dbl_ptr,
+    PictureParentControlSet *object_ptr,
     EbPtr object_init_data_ptr)
 {
-    PictureParentControlSet   *object_ptr;
     PictureControlSetInitData *initDataPtr = (PictureControlSetInitData*)object_init_data_ptr;
     EbErrorType return_error = EB_ErrorNone;
     const uint16_t pictureLcuWidth = (uint16_t)((initDataPtr->picture_width + initDataPtr->sb_sz - 1) / initDataPtr->sb_sz);
@@ -933,9 +932,6 @@ EbErrorType picture_parent_control_set_ctor(
     uint32_t regionInPictureWidthIndex;
     uint32_t regionInPictureHeightIndex;
 
-    EB_ALLOC_OBJECT(PictureParentControlSet*, object_ptr, sizeof(PictureParentControlSet), EB_N_PTR);
-
-    *object_dbl_ptr = (EbPtr)object_ptr;
     object_ptr->sequence_control_set_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
     object_ptr->input_picture_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
     object_ptr->reference_picture_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
@@ -1132,5 +1128,11 @@ EbErrorType picture_parent_control_set_creator(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr)
 {
-    return picture_parent_control_set_ctor(object_dbl_ptr, object_init_data_ptr);
+    PictureParentControlSet* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, picture_parent_control_set_ctor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }

@@ -21,6 +21,7 @@
 #include "EbEncDecSegments.h"
 #include "EbRateControlTables.h"
 #include "EbRestoration.h"
+#include "EbObject.h"
 #include "noise_model.h"
 #include "EbSegmentationParams.h"
 
@@ -13934,6 +13935,7 @@ extern "C" {
     // Parent is created before the Child, and continue to live more. Child PCS only lives the exact time needed to encode the picture: from ME to EC/ALF.
     typedef struct PictureParentControlSet
     {
+        EbDctor                            dctor;
         EbObjectWrapper                    *sequence_control_set_wrapper_ptr;
         EbObjectWrapper                    *input_picture_wrapper_ptr;
         EbObjectWrapper                    *reference_picture_wrapper_ptr;
