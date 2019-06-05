@@ -9,9 +9,11 @@
 #include "EbDefinitions.h"
 #include "EbDefinitions.h"
 #include "EbAdaptiveMotionVectorPrediction.h"
+#include "EbObject.h"
 
 typedef struct EbReferenceObject
 {
+    EbDctor                      dctor;
     EbPictureBufferDesc          *reference_picture;
     EbPictureBufferDesc          *reference_picture16bit;
     uint64_t                        ref_poc;

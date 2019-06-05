@@ -128,16 +128,13 @@ void InitializeSamplesNeighboringReferencePicture(
  *  the descriptor.
  *****************************************/
 EbErrorType eb_reference_object_ctor(
-    EbPtr  *object_dbl_ptr,
+    EbReferenceObject  *referenceObject,
     EbPtr   object_init_data_ptr)
 {
-    EbReferenceObject              *referenceObject;
+
     EbPictureBufferDescInitData    *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
     EbPictureBufferDescInitData    pictureBufferDescInitData16BitPtr = *pictureBufferDescInitDataPtr;
     EbErrorType return_error = EB_ErrorNone;
-    EB_ALLOC_OBJECT(EbReferenceObject*, referenceObject, sizeof(EbReferenceObject), EB_N_PTR);
-
-    *object_dbl_ptr = (EbPtr)referenceObject;
 
     //TODO:12bit
     if (pictureBufferDescInitData16BitPtr.bit_depth == EB_10BIT) {
@@ -181,7 +178,13 @@ EbErrorType eb_reference_object_creator(
     EbPtr  *object_dbl_ptr,
     EbPtr   object_init_data_ptr)
 {
-    return eb_reference_object_ctor(object_dbl_ptr, object_init_data_ptr);
+    EbReferenceObject* obj;
+
+    *object_dbl_ptr = NULL;
+    EB_NEW(obj, eb_reference_object_ctor, object_init_data_ptr);
+    *object_dbl_ptr = obj;
+
+    return EB_ErrorNone;
 }
 
 /*****************************************
