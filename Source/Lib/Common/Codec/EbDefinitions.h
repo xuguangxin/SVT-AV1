@@ -2127,12 +2127,6 @@ typedef EbErrorType(*EbCtor)(
     EbPtr *object_dbl_ptr,
     EbPtr object_init_data_ptr);
 
-/** The EbDtor type is used to define the eBrisk object destructors.
-object_ptr is a EbPtr to the object being constructed.
-*/
-typedef void(*EbDtor)(
-    EbPtr object_ptr);
-
 #define INVALID_MV            0xFFFFFFFF    //ICOPY They changed this to 0x80008000
 #define BLKSIZE 64
 

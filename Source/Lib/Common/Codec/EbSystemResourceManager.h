@@ -220,24 +220,6 @@ extern "C" {
         EbPtr               object_init_data_ptr);
 
     /*********************************************************************
-     * eb_system_resource_dtor
-     *   Destructor for EbSystemResource.  Fully destructs all members
-     *   of EbSystemResource including the object with the passed
-     *   object_dtor function.
-     *
-     *   resource_ptr
-     *     pointer to the SystemResource to be destructed.
-     *
-     *   object_dtor
-     *     Function pointer to the destructor of the object managed by
-     *     SystemResource referenced by resource_ptr. No object level
-     *     destruction is performed if object_dtor is NULL.
-     *********************************************************************/
-    extern void eb_system_resource_dtor(
-        EbSystemResource  *resource_ptr,
-        EbDtor              object_dtor);
-
-    /*********************************************************************
      * EbSystemResourceGetEmptyObject
      *   Dequeues an empty EbObjectWrapper from the SystemResource.  The
      *   new EbObjectWrapper will be populated with the contents of the
