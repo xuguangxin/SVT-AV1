@@ -7,6 +7,7 @@
 #define EbPictureResults_h
 
 #include "EbSystemResourceManager.h"
+#include "EbObject.h"
 
 /**************************************
  * Enums
@@ -23,6 +24,7 @@ typedef enum EbPicType
  **************************************/
 typedef struct PictureDemuxResults
 {
+    EbDctor                      dctor;
     EbPicType                    picture_type;
 
     // Only valid for input pictures
