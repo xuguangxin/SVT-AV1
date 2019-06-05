@@ -25,8 +25,6 @@
 #include "EbSequenceControlSet.h"
 #include "EbPictureBufferDesc.h"
 #include "EbReferenceObject.h"
-#include "EbResourceCoordinationProcess.h"
-#include "EbPictureAnalysisProcess.h"
 #include "EbPictureDecisionProcess.h"
 #include "EbMotionEstimationProcess.h"
 #include "EbInitialRateControlProcess.h"
@@ -660,7 +658,6 @@ static void eb_enc_handle_dctor(EbPtr p)
 {
     EbEncHandle *enc_handle_ptr = (EbEncHandle *)p;
     EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
-    EB_DELETE_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE(enc_handle_ptr->sequence_control_set_pool_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
@@ -686,6 +683,10 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->cdef_results_resource_ptr);
     EB_DELETE(enc_handle_ptr->rest_results_resource_ptr);
     EB_DELETE(enc_handle_ptr->entropy_coding_results_resource_ptr);
+
+    EB_DELETE(enc_handle_ptr->resource_coordination_context_ptr);
+    EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count);
+    EB_DELETE_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
 }
 
 /**********************************
@@ -1445,8 +1446,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     ************************************/
 
     // Resource Coordination Context
-    return_error = resource_coordination_context_ctor(
-        (ResourceCoordinationContext**)&enc_handle_ptr->resource_coordination_context_ptr,
+    EB_NEW(
+        enc_handle_ptr->resource_coordination_context_ptr,
+        resource_coordination_context_ctor,
         enc_handle_ptr->input_buffer_consumer_fifo_ptr_array[0],
         enc_handle_ptr->resource_coordination_results_producer_fifo_ptr_array[0],
         enc_handle_ptr->picture_parent_control_set_pool_producer_fifo_ptr_dbl_array[0],//ResourceCoordination works with ParentPCS
@@ -1456,10 +1458,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         enc_handle_ptr->compute_segments_total_count_array,
         enc_handle_ptr->encode_instance_total_count);
 
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Picture Analysis Context
-    EB_MALLOC(EbPtr*, enc_handle_ptr->picture_analysis_context_ptr_array, sizeof(EbPtr) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count);
 
     for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count; ++processIndex) {
         EbPictureBufferDescInitData  pictureBufferDescConf;
@@ -1473,16 +1473,14 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         pictureBufferDescConf.bot_padding = 0;
         pictureBufferDescConf.split_mode = EB_FALSE;
 
-        return_error = picture_analysis_context_ctor(
+        EB_NEW(
+            enc_handle_ptr->picture_analysis_context_ptr_array[processIndex],
+            picture_analysis_context_ctor,
             &pictureBufferDescConf,
             EB_TRUE,
-            (PictureAnalysisContext**)&enc_handle_ptr->picture_analysis_context_ptr_array[processIndex],
             enc_handle_ptr->resource_coordination_results_consumer_fifo_ptr_array[processIndex],
             enc_handle_ptr->picture_analysis_results_producer_fifo_ptr_array[processIndex]);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-    }
+   }
 
     // Picture Decision Context
     {

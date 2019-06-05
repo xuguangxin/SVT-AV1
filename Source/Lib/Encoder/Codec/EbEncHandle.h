@@ -11,7 +11,8 @@
 #include "EbPictureBufferDesc.h"
 #include "EbSystemResourceManager.h"
 #include "EbSequenceControlSet.h"
-
+#include "EbResourceCoordinationProcess.h"
+#include "EbPictureAnalysisProcess.h"
 #include "EbResourceCoordinationResults.h"
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
@@ -79,8 +80,8 @@ typedef struct EbEncHandle
     EbHandle                               packetization_thread_handle;
 
     // Contexts
-    EbPtr                                  resource_coordination_context_ptr;
-    EbPtr                                 *picture_analysis_context_ptr_array;
+    ResourceCoordinationContext            *resource_coordination_context_ptr;
+    PictureAnalysisContext                 **picture_analysis_context_ptr_array;
     EbPtr                                  picture_decision_context_ptr;
     EbPtr                                 *motion_estimation_context_ptr_array;
     EbPtr                                  initial_rate_control_context_ptr;

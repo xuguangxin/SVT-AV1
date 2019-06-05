@@ -20,7 +20,7 @@
  * Resource Coordination Context Constructor
  ************************************************/
 EbErrorType resource_coordination_context_ctor(
-    ResourceCoordinationContext  **context_dbl_ptr,
+    ResourceCoordinationContext *context_ptr,
     EbFifo                        *inputBufferFifoPtr,
     EbFifo                        *resource_coordination_results_output_fifo_ptr,
     EbFifo                        **picture_control_set_fifo_ptr_array,
@@ -30,11 +30,6 @@ EbErrorType resource_coordination_context_ctor(
     uint32_t                       compute_segments_total_count_array,
     uint32_t                        encode_instances_total_count){
     uint32_t instance_index;
-
-    ResourceCoordinationContext *context_ptr;
-    EB_ALLOC_OBJECT(ResourceCoordinationContext*, context_ptr, sizeof(ResourceCoordinationContext), EB_N_PTR);
-
-    *context_dbl_ptr = context_ptr;
 
     context_ptr->input_buffer_fifo_ptr = inputBufferFifoPtr;
     context_ptr->resource_coordination_results_output_fifo_ptr = resource_coordination_results_output_fifo_ptr;
