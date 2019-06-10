@@ -16,6 +16,7 @@
 #include "EbResourceCoordinationResults.h"
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
+#include "EbPictureDecisionProcess.h"
 #include "EbObject.h"
 
 /**************************************
@@ -82,7 +83,7 @@ typedef struct EbEncHandle
     // Contexts
     ResourceCoordinationContext            *resource_coordination_context_ptr;
     PictureAnalysisContext                 **picture_analysis_context_ptr_array;
-    EbPtr                                  picture_decision_context_ptr;
+    PictureDecisionContext                *picture_decision_context_ptr;
     EbPtr                                 *motion_estimation_context_ptr_array;
     EbPtr                                  initial_rate_control_context_ptr;
     EbPtr                                 *source_based_operations_context_ptr_array;

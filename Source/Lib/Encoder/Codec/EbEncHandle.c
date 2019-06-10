@@ -687,6 +687,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->resource_coordination_context_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
+    EB_DELETE(enc_handle_ptr->picture_decision_context_ptr);
 }
 
 /**********************************
@@ -1485,15 +1486,13 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     // Picture Decision Context
     {
         // Initialize the various Picture types
-
         instance_index = 0;
 
-        return_error = picture_decision_context_ctor(
-            (PictureDecisionContext**)&enc_handle_ptr->picture_decision_context_ptr,
+        EB_NEW(
+            enc_handle_ptr->picture_decision_context_ptr,
+            picture_decision_context_ctor,
             enc_handle_ptr->picture_analysis_results_consumer_fifo_ptr_array[0],
             enc_handle_ptr->picture_decision_results_producer_fifo_ptr_array[0]);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     // Motion Analysis Context
