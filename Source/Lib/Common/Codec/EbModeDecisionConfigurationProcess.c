@@ -655,18 +655,12 @@ void set_reference_cdef_strength(
  * Mode Decision Configuration Context Constructor
  ******************************************************/
 EbErrorType mode_decision_configuration_context_ctor(
-    ModeDecisionConfigurationContext **context_dbl_ptr,
+    ModeDecisionConfigurationContext  *context_ptr,
     EbFifo                            *rate_control_input_fifo_ptr,
     EbFifo                            *mode_decision_configuration_output_fifo_ptr,
     uint16_t                                 sb_total_count)
 
 {
-    ModeDecisionConfigurationContext *context_ptr;
-
-    EB_ALLOC_OBJECT(ModeDecisionConfigurationContext*, context_ptr, sizeof(ModeDecisionConfigurationContext), EB_N_PTR);
-
-    *context_dbl_ptr = context_ptr;
-
     // Input/Output System Resource Manager FIFOs
     context_ptr->rate_control_input_fifo_ptr = rate_control_input_fifo_ptr;
     context_ptr->mode_decision_configuration_output_fifo_ptr = mode_decision_configuration_output_fifo_ptr;

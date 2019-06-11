@@ -25,6 +25,7 @@ typedef struct InitialRateControlContext InitialRateControlContext;
 typedef struct SourceBasedOperationsContext SourceBasedOperationsContext;
 typedef struct PictureManagerContext PictureManagerContext;
 typedef struct RateControlContext RateControlContext;
+typedef struct ModeDecisionConfigurationContext ModeDecisionConfigurationContext;
 
 /**************************************
  * Component Private Data
@@ -96,7 +97,7 @@ typedef struct EbEncHandle
     SourceBasedOperationsContext         **source_based_operations_context_ptr_array;
     PictureManagerContext                 *picture_manager_context_ptr;
     RateControlContext                    *rate_control_context_ptr;
-    EbPtr                                 *mode_decision_configuration_context_ptr_array;
+    ModeDecisionConfigurationContext     **mode_decision_configuration_context_ptr_array;
     EbPtr                                 *enc_dec_context_ptr_array;
     EbPtr                                 *entropy_coding_context_ptr_array;
     EbPtr                                 *dlf_context_ptr_array;
