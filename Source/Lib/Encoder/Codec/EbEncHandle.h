@@ -19,6 +19,9 @@
 #include "EbPictureDecisionProcess.h"
 #include "EbObject.h"
 
+
+typedef struct MotionEstimationContext MotionEstimationContext_t;
+
 /**************************************
  * Component Private Data
  **************************************/
@@ -84,7 +87,7 @@ typedef struct EbEncHandle
     ResourceCoordinationContext            *resource_coordination_context_ptr;
     PictureAnalysisContext                 **picture_analysis_context_ptr_array;
     PictureDecisionContext                *picture_decision_context_ptr;
-    EbPtr                                 *motion_estimation_context_ptr_array;
+    MotionEstimationContext_t             **motion_estimation_context_ptr_array;
     EbPtr                                  initial_rate_control_context_ptr;
     EbPtr                                 *source_based_operations_context_ptr_array;
     EbPtr                                  picture_manager_context_ptr;

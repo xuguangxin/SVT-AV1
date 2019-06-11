@@ -188,9 +188,7 @@ void highbd_filter_intra_predictor(uint16_t *dst, ptrdiff_t stride,
         int32_t            intra_pred_angle);
 
     extern EbErrorType intra_open_loop_reference_samples_ctor(
-        IntraReferenceSamplesOpenLoop **context_dbl_ptr);
-    extern void IntraOpenLoopReferenceSamplesDtor(
-        IntraReferenceSamplesOpenLoop  *context_ptr);
+        IntraReferenceSamplesOpenLoop *context_ptr);
 
     extern EbErrorType update_neighbor_samples_array_open_loop(
         uint8_t                           *above_ref,
