@@ -689,6 +689,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->motion_estimation_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->motion_estimation_process_init_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->sequence_control_set_instance_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE(enc_handle_ptr->picture_decision_context_ptr);
+    EB_DELETE(enc_handle_ptr->initial_rate_control_context_ptr);
 }
 
 /**********************************
@@ -1512,12 +1513,11 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     }
 
     // Initial Rate Control Context
-    return_error = initial_rate_control_context_ctor(
-        (InitialRateControlContext**)&enc_handle_ptr->initial_rate_control_context_ptr,
+    EB_NEW(
+        enc_handle_ptr->initial_rate_control_context_ptr,
+        initial_rate_control_context_ctor,
         enc_handle_ptr->motion_estimation_results_consumer_fifo_ptr_array[0],
         enc_handle_ptr->initial_rate_control_results_producer_fifo_ptr_array[0]);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Source Based Operations Context
     EB_MALLOC(EbPtr*, enc_handle_ptr->source_based_operations_context_ptr_array, sizeof(EbPtr) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count, EB_N_PTR);
 
