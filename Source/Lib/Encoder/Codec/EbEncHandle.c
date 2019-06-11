@@ -663,9 +663,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->pa_reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
-#if ALT_REF_OVERLAY
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->overlay_input_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
-#endif
     EB_DELETE(enc_handle_ptr->input_buffer_resource_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->output_stream_buffer_resource_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->output_recon_buffer_resource_ptr_array, enc_handle_ptr->encode_instance_total_count);
@@ -692,6 +690,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->picture_decision_context_ptr);
     EB_DELETE(enc_handle_ptr->initial_rate_control_context_ptr);
     EB_DELETE(enc_handle_ptr->picture_manager_context_ptr);
+    EB_DELETE(enc_handle_ptr->rate_control_context_ptr);
 }
 
 /**********************************
@@ -1540,13 +1539,12 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         enc_handle_ptr->rate_control_tasks_producer_fifo_ptr_array[RateControlPortLookup(RATE_CONTROL_INPUT_PORT_PICTURE_MANAGER, 0)],
         enc_handle_ptr->picture_control_set_pool_producer_fifo_ptr_dbl_array[0]);//The Child PCS Pool here
     // Rate Control Context
-    return_error = rate_control_context_ctor(
-        (RateControlContext**)&enc_handle_ptr->rate_control_context_ptr,
+    EB_NEW(
+        enc_handle_ptr->rate_control_context_ptr,
+        rate_control_context_ctor,
         enc_handle_ptr->rate_control_tasks_consumer_fifo_ptr_array[0],
         enc_handle_ptr->rate_control_results_producer_fifo_ptr_array[0],
         enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->intra_period_length);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Mode Decision Configuration Contexts
     {
         // Mode Decision Configuration Contexts
