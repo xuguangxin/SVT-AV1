@@ -23,6 +23,8 @@
 typedef struct MotionEstimationContext MotionEstimationContext_t;
 typedef struct InitialRateControlContext InitialRateControlContext;
 typedef struct SourceBasedOperationsContext SourceBasedOperationsContext;
+typedef struct PictureManagerContext PictureManagerContext;
+
 
 /**************************************
  * Component Private Data
@@ -92,7 +94,7 @@ typedef struct EbEncHandle
     MotionEstimationContext_t             **motion_estimation_context_ptr_array;
     InitialRateControlContext             *initial_rate_control_context_ptr;
     SourceBasedOperationsContext         **source_based_operations_context_ptr_array;
-    EbPtr                                  picture_manager_context_ptr;
+    PictureManagerContext                 *picture_manager_context_ptr;
     EbPtr                                  rate_control_context_ptr;
     EbPtr                                 *mode_decision_configuration_context_ptr_array;
     EbPtr                                 *enc_dec_context_ptr_array;
