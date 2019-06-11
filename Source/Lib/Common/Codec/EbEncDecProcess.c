@@ -78,7 +78,7 @@ const int8_t  encMaxDeltaQpTab[4][MAX_TEMPORAL_LAYERS] = {
  * Enc Dec Context Constructor
  ******************************************************/
 EbErrorType enc_dec_context_ctor(
-    EncDecContext        **context_dbl_ptr,
+    EncDecContext         *context_ptr,
     EbFifo                *mode_decision_configuration_input_fifo_ptr,
     EbFifo                *packetization_output_fifo_ptr,
     EbFifo                *feedback_fifo_ptr,
@@ -90,9 +90,6 @@ EbErrorType enc_dec_context_ctor(
     (void)max_input_luma_width;
     (void)max_input_luma_height;
     EbErrorType return_error = EB_ErrorNone;
-    EncDecContext *context_ptr;
-    EB_ALLOC_OBJECT(EncDecContext*, context_ptr, sizeof(EncDecContext), EB_N_PTR);
-    *context_dbl_ptr = context_ptr;
 
     context_ptr->is16bit = is16bit;
     context_ptr->color_format = color_format;

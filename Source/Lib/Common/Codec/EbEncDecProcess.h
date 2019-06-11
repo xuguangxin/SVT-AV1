@@ -18,6 +18,7 @@
 #include "EbReferenceObject.h"
 #include "EbNeighborArrays.h"
 #include "EbCodingUnit.h"
+#include "EbObject.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +41,7 @@ extern "C" {
      **************************************/
     typedef struct EncDecContext
     {
+        EbDctor                              dctor;
         EbFifo                              *mode_decision_input_fifo_ptr;
         EbFifo                              *enc_dec_output_fifo_ptr;
         EbFifo                              *enc_dec_feedback_fifo_ptr;
@@ -130,7 +132,7 @@ extern "C" {
      * Extern Function Declarations
      **************************************/
     extern EbErrorType enc_dec_context_ctor(
-        EncDecContext        **context_dbl_ptr,
+        EncDecContext         *context_ptr,
         EbFifo                *mode_decision_configuration_input_fifo_ptr,
         EbFifo                *packetization_output_fifo_ptr,
         EbFifo                *feedback_fifo_ptr,
