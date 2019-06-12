@@ -30,7 +30,7 @@ typedef struct EncDecContext EncDecContext;
 typedef struct DlfContext DlfContext;
 typedef struct CdefContext_s CdefContext_t;
 typedef struct RestContext RestContext;
-
+typedef struct EntropyCodingContext EntropyCodingContext;
 
 /**************************************
  * Component Private Data
@@ -104,7 +104,7 @@ typedef struct EbEncHandle
     RateControlContext                    *rate_control_context_ptr;
     ModeDecisionConfigurationContext     **mode_decision_configuration_context_ptr_array;
     EncDecContext                        **enc_dec_context_ptr_array;
-    EbPtr                                 *entropy_coding_context_ptr_array;
+    EntropyCodingContext                 **entropy_coding_context_ptr_array;
     DlfContext                           **dlf_context_ptr_array;
     CdefContext_t                        **cdef_context_ptr_array;
     RestContext                          **rest_context_ptr_array;
