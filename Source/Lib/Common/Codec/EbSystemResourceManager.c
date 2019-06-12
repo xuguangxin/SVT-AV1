@@ -184,17 +184,13 @@ static EbErrorType EbCircularBufferPushFront(
  * EbMuxingQueueCtor
  **************************************/
 static EbErrorType EbMuxingQueueCtor(
-    EbMuxingQueue   **queueDblPtr,
+    EbMuxingQueue        *queue_ptr,
     uint32_t              object_total_count,
     uint32_t              process_total_count,
     EbFifo         ***processFifoPtrArrayPtr)
 {
-    EbMuxingQueue *queue_ptr;
     uint32_t processIndex;
     EbErrorType     return_error = EB_ErrorNone;
-
-    EB_ALLOC_OBJECT(EbMuxingQueue *, queue_ptr, sizeof(EbMuxingQueue), EB_N_PTR);
-    *queueDblPtr = queue_ptr;
 
     queue_ptr->process_total_count = process_total_count;
 
@@ -438,6 +434,8 @@ static EbErrorType eb_object_wrapper_ctor(EbObjectWrapper* wrapper,
 static void eb_system_resource_dctor(EbPtr p)
 {
     EbSystemResource* obj = (EbSystemResource*)p;
+    EB_DELETE(obj->full_queue);
+    EB_DELETE(obj->empty_queue);
     EB_DELETE_PTR_ARRAY(obj->wrapper_ptr_pool, obj->object_total_count);
 }
 
@@ -499,13 +497,12 @@ EbErrorType eb_system_resource_ctor(
     }
 
     // Initialize the Empty Queue
-    return_error = EbMuxingQueueCtor(
-        &resource_ptr->empty_queue,
+    EB_NEW(
+        resource_ptr->empty_queue,
+        EbMuxingQueueCtor,
         resource_ptr->object_total_count,
         producer_process_total_count,
         producer_fifo_ptr_array_ptr);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Fill the Empty Fifo with every ObjectWrapper
     for (wrapperIndex = 0; wrapperIndex < resource_ptr->object_total_count; ++wrapperIndex) {
         EbMuxingQueueObjectPushBack(
@@ -515,8 +512,9 @@ EbErrorType eb_system_resource_ctor(
 
     // Initialize the Full Queue
     if (full_fifo_enabled == EB_TRUE) {
-        return_error = EbMuxingQueueCtor(
-            &resource_ptr->full_queue,
+        EB_NEW(
+            resource_ptr->full_queue,
+            EbMuxingQueueCtor,
             resource_ptr->object_total_count,
             consumer_process_total_count,
             consumer_fifo_ptr_array_ptr);

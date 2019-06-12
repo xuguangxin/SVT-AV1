@@ -97,6 +97,7 @@ extern "C" {
      *********************************************************************/
     typedef struct EbMuxingQueue
     {
+        EbDctor            dctor;
         EbHandle           lockout_mutex;
         EbCircularBuffer *object_queue;
         EbCircularBuffer *process_queue;
