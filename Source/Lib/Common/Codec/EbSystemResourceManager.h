@@ -85,6 +85,7 @@ extern "C" {
      *********************************************************************/
     typedef struct EbCircularBuffer
     {
+        EbDctor dctor;
         EbPtr *array_ptr;
         uint32_t  head_index;
         uint32_t  tail_index;

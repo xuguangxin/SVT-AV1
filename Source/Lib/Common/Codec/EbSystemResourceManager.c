@@ -79,30 +79,24 @@ static EbErrorType EbFifoPopFront(
     return return_error;
 }
 
+void EbCircularBufferDctor(EbPtr p)
+{
+    EbCircularBuffer* obj = (EbCircularBuffer*)p;
+    EB_FREE(obj->array_ptr);
+}
+
 /**************************************
  * EbCircularBufferCtor
  **************************************/
 static EbErrorType EbCircularBufferCtor(
-    EbCircularBuffer  **buffer_dbl_ptr,
+    EbCircularBuffer  *bufferPtr,
     uint32_t                buffer_total_count)
 {
-    uint32_t bufferIndex;
-    EbCircularBuffer *bufferPtr;
-
-    EB_ALLOC_OBJECT(EbCircularBuffer*, bufferPtr, sizeof(EbCircularBuffer), EB_N_PTR);
-
-    *buffer_dbl_ptr = bufferPtr;
+    bufferPtr->dctor = EbCircularBufferDctor;
 
     bufferPtr->buffer_total_count = buffer_total_count;
 
-    EB_MALLOC(EbPtr*, bufferPtr->array_ptr, sizeof(EbPtr) * bufferPtr->buffer_total_count, EB_N_PTR);
-
-    for (bufferIndex = 0; bufferIndex < bufferPtr->buffer_total_count; ++bufferIndex)
-        bufferPtr->array_ptr[bufferIndex] = EB_NULL;
-    bufferPtr->head_index = 0;
-    bufferPtr->tail_index = 0;
-
-    bufferPtr->current_count = 0;
+    EB_CALLOC1(bufferPtr->array_ptr, bufferPtr->buffer_total_count, sizeof(EbPtr));
 
     return EB_ErrorNone;
 }
@@ -180,6 +174,13 @@ static EbErrorType EbCircularBufferPushFront(
     return return_error;
 }
 
+void EbMuxingQueueDctor(EbPtr p)
+{
+    EbMuxingQueue* obj = (EbMuxingQueue*)p;
+    EB_DELETE(obj->object_queue);
+    EB_DELETE(obj->process_queue);
+}
+
 /**************************************
  * EbMuxingQueueCtor
  **************************************/
@@ -192,23 +193,22 @@ static EbErrorType EbMuxingQueueCtor(
     uint32_t processIndex;
     EbErrorType     return_error = EB_ErrorNone;
 
+    queue_ptr->dctor = EbMuxingQueueDctor;
     queue_ptr->process_total_count = process_total_count;
 
     // Lockout Mutex
     EB_CREATEMUTEX(EbHandle, queue_ptr->lockout_mutex, sizeof(EbHandle), EB_MUTEX);
 
     // Construct Object Circular Buffer
-    return_error = EbCircularBufferCtor(
-        &queue_ptr->object_queue,
+    EB_NEW(
+        queue_ptr->object_queue,
+        EbCircularBufferCtor,
         object_total_count);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Construct Process Circular Buffer
-    return_error = EbCircularBufferCtor(
-        &queue_ptr->process_queue,
+    EB_NEW(
+        queue_ptr->process_queue,
+        EbCircularBufferCtor,
         queue_ptr->process_total_count);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Construct the Process Fifos
     EB_MALLOC(EbFifo**, queue_ptr->process_fifo_ptr_array, sizeof(EbFifo*) * queue_ptr->process_total_count, EB_N_PTR);
 
