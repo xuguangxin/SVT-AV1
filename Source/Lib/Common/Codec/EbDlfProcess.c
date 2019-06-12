@@ -29,7 +29,7 @@ void av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, Av1
  * Dlf Context Constructor
  ******************************************************/
 EbErrorType dlf_context_ctor(
-    DlfContext **context_dbl_ptr,
+    DlfContext            *context_ptr,
     EbFifo                *dlf_input_fifo_ptr,
     EbFifo                *dlf_output_fifo_ptr ,
     EbBool                  is16bit,
@@ -39,9 +39,6 @@ EbErrorType dlf_context_ctor(
    )
 {
     EbErrorType return_error = EB_ErrorNone;
-    DlfContext *context_ptr;
-    EB_ALLOC_OBJECT(DlfContext*, context_ptr, sizeof(DlfContext), EB_N_PTR);
-    *context_dbl_ptr = context_ptr;
 
     // Input/Output System Resource Manager FIFOs
     context_ptr->dlf_input_fifo_ptr = dlf_input_fifo_ptr;
