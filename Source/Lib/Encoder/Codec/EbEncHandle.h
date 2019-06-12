@@ -31,6 +31,7 @@ typedef struct DlfContext DlfContext;
 typedef struct CdefContext_s CdefContext_t;
 typedef struct RestContext RestContext;
 typedef struct EntropyCodingContext EntropyCodingContext;
+typedef struct PacketizationContext PacketizationContext;
 
 /**************************************
  * Component Private Data
@@ -108,7 +109,7 @@ typedef struct EbEncHandle
     DlfContext                           **dlf_context_ptr_array;
     CdefContext_t                        **cdef_context_ptr_array;
     RestContext                          **rest_context_ptr_array;
-    EbPtr                                  packetization_context_ptr;
+    PacketizationContext                  *packetization_context_ptr;
 
     // System Resource Managers
     EbSystemResource                     *input_buffer_resource_ptr;

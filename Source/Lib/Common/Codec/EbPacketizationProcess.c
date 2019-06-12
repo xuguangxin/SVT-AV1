@@ -34,14 +34,10 @@ static EbLinkedListNode* ExtractPassthroughData(EbLinkedListNode** llPtrPtr)
 }
 
 EbErrorType packetization_context_ctor(
-    PacketizationContext **context_dbl_ptr,
+    PacketizationContext  *context_ptr,
     EbFifo                *entropy_coding_input_fifo_ptr,
     EbFifo                *rate_control_tasks_output_fifo_ptr)
 {
-    PacketizationContext *context_ptr;
-    EB_ALLOC_OBJECT(PacketizationContext*, context_ptr, sizeof(PacketizationContext), EB_N_PTR);
-    *context_dbl_ptr = context_ptr;
-
     context_ptr->entropy_coding_input_fifo_ptr = entropy_coding_input_fifo_ptr;
     context_ptr->rate_control_tasks_output_fifo_ptr = rate_control_tasks_output_fifo_ptr;
 

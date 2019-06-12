@@ -697,6 +697,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->initial_rate_control_context_ptr);
     EB_DELETE(enc_handle_ptr->picture_manager_context_ptr);
     EB_DELETE(enc_handle_ptr->rate_control_context_ptr);
+    EB_DELETE(enc_handle_ptr->packetization_context_ptr);
 }
 
 /**********************************
@@ -1656,13 +1657,12 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     }
 
     // Packetization Context
-    return_error = packetization_context_ctor(
-        (PacketizationContext**)&enc_handle_ptr->packetization_context_ptr,
+    EB_NEW(
+        enc_handle_ptr->packetization_context_ptr,
+        packetization_context_ctor,
         enc_handle_ptr->entropy_coding_results_consumer_fifo_ptr_array[0],
         enc_handle_ptr->rate_control_tasks_producer_fifo_ptr_array[RateControlPortLookup(RATE_CONTROL_INPUT_PORT_PACKETIZATION, 0)]);
 
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     /************************************
     * Thread Handles
     ************************************/
