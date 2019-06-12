@@ -29,6 +29,7 @@ typedef struct ModeDecisionConfigurationContext ModeDecisionConfigurationContext
 typedef struct EncDecContext EncDecContext;
 typedef struct DlfContext DlfContext;
 typedef struct CdefContext_s CdefContext_t;
+typedef struct RestContext RestContext;
 
 
 /**************************************
@@ -106,7 +107,7 @@ typedef struct EbEncHandle
     EbPtr                                 *entropy_coding_context_ptr_array;
     DlfContext                           **dlf_context_ptr_array;
     CdefContext_t                        **cdef_context_ptr_array;
-    EbPtr                                 *rest_context_ptr_array;
+    RestContext                          **rest_context_ptr_array;
     EbPtr                                  packetization_context_ptr;
 
     // System Resource Managers

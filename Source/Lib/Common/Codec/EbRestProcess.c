@@ -57,7 +57,7 @@ void rest_finish_search(Macroblock *x, Av1Common *const cm);
  * Rest Context Constructor
  ******************************************************/
 EbErrorType rest_context_ctor(
-    RestContext **context_dbl_ptr,
+    RestContext           *context_ptr,
     EbFifo                *rest_input_fifo_ptr,
     EbFifo                *rest_output_fifo_ptr ,
     EbFifo                *picture_demux_fifo_ptr,
@@ -68,9 +68,6 @@ EbErrorType rest_context_ctor(
    )
 {
     EbErrorType return_error = EB_ErrorNone;
-    RestContext *context_ptr;
-    EB_ALLOC_OBJECT(RestContext*, context_ptr, sizeof(RestContext), EB_N_PTR);
-    *context_dbl_ptr = context_ptr;
 
     // Input/Output System Resource Manager FIFOs
     context_ptr->rest_input_fifo_ptr = rest_input_fifo_ptr;
