@@ -108,6 +108,7 @@ void picture_control_set_dctor(EbPtr p)
     EB_DELETE(obj->enc_dec_segment_ctrl);
     EB_DELETE_PTR_ARRAY(obj->sb_ptr_array, obj->sb_total_count);
     EB_DELETE(obj->coeff_est_entropy_coder_ptr);
+    EB_DELETE(obj->bitstream_ptr);
     EB_DELETE(obj->entropy_coder_ptr);
 }
 
@@ -234,8 +235,9 @@ EbErrorType picture_control_set_ctor(
         SEGMENT_ENTROPY_BUFFER_SIZE);
 
     // Packetization process Bitstream
-    return_error = bitstream_ctor(
-        &object_ptr->bitstream_ptr,
+    EB_NEW(
+        object_ptr->bitstream_ptr,
+        bitstream_ctor,
         PACKETIZATION_PROCESS_BUFFER_SIZE);
 
     if (return_error == EB_ErrorInsufficientResources)

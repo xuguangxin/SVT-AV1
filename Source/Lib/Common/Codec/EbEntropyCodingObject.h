@@ -14,6 +14,7 @@
 extern "C" {
 #endif
     typedef struct Bitstream {
+        EbDctor dctor;
         EbPtr output_bitstream_ptr;
     } Bitstream;
 
@@ -28,7 +29,7 @@ extern "C" {
     } EntropyCoder;
 
     extern EbErrorType bitstream_ctor(
-        Bitstream **bitstream_dbl_ptr,
+        Bitstream *bitstream_ptr,
         uint32_t buffer_size);
 
     extern EbErrorType entropy_coder_ctor(
