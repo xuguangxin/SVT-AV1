@@ -165,7 +165,7 @@ void ChooseBestAv1MvPred(
 * Mode Decision Candidate Ctor
 ***************************************/
 EbErrorType mode_decision_candidate_buffer_ctor(
-    ModeDecisionCandidateBuffer **buffer_dbl_ptr,
+    ModeDecisionCandidateBuffer    *buffer_ptr,
     uint64_t                       *fast_cost_ptr,
     uint64_t                       *full_cost_ptr,
     uint64_t                       *full_cost_skip_ptr,
@@ -177,10 +177,6 @@ EbErrorType mode_decision_candidate_buffer_ctor(
     EbPictureBufferDescInitData ThirtyTwoWidthPictureBufferDescInitData;
 
     EbErrorType return_error = EB_ErrorNone;
-    // Allocate Buffer
-    ModeDecisionCandidateBuffer *bufferPtr;
-    EB_ALLOC_OBJECT(ModeDecisionCandidateBuffer*, bufferPtr, sizeof(ModeDecisionCandidateBuffer), EB_N_PTR);
-    *buffer_dbl_ptr = bufferPtr;
 
     // Init Picture Data
     pictureBufferDescInitData.max_width = MAX_SB_SIZE;
@@ -216,60 +212,60 @@ EbErrorType mode_decision_candidate_buffer_ctor(
     ThirtyTwoWidthPictureBufferDescInitData.split_mode = EB_FALSE;
 
     // Candidate Ptr
-    bufferPtr->candidate_ptr = (ModeDecisionCandidate*)EB_NULL;
+    buffer_ptr->candidate_ptr = (ModeDecisionCandidate*)EB_NULL;
 
     // Video Buffers
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->prediction_ptr),
+        (EbPtr*)&(buffer_ptr->prediction_ptr),
         (EbPtr)&pictureBufferDescInitData);
 
     // Video Buffers
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->prediction_ptr_temp),
+        (EbPtr*)&(buffer_ptr->prediction_ptr_temp),
         (EbPtr)&pictureBufferDescInitData);
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->cfl_temp_prediction_ptr),
+        (EbPtr*)&(buffer_ptr->cfl_temp_prediction_ptr),
         (EbPtr)&pictureBufferDescInitData);
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->residual_ptr),
+        (EbPtr*)&(buffer_ptr->residual_ptr),
         (EbPtr)&doubleWidthPictureBufferDescInitData);
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->residual_quant_coeff_ptr),
+        (EbPtr*)&(buffer_ptr->residual_quant_coeff_ptr),
         (EbPtr)&ThirtyTwoWidthPictureBufferDescInitData);
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->recon_coeff_ptr),
+        (EbPtr*)&(buffer_ptr->recon_coeff_ptr),
         (EbPtr)&ThirtyTwoWidthPictureBufferDescInitData);
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*)&(bufferPtr->recon_ptr),
+        (EbPtr*)&(buffer_ptr->recon_ptr),
         (EbPtr)&pictureBufferDescInitData);
 
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     //Distortion
-    bufferPtr->residual_luma_sad = 0;
+    buffer_ptr->residual_luma_sad = 0;
 
-    bufferPtr->full_lambda_rate = 0;
+    buffer_ptr->full_lambda_rate = 0;
 
     // Costs
-    bufferPtr->fast_cost_ptr = fast_cost_ptr;
-    bufferPtr->full_cost_ptr = full_cost_ptr;
-    bufferPtr->full_cost_skip_ptr = full_cost_skip_ptr;
-    bufferPtr->full_cost_merge_ptr = full_cost_merge_ptr;
+    buffer_ptr->fast_cost_ptr = fast_cost_ptr;
+    buffer_ptr->full_cost_ptr = full_cost_ptr;
+    buffer_ptr->full_cost_skip_ptr = full_cost_skip_ptr;
+    buffer_ptr->full_cost_merge_ptr = full_cost_merge_ptr;
     return EB_ErrorNone;
 }
 

@@ -13,6 +13,7 @@ static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
     EB_DELETE(obj->intra_ref_ptr);
+    EB_DELETE_PTR_ARRAY(obj->candidate_buffer_ptr_array, (MAX_NFL + 1 + 1));
     EB_DELETE(obj->trans_quant_buffers_ptr);
 }
 
@@ -63,18 +64,17 @@ EbErrorType mode_decision_context_ctor(
     EB_MALLOC(uint64_t*, context_ptr->full_cost_skip_ptr, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
     EB_MALLOC(uint64_t*, context_ptr->full_cost_merge_ptr, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
     // Candidate Buffers
-    EB_ALLOC_OBJECT(ModeDecisionCandidateBuffer**, context_ptr->candidate_buffer_ptr_array, sizeof(ModeDecisionCandidateBuffer*) * (MAX_NFL + 1 + 1), EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_ptr_array, (MAX_NFL + 1 + 1));
 
     for (bufferIndex = 0; bufferIndex < (MAX_NFL + 1 + 1); ++bufferIndex) {
-        return_error = mode_decision_candidate_buffer_ctor(
-            &(context_ptr->candidate_buffer_ptr_array[bufferIndex]),
+        EB_NEW(
+            context_ptr->candidate_buffer_ptr_array[bufferIndex],
+            mode_decision_candidate_buffer_ctor,
             &(context_ptr->fast_cost_array[bufferIndex]),
             &(context_ptr->full_cost_array[bufferIndex]),
             &(context_ptr->full_cost_skip_ptr[bufferIndex]),
             &(context_ptr->full_cost_merge_ptr[bufferIndex])
         );
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
     uint32_t codedLeafIndex, tu_index;
     for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
