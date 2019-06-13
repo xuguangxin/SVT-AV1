@@ -104,6 +104,7 @@ EbErrorType me_sb_results_ctor(
 void picture_control_set_dctor(EbPtr p)
 {
     PictureControlSet* obj = (PictureControlSet*)p;
+    EB_DELETE(obj->enc_dec_segment_ctrl);
     EB_DELETE_PTR_ARRAY(obj->sb_ptr_array, obj->sb_total_count);
 }
 
@@ -853,12 +854,11 @@ EbErrorType picture_control_set_ctor(
     object_ptr->constrained_intra_flag = EB_FALSE;
 
     // Segments
-    return_error = enc_dec_segments_ctor(
-        &object_ptr->enc_dec_segment_ctrl,
+    EB_NEW(
+        object_ptr->enc_dec_segment_ctrl,
+        enc_dec_segments_ctor,
         initDataPtr->enc_dec_segment_col,
         initDataPtr->enc_dec_segment_row);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Entropy Rows
     EB_CREATEMUTEX(EbHandle, object_ptr->entropy_coding_mutex, sizeof(EbHandle), EB_MUTEX);
 

@@ -10,15 +10,11 @@
 #include "EbThreads.h"
 
 EbErrorType enc_dec_segments_ctor(
-    EncDecSegments **segments_dbl_ptr,
+    EncDecSegments      *segments_ptr,
     uint32_t             segment_col_count,
     uint32_t             segment_row_count)
 {
     uint32_t row_index;
-    EncDecSegments *segments_ptr;
-    EB_ALLOC_OBJECT(EncDecSegments*, segments_ptr, sizeof(EncDecSegments), EB_N_PTR);
-
-    *segments_dbl_ptr = segments_ptr;
 
     segments_ptr->segment_max_row_count = segment_row_count;
     segments_ptr->segment_max_band_count = segment_row_count + segment_col_count;
