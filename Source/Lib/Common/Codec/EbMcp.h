@@ -15,6 +15,7 @@
 #include "EbPictureControlSet.h"
 #include "EbSequenceControlSet.h"
 #include "EbMotionEstimationContext.h"
+#include "EbObject.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,6 +24,7 @@ extern "C" {
 
     typedef struct MotionCompensationPredictionContext
     {
+        EbDctor                  dctor;
         EbByte                   avc_style_mcp_intermediate_result_buf0;                    // For short filter in MD
         EbByte                   avc_style_mcp_intermediate_result_buf1;                    // For short filter in MD
 #if !USE_PRE_COMPUTE
