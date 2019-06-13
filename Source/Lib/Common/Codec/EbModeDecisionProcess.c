@@ -13,6 +13,7 @@ static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
     EB_DELETE(obj->intra_ref_ptr);
+    EB_DELETE(obj->trans_quant_buffers_ptr);
 }
 
 /******************************************************
@@ -51,13 +52,10 @@ EbErrorType mode_decision_context_ctor(
     }
 
     // Transform and Quantization Buffers
-    EB_ALLOC_OBJECT(EbTransQuantBuffers*, context_ptr->trans_quant_buffers_ptr, sizeof(EbTransQuantBuffers), EB_N_PTR);
+    EB_NEW(
+        context_ptr->trans_quant_buffers_ptr,
+        eb_trans_quant_buffers_ctor);
 
-    return_error = eb_trans_quant_buffers_ctor(
-        context_ptr->trans_quant_buffers_ptr);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Cost Arrays
     // Hsan: MAX_NFL + 1 scratch buffer for intra + 1 scratch buffer for inter
     EB_MALLOC(uint64_t*, context_ptr->fast_cost_array, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);

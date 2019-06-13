@@ -7,11 +7,19 @@
 #include "EbTransQuantBuffers.h"
 #include "EbPictureBufferDesc.h"
 
+void eb_trans_quant_buffers_dctor(EbPtr p)
+{
+    EbTransQuantBuffers* obj = (EbTransQuantBuffers*)p;
+    (void)obj;
+}
+
 EbErrorType eb_trans_quant_buffers_ctor(
     EbTransQuantBuffers          *trans_quant_buffers_ptr)
 {
     EbErrorType return_error = EB_ErrorNone;
     EbPictureBufferDescInitData transCoeffInitArray;
+
+    trans_quant_buffers_ptr->dctor = eb_trans_quant_buffers_dctor;
     transCoeffInitArray.max_width = SB_STRIDE_Y;
     transCoeffInitArray.max_height = SB_STRIDE_Y;
     transCoeffInitArray.bit_depth = EB_16BIT;
