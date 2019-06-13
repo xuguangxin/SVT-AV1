@@ -106,6 +106,8 @@ void picture_control_set_dctor(EbPtr p)
     PictureControlSet* obj = (PictureControlSet*)p;
     EB_DELETE(obj->enc_dec_segment_ctrl);
     EB_DELETE_PTR_ARRAY(obj->sb_ptr_array, obj->sb_total_count);
+    EB_DELETE(obj->coeff_est_entropy_coder_ptr);
+    EB_DELETE(obj->entropy_coder_ptr);
 }
 
 EbErrorType picture_control_set_ctor(
@@ -225,12 +227,11 @@ EbErrorType picture_control_set_ctor(
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     // Entropy Coder
-    return_error = entropy_coder_ctor(
-        &object_ptr->entropy_coder_ptr,
+    EB_NEW(
+        object_ptr->entropy_coder_ptr,
+        entropy_coder_ctor,
         SEGMENT_ENTROPY_BUFFER_SIZE);
 
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Packetization process Bitstream
     return_error = bitstream_ctor(
         &object_ptr->bitstream_ptr,
@@ -239,11 +240,10 @@ EbErrorType picture_control_set_ctor(
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     // Rate estimation entropy coder
-    return_error = entropy_coder_ctor(
-        &object_ptr->coeff_est_entropy_coder_ptr,
+    EB_NEW(
+        object_ptr->coeff_est_entropy_coder_ptr,
+        entropy_coder_ctor,
         SEGMENT_ENTROPY_BUFFER_SIZE);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // GOP
     object_ptr->picture_number = 0;
     object_ptr->temporal_layer_index = 0;
