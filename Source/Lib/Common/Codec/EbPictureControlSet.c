@@ -100,6 +100,13 @@ EbErrorType me_sb_results_ctor(
     //objectPtr->lcuDistortion = 0;
     return EB_ErrorNone;
 }
+
+void picture_control_set_dctor(EbPtr p)
+{
+    PictureControlSet* obj = (PictureControlSet*)p;
+    EB_DELETE_PTR_ARRAY(obj->sb_ptr_array, obj->sb_total_count);
+}
+
 EbErrorType picture_control_set_ctor(
     PictureControlSet *object_ptr,
     EbPtr object_init_data_ptr)
@@ -123,6 +130,8 @@ EbErrorType picture_control_set_ctor(
     EbBool is16bit = initDataPtr->bit_depth > 8 ? EB_TRUE : EB_FALSE;
     const uint16_t subsampling_x = (initDataPtr->color_format == EB_YUV444 ? 1 : 2) - 1;
     const uint16_t subsampling_y = (initDataPtr->color_format >= EB_YUV422 ? 1 : 2) - 1;
+
+    object_ptr->dctor = picture_control_set_dctor;
 
     // Init Picture Init data
     input_picture_buffer_desc_init_data.max_width = initDataPtr->picture_width;
@@ -241,7 +250,7 @@ EbErrorType picture_control_set_ctor(
     // SB Array
     object_ptr->sb_max_depth = (uint8_t)initDataPtr->max_depth;
     object_ptr->sb_total_count = pictureLcuWidth * pictureLcuHeight;
-    EB_MALLOC(LargestCodingUnit**, object_ptr->sb_ptr_array, sizeof(LargestCodingUnit*) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(object_ptr->sb_ptr_array, object_ptr->sb_total_count);
 
     sb_origin_x = 0;
     sb_origin_y = 0;
@@ -251,15 +260,14 @@ EbErrorType picture_control_set_ctor(
     const uint16_t all_sb = picture_sb_w * picture_sb_h;
 
     for (sb_index = 0; sb_index < all_sb; ++sb_index) {
-        return_error = largest_coding_unit_ctor(
-            &(object_ptr->sb_ptr_array[sb_index]),
+        EB_NEW(
+            object_ptr->sb_ptr_array[sb_index],
+            largest_coding_unit_ctor,
             (uint8_t)initDataPtr->sb_size_pix,
             (uint16_t)(sb_origin_x * maxCuSize),
             (uint16_t)(sb_origin_y * maxCuSize),
             (uint16_t)sb_index,
             object_ptr);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
         // Increment the Order in coding order (Raster Scan Order)
         sb_origin_y = (sb_origin_x == picture_sb_w - 1) ? sb_origin_y + 1 : sb_origin_y;
         sb_origin_x = (sb_origin_x == picture_sb_w - 1) ? 0 : sb_origin_x + 1;
