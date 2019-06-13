@@ -457,6 +457,7 @@ extern "C" {
 
     typedef struct SsMeContext
     {
+        EbDctor                       dctor;
         // Search region stride
         uint32_t                      interpolated_stride;
         uint32_t                      interpolated_full_stride[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];

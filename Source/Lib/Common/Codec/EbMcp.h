@@ -95,7 +95,7 @@ extern "C" {
         uint32_t           frac_pos_x,
         uint32_t           frac_pos_y);
     extern EbErrorType in_loop_me_context_ctor(
-        SsMeContext                         **ss_mecontext);
+        SsMeContext                         *ss_mecontext);
 
     extern void generate_padding(
         EbByte              src_pic,
