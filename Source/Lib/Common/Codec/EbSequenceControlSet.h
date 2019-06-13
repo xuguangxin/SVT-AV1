@@ -257,9 +257,6 @@ extern "C" {
     extern EbErrorType eb_sequence_control_set_instance_ctor(
         EbSequenceControlSetInstance *object_dbl_ptr);
 
-    extern EbErrorType sb_params_ctor(
-        SequenceControlSet *sequence_control_set_ptr);
-
     extern EbErrorType sb_params_init(
         SequenceControlSet *sequence_control_set_ptr);
 

@@ -8,6 +8,12 @@
 #include "EbDefinitions.h"
 #include "EbSequenceControlSet.h"
 
+static void eb_sequence_control_set_dctor(EbPtr p)
+{
+    SequenceControlSet *obj = (SequenceControlSet*)p;
+    EB_FREE_ARRAY(obj->sb_params_array);
+}
+
 /**************************************************************************************************
     General notes on how Sequence Control Sets (SCS) are used.
 
@@ -39,6 +45,8 @@ EbErrorType eb_sequence_control_set_ctor(
 {
     EbSequenceControlSetInitData *scsInitData = (EbSequenceControlSetInitData*)object_init_data_ptr;
     uint32_t segment_index;
+
+    sequence_control_set_ptr->dctor = eb_sequence_control_set_dctor;
 
     sequence_control_set_ptr->static_config.sb_sz = 64;
     sequence_control_set_ptr->static_config.partition_depth = 4;
@@ -103,8 +111,9 @@ EbErrorType eb_sequence_control_set_ctor(
     sequence_control_set_ptr->mv_merge_total_count = 5;
 
     // Initialize SB params
-    sb_params_ctor(
-        sequence_control_set_ptr);
+    EB_MALLOC_ARRAY(sequence_control_set_ptr->sb_params_array,
+        ((MAX_PICTURE_WIDTH_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz) *
+        ((MAX_PICTURE_HEIGHT_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz));
 
     sequence_control_set_ptr->seq_header.frame_width_bits = 16;
     sequence_control_set_ptr->seq_header.frame_height_bits = 16;
@@ -341,14 +350,6 @@ EbErrorType eb_sequence_control_set_instance_ctor(
     return EB_ErrorNone;
 }
 
-extern EbErrorType sb_params_ctor(
-    SequenceControlSet *sequence_control_set_ptr) {
-    EbErrorType return_error = EB_ErrorNone;
-
-    EB_ALLOC_OBJECT(SbParams*, sequence_control_set_ptr->sb_params_array, sizeof(SbParams) * ((MAX_PICTURE_WIDTH_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz) * ((MAX_PICTURE_HEIGHT_SIZE + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz), EB_N_PTR);
-    return return_error;
-}
-
 extern EbErrorType sb_params_init(
     SequenceControlSet *sequence_control_set_ptr) {
     EbErrorType return_error = EB_ErrorNone;
@@ -359,7 +360,10 @@ extern EbErrorType sb_params_init(
 #endif
     uint8_t   pictureLcuWidth = (uint8_t)((sequence_control_set_ptr->seq_header.max_frame_width + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz);
     uint8_t    pictureLcuHeight = (uint8_t)((sequence_control_set_ptr->seq_header.max_frame_height + sequence_control_set_ptr->sb_sz - 1) / sequence_control_set_ptr->sb_sz);
-    EB_MALLOC(SbParams*, sequence_control_set_ptr->sb_params_array, sizeof(SbParams) * pictureLcuWidth * pictureLcuHeight, EB_N_PTR);
+    //free old one;
+    EB_FREE_ARRAY(sequence_control_set_ptr->sb_params_array);
+
+    EB_MALLOC_ARRAY(sequence_control_set_ptr->sb_params_array, pictureLcuWidth * pictureLcuHeight);
 
     for (sb_index = 0; sb_index < pictureLcuWidth * pictureLcuHeight; ++sb_index) {
         sequence_control_set_ptr->sb_params_array[sb_index].horizontal_index = (uint8_t)(sb_index % pictureLcuWidth);

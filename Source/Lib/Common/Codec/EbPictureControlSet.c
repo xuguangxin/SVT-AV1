@@ -927,6 +927,11 @@ EbErrorType picture_control_set_creator(
     return EB_ErrorNone;
 }
 
+static void picture_parent_control_set_dctor(EbPtr p)
+{
+    PictureParentControlSet *obj = (PictureParentControlSet*)p;
+    (void*)obj;
+}
 EbErrorType picture_parent_control_set_ctor(
     PictureParentControlSet *object_ptr,
     EbPtr object_init_data_ptr)
@@ -940,6 +945,8 @@ EbErrorType picture_parent_control_set_ctor(
     uint16_t sb_index;
     uint32_t regionInPictureWidthIndex;
     uint32_t regionInPictureHeightIndex;
+
+    object_ptr->dctor = picture_parent_control_set_dctor;
 
     object_ptr->sequence_control_set_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
     object_ptr->input_picture_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
