@@ -790,7 +790,7 @@ PredictionStructure* get_prediction_structure(
  *  The RPS Ctor code follows these construction steps.
  ******************************************************************************************/
 static EbErrorType PredictionStructureCtor(
-    PredictionStructure       **predictionStructureDblPtr,
+    PredictionStructure              *predictionStructurePtr,
     const PredictionStructureConfig  *predictionStructureConfigPtr,
     EbPred                       predType,
     uint32_t                        numberOfReferences)
@@ -803,11 +803,6 @@ static EbErrorType PredictionStructureCtor(
     uint32_t                  leadingPicCount;
     uint32_t                  initPicCount;
     uint32_t                  steadyStatePicCount;
-
-    PredictionStructure  *predictionStructurePtr;
-    EB_ALLOC_OBJECT(PredictionStructure*, predictionStructurePtr, sizeof(PredictionStructure), EB_N_PTR);
-    *predictionStructureDblPtr = predictionStructurePtr;
-    memset(predictionStructurePtr, 0, sizeof(PredictionStructure));
 
     predictionStructurePtr->pred_type = predType;
 
@@ -1624,6 +1619,11 @@ static EbErrorType PredictionStructureCtor(
     return EB_ErrorNone;
 }
 
+static void prediction_structure_group_dctor(EbPtr p)
+{
+    PredictionStructureGroup *obj = (PredictionStructureGroup*)p;
+    EB_DELETE_PTR_ARRAY(obj->prediction_structure_ptr_array, obj->prediction_structure_count);
+}
 /*************************************************
  * Prediction Structure Group Ctor
  *
@@ -1645,8 +1645,8 @@ static EbErrorType PredictionStructureCtor(
  *************************************************/
 
 EbErrorType prediction_structure_group_ctor(
+    PredictionStructureGroup   *predictionStructureGroupPtr,
     uint8_t          enc_mode,
-    PredictionStructureGroup   **predictionStructureGroupDblPtr,
     uint32_t                         baseLayerSwitchMode)
 {
     uint32_t          predStructIndex = 0;
@@ -1656,9 +1656,7 @@ EbErrorType prediction_structure_group_ctor(
     uint32_t          numberOfReferences;
     EbErrorType    return_error = EB_ErrorNone;
 
-    PredictionStructureGroup *predictionStructureGroupPtr;
-    EB_ALLOC_OBJECT(PredictionStructureGroup*, predictionStructureGroupPtr, sizeof(PredictionStructureGroup), EB_N_PTR);
-    *predictionStructureGroupDblPtr = predictionStructureGroupPtr;
+    predictionStructureGroupPtr->dctor = prediction_structure_group_dctor;
 
     if (enc_mode > ENC_M0) {
         for (int gop_i = 1; gop_i < 8; ++gop_i) {
@@ -1687,20 +1685,19 @@ EbErrorType prediction_structure_group_ctor(
     }
 
     predictionStructureGroupPtr->prediction_structure_count = MAX_TEMPORAL_LAYERS * EB_PRED_TOTAL_COUNT * REF_LIST_MAX_DEPTH;
-    EB_MALLOC(PredictionStructure**, predictionStructureGroupPtr->prediction_structure_ptr_array, sizeof(PredictionStructure*) * predictionStructureGroupPtr->prediction_structure_count, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(predictionStructureGroupPtr->prediction_structure_ptr_array, predictionStructureGroupPtr->prediction_structure_count);
     for (hierarchicalLevelIdx = 0; hierarchicalLevelIdx < MAX_TEMPORAL_LAYERS; ++hierarchicalLevelIdx) {
         for (predTypeIdx = 0; predTypeIdx < EB_PRED_TOTAL_COUNT; ++predTypeIdx) {
             for (refIdx = 0; refIdx < REF_LIST_MAX_DEPTH; ++refIdx) {
                 predStructIndex = PRED_STRUCT_INDEX(hierarchicalLevelIdx, predTypeIdx, refIdx);
                 numberOfReferences = refIdx + 1;
 
-                return_error = PredictionStructureCtor(
-                    &(predictionStructureGroupPtr->prediction_structure_ptr_array[predStructIndex]),
+                EB_NEW(
+                    predictionStructureGroupPtr->prediction_structure_ptr_array[predStructIndex],
+                    PredictionStructureCtor,
                     &(PredictionStructureConfigArray[hierarchicalLevelIdx]),
                     (EbPred)predTypeIdx,
                     numberOfReferences);
-                if (return_error == EB_ErrorInsufficientResources)
-                    return EB_ErrorInsufficientResources;
             }
         }
     }

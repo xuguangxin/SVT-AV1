@@ -7,7 +7,7 @@
 #define EbPredictionStructure_h
 
 #include "EbDefinitions.h"
-#include "EbDefinitions.h"
+#include "EbObject.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -156,6 +156,7 @@ extern "C" {
      ************************************************/
     typedef struct PredictionStructure
     {
+        EbDctor                               dctor;
         uint32_t                              pred_struct_entry_count;
         PredictionStructureEntry        **pred_struct_entry_ptr_array;
         EbPred                             pred_type;
@@ -183,6 +184,7 @@ extern "C" {
      ************************************************/
     typedef struct PredictionStructureGroup
     {
+        EbDctor                           dctor;
         PredictionStructure             **prediction_structure_ptr_array;
         uint32_t                              prediction_structure_count;
     } PredictionStructureGroup;
@@ -191,8 +193,8 @@ extern "C" {
      * Declarations
      ************************************************/
     extern EbErrorType prediction_structure_group_ctor(
+        PredictionStructureGroup   *predictionStructureGroupPtr,
         uint8_t          enc_mode,
-        PredictionStructureGroup   **predictionStructureGroupDblPtr,
         uint32_t                        base_layer_switch_mode);
 
     extern PredictionStructure* get_prediction_structure(

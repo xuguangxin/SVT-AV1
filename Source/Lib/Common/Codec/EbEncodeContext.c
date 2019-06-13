@@ -14,6 +14,7 @@
 static void encode_context_dctor(EbPtr p)
 {
     EncodeContext* obj = (EncodeContext*)p;
+    EB_DELETE(obj->prediction_structure_group_ptr);
     EB_DELETE_PTR_ARRAY(obj->picture_decision_reorder_queue, PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->picture_manager_reorder_queue, PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH);
     EB_FREE(obj->pre_assignment_buffer);
