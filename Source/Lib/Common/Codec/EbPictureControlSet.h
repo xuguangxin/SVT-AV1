@@ -14587,7 +14587,7 @@ extern "C" {
         EbPtr  object_init_data_ptr);
 
     extern EbErrorType me_sb_results_ctor(
-        MeLcuResults     **objectDblPtr,
+        MeLcuResults      *objectPtr,
         uint32_t           maxNumberOfPusPerLcu,
         uint8_t            mrp_mode,
         uint32_t           maxNumberOfMeCandidatesPerPU);

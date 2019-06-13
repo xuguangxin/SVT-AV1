@@ -12,7 +12,6 @@
 static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
-    EB_DELETE(obj->intra_ref_ptr);
     EB_DELETE_PTR_ARRAY(obj->candidate_buffer_ptr_array, (MAX_NFL + 1 + 1));
     EB_DELETE(obj->trans_quant_buffers_ptr);
 }

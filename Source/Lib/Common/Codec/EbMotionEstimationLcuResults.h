@@ -7,7 +7,7 @@
 #define EbMotionEstimationLcuResults_h
 
 #include "EbDefinitions.h"
-#include "EbDefinitions.h"
+#include "EbObject.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,6 +41,7 @@ extern "C" {
     // move this to a new file with ctor & dtor
     typedef struct MeLcuResults
     {
+        EbDctor           dctor;
         uint32_t          lcu_distortion;
         uint8_t          *total_me_candidate_index;
         MeCandidate     **me_candidate;

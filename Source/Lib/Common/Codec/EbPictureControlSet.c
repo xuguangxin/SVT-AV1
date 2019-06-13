@@ -58,17 +58,18 @@ EbErrorType segmentation_map_ctor(SegmentationNeighborMap **seg_map_dbl_ptr,
 
 }
 
+static void me_sb_results_dctor(EbPtr p)
+{
+    MeLcuResults* obj = (MeLcuResults*)p;
+    (void)obj;
+}
+
 EbErrorType me_sb_results_ctor(
-    MeLcuResults     **objectDblPtr,
+    MeLcuResults      *objectPtr,
     uint32_t           maxNumberOfPusPerLcu,
     uint8_t            mrp_mode,
     uint32_t           maxNumberOfMeCandidatesPerPU){
     uint32_t  puIndex;
-    MeLcuResults *objectPtr;
-
-    EB_ALLOC_OBJECT(MeLcuResults*, objectPtr, sizeof(MeLcuResults), EB_N_PTR);
-
-    *objectDblPtr = objectPtr;
 
     EB_MALLOC(MeCandidate**, objectPtr->me_candidate, sizeof(MeCandidate*) * maxNumberOfPusPerLcu, EB_N_PTR);
     EB_MALLOC(MvCandidate**, objectPtr->me_mv_array, sizeof(MvCandidate*) * maxNumberOfPusPerLcu, EB_N_PTR);
@@ -930,7 +931,7 @@ EbErrorType picture_control_set_creator(
 static void picture_parent_control_set_dctor(EbPtr p)
 {
     PictureParentControlSet *obj = (PictureParentControlSet*)p;
-    (void*)obj;
+    EB_DELETE_PTR_ARRAY(obj->me_results, obj->sb_total_count);
 }
 EbErrorType picture_parent_control_set_ctor(
     PictureParentControlSet *object_ptr,
@@ -1033,11 +1034,13 @@ EbErrorType picture_parent_control_set_ctor(
     object_ptr->max_number_of_candidates_per_block = (initDataPtr->mrp_mode == 0) ?
         ME_RES_CAND_MRP_MODE_0 : // [Single Ref = 7] + [BiDir = 12 = 3*4 ] + [UniDir = 4 = 3+1]
         ME_RES_CAND_MRP_MODE_1 ; // [BiDir = 1] + [UniDir = 2 = 1 + 1]
-    EB_MALLOC(MeLcuResults**, object_ptr->me_results, sizeof(MeLcuResults*) * object_ptr->sb_total_count, EB_N_PTR);
+
+    EB_ALLOC_PTR_ARRAY(object_ptr->me_results, object_ptr->sb_total_count);
 
     for (sb_index = 0; sb_index < object_ptr->sb_total_count; ++sb_index) {
-        return_error = me_sb_results_ctor(
-            &(object_ptr->me_results[sb_index]),
+        EB_NEW(
+            object_ptr->me_results[sb_index],
+            me_sb_results_ctor,
             (initDataPtr->nsq_present) ? MAX_ME_PU_COUNT : SQUARE_PU_COUNT,
             initDataPtr->mrp_mode,
             object_ptr->max_number_of_candidates_per_block);
