@@ -20,6 +20,7 @@
 #include "EbModeDecision.h"
 #include "EbNeighborArrays.h"
 #include "EbMotionEstimationProcess.h"
+#include "EbObject.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,7 @@ extern "C" {
 
     typedef struct IntraReferenceSamples
     {
+        EbDctor                   dctor;
         uint8_t                  *y_intra_reference_array;
         uint8_t                  *cb_intra_reference_array;
         uint8_t                  *cr_intra_reference_array;
@@ -71,6 +73,7 @@ extern "C" {
 
     typedef struct IntraReference16bitSamples
     {
+        EbDctor                    dctor;
         uint16_t                  *y_intra_reference_array;
         uint16_t                  *cb_intra_reference_array;
         uint16_t                  *cr_intra_reference_array;

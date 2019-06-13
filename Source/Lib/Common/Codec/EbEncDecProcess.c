@@ -77,6 +77,8 @@ static void enc_dec_context_dctor(EbPtr p)
 {
     EncDecContext* obj = (EncDecContext*)p;
     EB_DELETE(obj->md_context);
+    EB_DELETE(obj->intra_ref_ptr16);
+    EB_DELETE(obj->intra_ref_ptr);
 }
 
 /******************************************************

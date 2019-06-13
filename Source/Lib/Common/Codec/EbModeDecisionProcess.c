@@ -12,7 +12,7 @@
 static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
-    (void)obj;
+    EB_DELETE(obj->intra_ref_ptr);
 }
 
 /******************************************************
