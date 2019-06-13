@@ -73,6 +73,11 @@ const int8_t  encMaxDeltaQpTab[4][MAX_TEMPORAL_LAYERS] = {
     { 4, 5, 5, 5, 5, 5 },
     { 4, 5, 5, 5, 5, 5 }
 };
+static void enc_dec_context_dctor(EbPtr p)
+{
+    EncDecContext* obj = (EncDecContext*)p;
+    EB_DELETE(obj->md_context);
+}
 
 /******************************************************
  * Enc Dec Context Constructor
@@ -91,6 +96,7 @@ EbErrorType enc_dec_context_ctor(
     (void)max_input_luma_height;
     EbErrorType return_error = EB_ErrorNone;
 
+    context_ptr->dctor = enc_dec_context_dctor;
     context_ptr->is16bit = is16bit;
     context_ptr->color_format = color_format;
 
@@ -178,13 +184,11 @@ EbErrorType enc_dec_context_ctor(
     }
 
     // Mode Decision Context
-    return_error = mode_decision_context_ctor(&context_ptr->md_context, color_format, 0, 0);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+    EB_NEW(
+        context_ptr->md_context,
+        mode_decision_context_ctor,
+        color_format, 0, 0);
 
-    // Second Stage ME Context
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     context_ptr->md_context->enc_dec_context_ptr = context_ptr;
 
     return EB_ErrorNone;

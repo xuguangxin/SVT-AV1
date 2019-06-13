@@ -9,11 +9,17 @@
 #include "EbModeDecisionProcess.h"
 #include "EbLambdaRateTables.h"
 
+static void mode_decision_context_dctor(EbPtr p)
+{
+    ModeDecisionContext* obj = (ModeDecisionContext*)p;
+    (void)obj;
+}
+
 /******************************************************
  * Mode Decision Context Constructor
  ******************************************************/
 EbErrorType mode_decision_context_ctor(
-    ModeDecisionContext  **context_dbl_ptr,
+    ModeDecisionContext  *context_ptr,
     EbColorFormat         color_format,
     EbFifo                *mode_decision_configuration_input_fifo_ptr,
     EbFifo                *mode_decision_output_fifo_ptr){
@@ -23,10 +29,7 @@ EbErrorType mode_decision_context_ctor(
 
     (void)color_format;
 
-    ModeDecisionContext *context_ptr;
-    EB_ALLOC_OBJECT(ModeDecisionContext*, context_ptr, sizeof(ModeDecisionContext), EB_N_PTR);
-    *context_dbl_ptr = context_ptr;
-
+    context_ptr->dctor = mode_decision_context_dctor;
     // Input/Output System Resource Manager FIFOs
     context_ptr->mode_decision_configuration_input_fifo_ptr = mode_decision_configuration_input_fifo_ptr;
     context_ptr->mode_decision_output_fifo_ptr = mode_decision_output_fifo_ptr;

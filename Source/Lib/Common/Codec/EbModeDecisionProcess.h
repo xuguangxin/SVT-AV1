@@ -16,6 +16,7 @@
 #include "EbTransQuantBuffers.h"
 #include "EbReferenceObject.h"
 #include "EbNeighborArrays.h"
+#include "EbObject.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,6 +79,7 @@ extern "C" {
 
     typedef struct ModeDecisionContext
     {
+        EbDctor                      dctor;
         EbFifo                       *mode_decision_configuration_input_fifo_ptr;
         EbFifo                       *mode_decision_output_fifo_ptr;
         int16_t                        *transform_inner_array_ptr;
@@ -256,7 +258,7 @@ extern "C" {
      * Extern Function Declarations
      **************************************/
     extern EbErrorType mode_decision_context_ctor(
-        ModeDecisionContext      **context_dbl_ptr,
+        ModeDecisionContext       *context_ptr,
         EbColorFormat              color_format,
         EbFifo                    *mode_decision_configuration_input_fifo_ptr,
         EbFifo                    *mode_decision_output_fifo_ptr);
