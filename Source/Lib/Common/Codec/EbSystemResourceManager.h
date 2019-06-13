@@ -60,6 +60,7 @@ extern "C" {
      *********************************************************************/
     typedef struct EbFifo
     {
+        EbDctor  dctor;
         // counting_semaphore - used for OS thread-blocking & dynamically
         //   counting the number of EbObjectWrappers currently in the
         //   EbFifo.

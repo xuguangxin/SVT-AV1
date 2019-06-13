@@ -177,6 +177,7 @@ static EbErrorType EbCircularBufferPushFront(
 void EbMuxingQueueDctor(EbPtr p)
 {
     EbMuxingQueue* obj = (EbMuxingQueue*)p;
+    EB_DELETE_PTR_ARRAY(obj->process_fifo_ptr_array, obj->process_total_count);
     EB_DELETE(obj->object_queue);
     EB_DELETE(obj->process_queue);
 }
@@ -210,19 +211,17 @@ static EbErrorType EbMuxingQueueCtor(
         EbCircularBufferCtor,
         queue_ptr->process_total_count);
     // Construct the Process Fifos
-    EB_MALLOC(EbFifo**, queue_ptr->process_fifo_ptr_array, sizeof(EbFifo*) * queue_ptr->process_total_count, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(queue_ptr->process_fifo_ptr_array, queue_ptr->process_total_count);
 
     for (processIndex = 0; processIndex < queue_ptr->process_total_count; ++processIndex) {
-        EB_ALLOC_OBJECT(EbFifo*, queue_ptr->process_fifo_ptr_array[processIndex], sizeof(EbFifo) * queue_ptr->process_total_count, EB_N_PTR);
-        return_error = EbFifoCtor(
+        EB_NEW(
             queue_ptr->process_fifo_ptr_array[processIndex],
+            EbFifoCtor,
             0,
             object_total_count,
             (EbObjectWrapper *)EB_NULL,
             (EbObjectWrapper *)EB_NULL,
             queue_ptr);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     *processFifoPtrArrayPtr = queue_ptr->process_fifo_ptr_array;
