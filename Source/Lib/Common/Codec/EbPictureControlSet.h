@@ -14268,7 +14268,7 @@ extern "C" {
         Macroblock                           *av1x;
         int32_t                               film_grain_params_present; //todo (AN): Do we need this flag at picture level?
         aom_film_grain_t                      film_grain_params;
-        struct aom_denoise_and_model_t       *denoise_and_model;
+        aom_denoise_and_model_t              *denoise_and_model;
         EbBool                                enable_in_loop_motion_estimation_flag;
         RestUnitSearchInfo                   *rusi_picture[3];//for 3 planes
         int8_t                                cdef_filter_mode;

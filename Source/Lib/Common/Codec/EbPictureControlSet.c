@@ -1135,12 +1135,9 @@ EbErrorType picture_parent_control_set_ctor(
         fg_init_data.stride_y = initDataPtr->picture_width + initDataPtr->left_padding + initDataPtr->right_padding;
         fg_init_data.stride_cb = fg_init_data.stride_cr = fg_init_data.stride_y >> subsampling_x;
 
-        return_error = denoise_and_model_ctor((EbPtr*)&(object_ptr->denoise_and_model),
+        EB_NEW(object_ptr->denoise_and_model, denoise_and_model_ctor,
             (EbPtr)&fg_init_data);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-    }
+   }
 
     return return_error;
 }
