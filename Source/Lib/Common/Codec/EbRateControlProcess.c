@@ -3499,7 +3499,9 @@ void* rate_control_kernel(void *input_ptr)
     EbRateControlModel          *rc_model_ptr;
     RATE_CONTROL                 rc;
 
-    rate_control_model_ctor(&rc_model_ptr);
+    /* This memory will leak. We use TerminalThread to stop thread,
+       so we have no way to free rate_contorl_modal yet ...*/
+    EB_NO_THROW_NEW(rc_model_ptr, rate_control_model_ctor);
 
     for (;;) {
         // Get RateControl Task
@@ -3968,5 +3970,6 @@ void* rate_control_kernel(void *input_ptr)
             break;
         }
     }
+    EB_DELETE(rc_model_ptr);
     return EB_NULL;
 }
