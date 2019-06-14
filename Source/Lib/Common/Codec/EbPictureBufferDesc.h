@@ -11,7 +11,7 @@
 #include "EbDefinitions.h"
 #include "grainSynthesis.h"
 #include "EbSvtAv1Formats.h"
-
+#include "EbObject.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +27,7 @@ extern "C" {
      ************************************/
     typedef struct EbPictureBufferDesc
     {
+        EbDctor        dctor;
         // Buffer Ptrs
         EbByte         buffer_y;             // pointer to the Y luma buffer
         EbByte         buffer_cb;            // pointer to the U chroma buffer
@@ -307,7 +308,7 @@ extern "C" {
         EbPtr  object_init_data_ptr);
 
     extern EbErrorType eb_recon_picture_buffer_desc_ctor(
-        EbPtr *object_dbl_ptr,
+        EbPictureBufferDesc *object_ptr,
         EbPtr  object_init_data_ptr);
 
 #ifdef __cplusplus

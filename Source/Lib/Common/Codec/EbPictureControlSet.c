@@ -110,6 +110,12 @@ void picture_control_set_dctor(EbPtr p)
     EB_DELETE(obj->coeff_est_entropy_coder_ptr);
     EB_DELETE(obj->bitstream_ptr);
     EB_DELETE(obj->entropy_coder_ptr);
+    EB_DELETE(obj->recon_picture32bit_ptr);
+    EB_DELETE(obj->recon_picture16bit_ptr);
+    EB_DELETE(obj->recon_picture_ptr);
+    EB_DELETE(obj->film_grain_picture16bit_ptr);
+    EB_DELETE(obj->film_grain_picture_ptr);
+    EB_DELETE(obj->input_frame16bit);
 }
 
 EbErrorType picture_control_set_ctor(
@@ -184,50 +190,48 @@ EbErrorType picture_control_set_ctor(
     coeffBufferDes32bitInitData.split_mode = EB_FALSE;
 
     object_ptr->recon_picture32bit_ptr = (EbPictureBufferDesc *)EB_NULL;
-    return_error = eb_recon_picture_buffer_desc_ctor(
-        (EbPtr*)&(object_ptr->recon_picture32bit_ptr),
+    EB_NEW(
+        object_ptr->recon_picture32bit_ptr,
+        eb_recon_picture_buffer_desc_ctor,
         (EbPtr)&coeffBufferDes32bitInitData);
 
     // Reconstructed Picture Buffer
     if (is16bit) {
-        return_error = eb_recon_picture_buffer_desc_ctor(
-            (EbPtr*) &(object_ptr->recon_picture16bit_ptr),
+        EB_NEW(
+            object_ptr->recon_picture16bit_ptr,
+            eb_recon_picture_buffer_desc_ctor,
             (EbPtr)&coeffBufferDescInitData);
     }
     else
     {
-        return_error = eb_recon_picture_buffer_desc_ctor(
-            (EbPtr*) &(object_ptr->recon_picture_ptr),
+        EB_NEW(
+            object_ptr->recon_picture_ptr,
+            eb_recon_picture_buffer_desc_ctor,
             (EbPtr)&input_picture_buffer_desc_init_data);
     }
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Film Grain Picture Buffer
     if (initDataPtr->film_grain_noise_level) {
         if (is16bit) {
-            return_error = eb_recon_picture_buffer_desc_ctor(
-                (EbPtr*) &(object_ptr->film_grain_picture16bit_ptr),
+            EB_NEW(
+                object_ptr->film_grain_picture16bit_ptr,
+                eb_recon_picture_buffer_desc_ctor,
                 (EbPtr)&coeffBufferDescInitData);
         }
         else
         {
-            return_error = eb_recon_picture_buffer_desc_ctor(
-                (EbPtr*) &(object_ptr->film_grain_picture_ptr),
+            EB_NEW(
+                object_ptr->film_grain_picture_ptr,
+                eb_recon_picture_buffer_desc_ctor,
                 (EbPtr)&input_picture_buffer_desc_init_data);
         }
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     if (is16bit) {
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&(object_ptr->input_frame16bit),
+        EB_NEW(
+            object_ptr->input_frame16bit,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&coeffBufferDescInitData);
     }
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Entropy Coder
     EB_NEW(
         object_ptr->entropy_coder_ptr,
