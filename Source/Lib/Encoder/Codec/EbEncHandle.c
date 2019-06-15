@@ -661,7 +661,6 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->sequence_control_set_pool_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
-    EB_DELETE_PTR_ARRAY(enc_handle_ptr->reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->pa_reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->overlay_input_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE(enc_handle_ptr->input_buffer_resource_ptr);
@@ -698,6 +697,8 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->picture_manager_context_ptr);
     EB_DELETE(enc_handle_ptr->rate_control_context_ptr);
     EB_DELETE(enc_handle_ptr->packetization_context_ptr);
+	EB_DELETE_PTR_ARRAY(enc_handle_ptr->reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+
 }
 
 /**********************************
@@ -3346,12 +3347,14 @@ static EbErrorType allocate_frame_buffer(
     if (is16bit && config->compressed_ten_bit_format == 1)
         input_picture_buffer_desc_init_data.split_mode = EB_FALSE;  //do special allocation for 2bit data down below.
     // Enhanced Picture Buffer
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(inputBuffer->p_buffer),
-        (EbPtr)&input_picture_buffer_desc_init_data);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+    {
+        EbPictureBufferDesc* buf;
+        EB_NEW(
+            buf,
+            eb_picture_buffer_desc_ctor,
+            (EbPtr)&input_picture_buffer_desc_init_data);
+        inputBuffer->p_buffer = (uint8_t*)buf;
+    }
     if (is16bit && config->compressed_ten_bit_format == 1) {
         //pack 4 2bit pixels into 1Byte
         EB_ALLIGN_MALLOC(uint8_t*, ((EbPictureBufferDesc*)(inputBuffer->p_buffer))->buffer_bit_inc_y, sizeof(uint8_t) * (input_picture_buffer_desc_init_data.max_width / 4)*(input_picture_buffer_desc_init_data.max_height), EB_A_PTR);
@@ -3389,6 +3392,9 @@ EbErrorType EbInputBufferHeaderCreator(
 void EbInputBufferHeaderDestoryer(    EbPtr p)
 {
     EbBufferHeaderType *obj = (EbBufferHeaderType*)p;
+    EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
+
+    EB_DELETE(buf);
     EB_FREE(obj);
 }
 

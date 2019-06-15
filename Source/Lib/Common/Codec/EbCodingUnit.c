@@ -11,6 +11,11 @@
 #include "EbTransformUnit.h"
 #include "EbPictureControlSet.h"
 
+void largest_coding_unit_dctor(EbPtr p)
+{
+    LargestCodingUnit* obj = (LargestCodingUnit*)p;
+    EB_DELETE(obj->quantized_coeff);
+}
 /*
 Tasks & Questions
     -Need a GetEmptyChain function for testing sub partitions.  Tie it to an Itr?
@@ -32,6 +37,8 @@ EbErrorType largest_coding_unit_ctor(
     EbErrorType return_error = EB_ErrorNone;
     uint32_t tu_index;
     EbPictureBufferDescInitData coeffInitData;
+
+    larget_coding_unit_ptr->dctor = largest_coding_unit_dctor;
 
     // ************ SB ***************
         // Which borderLargestCuSize is not a power of two
@@ -72,11 +79,10 @@ EbErrorType largest_coding_unit_ctor(
     coeffInitData.bot_padding = 0;
     coeffInitData.split_mode = EB_FALSE;
 
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(larget_coding_unit_ptr->quantized_coeff),
+    EB_NEW(
+        larget_coding_unit_ptr->quantized_coeff,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)&coeffInitData);
 
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     return EB_ErrorNone;
 }

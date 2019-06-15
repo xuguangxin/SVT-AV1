@@ -13943,6 +13943,7 @@ extern "C" {
         EbObjectWrapper                    *pa_reference_picture_wrapper_ptr;
         EbPictureBufferDesc                *enhanced_picture_ptr;
         EbPictureBufferDesc                *chroma_downsampled_picture_ptr; //if 422/444 input, down sample to 420 for MD
+        EbBool                              is_chroma_downsampled_picture_ptr_owner;
         PredictionStructure                *pred_struct_ptr;          // need to check
         struct SequenceControlSet          *sequence_control_set_ptr;
         EbObjectWrapper                    *p_pcs_wrapper_ptr;

@@ -304,7 +304,7 @@ extern "C" {
      * Extern Function Declarations
      **************************************/
     extern EbErrorType eb_picture_buffer_desc_ctor(
-        EbPtr *object_dbl_ptr,
+        EbPictureBufferDesc *object_ptr,
         EbPtr  object_init_data_ptr);
 
     extern EbErrorType eb_recon_picture_buffer_desc_ctor(

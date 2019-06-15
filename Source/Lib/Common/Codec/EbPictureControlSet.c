@@ -938,6 +938,8 @@ static void picture_parent_control_set_dctor(EbPtr p)
 {
     PictureParentControlSet *obj = (PictureParentControlSet*)p;
     EB_DELETE_PTR_ARRAY(obj->me_results, obj->sb_total_count);
+    if (obj->is_chroma_downsampled_picture_ptr_owner)
+        EB_DELETE(obj->chroma_downsampled_picture_ptr);
 }
 EbErrorType picture_parent_control_set_ctor(
     PictureParentControlSet *object_ptr,
@@ -972,11 +974,11 @@ EbErrorType picture_parent_control_set_ctor(
         input_picture_buffer_desc_init_data.bot_padding = initDataPtr->bot_padding;
         input_picture_buffer_desc_init_data.color_format = EB_YUV420; //set to 420 for MD
         input_picture_buffer_desc_init_data.split_mode    = EB_FALSE;
-        return_error = eb_picture_buffer_desc_ctor(
-                (EbPtr*) &(object_ptr->chroma_downsampled_picture_ptr),
-                (EbPtr) &input_picture_buffer_desc_init_data);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
+        EB_NEW(
+            object_ptr->chroma_downsampled_picture_ptr,
+            eb_picture_buffer_desc_ctor,
+            (EbPtr) &input_picture_buffer_desc_init_data);
+        object_ptr->is_chroma_downsampled_picture_ptr_owner = EB_TRUE;
     } else if(initDataPtr->color_format == EB_YUV420) {
         object_ptr->chroma_downsampled_picture_ptr = NULL;
     } else

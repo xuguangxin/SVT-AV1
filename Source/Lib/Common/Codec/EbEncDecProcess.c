@@ -77,6 +77,10 @@ static void enc_dec_context_dctor(EbPtr p)
 {
     EncDecContext* obj = (EncDecContext*)p;
     EB_DELETE(obj->md_context);
+    EB_DELETE(obj->residual_buffer);
+    EB_DELETE(obj->transform_buffer);
+    EB_DELETE(obj->inverse_quant_buffer);
+    EB_DELETE(obj->input_sample16bit_buffer);
 }
 
 /******************************************************
@@ -130,11 +134,10 @@ EbErrorType enc_dec_context_ctor(
         if (is16bit) {
             initData.bit_depth = EB_16BIT;
 
-            return_error = eb_picture_buffer_desc_ctor(
-                (EbPtr*)&context_ptr->input_sample16bit_buffer,
+            EB_NEW(
+                context_ptr->input_sample16bit_buffer,
+                eb_picture_buffer_desc_ctor,
                 (EbPtr)&initData);
-            if (return_error == EB_ErrorInsufficientResources)
-                return EB_ErrorInsufficientResources;
         }
     }
 
@@ -165,22 +168,18 @@ EbErrorType enc_dec_context_ctor(
         init32BitData.top_padding = 0;
         init32BitData.bot_padding = 0;
         init32BitData.split_mode = EB_FALSE;
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&context_ptr->inverse_quant_buffer,
+        EB_NEW(
+            context_ptr->inverse_quant_buffer,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&init32BitData);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&context_ptr->transform_buffer,
+        EB_NEW(
+            context_ptr->transform_buffer,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&init32BitData);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&context_ptr->residual_buffer,
+        EB_NEW(
+            context_ptr->residual_buffer,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&initData);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     // Mode Decision Context

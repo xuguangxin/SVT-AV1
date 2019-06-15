@@ -80,6 +80,9 @@ EbErrorType rate_control_model_init(EbRateControlModel *model_ptr, SequenceContr
     model_ptr->width = sequenceControlSetPtr->seq_header.max_frame_width;
     model_ptr->height = sequenceControlSetPtr->seq_header.max_frame_height;
     model_ptr->pixels = model_ptr->width * model_ptr->height;
+    //free old
+    EB_FREE(model_ptr->gop_infos);
+
     EB_CALLOC1(model_ptr->gop_infos, number_of_frame, sizeof(EbRateControlGopInfo));
     model_ptr->intra_period = sequenceControlSetPtr->static_config.intra_period_length;
 

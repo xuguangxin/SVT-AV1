@@ -18,6 +18,12 @@
 
 #include "EbPictureBufferDesc.h"
 
+static void eb_picture_buffer_desc_dctor(EbPtr p)
+{
+    EbPictureBufferDesc *obj = (EbPictureBufferDesc*)p;
+    (void)obj;
+}
+
 /*****************************************
  * eb_picture_buffer_desc_ctor
  *  Initializes the Buffer Descriptor's
@@ -25,22 +31,18 @@
  *  the descriptor.
  *****************************************/
 EbErrorType eb_picture_buffer_desc_ctor(
-    EbPtr  *object_dbl_ptr,
+    EbPictureBufferDesc* pictureBufferDescPtr,
     EbPtr   object_init_data_ptr)
 {
-    EbPictureBufferDesc          *pictureBufferDescPtr;
     EbPictureBufferDescInitData  *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
 
     uint32_t bytesPerPixel = (pictureBufferDescInitDataPtr->bit_depth == EB_8BIT) ? 1 : (pictureBufferDescInitDataPtr->bit_depth <= EB_16BIT) ? 2 : 4;
     const uint16_t subsampling_x = (pictureBufferDescInitDataPtr->color_format == EB_YUV444 ? 1 : 2) - 1;
 
+    pictureBufferDescPtr->dctor = eb_picture_buffer_desc_dctor;
+
     if (pictureBufferDescInitDataPtr->bit_depth > EB_8BIT && pictureBufferDescInitDataPtr->bit_depth <= EB_16BIT && pictureBufferDescInitDataPtr->split_mode == EB_TRUE)
         bytesPerPixel = 1;
-
-    EB_ALLOC_OBJECT(EbPictureBufferDesc*, pictureBufferDescPtr, sizeof(EbPictureBufferDesc), EB_N_PTR);
-
-    // Allocate the PictureBufferDesc Object
-    *object_dbl_ptr = (EbPtr)pictureBufferDescPtr;
 
     // Set the Picture Buffer Static variables
     pictureBufferDescPtr->max_width = pictureBufferDescInitDataPtr->max_width;

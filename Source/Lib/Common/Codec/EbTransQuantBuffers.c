@@ -10,7 +10,11 @@
 void eb_trans_quant_buffers_dctor(EbPtr p)
 {
     EbTransQuantBuffers* obj = (EbTransQuantBuffers*)p;
-    (void)obj;
+    EB_DELETE(obj->tu_trans_coeff2_nx2_n_ptr);
+    EB_DELETE(obj->tu_trans_coeff_nxn_ptr);
+    EB_DELETE(obj->tu_trans_coeff_n2x_n2_ptr);
+    EB_DELETE(obj->tu_quant_coeff_nxn_ptr);
+    EB_DELETE(obj->tu_quant_coeff_n2x_n2_ptr);
 }
 
 EbErrorType eb_trans_quant_buffers_ctor(
@@ -43,30 +47,25 @@ EbErrorType eb_trans_quant_buffers_ctor(
     ThirtyTwoBittransCoeffInitArray.bot_padding = 0;
     ThirtyTwoBittransCoeffInitArray.split_mode = EB_FALSE;
 
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(trans_quant_buffers_ptr->tu_trans_coeff2_nx2_n_ptr),
+    EB_NEW(
+        trans_quant_buffers_ptr->tu_trans_coeff2_nx2_n_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)&ThirtyTwoBittransCoeffInitArray);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(trans_quant_buffers_ptr->tu_trans_coeff_nxn_ptr),
+    EB_NEW(
+        trans_quant_buffers_ptr->tu_trans_coeff_nxn_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)&ThirtyTwoBittransCoeffInitArray);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(trans_quant_buffers_ptr->tu_trans_coeff_n2x_n2_ptr),
+    EB_NEW(
+        trans_quant_buffers_ptr->tu_trans_coeff_n2x_n2_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)&transCoeffInitArray);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(trans_quant_buffers_ptr->tu_quant_coeff_nxn_ptr),
+    EB_NEW(
+        trans_quant_buffers_ptr->tu_quant_coeff_nxn_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)&transCoeffInitArray);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(trans_quant_buffers_ptr->tu_quant_coeff_n2x_n2_ptr),
+    EB_NEW(
+        trans_quant_buffers_ptr->tu_quant_coeff_n2x_n2_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)&transCoeffInitArray);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     return EB_ErrorNone;
 }

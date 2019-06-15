@@ -121,6 +121,14 @@ void InitializeSamplesNeighboringReferencePicture(
     }
 }
 
+static void eb_reference_object_dctor(EbPtr p)
+{
+    EbReferenceObject *obj = (EbReferenceObject*)p;
+    EB_DELETE(obj->reference_picture16bit);
+    EB_DELETE(obj->reference_picture);
+}
+
+
 /*****************************************
  * eb_picture_buffer_desc_ctor
  *  Initializes the Buffer Descriptor's
@@ -136,12 +144,14 @@ EbErrorType eb_reference_object_ctor(
     EbPictureBufferDescInitData    pictureBufferDescInitData16BitPtr = *pictureBufferDescInitDataPtr;
     EbErrorType return_error = EB_ErrorNone;
 
+    referenceObject->dctor = eb_reference_object_dctor;
     //TODO:12bit
     if (pictureBufferDescInitData16BitPtr.bit_depth == EB_10BIT) {
         // Hsan: set split_mode to 0 to construct the packed reference buffer (used @ EP)
         pictureBufferDescInitData16BitPtr.split_mode = EB_FALSE;
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&(referenceObject->reference_picture16bit),
+        EB_NEW(
+            referenceObject->reference_picture16bit,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&pictureBufferDescInitData16BitPtr);
 
         InitializeSamplesNeighboringReferencePicture(
@@ -151,15 +161,17 @@ EbErrorType eb_reference_object_ctor(
 
         // Hsan: set split_mode to 1 to construct the unpacked reference buffer (used @ MD)
         pictureBufferDescInitData16BitPtr.split_mode = EB_TRUE;
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&(referenceObject->reference_picture),
+        EB_NEW(
+            referenceObject->reference_picture,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&pictureBufferDescInitData16BitPtr);
     }
     else {
         // Hsan: set split_mode to 0 to as 8BIT input
         pictureBufferDescInitDataPtr->split_mode = EB_FALSE;
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&(referenceObject->reference_picture),
+        EB_NEW(
+            referenceObject->reference_picture,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)pictureBufferDescInitDataPtr);
 
         InitializeSamplesNeighboringReferencePicture(
@@ -167,8 +179,6 @@ EbErrorType eb_reference_object_ctor(
             pictureBufferDescInitDataPtr,
             pictureBufferDescInitData16BitPtr.bit_depth);
     }
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     memset(&referenceObject->film_grain_params, 0, sizeof(referenceObject->film_grain_params));
 
     return EB_ErrorNone;
@@ -187,6 +197,18 @@ EbErrorType eb_reference_object_creator(
     return EB_ErrorNone;
 }
 
+static void eb_pa_reference_object_dctor(EbPtr p)
+{
+    EbPaReferenceObject* obj = (EbPaReferenceObject*)p;
+    EB_DELETE(obj->input_padded_picture_ptr);
+    EB_DELETE(obj->quarter_decimated_picture_ptr);
+    EB_DELETE(obj->sixteenth_decimated_picture_ptr);
+#if DOWN_SAMPLING_FILTERING
+    EB_DELETE(obj->quarter_filtered_picture_ptr);
+    EB_DELETE(obj->sixteenth_filtered_picture_ptr);
+#endif
+}
+
 /*****************************************
  * eb_pa_reference_object_ctor
  *  Initializes the Buffer Descriptor's
@@ -200,43 +222,35 @@ EbErrorType eb_pa_reference_object_ctor(
     EbPictureBufferDescInitData       *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
     EbErrorType return_error = EB_ErrorNone;
 
+    paReferenceObject->dctor = eb_pa_reference_object_dctor;
+
     // Reference picture constructor
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(paReferenceObject->input_padded_picture_ptr),
+    EB_NEW(
+        paReferenceObject->input_padded_picture_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)pictureBufferDescInitDataPtr);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Quarter Decim reference picture constructor
-    paReferenceObject->quarter_decimated_picture_ptr = (EbPictureBufferDesc*)EB_NULL;
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(paReferenceObject->quarter_decimated_picture_ptr),
+    EB_NEW(
+        paReferenceObject->quarter_decimated_picture_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)(pictureBufferDescInitDataPtr + 1));
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    // Sixteenth Decim reference picture constructor
-    paReferenceObject->sixteenth_decimated_picture_ptr = (EbPictureBufferDesc*)EB_NULL;
-    return_error = eb_picture_buffer_desc_ctor(
-        (EbPtr*) &(paReferenceObject->sixteenth_decimated_picture_ptr),
+    EB_NEW(
+        paReferenceObject->sixteenth_decimated_picture_ptr,
+        eb_picture_buffer_desc_ctor,
         (EbPtr)(pictureBufferDescInitDataPtr + 2));
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     // Quarter Filtered reference picture constructor
-    paReferenceObject->quarter_filtered_picture_ptr = (EbPictureBufferDesc*)EB_NULL;
     if ((pictureBufferDescInitDataPtr + 1)->down_sampled_filtered) {
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*) &(paReferenceObject->quarter_filtered_picture_ptr),
+        EB_NEW(
+            paReferenceObject->quarter_filtered_picture_ptr,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)(pictureBufferDescInitDataPtr + 1));
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
     // Sixteenth Filtered reference picture constructor
-    paReferenceObject->sixteenth_filtered_picture_ptr = (EbPictureBufferDesc*)EB_NULL;
     if ((pictureBufferDescInitDataPtr + 2)->down_sampled_filtered) {
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*) &(paReferenceObject->sixteenth_filtered_picture_ptr),
+        EB_NEW(
+            paReferenceObject->sixteenth_filtered_picture_ptr,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)(pictureBufferDescInitDataPtr + 2));
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
     }
 
     return EB_ErrorNone;

@@ -58,6 +58,8 @@ static void rest_context_dctor(EbPtr p)
     RestContext *obj = (RestContext*)p;
     EB_DELETE(obj->temp_lf_recon_picture_ptr);
     EB_DELETE(obj->temp_lf_recon_picture16bit_ptr);
+    EB_DELETE(obj->trial_frame_rst);
+    EB_DELETE(obj->org_rec_frame);
 }
 
 /******************************************************
@@ -97,15 +99,15 @@ EbErrorType rest_context_ctor(
         initData.bot_padding = AOM_BORDER_IN_PIXELS;
         initData.split_mode = EB_FALSE;
 
-        return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&context_ptr->trial_frame_rst,
+        EB_NEW(
+            context_ptr->trial_frame_rst,
+            eb_picture_buffer_desc_ctor,
             (EbPtr)&initData);
 
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-         return_error = eb_picture_buffer_desc_ctor(
-            (EbPtr*)&context_ptr->org_rec_frame,
-                (EbPtr)&initData);
+        EB_NEW(
+            context_ptr->org_rec_frame,
+            eb_picture_buffer_desc_ctor,
+            (EbPtr)&initData);
 
          EB_MALLOC(int32_t *, context_ptr->rst_tmpbuf, RESTORATION_TMPBUF_SIZE, EB_N_PTR);
     }

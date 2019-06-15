@@ -12,6 +12,15 @@
 static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
+#if NO_ENCDEC //SB128_TODO to upgrade
+    int codedLeafIndex;
+    for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
+        EB_DELETE(obj->md_cu_arr_nsq[codedLeafIndex].recon_tmp);
+        EB_DELETE(obj->md_cu_arr_nsq[codedLeafIndex].coeff_tmp);
+
+   }
+#endif
+
     EB_DELETE_PTR_ARRAY(obj->candidate_buffer_ptr_array, (MAX_NFL + 1 + 1));
     EB_DELETE(obj->trans_quant_buffers_ptr);
 }
@@ -105,12 +114,11 @@ EbErrorType mode_decision_context_ctor(
             initData.bot_padding = 0;
             initData.split_mode = EB_FALSE;
 
-            return_error = eb_picture_buffer_desc_ctor(
-                (EbPtr*)&context_ptr->md_cu_arr_nsq[codedLeafIndex].coeff_tmp,
+            EB_NEW(
+                context_ptr->md_cu_arr_nsq[codedLeafIndex].coeff_tmp,
+                eb_picture_buffer_desc_ctor,
                 (EbPtr)&initData);
 
-            if (return_error == EB_ErrorInsufficientResources)
-                return EB_ErrorInsufficientResources;
             initData.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
             initData.max_width = SB_STRIDE_Y;
             initData.max_height = SB_STRIDE_Y;
@@ -122,12 +130,10 @@ EbErrorType mode_decision_context_ctor(
             initData.bot_padding = 0;
             initData.split_mode = EB_FALSE;
 
-            return_error = eb_picture_buffer_desc_ctor(
-                (EbPtr*)&context_ptr->md_cu_arr_nsq[codedLeafIndex].recon_tmp,
+            EB_NEW(
+                context_ptr->md_cu_arr_nsq[codedLeafIndex].recon_tmp,
+                eb_picture_buffer_desc_ctor,
                 (EbPtr)&initData);
-
-            if (return_error == EB_ErrorInsufficientResources)
-                return EB_ErrorInsufficientResources;
         }
 #endif
     }
