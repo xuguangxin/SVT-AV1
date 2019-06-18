@@ -423,6 +423,7 @@ extern "C" {
         struct PictureControlSet     *picture_control_set_ptr;
 
         CodingUnit                   *final_cu_arr;
+        uint32_t                      final_cu_count;
         PartitionType                  *cu_partition_array;
 #if !ADD_DELTA_QP_SUPPORT
         unsigned                        qp                      : 8;
