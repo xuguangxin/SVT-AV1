@@ -105,7 +105,83 @@ EbErrorType me_sb_results_ctor(
 void picture_control_set_dctor(EbPtr p)
 {
     PictureControlSet* obj = (PictureControlSet*)p;
+    uint8_t depth;
     EB_DELETE(obj->enc_dec_segment_ctrl);
+#if !MEMORY_FOOTPRINT_OPT
+    EB_DELETE(obj->md_refinement_intra_luma_mode_neighbor_array);
+    EB_DELETE(obj->md_refinement_mode_type_neighbor_array);
+    EB_DELETE(obj->md_refinement_luma_recon_neighbor_array);
+#endif
+    EB_DELETE(obj->ep_intra_luma_mode_neighbor_array);
+    EB_DELETE(obj->ep_intra_chroma_mode_neighbor_array);
+    EB_DELETE(obj->ep_mv_neighbor_array);
+    EB_DELETE(obj->ep_skip_flag_neighbor_array);
+    EB_DELETE(obj->ep_mode_type_neighbor_array);
+    EB_DELETE(obj->ep_leaf_depth_neighbor_array);
+    EB_DELETE(obj->ep_luma_recon_neighbor_array);
+    EB_DELETE(obj->ep_cb_recon_neighbor_array);
+    EB_DELETE(obj->ep_cr_recon_neighbor_array);
+#if DC_SIGN_CONTEXT_EP
+    EB_DELETE(obj->ep_luma_dc_sign_level_coeff_neighbor_array);
+    EB_DELETE(obj->ep_cb_dc_sign_level_coeff_neighbor_array);
+    EB_DELETE(obj->ep_cr_dc_sign_level_coeff_neighbor_array);
+#endif
+
+#if !OPT_LOSSLESS_0
+    EB_DELETE(obj->amvp_mv_merge_mv_neighbor_array);
+    EB_DELETE(obj->amvp_mv_merge_mode_type_neighbor_array);
+#endif
+    EB_DELETE(obj->mode_type_neighbor_array);
+    EB_DELETE(obj->partition_context_neighbor_array);
+    EB_DELETE(obj->skip_flag_neighbor_array);
+    EB_DELETE(obj->skip_coeff_neighbor_array);
+    EB_DELETE(obj->luma_dc_sign_level_coeff_neighbor_array);
+    EB_DELETE(obj->cr_dc_sign_level_coeff_neighbor_array);
+    EB_DELETE(obj->cb_dc_sign_level_coeff_neighbor_array);
+    EB_DELETE(obj->inter_pred_dir_neighbor_array);
+    EB_DELETE(obj->ref_frame_type_neighbor_array);
+    EB_DELETE(obj->intra_luma_mode_neighbor_array);
+#if ATB_EC
+    EB_DELETE(obj->txfm_context_array);
+#endif
+    EB_DELETE(obj->segmentation_id_pred_array);
+
+    EB_DELETE(obj->ep_luma_recon_neighbor_array16bit);
+    EB_DELETE(obj->ep_cb_recon_neighbor_array16bit);
+    EB_DELETE(obj->ep_cr_recon_neighbor_array16bit);
+    EB_DELETE(obj->interpolation_type_neighbor_array);
+
+    for (depth = 0; depth < NEIGHBOR_ARRAY_TOTAL_COUNT; depth++) {
+        EB_DELETE(obj->md_intra_luma_mode_neighbor_array[depth]);
+        EB_DELETE(obj->md_intra_chroma_mode_neighbor_array[depth]);
+        EB_DELETE(obj->md_mv_neighbor_array[depth]);
+        EB_DELETE(obj->md_skip_flag_neighbor_array[depth]);
+        EB_DELETE(obj->md_mode_type_neighbor_array[depth]);
+        EB_DELETE(obj->md_leaf_depth_neighbor_array[depth]);
+        EB_DELETE(obj->mdleaf_partition_neighbor_array[depth]);
+        EB_DELETE(obj->md_luma_recon_neighbor_array[depth]);
+#if ATB_MD
+        EB_DELETE(obj->md_tx_depth_1_luma_recon_neighbor_array[depth]);
+#endif
+        EB_DELETE(obj->md_cb_recon_neighbor_array[depth]);
+        EB_DELETE(obj->md_cr_recon_neighbor_array[depth]);
+#if !REMOVE_SKIP_COEFF_NEIGHBOR_ARRAY
+        EB_DELETE(obj->md_skip_coeff_neighbor_array[depth]);
+#endif
+        EB_DELETE(obj->md_luma_dc_sign_level_coeff_neighbor_array[depth]);
+#if ATB_DC_CONTEXT_SUPPORT_2
+        EB_DELETE(obj->md_tx_depth_1_luma_dc_sign_level_coeff_neighbor_array[depth]);
+#endif
+        EB_DELETE(obj->md_cr_dc_sign_level_coeff_neighbor_array[depth]);
+        EB_DELETE(obj->md_cb_dc_sign_level_coeff_neighbor_array[depth]);
+#if ATB_RATE
+        EB_DELETE(obj->md_txfm_context_array[depth]);
+#endif
+        EB_DELETE(obj->md_inter_pred_dir_neighbor_array[depth]);
+        EB_DELETE(obj->md_ref_frame_type_neighbor_array[depth]);
+        EB_DELETE(obj->md_interpolation_type_neighbor_array[depth]);
+    }
+    EB_DELETE(obj->md_ref_frame_type_neighbor_array[depth]);
     EB_DELETE_PTR_ARRAY(obj->sb_ptr_array, obj->sb_total_count);
     EB_DELETE(obj->coeff_est_entropy_coder_ptr);
     EB_DELETE(obj->bitstream_ptr);
@@ -131,18 +207,16 @@ typedef struct InitData {
 #define DIM(array) (sizeof(array) / sizeof(array[0]))
 EbErrorType create_neighbor_array_units(InitData* data, size_t count)
 {
-    EbErrorType return_error = EB_ErrorNone;
     for (size_t i = 0; i < count; i++) {
-        return_error = neighbor_array_unit_ctor(
-            data[i].na_unit_dbl_ptr,
+        EB_NEW(
+            *data[i].na_unit_dbl_ptr,
+            neighbor_array_unit_ctor,
             data[i].max_picture_width,
             data[i].max_picture_height,
             data[i].unit_size,
             data[i].granularity_normal,
             data[i].granularity_top_left,
             data[i].type_mask);
-        if (return_error != EB_ErrorNone)
-            return return_error;
     }
     return EB_ErrorNone;
 }
@@ -505,16 +579,15 @@ EbErrorType picture_control_set_ctor(
         return_error = create_neighbor_array_units(data, DIM(data));
         if (return_error == EB_ErrorInsufficientResources)
             return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor32(
-                &object_ptr->md_interpolation_type_neighbor_array[depth],
-                MAX_PICTURE_WIDTH_SIZE,
-                MAX_PICTURE_HEIGHT_SIZE,
-                sizeof(uint32_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
-                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
+        EB_NEW(
+            object_ptr->md_interpolation_type_neighbor_array[depth],
+            neighbor_array_unit_ctor32,
+            MAX_PICTURE_WIDTH_SIZE,
+            MAX_PICTURE_HEIGHT_SIZE,
+            sizeof(uint32_t),
+            PU_NEIGHBOR_ARRAY_GRANULARITY,
+            PU_NEIGHBOR_ARRAY_GRANULARITY,
+            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     }
     {
         InitData data[] = {
@@ -787,16 +860,15 @@ EbErrorType picture_control_set_ctor(
         object_ptr->ep_cb_recon_neighbor_array16bit = 0;
         object_ptr->ep_cr_recon_neighbor_array16bit = 0;
     }
-    return_error = neighbor_array_unit_ctor32(
-        &object_ptr->interpolation_type_neighbor_array,
+    EB_NEW(
+        object_ptr->interpolation_type_neighbor_array,
+        neighbor_array_unit_ctor32,
         MAX_PICTURE_WIDTH_SIZE,
         MAX_PICTURE_HEIGHT_SIZE,
         sizeof(uint32_t),
         PU_NEIGHBOR_ARRAY_GRANULARITY,
         PU_NEIGHBOR_ARRAY_GRANULARITY,
         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
 
     //Segmentation neighbor arrays
     return_error = segmentation_map_ctor(

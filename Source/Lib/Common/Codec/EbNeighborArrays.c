@@ -15,7 +15,7 @@
  * Neighbor Array Unit Ctor
  *************************************************/
 EbErrorType neighbor_array_unit_ctor32(
-    NeighborArrayUnit32 **na_unit_dbl_ptr,
+    NeighborArrayUnit32 *na_unit_ptr,
     uint32_t   max_picture_width,
     uint32_t   max_picture_height,
     uint32_t   unit_size,
@@ -23,10 +23,6 @@ EbErrorType neighbor_array_unit_ctor32(
     uint32_t   granularity_top_left,
     uint32_t   type_mask)
 {
-    NeighborArrayUnit32 *na_unit_ptr;
-    EB_ALLOC_OBJECT(NeighborArrayUnit32*, na_unit_ptr, sizeof(NeighborArrayUnit32), EB_N_PTR);
-
-    *na_unit_dbl_ptr = na_unit_ptr;
     na_unit_ptr->unit_size = (uint8_t)(unit_size);
     na_unit_ptr->granularity_normal = (uint8_t)(granularity_normal);
     na_unit_ptr->granularity_normal_log2 = (uint8_t)(Log2f(na_unit_ptr->granularity_normal));
@@ -55,7 +51,7 @@ EbErrorType neighbor_array_unit_ctor32(
 }
 
 EbErrorType neighbor_array_unit_ctor(
-    NeighborArrayUnit **na_unit_dbl_ptr,
+    NeighborArrayUnit *na_unit_ptr,
     uint32_t   max_picture_width,
     uint32_t   max_picture_height,
     uint32_t   unit_size,
@@ -63,10 +59,6 @@ EbErrorType neighbor_array_unit_ctor(
     uint32_t   granularity_top_left,
     uint32_t   type_mask)
 {
-    NeighborArrayUnit *na_unit_ptr;
-    EB_ALLOC_OBJECT(NeighborArrayUnit*, na_unit_ptr, sizeof(NeighborArrayUnit), EB_N_PTR);
-
-    *na_unit_dbl_ptr = na_unit_ptr;
     na_unit_ptr->unit_size = (uint8_t)(unit_size);
     na_unit_ptr->granularity_normal = (uint8_t)(granularity_normal);
     na_unit_ptr->granularity_normal_log2 = (uint8_t)(Log2f(na_unit_ptr->granularity_normal));
