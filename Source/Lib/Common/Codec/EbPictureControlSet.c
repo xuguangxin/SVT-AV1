@@ -118,6 +118,35 @@ void picture_control_set_dctor(EbPtr p)
     EB_DELETE(obj->input_frame16bit);
 }
 
+typedef struct InitData {
+    NeighborArrayUnit **na_unit_dbl_ptr;
+    uint32_t   max_picture_width;
+    uint32_t   max_picture_height;
+    uint32_t   unit_size;
+    uint32_t   granularity_normal;
+    uint32_t   granularity_top_left;
+    uint32_t   type_mask;
+} InitData;
+
+#define DIM(array) (sizeof(array) / sizeof(array[0]))
+EbErrorType create_neighbor_array_units(InitData* data, size_t count)
+{
+    EbErrorType return_error = EB_ErrorNone;
+    for (size_t i = 0; i < count; i++) {
+        return_error = neighbor_array_unit_ctor(
+            data[i].na_unit_dbl_ptr,
+            data[i].max_picture_width,
+            data[i].max_picture_height,
+            data[i].unit_size,
+            data[i].granularity_normal,
+            data[i].granularity_top_left,
+            data[i].type_mask);
+        if (return_error != EB_ErrorNone)
+            return return_error;
+    }
+    return EB_ErrorNone;
+}
+
 EbErrorType picture_control_set_ctor(
     PictureControlSet *object_ptr,
     EbPtr object_init_data_ptr)
@@ -296,356 +325,460 @@ EbErrorType picture_control_set_ctor(
     // Mode Decision Neighbor Arrays
     uint8_t depth;
     for (depth = 0; depth < NEIGHBOR_ARRAY_TOTAL_COUNT; depth++) {
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_intra_luma_mode_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_intra_chroma_mode_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-            MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
+        InitData data[] = {
+            {
+                &object_ptr->md_intra_luma_mode_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK
+            },
+            {
+                &object_ptr->md_intra_chroma_mode_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->md_mv_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(MvUnit),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->md_skip_flag_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->md_mode_type_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->md_leaf_depth_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->mdleaf_partition_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(struct PartitionContext),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->md_luma_recon_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->md_tx_depth_1_luma_recon_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->md_cb_recon_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->md_cr_recon_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->md_skip_coeff_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->md_luma_dc_sign_level_coeff_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->md_tx_depth_1_luma_dc_sign_level_coeff_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->md_cr_dc_sign_level_coeff_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->md_cb_dc_sign_level_coeff_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->md_txfm_context_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(TXFM_CONTEXT),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->md_inter_pred_dir_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->md_ref_frame_type_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+        };
+        return_error = create_neighbor_array_units(data, DIM(data));
         if (return_error == EB_ErrorInsufficientResources)
             return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_mv_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(MvUnit),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_skip_flag_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_mode_type_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_leaf_depth_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->mdleaf_partition_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(struct PartitionContext),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_luma_recon_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_tx_depth_1_luma_recon_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_cb_recon_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-            MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-            sizeof(uint8_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_cr_recon_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-            MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-            sizeof(uint8_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_skip_coeff_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        // for each 4x4
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_luma_dc_sign_level_coeff_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        // for each 4x4
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_tx_depth_1_luma_dc_sign_level_coeff_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        // for each 4x4
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_cr_dc_sign_level_coeff_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        // for each 4x4
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_cb_dc_sign_level_coeff_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_txfm_context_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(TXFM_CONTEXT),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_inter_pred_dir_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->md_ref_frame_type_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
         return_error = neighbor_array_unit_ctor32(
-            &object_ptr->md_interpolation_type_neighbor_array[depth],
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint32_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
+                &object_ptr->md_interpolation_type_neighbor_array[depth],
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint32_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
         if (return_error == EB_ErrorInsufficientResources)
             return EB_ErrorInsufficientResources;
     }
-    // Encode Pass Neighbor Arrays
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_intra_luma_mode_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
+    {
+        InitData data[] = {
+            {
+                &object_ptr->ep_intra_luma_mode_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // Encode Pass Neighbor Arrays
+            {
+                &object_ptr->ep_intra_chroma_mode_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->ep_mv_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(MvUnit),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_skip_flag_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                CU_NEIGHBOR_ARRAY_GRANULARITY,
+                CU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->ep_mode_type_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_leaf_depth_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->ep_luma_recon_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_cb_recon_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_cr_recon_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint8_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+           // for each 4x4
+            {
+                &object_ptr->ep_luma_dc_sign_level_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->ep_cb_dc_sign_level_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->ep_cr_dc_sign_level_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
 
-    // Encode Pass Neighbor Arrays
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_intra_chroma_mode_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-        MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_mv_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(MvUnit),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_skip_flag_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        CU_NEIGHBOR_ARRAY_GRANULARITY,
-        CU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_mode_type_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_leaf_depth_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_luma_recon_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_cb_recon_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-        MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-        sizeof(uint8_t),
-        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_cr_recon_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-        MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-        sizeof(uint8_t),
-        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-        SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+            // Entropy Coding Neighbor Arrays
+            {
+                &object_ptr->mode_type_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->partition_context_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(struct PartitionContext),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->skip_flag_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->skip_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->luma_dc_sign_level_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->cr_dc_sign_level_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            // for each 4x4
+            {
+                &object_ptr->cb_dc_sign_level_coeff_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->inter_pred_dir_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->ref_frame_type_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->intra_luma_mode_neighbor_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->txfm_context_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(TXFM_CONTEXT),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK,
+            },
+            {
+                &object_ptr->segmentation_id_pred_array,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint8_t),
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                PU_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+        };
+        return_error = create_neighbor_array_units(data, DIM(data));
+        if (return_error == EB_ErrorInsufficientResources)
+            return EB_ErrorInsufficientResources;
+    }
     if (is16bit) {
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->ep_luma_recon_neighbor_array16bit,
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint16_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->ep_cb_recon_neighbor_array16bit,
-            MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-            MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-            sizeof(uint16_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-
-        if (return_error == EB_ErrorInsufficientResources)
-            return EB_ErrorInsufficientResources;
-        return_error = neighbor_array_unit_ctor(
-            &object_ptr->ep_cr_recon_neighbor_array16bit,
-            MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-            MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-            sizeof(uint16_t),
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
+        InitData data[] = {
+            {
+                &object_ptr->ep_luma_recon_neighbor_array16bit,
+                MAX_PICTURE_WIDTH_SIZE,
+                MAX_PICTURE_HEIGHT_SIZE,
+                sizeof(uint16_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_cb_recon_neighbor_array16bit,
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint16_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_cr_recon_neighbor_array16bit,
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint16_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+        };
+        return_error = create_neighbor_array_units(data, DIM(data));
         if (return_error == EB_ErrorInsufficientResources)
             return EB_ErrorInsufficientResources;
     }
@@ -654,145 +787,6 @@ EbErrorType picture_control_set_ctor(
         object_ptr->ep_cb_recon_neighbor_array16bit = 0;
         object_ptr->ep_cr_recon_neighbor_array16bit = 0;
     }
-
-    // for each 4x4
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_luma_dc_sign_level_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    // for each 4x4
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_cb_dc_sign_level_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    // for each 4x4
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ep_cr_dc_sign_level_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-
-    // Entropy Coding Neighbor Arrays
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->mode_type_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->partition_context_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(struct PartitionContext),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->skip_flag_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->skip_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    // for each 4x4
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->luma_dc_sign_level_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    // for each 4x4
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->cr_dc_sign_level_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    // for each 4x4
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->cb_dc_sign_level_coeff_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->inter_pred_dir_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->ref_frame_type_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
     return_error = neighbor_array_unit_ctor32(
         &object_ptr->interpolation_type_neighbor_array,
         MAX_PICTURE_WIDTH_SIZE,
@@ -801,50 +795,15 @@ EbErrorType picture_control_set_ctor(
         PU_NEIGHBOR_ARRAY_GRANULARITY,
         PU_NEIGHBOR_ARRAY_GRANULARITY,
         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->intra_luma_mode_neighbor_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(uint8_t),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
 
-    return_error = neighbor_array_unit_ctor(
-        &object_ptr->txfm_context_array,
-        MAX_PICTURE_WIDTH_SIZE,
-        MAX_PICTURE_HEIGHT_SIZE,
-        sizeof(TXFM_CONTEXT),
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        PU_NEIGHBOR_ARRAY_GRANULARITY,
-        NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
     //Segmentation neighbor arrays
     return_error = segmentation_map_ctor(
             &object_ptr->segmentation_neighbor_map,
             initDataPtr->picture_width, initDataPtr->picture_height);
-
-    if (return_error == EB_ErrorInsufficientResources) {
+    if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
-    }
-
-    return_error = neighbor_array_unit_ctor(
-            &object_ptr->segmentation_id_pred_array,
-            MAX_PICTURE_WIDTH_SIZE,
-            MAX_PICTURE_HEIGHT_SIZE,
-            sizeof(uint8_t),
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            PU_NEIGHBOR_ARRAY_GRANULARITY,
-            NEIGHBOR_ARRAY_UNIT_FULL_MASK);
-    if (return_error == EB_ErrorInsufficientResources) {
-        return EB_ErrorInsufficientResources;
-    }
 
     // Note - non-zero offsets are not supported (to be fixed later in DLF chroma filtering)
     object_ptr->cb_qp_offset = 0;
