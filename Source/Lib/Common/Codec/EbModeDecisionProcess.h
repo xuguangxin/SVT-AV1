@@ -88,6 +88,7 @@ extern "C" {
         ModeDecisionCandidate        *fast_candidate_array;
         ModeDecisionCandidateBuffer **candidate_buffer_ptr_array;
         MdRateEstimationContext      *md_rate_estimation_ptr;
+        EbBool                        is_md_rate_estimation_ptr_owner;
         InterPredictionContext       *inter_prediction_context;
         MdCodingUnit                  md_local_cu_unit[BLOCK_MAX_COUNT_SB_128];
         CodingUnit                    md_cu_arr_nsq[BLOCK_MAX_COUNT_SB_128];

@@ -12,6 +12,7 @@
 static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
+    uint32_t codedLeafIndex;
 #if NO_ENCDEC //SB128_TODO to upgrade
     int codedLeafIndex;
     for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
@@ -23,6 +24,27 @@ static void mode_decision_context_dctor(EbPtr p)
 
     EB_DELETE_PTR_ARRAY(obj->candidate_buffer_ptr_array, (MAX_NFL + 1 + 1));
     EB_DELETE(obj->trans_quant_buffers_ptr);
+
+    EB_FREE(obj->transform_inner_array_ptr);
+    if (obj->is_md_rate_estimation_ptr_owner)
+        EB_FREE_ARRAY(obj->md_rate_estimation_ptr);
+    EB_FREE_ARRAY(obj->fast_candidate_array);
+    EB_FREE_ARRAY(obj->fast_candidate_ptr_array);
+    EB_FREE_ARRAY(obj->fast_cost_array);
+    EB_FREE_ARRAY(obj->full_cost_array);
+    EB_FREE_ARRAY(obj->full_cost_skip_ptr);
+    EB_FREE_ARRAY(obj->full_cost_merge_ptr);
+    for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].av1xd);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0]);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1]);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2]);
+
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0]);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1]);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2]);
+
+    }
 }
 
 /******************************************************
@@ -45,15 +67,16 @@ EbErrorType mode_decision_context_ctor(
     context_ptr->mode_decision_output_fifo_ptr = mode_decision_output_fifo_ptr;
 
     // Trasform Scratch Memory
-    EB_MALLOC(int16_t*, context_ptr->transform_inner_array_ptr, 3120, EB_N_PTR); //refer to EbInvTransform_SSE2.as. case 32x32
+    EB_MALLOC1(context_ptr->transform_inner_array_ptr, 3120); //refer to EbInvTransform_SSE2.as. case 32x32
 
     // MD rate Estimation tables
-    EB_MALLOC(MdRateEstimationContext*, context_ptr->md_rate_estimation_ptr, sizeof(MdRateEstimationContext), EB_N_PTR);
+    EB_MALLOC_ARRAY(context_ptr->md_rate_estimation_ptr, 1);
+    context_ptr->is_md_rate_estimation_ptr_owner = EB_TRUE;
 
     // Fast Candidate Array
-    EB_MALLOC(ModeDecisionCandidate*, context_ptr->fast_candidate_array, sizeof(ModeDecisionCandidate) * MODE_DECISION_CANDIDATE_MAX_COUNT, EB_N_PTR);
+    EB_MALLOC_ARRAY(context_ptr->fast_candidate_array, MODE_DECISION_CANDIDATE_MAX_COUNT);
 
-    EB_MALLOC(ModeDecisionCandidate**, context_ptr->fast_candidate_ptr_array, sizeof(ModeDecisionCandidate*) * MODE_DECISION_CANDIDATE_MAX_COUNT, EB_N_PTR);
+    EB_MALLOC_ARRAY(context_ptr->fast_candidate_ptr_array, MODE_DECISION_CANDIDATE_MAX_COUNT);
 
     for (candidateIndex = 0; candidateIndex < MODE_DECISION_CANDIDATE_MAX_COUNT; ++candidateIndex) {
         context_ptr->fast_candidate_ptr_array[candidateIndex] = &context_ptr->fast_candidate_array[candidateIndex];
@@ -67,10 +90,10 @@ EbErrorType mode_decision_context_ctor(
 
     // Cost Arrays
     // Hsan: MAX_NFL + 1 scratch buffer for intra + 1 scratch buffer for inter
-    EB_MALLOC(uint64_t*, context_ptr->fast_cost_array, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
-    EB_MALLOC(uint64_t*, context_ptr->full_cost_array, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
-    EB_MALLOC(uint64_t*, context_ptr->full_cost_skip_ptr, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
-    EB_MALLOC(uint64_t*, context_ptr->full_cost_merge_ptr, sizeof(uint64_t) * (MAX_NFL + 1 + 1), EB_N_PTR);
+    EB_MALLOC_ARRAY(context_ptr->fast_cost_array, MAX_NFL + 1 + 1);
+    EB_MALLOC_ARRAY(context_ptr->full_cost_array, MAX_NFL + 1 + 1);
+    EB_MALLOC_ARRAY(context_ptr->full_cost_skip_ptr, MAX_NFL + 1 + 1);
+    EB_MALLOC_ARRAY(context_ptr->full_cost_merge_ptr, MAX_NFL + 1 + 1);
     // Candidate Buffers
     EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_ptr_array, (MAX_NFL + 1 + 1));
 
@@ -90,14 +113,14 @@ EbErrorType mode_decision_context_ctor(
             context_ptr->md_cu_arr_nsq[codedLeafIndex].transform_unit_array[tu_index].tu_index = tu_index;
         const BlockGeom * blk_geom = get_blk_geom_mds(codedLeafIndex);
         UNUSED(blk_geom);
-        EB_MALLOC(MacroBlockD*, context_ptr->md_cu_arr_nsq[codedLeafIndex].av1xd, sizeof(MacroBlockD), EB_N_PTR);
-        EB_MALLOC(uint8_t*, context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0], 128, EB_N_PTR);
-        EB_MALLOC(uint8_t*, context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1], 128, EB_N_PTR);
-        EB_MALLOC(uint8_t*, context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2], 128, EB_N_PTR);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].av1xd, 1);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0], 128);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1], 128);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2], 128);
 
-        EB_MALLOC(uint8_t*, context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0], 128, EB_N_PTR);
-        EB_MALLOC(uint8_t*, context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1], 128, EB_N_PTR);
-        EB_MALLOC(uint8_t*, context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2], 128, EB_N_PTR);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0], 128);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1], 128);
+        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2], 128);
 
 #if NO_ENCDEC //SB128_TODO to upgrade
         {
@@ -346,6 +369,10 @@ void reset_mode_decision(
 #endif
 
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
+    if (context_ptr->is_md_rate_estimation_ptr_owner) {
+        context_ptr->is_md_rate_estimation_ptr_owner = EB_FALSE;
+        EB_FREE_ARRAY(context_ptr->md_rate_estimation_ptr);
+    }
 
     context_ptr->md_rate_estimation_ptr = md_rate_estimation_array;
     uint32_t  candidateIndex;
