@@ -73,6 +73,7 @@ const int8_t  encMaxDeltaQpTab[4][MAX_TEMPORAL_LAYERS] = {
     { 4, 5, 5, 5, 5, 5 },
     { 4, 5, 5, 5, 5, 5 }
 };
+
 static void enc_dec_context_dctor(EbPtr p)
 {
     EncDecContext* obj = (EncDecContext*)p;
@@ -81,6 +82,9 @@ static void enc_dec_context_dctor(EbPtr p)
     EB_DELETE(obj->transform_buffer);
     EB_DELETE(obj->inverse_quant_buffer);
     EB_DELETE(obj->input_sample16bit_buffer);
+    if (obj->is_md_rate_estimation_ptr_owner)
+        EB_FREE(obj->md_rate_estimation_ptr);
+    EB_FREE_ARRAY(obj->transform_inner_array_ptr);
 }
 
 /******************************************************
@@ -111,9 +115,10 @@ EbErrorType enc_dec_context_ctor(
     context_ptr->picture_demux_output_fifo_ptr = picture_demux_fifo_ptr;
 
     // Trasform Scratch Memory
-    EB_MALLOC(int16_t*, context_ptr->transform_inner_array_ptr, 3152, EB_N_PTR); //refer to EbInvTransform_SSE2.as. case 32x32
+    EB_MALLOC_ARRAY(context_ptr->transform_inner_array_ptr, 3152); //refer to EbInvTransform_SSE2.as. case 32x32
     // MD rate Estimation tables
-    EB_MALLOC(MdRateEstimationContext*, context_ptr->md_rate_estimation_ptr, sizeof(MdRateEstimationContext), EB_N_PTR);
+    EB_MALLOC1(context_ptr->md_rate_estimation_ptr, sizeof(MdRateEstimationContext));
+    context_ptr->is_md_rate_estimation_ptr_owner = EB_TRUE;
 
     // Prediction Buffer
     {
@@ -271,6 +276,10 @@ static void ResetEncDec(
 #endif
 
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
+    if (context_ptr->is_md_rate_estimation_ptr_owner) {
+        EB_FREE(context_ptr->md_rate_estimation_ptr);
+        context_ptr->is_md_rate_estimation_ptr_owner = EB_FALSE;
+    }
 
     context_ptr->md_rate_estimation_ptr = md_rate_estimation_array;
     if (segment_index == 0){
