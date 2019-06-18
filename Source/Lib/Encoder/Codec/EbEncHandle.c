@@ -660,6 +660,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE(enc_handle_ptr->sequence_control_set_pool_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->pa_reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->overlay_input_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
@@ -698,6 +699,16 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->rate_control_context_ptr);
     EB_DELETE(enc_handle_ptr->packetization_context_ptr);
 	EB_DELETE_PTR_ARRAY(enc_handle_ptr->reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+
+    EB_FREE_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->picture_control_set_pool_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->overlay_input_picture_pool_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->reference_picture_pool_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->pa_reference_picture_pool_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->output_stream_buffer_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->output_stream_buffer_consumer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->output_recon_buffer_producer_fifo_ptr_dbl_array);
+    EB_FREE_ARRAY(enc_handle_ptr->output_recon_buffer_consumer_fifo_ptr_dbl_array);
 
 }
 
@@ -898,7 +909,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     ************************************/
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
 
-    EB_MALLOC(EbFifo***, enc_handle_ptr->picture_parent_control_set_pool_producer_fifo_ptr_dbl_array, sizeof(EbSystemResource**) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
 
     for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
         // The segment Width & Height Arrays are in units of LCUs, not samples
@@ -945,7 +956,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     ************************************/
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
 
-    EB_MALLOC(EbFifo***, enc_handle_ptr->picture_control_set_pool_producer_fifo_ptr_dbl_array, sizeof(EbSystemResource**) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(enc_handle_ptr->picture_control_set_pool_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
 
     for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
         // The segment Width & Height Arrays are in units of LCUs, not samples
@@ -998,10 +1009,10 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->pa_reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
 
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->overlay_input_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
-    EB_MALLOC(EbFifo***, enc_handle_ptr->overlay_input_picture_pool_producer_fifo_ptr_dbl_array, sizeof(EbFifo**) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(enc_handle_ptr->overlay_input_picture_pool_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
     // Allocate Producer Fifo Arrays
-    EB_MALLOC(EbFifo***, enc_handle_ptr->reference_picture_pool_producer_fifo_ptr_dbl_array, sizeof(EbFifo**) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
-    EB_MALLOC(EbFifo***, enc_handle_ptr->pa_reference_picture_pool_producer_fifo_ptr_dbl_array, sizeof(EbFifo**) * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(enc_handle_ptr->reference_picture_pool_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
+    EB_MALLOC_ARRAY(enc_handle_ptr->pa_reference_picture_pool_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
 
     // Rate Control
     rateControlPorts[0].count = EB_PictureManagerProcessInitCount;
@@ -1144,8 +1155,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
 
     // EbBufferHeaderType Output Stream
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->output_stream_buffer_resource_ptr_array, enc_handle_ptr->encode_instance_total_count);
-    EB_MALLOC(EbFifo***, enc_handle_ptr->output_stream_buffer_producer_fifo_ptr_dbl_array, sizeof(EbFifo**)          * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
-    EB_MALLOC(EbFifo***, enc_handle_ptr->output_stream_buffer_consumer_fifo_ptr_dbl_array, sizeof(EbFifo**)          * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(enc_handle_ptr->output_stream_buffer_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
+    EB_MALLOC_ARRAY(enc_handle_ptr->output_stream_buffer_consumer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
 
     for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
         EB_NEW(
@@ -1164,8 +1175,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     if (enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->static_config.recon_enabled) {
         // EbBufferHeaderType Output Recon
         EB_ALLOC_PTR_ARRAY(enc_handle_ptr->output_recon_buffer_resource_ptr_array, enc_handle_ptr->encode_instance_total_count);
-        EB_MALLOC(EbFifo***, enc_handle_ptr->output_recon_buffer_producer_fifo_ptr_dbl_array, sizeof(EbFifo**)          * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
-        EB_MALLOC(EbFifo***, enc_handle_ptr->output_recon_buffer_consumer_fifo_ptr_dbl_array, sizeof(EbFifo**)          * enc_handle_ptr->encode_instance_total_count, EB_N_PTR);
+        EB_MALLOC_ARRAY(enc_handle_ptr->output_recon_buffer_producer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
+        EB_MALLOC_ARRAY(enc_handle_ptr->output_recon_buffer_consumer_fifo_ptr_dbl_array, enc_handle_ptr->encode_instance_total_count);
 
         for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
             EB_NEW(
