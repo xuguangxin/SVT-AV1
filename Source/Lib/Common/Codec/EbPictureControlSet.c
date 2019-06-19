@@ -945,9 +945,60 @@ EbErrorType picture_control_set_creator(
 static void picture_parent_control_set_dctor(EbPtr p)
 {
     PictureParentControlSet *obj = (PictureParentControlSet*)p;
+    uint32_t regionInPictureWidthIndex;
+    uint32_t regionInPictureHeightIndex;
+
+    EB_DELETE(obj->denoise_and_model);
+
     EB_DELETE_PTR_ARRAY(obj->me_results, obj->sb_total_count);
     if (obj->is_chroma_downsampled_picture_ptr_owner)
         EB_DELETE(obj->chroma_downsampled_picture_ptr);
+
+    EB_FREE_2D(obj->variance, obj->sb_total_count);
+    EB_FREE_2D(obj->y_mean, obj->sb_total_count);
+    EB_FREE_2D(obj->cbMean, obj->sb_total_count);
+    EB_FREE_2D(obj->crMean, obj->sb_total_count);
+
+    if (obj->picture_histogram) {
+        for (regionInPictureWidthIndex = 0; regionInPictureWidthIndex < MAX_NUMBER_OF_REGIONS_IN_WIDTH; regionInPictureWidthIndex++) {
+            if (obj->picture_histogram[regionInPictureWidthIndex]) {
+                for (regionInPictureHeightIndex = 0; regionInPictureHeightIndex < MAX_NUMBER_OF_REGIONS_IN_HEIGHT; regionInPictureHeightIndex++) {
+                    EB_FREE_2D(obj->picture_histogram[regionInPictureWidthIndex][regionInPictureHeightIndex], 3);
+                }
+            }
+            EB_FREE_PTR_ARRAY(obj->picture_histogram[regionInPictureWidthIndex], MAX_NUMBER_OF_REGIONS_IN_HEIGHT);
+        }
+        EB_FREE_PTR_ARRAY(obj->picture_histogram, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
+    }
+
+    EB_FREE_2D(obj->ois_sb_results, obj->sb_total_count);
+    EB_FREE_2D(obj->ois_candicate, obj->sb_total_count);
+    EB_FREE_ARRAY(obj->rc_me_distortion);
+    // ME and OIS Distortion Histograms
+    EB_FREE_ARRAY(obj->me_distortion_histogram);
+    EB_FREE_ARRAY(obj->ois_distortion_histogram);
+    EB_FREE_ARRAY(obj->intra_sad_interval_index);
+    EB_FREE_ARRAY(obj->inter_sad_interval_index);
+    // Non moving index array
+    EB_FREE_ARRAY(obj->non_moving_index_array);
+    // SB noise variance array
+    EB_FREE_ARRAY(obj->sb_flat_noise_array);
+    EB_FREE_ARRAY(obj->edge_results_ptr);
+
+    EB_FREE_ARRAY(obj->sharp_edge_sb_flag);
+    EB_FREE_ARRAY(obj->sb_stat_array);
+
+    EB_FREE_ARRAY(obj->complex_sb_array);
+
+    EB_FREE_ARRAY(obj->sb_depth_mode_array);
+
+    EB_FREE_ARRAY(obj->av1_cm->frame_to_show);
+    EB_FREE_ARRAY(obj->av1_cm);
+    EB_FREE_ARRAY(obj->rusi_picture[0]);
+    EB_FREE_ARRAY(obj->rusi_picture[1]);
+    EB_FREE_ARRAY(obj->rusi_picture[2]);
+
+    EB_FREE_ARRAY(obj->av1x);
 }
 EbErrorType picture_parent_control_set_ctor(
     PictureParentControlSet *object_ptr,
@@ -1002,49 +1053,30 @@ EbErrorType picture_parent_control_set_ctor(
 
     object_ptr->data_ll_head_ptr = (EbLinkedListNode *)EB_NULL;
     object_ptr->app_out_data_ll_head_ptr = (EbLinkedListNode *)EB_NULL;
-    EB_MALLOC(uint16_t**, object_ptr->variance, sizeof(uint16_t*) * object_ptr->sb_total_count, EB_N_PTR);
-    EB_MALLOC(uint8_t**, object_ptr->y_mean, sizeof(uint8_t*) * object_ptr->sb_total_count, EB_N_PTR);
-    EB_MALLOC(uint8_t**, object_ptr->cbMean, sizeof(uint8_t*) * object_ptr->sb_total_count, EB_N_PTR);
-    EB_MALLOC(uint8_t**, object_ptr->crMean, sizeof(uint8_t*) * object_ptr->sb_total_count, EB_N_PTR);
-    for (sb_index = 0; sb_index < object_ptr->sb_total_count; ++sb_index) {
-        EB_MALLOC(uint16_t*, object_ptr->variance[sb_index], sizeof(uint16_t) * MAX_ME_PU_COUNT, EB_N_PTR);
-        EB_MALLOC(uint8_t*, object_ptr->y_mean[sb_index], sizeof(uint8_t) * MAX_ME_PU_COUNT, EB_N_PTR);
-        EB_MALLOC(uint8_t*, object_ptr->cbMean[sb_index], sizeof(uint8_t) * 21, EB_N_PTR);
-        EB_MALLOC(uint8_t*, object_ptr->crMean[sb_index], sizeof(uint8_t) * 21, EB_N_PTR);
-    }
+    EB_MALLOC_2D(object_ptr->variance, object_ptr->sb_total_count, MAX_ME_PU_COUNT);
+    EB_MALLOC_2D(object_ptr->y_mean, object_ptr->sb_total_count, MAX_ME_PU_COUNT);
+    EB_MALLOC_2D(object_ptr->cbMean, object_ptr->sb_total_count, 21);
+    EB_MALLOC_2D(object_ptr->crMean, object_ptr->sb_total_count, 21);
+
     // Histograms
     uint32_t videoComponent;
 
-    EB_MALLOC(uint32_t****, object_ptr->picture_histogram, sizeof(uint32_t***) * MAX_NUMBER_OF_REGIONS_IN_WIDTH, EB_N_PTR);
+    EB_ALLOC_PTR_ARRAY(object_ptr->picture_histogram, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
 
     for (regionInPictureWidthIndex = 0; regionInPictureWidthIndex < MAX_NUMBER_OF_REGIONS_IN_WIDTH; regionInPictureWidthIndex++) {  // loop over horizontal regions
-        EB_MALLOC(uint32_t***, object_ptr->picture_histogram[regionInPictureWidthIndex], sizeof(uint32_t**) * MAX_NUMBER_OF_REGIONS_IN_HEIGHT, EB_N_PTR);
-    }
-
-    for (regionInPictureWidthIndex = 0; regionInPictureWidthIndex < MAX_NUMBER_OF_REGIONS_IN_WIDTH; regionInPictureWidthIndex++) {  // loop over horizontal regions
-        for (regionInPictureHeightIndex = 0; regionInPictureHeightIndex < MAX_NUMBER_OF_REGIONS_IN_HEIGHT; regionInPictureHeightIndex++) { // loop over vertical regions
-            EB_MALLOC(uint32_t**, object_ptr->picture_histogram[regionInPictureWidthIndex][regionInPictureHeightIndex], sizeof(uint32_t*) * 3, EB_N_PTR);
+        EB_ALLOC_PTR_ARRAY(object_ptr->picture_histogram[regionInPictureWidthIndex], MAX_NUMBER_OF_REGIONS_IN_HEIGHT);
+        for (regionInPictureHeightIndex = 0; regionInPictureHeightIndex < MAX_NUMBER_OF_REGIONS_IN_HEIGHT; regionInPictureHeightIndex++) {
+            EB_MALLOC_2D(object_ptr->picture_histogram[regionInPictureWidthIndex][regionInPictureHeightIndex], 3, HISTOGRAM_NUMBER_OF_BINS);
         }
     }
 
-    for (regionInPictureWidthIndex = 0; regionInPictureWidthIndex < MAX_NUMBER_OF_REGIONS_IN_WIDTH; regionInPictureWidthIndex++) {  // loop over horizontal regions
-        for (regionInPictureHeightIndex = 0; regionInPictureHeightIndex < MAX_NUMBER_OF_REGIONS_IN_HEIGHT; regionInPictureHeightIndex++) { // loop over vertical regions
-            for (videoComponent = 0; videoComponent < 3; ++videoComponent) {
-                EB_MALLOC(uint32_t*, object_ptr->picture_histogram[regionInPictureWidthIndex][regionInPictureHeightIndex][videoComponent], sizeof(uint32_t) * HISTOGRAM_NUMBER_OF_BINS, EB_N_PTR);
-            }
-        }
-    }
-        EB_MALLOC(OisSbResults**, object_ptr->ois_sb_results, sizeof(OisSbResults*) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_2D(object_ptr->ois_sb_results, object_ptr->sb_total_count, 1);
+    EB_MALLOC_2D(object_ptr->ois_candicate, object_ptr->sb_total_count,  MAX_OIS_CANDIDATES * CU_MAX_COUNT);
 
     for (sb_index = 0; sb_index < object_ptr->sb_total_count; ++sb_index) {
-        EB_MALLOC(OisSbResults*, object_ptr->ois_sb_results[sb_index], sizeof(OisSbResults), EB_N_PTR);
-
-        OisCandidate* contigousCand;
-        EB_MALLOC(OisCandidate*, contigousCand, sizeof(OisCandidate) * MAX_OIS_CANDIDATES * CU_MAX_COUNT, EB_N_PTR);
-
         uint32_t cuIdx;
         for (cuIdx = 0; cuIdx < CU_MAX_COUNT; ++cuIdx)
-            object_ptr->ois_sb_results[sb_index]->ois_candidate_array[cuIdx] = &contigousCand[cuIdx*MAX_OIS_CANDIDATES];
+            object_ptr->ois_sb_results[sb_index]->ois_candidate_array[cuIdx] = &object_ptr->ois_candicate[sb_index][cuIdx*MAX_OIS_CANDIDATES];
     }
 
     object_ptr->max_number_of_candidates_per_block = (initDataPtr->mrp_mode == 0) ?
@@ -1062,32 +1094,32 @@ EbErrorType picture_parent_control_set_ctor(
             object_ptr->max_number_of_candidates_per_block);
     }
 
-    EB_MALLOC(uint32_t*, object_ptr->rc_me_distortion, sizeof(uint32_t) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->rc_me_distortion, object_ptr->sb_total_count);
     // ME and OIS Distortion Histograms
-    EB_MALLOC(uint16_t*, object_ptr->me_distortion_histogram, sizeof(uint16_t) * NUMBER_OF_SAD_INTERVALS, EB_N_PTR);
-    EB_MALLOC(uint16_t*, object_ptr->ois_distortion_histogram, sizeof(uint16_t) * NUMBER_OF_INTRA_SAD_INTERVALS, EB_N_PTR);
-    EB_MALLOC(uint32_t*, object_ptr->intra_sad_interval_index, sizeof(uint32_t) * object_ptr->sb_total_count, EB_N_PTR);
-    EB_MALLOC(uint32_t*, object_ptr->inter_sad_interval_index, sizeof(uint32_t) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->me_distortion_histogram, NUMBER_OF_SAD_INTERVALS);
+    EB_MALLOC_ARRAY(object_ptr->ois_distortion_histogram, NUMBER_OF_INTRA_SAD_INTERVALS);
+    EB_MALLOC_ARRAY(object_ptr->intra_sad_interval_index, object_ptr->sb_total_count);
+    EB_MALLOC_ARRAY(object_ptr->inter_sad_interval_index, object_ptr->sb_total_count);
     // Non moving index array
-    EB_MALLOC(uint8_t*, object_ptr->non_moving_index_array, sizeof(uint8_t) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->non_moving_index_array, object_ptr->sb_total_count);
     // SB noise variance array
-    EB_MALLOC(uint8_t*, object_ptr->sb_flat_noise_array, sizeof(uint8_t) * object_ptr->sb_total_count, EB_N_PTR);
-    EB_MALLOC(EdgeLcuResults*, object_ptr->edge_results_ptr, sizeof(EdgeLcuResults) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->sb_flat_noise_array, object_ptr->sb_total_count);
+    EB_MALLOC_ARRAY(object_ptr->edge_results_ptr, object_ptr->sb_total_count);
 
-    EB_MALLOC(uint8_t*, object_ptr->sharp_edge_sb_flag, sizeof(EbBool) * object_ptr->sb_total_count, EB_N_PTR);
-    EB_MALLOC(SbStat*, object_ptr->sb_stat_array, sizeof(SbStat) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->sharp_edge_sb_flag, object_ptr->sb_total_count);
+    EB_MALLOC_ARRAY(object_ptr->sb_stat_array, object_ptr->sb_total_count);
 
-    EB_MALLOC(EbSbComplexityStatus*, object_ptr->complex_sb_array, sizeof(EbSbComplexityStatus) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->complex_sb_array, object_ptr->sb_total_count);
 
     EB_CREATEMUTEX(EbHandle, object_ptr->rc_distortion_histogram_mutex, sizeof(EbHandle), EB_MUTEX);
 
-    EB_MALLOC(EB_SB_DEPTH_MODE*, object_ptr->sb_depth_mode_array, sizeof(EB_SB_DEPTH_MODE) * object_ptr->sb_total_count, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->sb_depth_mode_array, object_ptr->sb_total_count);
 
     EB_CREATESEMAPHORE(EbHandle, object_ptr->temp_filt_done_semaphore, sizeof(EbHandle), EB_SEMAPHORE, 0, 1);
     EB_CREATEMUTEX(EbHandle, object_ptr->temp_filt_mutex, sizeof(EbHandle), EB_MUTEX);
     EB_CREATEMUTEX(EbHandle, object_ptr->debug_mutex, sizeof(EbHandle), EB_MUTEX);
 
-    EB_MALLOC(Av1Common*, object_ptr->av1_cm, sizeof(Av1Common), EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->av1_cm, 1);
 
     object_ptr->av1_cm->interp_filter = SWITCHABLE;
 
@@ -1095,7 +1127,7 @@ EbErrorType picture_parent_control_set_ctor(
 
     object_ptr->av1_cm->p_pcs_ptr = object_ptr;
 
-    EB_MALLOC(Yv12BufferConfig*, object_ptr->av1_cm->frame_to_show, sizeof(Yv12BufferConfig), EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->av1_cm->frame_to_show, 1);
 
     object_ptr->av1_cm->use_highbitdepth = (initDataPtr->bit_depth > 8 ? 1 : 0);
     object_ptr->av1_cm->bit_depth = initDataPtr->bit_depth;
@@ -1124,19 +1156,11 @@ EbErrorType picture_parent_control_set_ctor(
 
     assert(ntiles[1] <= ntiles[0]);
 
-    EB_MALLOC(RestUnitSearchInfo*, object_ptr->rusi_picture[0], sizeof(RestUnitSearchInfo) * ntiles[0], EB_N_PTR);
-    EB_MALLOC(RestUnitSearchInfo*, object_ptr->rusi_picture[1], sizeof(RestUnitSearchInfo) * ntiles[1], EB_N_PTR);
-    EB_MALLOC(RestUnitSearchInfo*, object_ptr->rusi_picture[2], sizeof(RestUnitSearchInfo) * ntiles[1], EB_N_PTR);
+    EB_CALLOC_ARRAY(object_ptr->rusi_picture[0], ntiles[0]);
+    EB_CALLOC_ARRAY(object_ptr->rusi_picture[1], ntiles[1]);
+    EB_CALLOC_ARRAY(object_ptr->rusi_picture[2], ntiles[1]);
 
-    //object_ptr->rusi_picture[0] = (RestUnitSearchInfo *)malloc(sizeof(RestUnitSearchInfo) * ntiles[0]);
-    //object_ptr->rusi_picture[1] = (RestUnitSearchInfo *)malloc(sizeof(RestUnitSearchInfo) * ntiles[1]);
-    //object_ptr->rusi_picture[2] = (RestUnitSearchInfo *)malloc(sizeof(RestUnitSearchInfo) * ntiles[1]);
-
-    memset(object_ptr->rusi_picture[0], 0, sizeof(RestUnitSearchInfo) * ntiles[0]);
-    memset(object_ptr->rusi_picture[1], 0, sizeof(RestUnitSearchInfo) * ntiles[1]);
-    memset(object_ptr->rusi_picture[2], 0, sizeof(RestUnitSearchInfo) * ntiles[1]);
-
-    EB_MALLOC(Macroblock*, object_ptr->av1x, sizeof(Macroblock), EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->av1x, 1);
 
     // Film grain noise model if film grain is applied
     if (initDataPtr->film_grain_noise_level) {
@@ -1151,7 +1175,7 @@ EbErrorType picture_parent_control_set_ctor(
 
         EB_NEW(object_ptr->denoise_and_model, denoise_and_model_ctor,
             (EbPtr)&fg_init_data);
-   }
+    }
 
     return return_error;
 }

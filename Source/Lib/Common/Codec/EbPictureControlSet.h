@@ -14089,6 +14089,7 @@ extern "C" {
 
         // Open loop Intra candidate Search Results
         OisSbResults                    **ois_sb_results;
+        OisCandidate                    **ois_candicate;
         // Dynamic GOP
         EbPred                                pred_structure;
         uint8_t                               hierarchical_levels;
