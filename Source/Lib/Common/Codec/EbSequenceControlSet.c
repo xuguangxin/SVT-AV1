@@ -12,6 +12,7 @@ static void eb_sequence_control_set_dctor(EbPtr p)
 {
     SequenceControlSet *obj = (SequenceControlSet*)p;
     EB_FREE_ARRAY(obj->sb_params_array);
+    EB_FREE_ARRAY(obj->sb_geom);
 }
 
 /**************************************************************************************************
@@ -480,7 +481,9 @@ EbErrorType sb_geom_init(SequenceControlSet * sequence_control_set_ptr)
     uint16_t   pictureLcuWidth = (sequence_control_set_ptr->seq_header.max_frame_width + sequence_control_set_ptr->sb_size_pix - 1) / sequence_control_set_ptr->sb_size_pix;
     uint16_t    pictureLcuHeight = (sequence_control_set_ptr->seq_header.max_frame_height + sequence_control_set_ptr->sb_size_pix - 1) / sequence_control_set_ptr->sb_size_pix;
 
-    EB_MALLOC(SbGeom*, sequence_control_set_ptr->sb_geom, sizeof(SbGeom) * pictureLcuWidth * pictureLcuHeight, EB_N_PTR);
+
+    EB_FREE_ARRAY(sequence_control_set_ptr->sb_geom);
+    EB_MALLOC_ARRAY(sequence_control_set_ptr->sb_geom, pictureLcuWidth * pictureLcuHeight);
 
     for (sb_index = 0; sb_index < pictureLcuWidth * pictureLcuHeight; ++sb_index) {
         sequence_control_set_ptr->sb_geom[sb_index].horizontal_index = sb_index % pictureLcuWidth;
