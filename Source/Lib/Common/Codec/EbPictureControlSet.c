@@ -1022,7 +1022,19 @@ static void picture_parent_control_set_dctor(EbPtr p)
 
     EB_FREE_ARRAY(obj->sb_depth_mode_array);
 
+    {
+        const int32_t num_planes = 3;// av1_num_planes(cm);
+        for (int32_t p = 0; p < num_planes; ++p) {
+            RestorationInfo* ri =obj->av1_cm->rst_info + p;
+            RestorationStripeBoundaries *boundaries = &ri->boundaries;
+            EB_FREE_ARRAY(ri->unit_info);
+            EB_FREE(boundaries->stripe_boundary_above);
+            EB_FREE(boundaries->stripe_boundary_below);
+        }
+    }
+
     EB_FREE_ARRAY(obj->av1_cm->frame_to_show);
+    EB_FREE_ARRAY(obj->av1_cm->rst_tmpbuf);
     EB_FREE_ARRAY(obj->av1_cm);
     EB_FREE_ARRAY(obj->rusi_picture[0]);
     EB_FREE_ARRAY(obj->rusi_picture[1]);

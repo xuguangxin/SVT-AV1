@@ -60,6 +60,7 @@ static void rest_context_dctor(EbPtr p)
     EB_DELETE(obj->temp_lf_recon_picture16bit_ptr);
     EB_DELETE(obj->trial_frame_rst);
     EB_DELETE(obj->org_rec_frame);
+    EB_FREE(obj->rst_tmpbuf);
 }
 
 /******************************************************
@@ -109,7 +110,7 @@ EbErrorType rest_context_ctor(
             eb_picture_buffer_desc_ctor,
             (EbPtr)&initData);
 
-         EB_MALLOC(int32_t *, context_ptr->rst_tmpbuf, RESTORATION_TMPBUF_SIZE, EB_N_PTR);
+         EB_MALLOC1(context_ptr->rst_tmpbuf, RESTORATION_TMPBUF_SIZE);
     }
 
     EbPictureBufferDescInitData tempLfReconDescInitData;
