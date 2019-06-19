@@ -175,6 +175,11 @@ extern "C" {
         EbBool                             long_term_enable_flag;
         uint32_t                              default_ref_pics_list0_total_count_minus1;
         uint32_t                              default_ref_pics_list1_total_count_minus1;
+
+        //private use only
+        int32_t                           *decodeOrderTable;
+        uint32_t                          *displayOrderTable;
+        EbBool                            *timelineMap;
     } PredictionStructure;
 
     /************************************************
