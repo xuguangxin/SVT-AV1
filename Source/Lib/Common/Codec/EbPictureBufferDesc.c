@@ -370,12 +370,10 @@ int32_t aom_realloc_frame_buffer(Yv12BufferConfig *ybf, int32_t width, int32_t h
         }
         else if (frame_size > (size_t)ybf->buffer_alloc_sz) {
             // Allocation to hold larger frame, or first allocation.
-            aom_free(ybf->buffer_alloc);
-            ybf->buffer_alloc = NULL;
-
+            if (ybf->buffer_alloc_sz > 0)
+                EB_FREE_ARRAY(ybf->buffer_alloc);
             if (frame_size != (size_t)frame_size) return -1;
-
-            EB_MALLOC(uint8_t *, ybf->buffer_alloc, frame_size, EB_N_PTR);
+            EB_MALLOC_ARRAY(ybf->buffer_alloc, frame_size);
 
             if (!ybf->buffer_alloc) return -1;
 
