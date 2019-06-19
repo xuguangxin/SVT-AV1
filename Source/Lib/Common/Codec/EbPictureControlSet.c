@@ -169,6 +169,26 @@ void picture_control_set_dctor(EbPtr p)
     EB_DELETE(obj->film_grain_picture16bit_ptr);
     EB_DELETE(obj->film_grain_picture_ptr);
     EB_DELETE(obj->input_frame16bit);
+
+
+    EB_FREE_ARRAY(obj->mse_seg[0]);
+    EB_FREE_ARRAY(obj->mse_seg[1]);
+
+    EB_FREE_ARRAY(obj->src[0]);
+    EB_FREE_ARRAY(obj->ref_coeff[0]);
+    EB_FREE_ARRAY(obj->src[1]);
+    EB_FREE_ARRAY(obj->ref_coeff[1]);
+    EB_FREE_ARRAY(obj->src[2]);
+    EB_FREE_ARRAY(obj->ref_coeff[2]);
+
+    EB_FREE_ARRAY(obj->mi_grid_base);
+    EB_FREE_ARRAY(obj->mip);
+
+    EB_FREE_ARRAY(obj->ec_ctx_array);
+    EB_FREE_ARRAY(obj->rate_est_array);
+
+    EB_FREE_ARRAY(obj->mdc_sb_array);
+    EB_FREE_ARRAY(obj->qp_array);
 }
 
 typedef struct InitData {
@@ -362,17 +382,17 @@ EbErrorType picture_control_set_ctor(
     }
 
     if (initDataPtr->cdf_mode == 0) {
-        EB_MALLOC(FRAME_CONTEXT*, object_ptr->ec_ctx_array, sizeof(FRAME_CONTEXT) * all_sb, EB_N_PTR);
-        EB_MALLOC(MdRateEstimationContext*, object_ptr->rate_est_array, sizeof(MdRateEstimationContext) * all_sb, EB_N_PTR);
+        EB_MALLOC_ARRAY(object_ptr->ec_ctx_array, all_sb);
+        EB_MALLOC_ARRAY(object_ptr->rate_est_array, all_sb);
     }
     // Mode Decision Control config
-    EB_MALLOC(MdcLcuData*, object_ptr->mdc_sb_array, object_ptr->sb_total_count * sizeof(MdcLcuData), EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->mdc_sb_array, object_ptr->sb_total_count);
     object_ptr->qp_array_stride = (uint16_t)((initDataPtr->picture_width + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE);
     object_ptr->qp_array_size = ((initDataPtr->picture_width + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE) *
         ((initDataPtr->picture_height + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE);
 
     // Allocate memory for qp array (used by DLF)
-    EB_MALLOC(uint8_t*, object_ptr->qp_array, sizeof(uint8_t) * object_ptr->qp_array_size, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->qp_array, object_ptr->qp_array_size);
     // Mode Decision Neighbor Arrays
     uint8_t depth;
     for (depth = 0; depth < NEIGHBOR_ARRAY_TOTAL_COUNT; depth++) {
@@ -884,26 +904,26 @@ EbErrorType picture_control_set_ctor(
     //object_ptr->mse_seg[0] = (uint64_t(*)[64])aom_malloc(sizeof(**object_ptr->mse_seg) *  pictureLcuWidth * pictureLcuHeight);
    // object_ptr->mse_seg[1] = (uint64_t(*)[64])aom_malloc(sizeof(**object_ptr->mse_seg) *  pictureLcuWidth * pictureLcuHeight);
 
-    EB_MALLOC(uint64_t(*)[64], object_ptr->mse_seg[0], sizeof(**object_ptr->mse_seg) *  pictureLcuWidth * pictureLcuHeight, EB_N_PTR);
-    EB_MALLOC(uint64_t(*)[64], object_ptr->mse_seg[1], sizeof(**object_ptr->mse_seg) *  pictureLcuWidth * pictureLcuHeight, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->mse_seg[0], pictureLcuWidth * pictureLcuHeight);
+    EB_MALLOC_ARRAY(object_ptr->mse_seg[1], pictureLcuWidth * pictureLcuHeight);
 
     if (!is16bit)
     {
-        EB_MALLOC(uint16_t*, object_ptr->src[0],sizeof(object_ptr->src)       * initDataPtr->picture_width * initDataPtr->picture_height,EB_N_PTR);
-        EB_MALLOC(uint16_t*, object_ptr->ref_coeff[0],sizeof(object_ptr->ref_coeff) * initDataPtr->picture_width * initDataPtr->picture_height, EB_N_PTR);
-        EB_MALLOC(uint16_t*, object_ptr->src[1],sizeof(object_ptr->src)       * initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2, EB_N_PTR);
-        EB_MALLOC(uint16_t*, object_ptr->ref_coeff[1],sizeof(object_ptr->ref_coeff) * initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2, EB_N_PTR);
-        EB_MALLOC(uint16_t*, object_ptr->src[2],sizeof(object_ptr->src)       * initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2, EB_N_PTR);
-        EB_MALLOC(uint16_t*,object_ptr->ref_coeff[2],sizeof(object_ptr->ref_coeff) * initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2, EB_N_PTR);
+        EB_MALLOC_ARRAY(object_ptr->src[0], initDataPtr->picture_width * initDataPtr->picture_height);
+        EB_MALLOC_ARRAY(object_ptr->ref_coeff[0], initDataPtr->picture_width * initDataPtr->picture_height);
+        EB_MALLOC_ARRAY(object_ptr->src[1], initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2);
+        EB_MALLOC_ARRAY(object_ptr->ref_coeff[1],initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2);
+        EB_MALLOC_ARRAY(object_ptr->src[2], initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2);
+        EB_MALLOC_ARRAY(object_ptr->ref_coeff[2], initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2);
     }
 
     EB_CREATEMUTEX(EbHandle, object_ptr->rest_search_mutex, sizeof(EbHandle), EB_MUTEX);
 
     //the granularity is 4x4
 #if INCOMPLETE_SB_FIX
-    EB_MALLOC(ModeInfo**, object_ptr->mi_grid_base, sizeof(ModeInfo*) * all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2), EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->mi_grid_base, all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2));
 
-    EB_MALLOC(ModeInfo*, object_ptr->mip, sizeof(ModeInfo) *all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2), EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->mip, all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2));
 
     memset(object_ptr->mip, 0, sizeof(ModeInfo) * all_sb*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2)*(initDataPtr->sb_size_pix >> MI_SIZE_LOG2));
 
@@ -912,9 +932,9 @@ EbErrorType picture_control_set_ctor(
         object_ptr->mi_grid_base[miIdx] = object_ptr->mip + miIdx;
     object_ptr->mi_stride = picture_sb_w * (initDataPtr->sb_size_pix >> MI_SIZE_LOG2);
 #else
-    EB_MALLOC(ModeInfo**, object_ptr->mi_grid_base, sizeof(ModeInfo*) * object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4), EB_N_PTR);
-
-    EB_MALLOC(ModeInfo*, object_ptr->mip, sizeof(ModeInfo) * object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4), EB_N_PTR);
+    //the granularity is 4x4
+    EB_MALLOC_ARRAY(object_ptr->mi_grid_base, object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4));
+    EB_MALLOC_ARRAY(object_ptr->mip, object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4));
 
     memset(object_ptr->mip, 0, sizeof(ModeInfo) * object_ptr->sb_total_count*(BLOCK_SIZE_64 / 4)*(BLOCK_SIZE_64 / 4));
     // pictureLcuWidth * pictureLcuHeight
