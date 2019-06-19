@@ -52,6 +52,8 @@ extern "C" {
         MvCandidate    **me_mv_array;
         // [PU][LAST, LAST2, LAST3, GOLD, BWD, ALT2, ALT] if MRP Mode 0,
         // [PU][LAST, LAST2, BWD, ALT2] if MRP Mode 1,
+        uint32_t max_number_of_pus_per_lcu;
+
     } MeLcuResults;
 #ifdef __cplusplus
 }
