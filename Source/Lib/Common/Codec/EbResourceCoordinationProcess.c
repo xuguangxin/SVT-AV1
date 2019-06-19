@@ -16,6 +16,14 @@
 #include "EbTransforms.h"
 #include "EbTime.h"
 
+void resource_coordination_context_dctor(EbPtr p)
+{
+    ResourceCoordinationContext *obj = (ResourceCoordinationContext*)p;
+
+    EB_FREE_ARRAY(obj->sequenceControlSetActiveArray);
+    EB_FREE_ARRAY(obj->picture_number_array);
+}
+
 /************************************************
  * Resource Coordination Context Constructor
  ************************************************/
@@ -31,6 +39,8 @@ EbErrorType resource_coordination_context_ctor(
     uint32_t                        encode_instances_total_count){
     uint32_t instance_index;
 
+    context_ptr->dctor = resource_coordination_context_dctor;
+
     context_ptr->input_buffer_fifo_ptr = inputBufferFifoPtr;
     context_ptr->resource_coordination_results_output_fifo_ptr = resource_coordination_results_output_fifo_ptr;
     context_ptr->picture_control_set_fifo_ptr_array = picture_control_set_fifo_ptr_array;
@@ -41,15 +51,10 @@ EbErrorType resource_coordination_context_ctor(
     context_ptr->encode_instances_total_count = encode_instances_total_count;
 
     // Allocate SequenceControlSetActiveArray
-    EB_MALLOC(EbObjectWrapper**, context_ptr->sequenceControlSetActiveArray, sizeof(EbObjectWrapper*) * context_ptr->encode_instances_total_count, EB_N_PTR);
+    EB_CALLOC_ARRAY(context_ptr->sequenceControlSetActiveArray, context_ptr->encode_instances_total_count);
 
-    for (instance_index = 0; instance_index < context_ptr->encode_instances_total_count; ++instance_index)
-        context_ptr->sequenceControlSetActiveArray[instance_index] = 0;
-    // Picture Stats
-    EB_MALLOC(uint64_t*, context_ptr->picture_number_array, sizeof(uint64_t) * context_ptr->encode_instances_total_count, EB_N_PTR);
+    EB_CALLOC_ARRAY(context_ptr->picture_number_array, context_ptr->encode_instances_total_count);
 
-    for (instance_index = 0; instance_index < context_ptr->encode_instances_total_count; ++instance_index)
-        context_ptr->picture_number_array[instance_index] = 0;
     context_ptr->average_enc_mod = 0;
     context_ptr->prev_enc_mod = 0;
     context_ptr->prev_enc_mode_delta = 0;
