@@ -6383,7 +6383,20 @@ static void in_loop_me_fullpel_search_sblock(
 static void in_loop_me_context_dctor(EbPtr p)
 {
     SsMeContext* obj = (SsMeContext*)p;
-    (void*)obj;
+    uint32_t                   listIndex;
+    uint32_t                   refPicIndex;
+
+    for (listIndex = 0; listIndex < MAX_NUM_OF_REF_PIC_LIST; listIndex++) {
+        for (refPicIndex = 0; refPicIndex < MAX_REF_IDX; refPicIndex++) {
+            EB_FREE_ARRAY(obj->integer_buffer[listIndex][refPicIndex]);
+            EB_FREE_ARRAY(obj->pos_b_buffer[listIndex][refPicIndex]);
+            EB_FREE_ARRAY(obj->pos_h_buffer[listIndex][refPicIndex]);
+            EB_FREE_ARRAY(obj->pos_j_buffer[listIndex][refPicIndex]);
+        }
+    }
+
+    EB_FREE_ARRAY(obj->avctemp_buffer);
+    EB_FREE_ALIGNED(obj->sb_buffer);
 }
 /***************************************************************
 * in_loop_me_context_ctor
@@ -6400,7 +6413,7 @@ EbErrorType in_loop_me_context_ctor(
     // Intermediate LCU-sized buffer to retain the input samples
     object_ptr->sb_buffer_stride = MAX_SB_SIZE;
 
-    EB_ALLIGN_MALLOC(uint8_t *, object_ptr->sb_buffer, sizeof(uint8_t) * MAX_SB_SIZE * object_ptr->sb_buffer_stride, EB_A_PTR);
+    EB_MALLOC_ALIGNED(object_ptr->sb_buffer,  MAX_SB_SIZE * object_ptr->sb_buffer_stride);
 
     EB_MEMSET(object_ptr->sb_buffer, 0, sizeof(uint8_t) * MAX_SB_SIZE * object_ptr->sb_buffer_stride);
 
@@ -6450,17 +6463,17 @@ EbErrorType in_loop_me_context_ctor(
 
     for (listIndex = 0; listIndex < MAX_NUM_OF_REF_PIC_LIST; listIndex++) {
         for (refPicIndex = 0; refPicIndex < MAX_REF_IDX; refPicIndex++) {
-            EB_MALLOC(uint8_t *, object_ptr->integer_buffer[listIndex][refPicIndex], sizeof(uint8_t) * object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT, EB_N_PTR);
+            EB_MALLOC_ARRAY(object_ptr->integer_buffer[listIndex][refPicIndex], object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT);
 
-            EB_MALLOC(uint8_t *, object_ptr->pos_b_buffer[listIndex][refPicIndex], sizeof(uint8_t) * object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT, EB_N_PTR);
+            EB_MALLOC_ARRAY(object_ptr->pos_b_buffer[listIndex][refPicIndex], object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT);
 
-            EB_MALLOC(uint8_t *, object_ptr->pos_h_buffer[listIndex][refPicIndex], sizeof(uint8_t) * object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT, EB_N_PTR);
+            EB_MALLOC_ARRAY(object_ptr->pos_h_buffer[listIndex][refPicIndex], object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT);
 
-            EB_MALLOC(uint8_t *, object_ptr->pos_j_buffer[listIndex][refPicIndex], sizeof(uint8_t) * object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT, EB_N_PTR);
+            EB_MALLOC_ARRAY(object_ptr->pos_j_buffer[listIndex][refPicIndex], object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT);
         }
     }
 
-    EB_MALLOC(uint8_t *, object_ptr->avctemp_buffer, sizeof(uint8_t) * object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT, EB_N_PTR);
+    EB_MALLOC_ARRAY(object_ptr->avctemp_buffer, object_ptr->interpolated_stride * MAX_SEARCH_AREA_HEIGHT);
 
     return EB_ErrorNone;
 }
