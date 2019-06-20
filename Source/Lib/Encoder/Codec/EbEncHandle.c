@@ -651,12 +651,60 @@ void lib_svt_encoder_send_error_exit(
     EbPtr                    hComponent,
     uint32_t                 error_code);
 
+static void eb_enc_handle_stop_threads(EbEncHandle *enc_handle_ptr)
+{
+    SequenceControlSet*  control_set_ptr = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr;
+    // Resource Coordination
+    EB_DESTROY_THREAD(enc_handle_ptr->resource_coordination_thread_handle);
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,control_set_ptr->picture_analysis_process_init_count);
+
+    // Picture Decision
+    EB_DESTROY_THREAD(enc_handle_ptr->picture_decision_thread_handle);
+
+    // Motion Estimation
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->motion_estimation_thread_handle_array, control_set_ptr->motion_estimation_process_init_count);
+
+    // Initial Rate Control
+    EB_DESTROY_THREAD(enc_handle_ptr->initial_rate_control_thread_handle);
+
+    // Source Based Oprations
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->source_based_operations_thread_handle_array, control_set_ptr->source_based_operations_process_init_count);
+
+    // Picture Manager
+    EB_DESTROY_THREAD(enc_handle_ptr->picture_manager_thread_handle);
+
+    // Rate Control
+    EB_DESTROY_THREAD(enc_handle_ptr->rate_control_thread_handle);
+
+    // Mode Decision Configuration Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->mode_decision_configuration_thread_handle_array, control_set_ptr->mode_decision_configuration_process_init_count);
+
+    // EncDec Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->enc_dec_thread_handle_array, control_set_ptr->enc_dec_process_init_count);
+
+    // Dlf Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->dlf_thread_handle_array, control_set_ptr->dlf_process_init_count);
+
+    // Cdef Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->cdef_thread_handle_array, control_set_ptr->cdef_process_init_count);
+
+    // Rest Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->rest_thread_handle_array, control_set_ptr->rest_process_init_count);
+
+    // Entropy Coding Process
+    EB_DESTROY_THREAD_ARRAY(enc_handle_ptr->entropy_coding_thread_handle_array, control_set_ptr->entropy_coding_process_init_count);
+
+    // Packetization
+    EB_DESTROY_THREAD(enc_handle_ptr->packetization_thread_handle);
+}
 /**********************************
 * Encoder Library Handle Deonstructor
 **********************************/
 static void eb_enc_handle_dctor(EbPtr p)
 {
     EbEncHandle *enc_handle_ptr = (EbEncHandle *)p;
+
+    eb_enc_handle_stop_threads(enc_handle_ptr);
     EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE(enc_handle_ptr->sequence_control_set_pool_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
@@ -865,6 +913,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     uint32_t max_picture_width;
     EbBool is16bit = (EbBool)(enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->static_config.encoder_bit_depth > EB_8BIT);
     EbColorFormat color_format = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->static_config.encoder_color_format;
+    SequenceControlSet* control_set_ptr;
 
     /************************************
     * Plateform detection
@@ -1682,86 +1731,69 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
 
     EbSetThreadManagementParameters(config_ptr);
 
+    control_set_ptr = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr;
+
     // Resource Coordination
-    EB_CREATETHREAD(EbHandle, enc_handle_ptr->resource_coordination_thread_handle, sizeof(EbHandle), EB_THREAD, resource_coordination_kernel, enc_handle_ptr->resource_coordination_context_ptr);
-
-    // Picture Analysis
-    EB_MALLOC(EbHandle*, enc_handle_ptr->picture_analysis_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->picture_analysis_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, picture_analysis_kernel, enc_handle_ptr->picture_analysis_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD(enc_handle_ptr->resource_coordination_thread_handle, resource_coordination_kernel, enc_handle_ptr->resource_coordination_context_ptr);
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->picture_analysis_thread_handle_array,control_set_ptr->picture_analysis_process_init_count,
+        picture_analysis_kernel,
+        enc_handle_ptr->picture_analysis_context_ptr_array);
 
     // Picture Decision
-    EB_CREATETHREAD(EbHandle, enc_handle_ptr->picture_decision_thread_handle, sizeof(EbHandle), EB_THREAD, picture_decision_kernel, enc_handle_ptr->picture_decision_context_ptr);
+    EB_CREATE_THREAD(enc_handle_ptr->picture_decision_thread_handle, picture_decision_kernel, enc_handle_ptr->picture_decision_context_ptr);
 
     // Motion Estimation
-    EB_MALLOC(EbHandle*, enc_handle_ptr->motion_estimation_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->motion_estimation_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->motion_estimation_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->motion_estimation_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, motion_estimation_kernel, enc_handle_ptr->motion_estimation_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->motion_estimation_thread_handle_array, control_set_ptr->motion_estimation_process_init_count,
+        motion_estimation_kernel,
+        enc_handle_ptr->motion_estimation_context_ptr_array);
 
     // Initial Rate Control
-    EB_CREATETHREAD(EbHandle, enc_handle_ptr->initial_rate_control_thread_handle, sizeof(EbHandle), EB_THREAD, initial_rate_control_kernel, enc_handle_ptr->initial_rate_control_context_ptr);
+    EB_CREATE_THREAD(enc_handle_ptr->initial_rate_control_thread_handle, initial_rate_control_kernel, enc_handle_ptr->initial_rate_control_context_ptr);
 
     // Source Based Oprations
-    EB_MALLOC(EbHandle*, enc_handle_ptr->source_based_operations_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->source_based_operations_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, source_based_operations_kernel, enc_handle_ptr->source_based_operations_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->source_based_operations_thread_handle_array, control_set_ptr->source_based_operations_process_init_count,
+        source_based_operations_kernel,
+        enc_handle_ptr->source_based_operations_context_ptr_array);
 
     // Picture Manager
-    EB_CREATETHREAD(EbHandle, enc_handle_ptr->picture_manager_thread_handle, sizeof(EbHandle), EB_THREAD, picture_manager_kernel, enc_handle_ptr->picture_manager_context_ptr);
+    EB_CREATE_THREAD(enc_handle_ptr->picture_manager_thread_handle, picture_manager_kernel, enc_handle_ptr->picture_manager_context_ptr);
 
     // Rate Control
-    EB_CREATETHREAD(EbHandle, enc_handle_ptr->rate_control_thread_handle, sizeof(EbHandle), EB_THREAD, rate_control_kernel, enc_handle_ptr->rate_control_context_ptr);
+    EB_CREATE_THREAD(enc_handle_ptr->rate_control_thread_handle, rate_control_kernel, enc_handle_ptr->rate_control_context_ptr);
 
     // Mode Decision Configuration Process
-    EB_MALLOC(EbHandle*, enc_handle_ptr->mode_decision_configuration_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->mode_decision_configuration_process_init_count, EB_N_PTR);
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->mode_decision_configuration_thread_handle_array, control_set_ptr->mode_decision_configuration_process_init_count,
+        mode_decision_configuration_kernel,
+        enc_handle_ptr->mode_decision_configuration_context_ptr_array);
 
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->mode_decision_configuration_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->mode_decision_configuration_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, mode_decision_configuration_kernel, enc_handle_ptr->mode_decision_configuration_context_ptr_array[processIndex]);
-    }
 
     // EncDec Process
-    EB_MALLOC(EbHandle*, enc_handle_ptr->enc_dec_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->enc_dec_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->enc_dec_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->enc_dec_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, enc_dec_kernel, enc_handle_ptr->enc_dec_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->enc_dec_thread_handle_array, control_set_ptr->enc_dec_process_init_count,
+        enc_dec_kernel,
+        enc_handle_ptr->enc_dec_context_ptr_array);
 
     // Dlf Process
-    EB_MALLOC(EbHandle*, enc_handle_ptr->dlf_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->dlf_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->dlf_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->dlf_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, dlf_kernel, enc_handle_ptr->dlf_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->dlf_thread_handle_array, control_set_ptr->dlf_process_init_count,
+        dlf_kernel,
+        enc_handle_ptr->dlf_context_ptr_array);
 
     // Cdef Process
-    EB_MALLOC(EbHandle*, enc_handle_ptr->cdef_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->cdef_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->cdef_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->cdef_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, cdef_kernel, enc_handle_ptr->cdef_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->cdef_thread_handle_array, control_set_ptr->cdef_process_init_count,
+        cdef_kernel,
+        enc_handle_ptr->cdef_context_ptr_array);
 
     // Rest Process
-    EB_MALLOC(EbHandle*, enc_handle_ptr->rest_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->rest_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->rest_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->rest_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, rest_kernel, enc_handle_ptr->rest_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->rest_thread_handle_array, control_set_ptr->rest_process_init_count,
+        rest_kernel,
+        enc_handle_ptr->rest_context_ptr_array);
 
     // Entropy Coding Process
-    EB_MALLOC(EbHandle*, enc_handle_ptr->entropy_coding_thread_handle_array, sizeof(EbHandle) * enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->entropy_coding_process_init_count, EB_N_PTR);
-
-    for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->entropy_coding_process_init_count; ++processIndex) {
-        EB_CREATETHREAD(EbHandle, enc_handle_ptr->entropy_coding_thread_handle_array[processIndex], sizeof(EbHandle), EB_THREAD, entropy_coding_kernel, enc_handle_ptr->entropy_coding_context_ptr_array[processIndex]);
-    }
+    EB_CREATE_THREAD_ARRAY(enc_handle_ptr->entropy_coding_thread_handle_array, control_set_ptr->entropy_coding_process_init_count,
+        entropy_coding_kernel,
+        enc_handle_ptr->entropy_coding_context_ptr_array);
 
     // Packetization
-    EB_CREATETHREAD(EbHandle, enc_handle_ptr->packetization_thread_handle, sizeof(EbHandle), EB_THREAD, packetization_kernel, enc_handle_ptr->packetization_context_ptr);
+    EB_CREATE_THREAD(enc_handle_ptr->packetization_thread_handle, packetization_kernel, enc_handle_ptr->packetization_context_ptr);
 
 #if DISPLAY_MEMORY
     EB_MEMORY();
