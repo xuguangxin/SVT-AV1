@@ -100,15 +100,6 @@
  * Globals
  **************************************/
 
-EbMemoryMapEntry                 *memory_map;
-uint32_t                         *memory_map_index;
-uint64_t                         *total_lib_memory;
-
-uint32_t                         lib_malloc_count = 0;
-uint32_t                         lib_thread_count = 0;
-uint32_t                         lib_semaphore_count = 0;
-uint32_t                         lib_mutex_count = 0;
-
 uint8_t                          num_groups = 0;
 #ifdef _WIN32
 GROUP_AFFINITY                   group_affinity;
@@ -768,22 +759,6 @@ static EbErrorType eb_enc_handle_ctor(
     EbComponentType * ebHandlePtr)
 {
     EbErrorType return_error = EB_ErrorNone;
-
-    enc_handle_ptr->memory_map                = (EbMemoryMapEntry*)malloc(sizeof(EbMemoryMapEntry));
-    enc_handle_ptr->memory_map_index          = 0;
-    enc_handle_ptr->total_lib_memory          = sizeof(EbComponentType) + sizeof(EbEncHandle) + sizeof(EbMemoryMapEntry);
-    enc_handle_ptr->memory_map_init_address   = enc_handle_ptr->memory_map;
-    // Save Memory Map Pointers
-    total_lib_memory                        = &enc_handle_ptr->total_lib_memory;
-    memory_map                              = enc_handle_ptr->memory_map;
-    memory_map_index                        = &enc_handle_ptr->memory_map_index;
-    lib_malloc_count                        = 0;
-    lib_thread_count                        = 0;
-    lib_mutex_count                         = 0;
-    lib_semaphore_count                     = 0;
-
-    if (memory_map == (EbMemoryMapEntry*)EB_NULL)
-        return EB_ErrorInsufficientResources;
 
     enc_handle_ptr->dctor = eb_enc_handle_dctor;
 
@@ -1812,48 +1787,7 @@ __attribute__((visibility("default")))
 EB_API EbErrorType eb_deinit_encoder(EbComponentType *svt_enc_component){
     if(svt_enc_component == NULL)
         return EB_ErrorBadParameter;
-    EbEncHandle         *enc_handle_ptr = (EbEncHandle*)svt_enc_component->p_component_private;
-    EbErrorType          return_error = EB_ErrorNone;
-
-    if (enc_handle_ptr) {
-        if (memory_map) {
-            // Loop through the ptr table and free all malloc'd pointers per channel
-            EbMemoryMapEntry*    memory_entry = memory_map;
-            if (memory_entry){
-                do {
-                    switch (memory_entry->ptr_type) {
-                        case EB_N_PTR:
-                            free(memory_entry->ptr);
-                            break;
-                        case EB_A_PTR:
-#ifdef _WIN32
-                            _aligned_free(memory_entry->ptr);
-#else
-                            free(memory_entry->ptr);
-#endif
-                            break;
-                        case EB_SEMAPHORE:
-                            eb_destroy_semaphore(memory_entry->ptr);
-                            break;
-                        case EB_THREAD:
-                            eb_destroy_thread(memory_entry->ptr);
-                            break;
-                        case EB_MUTEX:
-                            eb_destroy_mutex(memory_entry->ptr);
-                            break;
-                        default:
-                            return_error = EB_ErrorMax;
-                            break;
-                    }
-                    EbMemoryMapEntry*    tmp_memory_entry = memory_entry;
-                    memory_entry = (EbMemoryMapEntry*)tmp_memory_entry->prev_entry;
-                    if (tmp_memory_entry) free(tmp_memory_entry);
-                } while(memory_entry != enc_handle_ptr->memory_map_init_address && memory_entry);
-                if (enc_handle_ptr->memory_map_init_address) free(enc_handle_ptr->memory_map_init_address);
-            }
-        }
-    }
-    return return_error;
+    return EB_ErrorNone;
 }
 
 EbErrorType eb_svt_enc_init_parameter(

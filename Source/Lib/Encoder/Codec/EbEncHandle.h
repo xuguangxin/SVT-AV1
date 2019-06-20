@@ -175,11 +175,6 @@ typedef struct EbEncHandle
     // Callbacks
     EbCallback                          **app_callback_ptr_array;
 
-    // Memory Map
-    EbMemoryMapEntry                       *memory_map_init_address;
-    EbMemoryMapEntry                       *memory_map;
-    uint32_t                                memory_map_index;
-    uint64_t                                total_lib_memory;
 } EbEncHandle;
 
 #endif // EbEncHandle_h
