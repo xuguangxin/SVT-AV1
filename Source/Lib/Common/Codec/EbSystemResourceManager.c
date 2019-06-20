@@ -7,6 +7,12 @@
 
 #include "EbSystemResourceManager.h"
 
+void EbFifoDctor(EbPtr p)
+{
+    EbFifo *obj = (EbFifo*)p;
+    EB_DESTROY_SEMAPHORE(obj->counting_semaphore);
+    EB_DESTROY_MUTEX(obj->lockout_mutex);
+}
 /**************************************
  * EbFifoCtor
  **************************************/
@@ -18,11 +24,12 @@ static EbErrorType EbFifoCtor(
     EbObjectWrapper  *lastWrapperPtr,
     EbMuxingQueue    *queue_ptr)
 {
+    fifoPtr->dctor = EbFifoDctor;
     // Create Counting Semaphore
-    EB_CREATESEMAPHORE(EbHandle, fifoPtr->counting_semaphore, sizeof(EbHandle), EB_SEMAPHORE, initial_count, max_count);
+    EB_CREATE_SEMAPHORE(fifoPtr->counting_semaphore, initial_count, max_count);
 
     // Create Buffer Pool Mutex
-    EB_CREATEMUTEX(EbHandle, fifoPtr->lockout_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(fifoPtr->lockout_mutex);
 
     // Initialize Fifo First & Last ptrs
     fifoPtr->first_ptr = firstWrapperPtr;
@@ -180,6 +187,7 @@ void EbMuxingQueueDctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(obj->process_fifo_ptr_array, obj->process_total_count);
     EB_DELETE(obj->object_queue);
     EB_DELETE(obj->process_queue);
+    EB_DESTROY_MUTEX(obj->lockout_mutex);
 }
 
 /**************************************
@@ -198,7 +206,7 @@ static EbErrorType EbMuxingQueueCtor(
     queue_ptr->process_total_count = process_total_count;
 
     // Lockout Mutex
-    EB_CREATEMUTEX(EbHandle, queue_ptr->lockout_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(queue_ptr->lockout_mutex);
 
     // Construct Object Circular Buffer
     EB_NEW(

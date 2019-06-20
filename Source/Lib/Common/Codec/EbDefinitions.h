@@ -2279,16 +2279,31 @@ EB_ADD_MEM(pointer, n_elements, pointer_class, lib_malloc_count, free);
 pointer = (type) calloc(count, size); \
 EB_ADD_MEM(pointer, (count)*(size), pointer_class, lib_malloc_count, free);
 
-#define EB_CREATESEMAPHORE(type, pointer, n_elements, pointer_class, initial_count, max_count) \
-pointer = eb_create_semaphore(initial_count, max_count); \
-EB_ADD_MEM(pointer, n_elements, pointer_class, lib_semaphore_count, eb_destroy_semaphore);
+#define EB_CREATE_SEMAPHORE(pointer, initial_count, max_count) \
+    do { \
+        pointer = eb_create_semaphore(initial_count, max_count); \
+        EB_ADD_MEM1(pointer, 1, EB_SEMAPHORE); \
+    }while (0)
 
-#define EB_CREATEMUTEX(type, pointer, n_elements, pointer_class) \
-pointer = eb_create_mutex(); \
-EB_ADD_MEM(pointer, n_elements, pointer_class, lib_mutex_count, eb_destroy_mutex);
+#define EB_DESTROY_SEMAPHORE(pointer) \
+    do { \
+        eb_destroy_semaphore(pointer); \
+        EB_REMOVE_MEM_ENTRY(pointer, EB_SEMAPHORE); \
+    }while (0)
 
-#define EB_ALLOC_OBJECT(type, pointer, n_elements, pointer_class) \
-    EB_MALLOC(type, pointer, n_elements, pointer_class)
+#define EB_CREATE_MUTEX(pointer) \
+    do { \
+        pointer = eb_create_mutex(); \
+        EB_ADD_MEM1(pointer, 1, EB_MUTEX); \
+    } while (0)
+
+#define EB_DESTROY_MUTEX(pointer) \
+    do { \
+        if (pointer) { \
+            eb_destroy_mutex(pointer); \
+            EB_REMOVE_MEM_ENTRY(pointer, EB_MUTEX); \
+        } \
+    } while (0)
 
 
 #define EB_MEMORY() \

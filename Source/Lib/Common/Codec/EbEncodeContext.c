@@ -14,6 +14,12 @@
 static void encode_context_dctor(EbPtr p)
 {
     EncodeContext* obj = (EncodeContext*)p;
+    EB_DESTROY_MUTEX(obj->total_number_of_recon_frame_mutex);
+    EB_DESTROY_MUTEX(obj->hl_rate_control_historgram_queue_mutex);
+    EB_DESTROY_MUTEX(obj->rate_table_update_mutex);
+    EB_DESTROY_MUTEX(obj->sc_buffer_mutex);
+    EB_DESTROY_MUTEX(obj->shared_reference_mutex);
+
     EB_DELETE(obj->prediction_structure_group_ptr);
     EB_DELETE_PTR_ARRAY(obj->picture_decision_reorder_queue, PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->picture_manager_reorder_queue, PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH);
@@ -43,7 +49,7 @@ EbErrorType encode_context_ctor(
         encode_context_ptr->app_callback_ptr,
         EB_ENC_EC_ERROR29);
 
-    EB_CREATEMUTEX(EbHandle, encode_context_ptr->total_number_of_recon_frame_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(encode_context_ptr->total_number_of_recon_frame_mutex);
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->picture_decision_reorder_queue, PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH);
 
     for (pictureIndex = 0; pictureIndex < PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH; ++pictureIndex) {
@@ -94,7 +100,7 @@ EbErrorType encode_context_ctor(
             pictureIndex);
     }
     // HLRateControl Historgram Queue Mutex
-    EB_CREATEMUTEX(EbHandle, encode_context_ptr->hl_rate_control_historgram_queue_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(encode_context_ptr->hl_rate_control_historgram_queue_mutex);
 
     EB_ALLOC_PTR_ARRAY(encode_context_ptr->packetization_reorder_queue, PACKETIZATION_REORDER_QUEUE_MAX_DEPTH);
 
@@ -128,13 +134,13 @@ EbErrorType encode_context_ctor(
     if (return_error == EB_ErrorInsufficientResources)
         return EB_ErrorInsufficientResources;
     // RC Rate Table Update Mutex
-    EB_CREATEMUTEX(EbHandle, encode_context_ptr->rate_table_update_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(encode_context_ptr->rate_table_update_mutex);
 
-    EB_CREATEMUTEX(EbHandle, encode_context_ptr->sc_buffer_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(encode_context_ptr->sc_buffer_mutex);
     encode_context_ptr->enc_mode                      = SPEED_CONTROL_INIT_MOD;
     encode_context_ptr->previous_selected_ref_qp      = 32;
     encode_context_ptr->max_coded_poc_selected_ref_qp = 32;
 
-    EB_CREATEMUTEX(EbHandle, encode_context_ptr->shared_reference_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(encode_context_ptr->shared_reference_mutex);
     return EB_ErrorNone;
 }

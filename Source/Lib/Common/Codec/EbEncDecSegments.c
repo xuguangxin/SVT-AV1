@@ -12,6 +12,11 @@
 static void enc_dec_segments_dctor(EbPtr p)
 {
     EncDecSegments* obj = (EncDecSegments*)p;
+    uint32_t row_index;
+    for (row_index = 0; row_index < obj->segment_max_row_count; ++row_index) {
+        EB_DESTROY_MUTEX(obj->row_array[row_index].assignment_mutex);
+    }
+    EB_DESTROY_MUTEX(obj->dep_map.update_mutex);
     EB_FREE_ARRAY(obj->x_start_array);
     EB_FREE_ARRAY(obj->y_start_array);
     EB_FREE_ARRAY(obj->valid_lcu_count_array);
@@ -42,7 +47,7 @@ EbErrorType enc_dec_segments_ctor(
     // Dependency map
     EB_MALLOC_ARRAY(segments_ptr->dep_map.dependency_map, segments_ptr->segment_max_total_count);
 
-    EB_CREATEMUTEX(EbHandle, segments_ptr->dep_map.update_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(segments_ptr->dep_map.update_mutex);
 
     // Segment rows
     EB_MALLOC_ARRAY(segments_ptr->row_array,  segments_ptr->segment_max_row_count);
@@ -51,7 +56,7 @@ EbErrorType enc_dec_segments_ctor(
     }
 
     for (row_index = 0; row_index < segments_ptr->segment_max_row_count; ++row_index) {
-        EB_CREATEMUTEX(EbHandle, segments_ptr->row_array[row_index].assignment_mutex, sizeof(EbHandle), EB_MUTEX);
+        EB_CREATE_MUTEX(segments_ptr->row_array[row_index].assignment_mutex);
     }
 
     return EB_ErrorNone;

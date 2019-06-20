@@ -200,6 +200,11 @@ void picture_control_set_dctor(EbPtr p)
 
     EB_FREE_ARRAY(obj->mdc_sb_array);
     EB_FREE_ARRAY(obj->qp_array);
+    EB_DESTROY_MUTEX(obj->entropy_coding_mutex);
+    EB_DESTROY_MUTEX(obj->intra_mutex);
+    EB_DESTROY_MUTEX(obj->cdef_search_mutex);
+    EB_DESTROY_MUTEX(obj->rest_search_mutex);
+
 }
 
 typedef struct InitData {
@@ -906,11 +911,11 @@ EbErrorType picture_control_set_ctor(
         initDataPtr->enc_dec_segment_col,
         initDataPtr->enc_dec_segment_row);
     // Entropy Rows
-    EB_CREATEMUTEX(EbHandle, object_ptr->entropy_coding_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(object_ptr->entropy_coding_mutex);
 
-    EB_CREATEMUTEX(EbHandle, object_ptr->intra_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(object_ptr->intra_mutex);
 
-    EB_CREATEMUTEX(EbHandle, object_ptr->cdef_search_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(object_ptr->cdef_search_mutex);
 
     //object_ptr->mse_seg[0] = (uint64_t(*)[64])aom_malloc(sizeof(**object_ptr->mse_seg) *  pictureLcuWidth * pictureLcuHeight);
    // object_ptr->mse_seg[1] = (uint64_t(*)[64])aom_malloc(sizeof(**object_ptr->mse_seg) *  pictureLcuWidth * pictureLcuHeight);
@@ -928,7 +933,7 @@ EbErrorType picture_control_set_ctor(
         EB_MALLOC_ARRAY(object_ptr->ref_coeff[2], initDataPtr->picture_width * initDataPtr->picture_height * 3 / 2);
     }
 
-    EB_CREATEMUTEX(EbHandle, object_ptr->rest_search_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(object_ptr->rest_search_mutex);
 
     //the granularity is 4x4
 #if INCOMPLETE_SB_FIX
@@ -1042,6 +1047,11 @@ static void picture_parent_control_set_dctor(EbPtr p)
     EB_FREE_ARRAY(obj->rusi_picture[2]);
 
     EB_FREE_ARRAY(obj->av1x);
+
+    EB_DESTROY_MUTEX(obj->rc_distortion_histogram_mutex);
+    EB_DESTROY_SEMAPHORE(obj->temp_filt_done_semaphore);
+    EB_DESTROY_MUTEX(obj->temp_filt_mutex);
+    EB_DESTROY_MUTEX(obj->debug_mutex);
 }
 EbErrorType picture_parent_control_set_ctor(
     PictureParentControlSet *object_ptr,
@@ -1154,13 +1164,13 @@ EbErrorType picture_parent_control_set_ctor(
 
     EB_MALLOC_ARRAY(object_ptr->complex_sb_array, object_ptr->sb_total_count);
 
-    EB_CREATEMUTEX(EbHandle, object_ptr->rc_distortion_histogram_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_MUTEX(object_ptr->rc_distortion_histogram_mutex);
 
     EB_MALLOC_ARRAY(object_ptr->sb_depth_mode_array, object_ptr->sb_total_count);
 
-    EB_CREATESEMAPHORE(EbHandle, object_ptr->temp_filt_done_semaphore, sizeof(EbHandle), EB_SEMAPHORE, 0, 1);
-    EB_CREATEMUTEX(EbHandle, object_ptr->temp_filt_mutex, sizeof(EbHandle), EB_MUTEX);
-    EB_CREATEMUTEX(EbHandle, object_ptr->debug_mutex, sizeof(EbHandle), EB_MUTEX);
+    EB_CREATE_SEMAPHORE(object_ptr->temp_filt_done_semaphore, 0, 1);
+    EB_CREATE_MUTEX(object_ptr->temp_filt_mutex);
+    EB_CREATE_MUTEX(object_ptr->debug_mutex);
 
     EB_MALLOC_ARRAY(object_ptr->av1_cm, 1);
 
