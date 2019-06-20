@@ -3365,12 +3365,12 @@ static EbErrorType allocate_frame_buffer(
             eb_picture_buffer_desc_ctor,
             (EbPtr)&input_picture_buffer_desc_init_data);
         inputBuffer->p_buffer = (uint8_t*)buf;
-    }
-    if (is16bit && config->compressed_ten_bit_format == 1) {
-        //pack 4 2bit pixels into 1Byte
-        EB_ALLIGN_MALLOC(uint8_t*, ((EbPictureBufferDesc*)(inputBuffer->p_buffer))->buffer_bit_inc_y, sizeof(uint8_t) * (input_picture_buffer_desc_init_data.max_width / 4)*(input_picture_buffer_desc_init_data.max_height), EB_A_PTR);
-        EB_ALLIGN_MALLOC(uint8_t*, ((EbPictureBufferDesc*)(inputBuffer->p_buffer))->buffer_bit_inc_cb, sizeof(uint8_t) * (input_picture_buffer_desc_init_data.max_width / 8)*(input_picture_buffer_desc_init_data.max_height / 2), EB_A_PTR);
-        EB_ALLIGN_MALLOC(uint8_t*, ((EbPictureBufferDesc*)(inputBuffer->p_buffer))->buffer_bit_inc_cr, sizeof(uint8_t) * (input_picture_buffer_desc_init_data.max_width / 8)*(input_picture_buffer_desc_init_data.max_height / 2), EB_A_PTR);
+        if (is16bit && config->compressed_ten_bit_format == 1) {
+            //pack 4 2bit pixels into 1Byte
+            EB_MALLOC_ALIGNED_ARRAY(buf->buffer_bit_inc_y, (input_picture_buffer_desc_init_data.max_width / 4)*(input_picture_buffer_desc_init_data.max_height));
+            EB_MALLOC_ALIGNED_ARRAY(buf->buffer_bit_inc_cb, (input_picture_buffer_desc_init_data.max_width / 8)*(input_picture_buffer_desc_init_data.max_height / 2));
+            EB_MALLOC_ALIGNED_ARRAY(buf->buffer_bit_inc_cr, (input_picture_buffer_desc_init_data.max_width / 8)*(input_picture_buffer_desc_init_data.max_height / 2));
+        }
     }
 
     return return_error;
@@ -3404,6 +3404,9 @@ void EbInputBufferHeaderDestoryer(    EbPtr p)
 {
     EbBufferHeaderType *obj = (EbBufferHeaderType*)p;
     EbPictureBufferDesc* buf = (EbPictureBufferDesc*)obj->p_buffer;
+    EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_y);
+    EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cb);
+    EB_FREE_ALIGNED_ARRAY(buf->buffer_bit_inc_cr);
 
     EB_DELETE(buf);
     EB_FREE(obj);

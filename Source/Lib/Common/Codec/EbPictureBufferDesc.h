@@ -61,6 +61,7 @@ extern "C" {
         EbBool            packedFlag;       // Indicates if sample buffers are packed or not
 
         EbBool            film_grain_flag;  // Indicates if film grain parameters are present for the frame
+        uint32_t          buffer_enable_mask;
     } EbPictureBufferDesc;
 
 #define YV12_FLAG_HIGHBITDEPTH 8
