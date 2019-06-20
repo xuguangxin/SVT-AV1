@@ -63,7 +63,7 @@ typedef void(*EbDctor)(void* pobj);
     do { \
         EbErrorType err; \
         size_t size = sizeof(*pobj); \
-        EB_CALLOC1(pobj, 1, size); \
+        EB_CALLOC(pobj, 1, size); \
         err = ctor(pobj EB_VA_ARGS(__VA_ARGS__)); \
         if (err != EB_ErrorNone) { \
             EB_DELETE_UNCHECKED(pobj); \

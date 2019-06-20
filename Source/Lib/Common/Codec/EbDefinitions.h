@@ -2244,7 +2244,7 @@ extern    uint32_t                   app_malloc_count;
 #define EB_CREATE_SEMAPHORE(pointer, initial_count, max_count) \
     do { \
         pointer = eb_create_semaphore(initial_count, max_count); \
-        EB_ADD_MEM1(pointer, 1, EB_SEMAPHORE); \
+        EB_ADD_MEM(pointer, 1, EB_SEMAPHORE); \
     }while (0)
 
 #define EB_DESTROY_SEMAPHORE(pointer) \
@@ -2256,7 +2256,7 @@ extern    uint32_t                   app_malloc_count;
 #define EB_CREATE_MUTEX(pointer) \
     do { \
         pointer = eb_create_mutex(); \
-        EB_ADD_MEM1(pointer, 1, EB_MUTEX); \
+        EB_ADD_MEM(pointer, 1, EB_MUTEX); \
     } while (0)
 
 #define EB_DESTROY_MUTEX(pointer) \

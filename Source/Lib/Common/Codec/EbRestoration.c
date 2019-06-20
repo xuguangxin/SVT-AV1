@@ -1734,7 +1734,7 @@ EbErrorType av1_alloc_restoration_buffers(Av1Common *cm) {
         //CHKN CHECK_MEM_ERROR(cm, cm->rst_tmpbuf,
        //cm->rst_tmpbuf = (int32_t *)aom_memalign(16, RESTORATION_TMPBUF_SIZE);
 
-        EB_MALLOC1(cm->rst_tmpbuf, RESTORATION_TMPBUF_SIZE);
+        EB_MALLOC(cm->rst_tmpbuf, RESTORATION_TMPBUF_SIZE);
     }
 
     // For striped loop restoration, we divide each row of tiles into "stripes",
@@ -1770,8 +1770,8 @@ EbErrorType av1_alloc_restoration_buffers(Av1Common *cm) {
         RestorationStripeBoundaries *boundaries = &cm->rst_info[p].boundaries;
 
         {
-            EB_MALLOC1(boundaries->stripe_boundary_above, buf_size);
-            EB_MALLOC1(boundaries->stripe_boundary_below, buf_size);
+            EB_MALLOC(boundaries->stripe_boundary_above, buf_size);
+            EB_MALLOC(boundaries->stripe_boundary_below, buf_size);
 
             boundaries->stripe_boundary_size = buf_size;
         }

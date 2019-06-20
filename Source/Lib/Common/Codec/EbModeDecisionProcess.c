@@ -67,7 +67,7 @@ EbErrorType mode_decision_context_ctor(
     context_ptr->mode_decision_output_fifo_ptr = mode_decision_output_fifo_ptr;
 
     // Trasform Scratch Memory
-    EB_MALLOC1(context_ptr->transform_inner_array_ptr, 3120); //refer to EbInvTransform_SSE2.as. case 32x32
+    EB_MALLOC(context_ptr->transform_inner_array_ptr, 3120); //refer to EbInvTransform_SSE2.as. case 32x32
 
     // MD rate Estimation tables
     EB_MALLOC_ARRAY(context_ptr->md_rate_estimation_ptr, 1);

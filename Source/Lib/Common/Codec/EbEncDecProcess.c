@@ -117,7 +117,7 @@ EbErrorType enc_dec_context_ctor(
     // Trasform Scratch Memory
     EB_MALLOC_ARRAY(context_ptr->transform_inner_array_ptr, 3152); //refer to EbInvTransform_SSE2.as. case 32x32
     // MD rate Estimation tables
-    EB_MALLOC1(context_ptr->md_rate_estimation_ptr, sizeof(MdRateEstimationContext));
+    EB_MALLOC(context_ptr->md_rate_estimation_ptr, sizeof(MdRateEstimationContext));
     context_ptr->is_md_rate_estimation_ptr_owner = EB_TRUE;
 
     // Prediction Buffer

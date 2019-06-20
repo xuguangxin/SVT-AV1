@@ -81,7 +81,7 @@ extern "C" {
 #define EB_CREATE_THREAD(pointer, thread_function, thread_context) \
     do { \
         pointer = eb_create_thread(thread_function, thread_context); \
-        EB_ADD_MEM1(pointer, 1, EB_THREAD); \
+        EB_ADD_MEM(pointer, 1, EB_THREAD); \
         if(num_groups == 1) \
             SetThreadAffinityMask(pointer, group_affinity.Mask);\
         else if (num_groups == 2 && alternate_groups){ \
@@ -101,14 +101,14 @@ extern    cpu_set_t                   group_affinity;
 #define EB_CREATE_THREAD(pointer, thread_function, thread_context) \
     do { \
         pointer = eb_create_thread(thread_function, thread_context); \
-        EB_ADD_MEM1(pointer, 1, EB_THREAD); \
+        EB_ADD_MEM(pointer, 1, EB_THREAD); \
         pthread_setaffinity_np(*((pthread_t*)pointer),sizeof(cpu_set_t),&group_affinity); \
     } while (0)
 #else
 #define EB_CREATE_THREAD(pointer, thread_function, thread_context) \
     do { \
         pointer = eb_create_thread(thread_function, thread_context); \
-        EB_ADD_MEM1(pointer, 1, EB_THREAD); \
+        EB_ADD_MEM(pointer, 1, EB_THREAD); \
     } while (0)
 #endif
 

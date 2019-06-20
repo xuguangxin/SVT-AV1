@@ -1748,9 +1748,9 @@ EbErrorType entropy_coder_ctor(
 
     entropy_coder_ptr->dctor = entropy_coder_dctor;
 
-    EB_CALLOC1(entropy_coder_ptr->cabac_encode_context_ptr, 1, sizeof(CabacEncodeContext));
+    EB_CALLOC(entropy_coder_ptr->cabac_encode_context_ptr, 1, sizeof(CabacEncodeContext));
 
-    EB_MALLOC1(entropy_coder_ptr->fc, sizeof(FRAME_CONTEXT));
+    EB_MALLOC(entropy_coder_ptr->fc, sizeof(FRAME_CONTEXT));
 
 
     EB_NEW(

@@ -1046,9 +1046,9 @@ EbErrorType intra_open_loop_reference_samples_ctor(
     IntraReferenceSamplesOpenLoop *context_ptr)
 {
     context_ptr->dctor = intra_open_loop_reference_samples_dctor;
-    EB_MALLOC1(context_ptr->y_intra_reference_array, sizeof(uint8_t) * (4 * BLOCK_SIZE_64 + 1));
+    EB_MALLOC(context_ptr->y_intra_reference_array, (4 * BLOCK_SIZE_64 + 1));
 
-    EB_MALLOC1(context_ptr->y_intra_reference_array_reverse, sizeof(uint8_t) * (4 * BLOCK_SIZE_64 + 2));
+    EB_MALLOC(context_ptr->y_intra_reference_array_reverse, (4 * BLOCK_SIZE_64 + 2));
 
     context_ptr->y_intra_reference_array_reverse++;
 

@@ -17,8 +17,8 @@ EbErrorType pa_reference_queue_entry_ctor(
     PaReferenceQueueEntry   *entryPtr)
 {
     entryPtr->dctor = pa_reference_queue_entry_dctor;
-    EB_MALLOC1(entryPtr->list0.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
-    EB_MALLOC1(entryPtr->list1.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
+    EB_MALLOC(entryPtr->list0.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
+    EB_MALLOC(entryPtr->list1.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
 
     return EB_ErrorNone;
 }

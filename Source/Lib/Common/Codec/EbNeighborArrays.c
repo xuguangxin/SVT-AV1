@@ -42,15 +42,15 @@ EbErrorType neighbor_array_unit_ctor32(
     na_unit_ptr->top_left_array_size = (uint16_t)((type_mask & NEIGHBOR_ARRAY_UNIT_TOPLEFT_MASK) ? (max_picture_width + max_picture_height) >> na_unit_ptr->granularity_top_left_log2 : 0);
 
     if (na_unit_ptr->left_array_size) {
-        EB_MALLOC1(na_unit_ptr->left_array, na_unit_ptr->unit_size * na_unit_ptr->left_array_size);
+        EB_MALLOC(na_unit_ptr->left_array, na_unit_ptr->unit_size * na_unit_ptr->left_array_size);
     }
 
     if (na_unit_ptr->top_array_size) {
-        EB_MALLOC1(na_unit_ptr->top_array, na_unit_ptr->unit_size * na_unit_ptr->top_array_size);
+        EB_MALLOC(na_unit_ptr->top_array, na_unit_ptr->unit_size * na_unit_ptr->top_array_size);
     }
 
     if (na_unit_ptr->top_left_array_size) {
-        EB_MALLOC1(na_unit_ptr->top_left_array, na_unit_ptr->unit_size * na_unit_ptr->top_left_array_size);
+        EB_MALLOC(na_unit_ptr->top_left_array, na_unit_ptr->unit_size * na_unit_ptr->top_left_array_size);
     }
     return EB_ErrorNone;
 }
@@ -83,13 +83,13 @@ EbErrorType neighbor_array_unit_ctor(
     na_unit_ptr->top_left_array_size = (uint16_t)((type_mask & NEIGHBOR_ARRAY_UNIT_TOPLEFT_MASK) ? (max_picture_width + max_picture_height) >> na_unit_ptr->granularity_top_left_log2 : 0);
 
     if (na_unit_ptr->left_array_size) {
-        EB_MALLOC1(na_unit_ptr->left_array, na_unit_ptr->unit_size * na_unit_ptr->left_array_size);
+        EB_MALLOC(na_unit_ptr->left_array, na_unit_ptr->unit_size * na_unit_ptr->left_array_size);
     }
     if (na_unit_ptr->top_array_size) {
-        EB_MALLOC1(na_unit_ptr->top_array, na_unit_ptr->unit_size * na_unit_ptr->top_array_size);
+        EB_MALLOC(na_unit_ptr->top_array, na_unit_ptr->unit_size * na_unit_ptr->top_array_size);
     }
     if (na_unit_ptr->top_left_array_size) {
-        EB_MALLOC1(na_unit_ptr->top_left_array, na_unit_ptr->unit_size * na_unit_ptr->top_left_array_size);
+        EB_MALLOC(na_unit_ptr->top_left_array, na_unit_ptr->unit_size * na_unit_ptr->top_left_array_size);
     }
     return EB_ErrorNone;
 }

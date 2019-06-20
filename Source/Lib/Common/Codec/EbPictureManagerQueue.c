@@ -29,9 +29,9 @@ EbErrorType reference_queue_entry_ctor(
     entryPtr->dependent_count = 0;
     entryPtr->reference_available = EB_FALSE;
 
-    EB_MALLOC1(entryPtr->list0.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
+    EB_MALLOC(entryPtr->list0.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
 
-    EB_MALLOC1(entryPtr->list1.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
+    EB_MALLOC(entryPtr->list1.list, sizeof(int32_t) * (1 << MAX_TEMPORAL_LAYERS));
 
     return EB_ErrorNone;
 }

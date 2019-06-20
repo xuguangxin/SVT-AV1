@@ -63,7 +63,7 @@ EbErrorType largest_coding_unit_ctor(
     uint32_t  tot_cu_num = sb_size_pix == 128 ? 1024 : 256;
     larget_coding_unit_ptr->final_cu_count = tot_cu_num;
 
-    EB_CALLOC1(larget_coding_unit_ptr->final_cu_arr, tot_cu_num, sizeof(CodingUnit));
+    EB_CALLOC(larget_coding_unit_ptr->final_cu_arr, tot_cu_num, sizeof(CodingUnit));
 
     for (cu_i = 0; cu_i < tot_cu_num; ++cu_i) {
         larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd = NULL;
@@ -74,7 +74,7 @@ EbErrorType largest_coding_unit_ctor(
             larget_coding_unit_ptr->final_cu_arr[cu_i].transform_unit_array[tu_index].tu_index = tu_index;
         larget_coding_unit_ptr->final_cu_arr[cu_i].leaf_index = cu_i;
 
-        EB_MALLOC1(larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd, sizeof(MacroBlockD));
+        EB_MALLOC(larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd, sizeof(MacroBlockD));
     }
 
     uint32_t  max_block_count = sb_size_pix == 128 ? BLOCK_MAX_COUNT_SB_128 : BLOCK_MAX_COUNT_SB_64;

@@ -31,7 +31,7 @@ static void encode_context_dctor(EbPtr p)
     EB_DELETE_PTR_ARRAY(obj->hl_rate_control_historgram_queue, HIGH_LEVEL_RATE_CONTROL_HISTOGRAM_QUEUE_MAX_DEPTH);
     EB_DELETE_PTR_ARRAY(obj->packetization_reorder_queue, PACKETIZATION_REORDER_QUEUE_MAX_DEPTH);
     EB_FREE(obj->md_rate_estimation_array);
-    EB_FREE(obj->rate_control_tables_array);
+    EB_FREE_ARRAY(obj->rate_control_tables_array);
 }
 
 EbErrorType encode_context_ctor(
@@ -120,7 +120,7 @@ EbErrorType encode_context_ctor(
     encode_context_ptr->td_needed = EB_TRUE;
 
     // MD Rate Estimation Array
-    EB_CALLOC1(encode_context_ptr->md_rate_estimation_array, TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS, sizeof(MdRateEstimationContext));
+    EB_CALLOC(encode_context_ptr->md_rate_estimation_array, TOTAL_NUMBER_OF_MD_RATE_ESTIMATION_CASE_BUFFERS, sizeof(MdRateEstimationContext));
 
     return_error = md_rate_estimation_context_init(encode_context_ptr->md_rate_estimation_array);
     if (return_error == EB_ErrorInsufficientResources)
@@ -128,7 +128,7 @@ EbErrorType encode_context_ctor(
     // Temporal Filter
 
     // Rate Control Bit Tables
-    EB_MALLOC1(encode_context_ptr->rate_control_tables_array, TOTAL_NUMBER_OF_INITIAL_RC_TABLES_ENTRY*sizeof(RateControlTables));
+    EB_MALLOC_ARRAY(encode_context_ptr->rate_control_tables_array, TOTAL_NUMBER_OF_INITIAL_RC_TABLES_ENTRY);
 
     return_error = rate_control_tables_init(encode_context_ptr->rate_control_tables_array);
     if (return_error == EB_ErrorInsufficientResources)

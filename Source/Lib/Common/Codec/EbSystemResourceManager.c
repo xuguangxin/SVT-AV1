@@ -103,7 +103,7 @@ static EbErrorType EbCircularBufferCtor(
 
     bufferPtr->buffer_total_count = buffer_total_count;
 
-    EB_CALLOC1(bufferPtr->array_ptr, bufferPtr->buffer_total_count, sizeof(EbPtr));
+    EB_CALLOC(bufferPtr->array_ptr, bufferPtr->buffer_total_count, sizeof(EbPtr));
 
     return EB_ErrorNone;
 }

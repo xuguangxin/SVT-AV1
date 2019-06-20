@@ -773,7 +773,7 @@ static EbErrorType eb_enc_handle_ctor(
 
     // Initialize Callbacks
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
-    EB_MALLOC1(enc_handle_ptr->app_callback_ptr_array[0], sizeof(EbCallback));
+    EB_MALLOC(enc_handle_ptr->app_callback_ptr_array[0], sizeof(EbCallback));
     enc_handle_ptr->app_callback_ptr_array[0]->ErrorHandler = lib_svt_encoder_send_error_exit;
     enc_handle_ptr->app_callback_ptr_array[0]->handle = ebHandlePtr;
 
@@ -3352,7 +3352,7 @@ EbErrorType EbInputBufferHeaderCreator(
     SequenceControlSet        *sequence_control_set_ptr = (SequenceControlSet*)objectInitDataPtr;
 
     *objectDblPtr = NULL;
-    EB_CALLOC1(inputBuffer, 1, sizeof(EbBufferHeaderType));
+    EB_CALLOC(inputBuffer, 1, sizeof(EbBufferHeaderType));
     *objectDblPtr = (EbPtr)inputBuffer;
     // Initialize Header
     inputBuffer->size = sizeof(EbBufferHeaderType);
@@ -3390,13 +3390,13 @@ EbErrorType EbOutputBufferHeaderCreator(
     EbBufferHeaderType* outBufPtr;
 
     *objectDblPtr = NULL;
-    EB_CALLOC1(outBufPtr, 1, sizeof(EbBufferHeaderType));
+    EB_CALLOC(outBufPtr, 1, sizeof(EbBufferHeaderType));
     *objectDblPtr = (EbPtr)outBufPtr;
 
     // Initialize Header
     outBufPtr->size = sizeof(EbBufferHeaderType);
 
-    EB_MALLOC1(outBufPtr->p_buffer, n_stride);
+    EB_MALLOC(outBufPtr->p_buffer, n_stride);
 
     outBufPtr->n_alloc_len = n_stride;
     outBufPtr->p_app_private = NULL;
@@ -3431,14 +3431,14 @@ EbErrorType EbOutputReconBufferHeaderCreator(
     const uint32_t frameSize = (luma_size + chroma_size) << tenBit;
 
     *objectDblPtr = NULL;
-    EB_CALLOC1(recon_buffer, 1, sizeof(EbBufferHeaderType));
+    EB_CALLOC(recon_buffer, 1, sizeof(EbBufferHeaderType));
     *objectDblPtr = (EbPtr)recon_buffer;
 
     // Initialize Header
     recon_buffer->size = sizeof(EbBufferHeaderType);
 
     // Assign the variables
-    EB_MALLOC1(recon_buffer->p_buffer, frameSize);
+    EB_MALLOC(recon_buffer->p_buffer, frameSize);
 
     recon_buffer->n_alloc_len = frameSize;
     recon_buffer->p_app_private = NULL;
