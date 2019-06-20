@@ -45,17 +45,22 @@ static void set_restoration_unit_size(int32_t width, int32_t height, int32_t sx,
     rst[2].restoration_unit_size = rst[1].restoration_unit_size;
 }
 
-EbErrorType segmentation_map_ctor(SegmentationNeighborMap **seg_map_dbl_ptr,
+void segmentation_map_dctor(EbPtr p)
+{
+    SegmentationNeighborMap *obj = (SegmentationNeighborMap*)p;
+    EB_FREE_ARRAY(obj->data);
+}
+
+EbErrorType segmentation_map_ctor(SegmentationNeighborMap *seg_neighbor_map,
                                 uint16_t pic_width, uint16_t pic_height){
 
-    SegmentationNeighborMap *seg_neighbor_map;
-    EB_CALLOC(SegmentationNeighborMap*, seg_neighbor_map, 1, sizeof(SegmentationNeighborMap), EB_N_PTR);
-    *seg_map_dbl_ptr = seg_neighbor_map;
     uint32_t num_elements = (pic_width >> MI_SIZE_LOG2) * (pic_height >> MI_SIZE_LOG2);
-    seg_neighbor_map->map_size = num_elements;
-    EB_CALLOC(uint8_t*, seg_neighbor_map->data, num_elements, sizeof(uint8_t), EB_N_PTR);
-    return  EB_ErrorNone;
 
+    seg_neighbor_map->dctor = segmentation_map_dctor;
+
+    seg_neighbor_map->map_size = num_elements;
+    EB_CALLOC_ARRAY(seg_neighbor_map->data, num_elements);
+    return  EB_ErrorNone;
 }
 
 static void me_sb_results_dctor(EbPtr p)
@@ -142,6 +147,7 @@ void picture_control_set_dctor(EbPtr p)
     EB_DELETE(obj->intra_luma_mode_neighbor_array);
     EB_DELETE(obj->txfm_context_array);
     EB_DELETE(obj->segmentation_id_pred_array);
+    EB_DELETE(obj->segmentation_neighbor_map);
     EB_DELETE(obj->ep_luma_recon_neighbor_array16bit);
     EB_DELETE(obj->ep_cb_recon_neighbor_array16bit);
     EB_DELETE(obj->ep_cr_recon_neighbor_array16bit);
@@ -884,11 +890,10 @@ EbErrorType picture_control_set_ctor(
         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
     //Segmentation neighbor arrays
-    return_error = segmentation_map_ctor(
-            &object_ptr->segmentation_neighbor_map,
-            initDataPtr->picture_width, initDataPtr->picture_height);
-    if (return_error == EB_ErrorInsufficientResources)
-        return EB_ErrorInsufficientResources;
+    EB_NEW(
+        object_ptr->segmentation_neighbor_map,
+        segmentation_map_ctor,
+        initDataPtr->picture_width, initDataPtr->picture_height);
 
     // Note - non-zero offsets are not supported (to be fixed later in DLF chroma filtering)
     object_ptr->cb_qp_offset = 0;
