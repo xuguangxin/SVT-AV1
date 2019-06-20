@@ -680,7 +680,7 @@ EbErrorType mode_decision_configuration_context_ctor(
     context_ptr->mode_decision_configuration_output_fifo_ptr = mode_decision_configuration_output_fifo_ptr;
     // Rate estimation
     EB_MALLOC_ARRAY(context_ptr->md_rate_estimation_ptr, 1);
-	context_ptr->is_md_rate_estimation_ptr_owner = EB_TRUE;
+    context_ptr->is_md_rate_estimation_ptr_owner = EB_TRUE;
 
     // Adaptive Depth Partitioning
     EB_MALLOC_ARRAY(context_ptr->sb_score_array, sb_total_count);

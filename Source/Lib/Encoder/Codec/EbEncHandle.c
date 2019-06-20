@@ -737,7 +737,7 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_DELETE(enc_handle_ptr->picture_manager_context_ptr);
     EB_DELETE(enc_handle_ptr->rate_control_context_ptr);
     EB_DELETE(enc_handle_ptr->packetization_context_ptr);
-	EB_DELETE_PTR_ARRAY(enc_handle_ptr->reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+    EB_DELETE_PTR_ARRAY(enc_handle_ptr->reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
 
     EB_FREE_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_producer_fifo_ptr_dbl_array);
     EB_FREE_ARRAY(enc_handle_ptr->picture_control_set_pool_producer_fifo_ptr_dbl_array);

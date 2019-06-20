@@ -88,7 +88,6 @@ EbErrorType eb_picture_buffer_desc_ctor(
         }
     }
 
-
     if (pictureBufferDescInitDataPtr->buffer_enable_mask & PICTURE_BUFFER_DESC_Cb_FLAG) {
         EB_CALLOC_ALIGNED_ARRAY(pictureBufferDescPtr->buffer_cb, pictureBufferDescPtr->chroma_size * bytesPerPixel);
         pictureBufferDescPtr->buffer_bit_inc_cb = 0;
