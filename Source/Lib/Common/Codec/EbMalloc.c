@@ -104,6 +104,9 @@ typedef EbBool (*Predicate)(MemoryEntry* e, void* param);
 * @brief
 *  Loop through mem entries.
 *
+* @param[in] bucket
+*  the hash bucket
+*
 * @param[in] start
 *  loop start position
 *
@@ -115,31 +118,33 @@ typedef EbBool (*Predicate)(MemoryEntry* e, void* param);
 *
 * @returns  return EB_TRUE if we got early exit.
 *
-* @remarks
-*  Any remarks
 *
 ********************************************************************************/
-
-static EbBool for_each_mem_entry(uint32_t start, Predicate pred, void* param)
+static EbBool for_each_hash_entry(MemoryEntry* bucket, uint32_t start, Predicate pred, void* param)
 {
 
     uint32_t s = TO_INDEX(start);
     uint32_t i = s;
 
-    EbHandle m = get_malloc_mutex();
-    eb_block_on_mutex(m);
-
     do {
-        MemoryEntry* e = g_mem_entry + i;
+        MemoryEntry* e = bucket + i;
         if (pred(e, param)) {
-            eb_release_mutex(m);
             return EB_TRUE;
         }
         i++;
         i = TO_INDEX(i);
     } while (i != s);
+     return EB_FALSE;
+}
+
+static EbBool for_each_mem_entry(uint32_t start, Predicate pred, void* param)
+{
+    EbBool ret;
+    EbHandle m = get_malloc_mutex();
+    eb_block_on_mutex(m);
+    ret = for_each_hash_entry(g_mem_entry, start, pred, param);
     eb_release_mutex(m);
-    return EB_FALSE;
+    return ret;
 }
 
 static const char* mem_type_name(EbPtrType type)
@@ -285,18 +290,16 @@ static EbBool print_leak(MemoryEntry* e, void* param)
 void eb_decrease_component_count()
 {
 #ifdef DEBUG_MEMORY_USAGE
-    EbBool all_components_released;
     EbHandle m = get_malloc_mutex();
     eb_block_on_mutex(m);
     g_component_count--;
-    all_components_released = !g_component_count;
-    eb_release_mutex(m);
-    if (all_components_released) {
+    if (!g_component_count) {
         EbBool leaked = EB_FALSE;
-        for_each_mem_entry(0, print_leak, &leaked);
+        for_each_hash_entry(g_mem_entry, 0, print_leak, &leaked);
         if (!leaked) {
             printf("SVT: you have no memory leak\r\n");
         }
     }
+    eb_release_mutex(m);
 #endif
 }
