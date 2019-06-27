@@ -63,7 +63,7 @@ EbErrorType largest_coding_unit_ctor(
     uint32_t  tot_cu_num = sb_size_pix == 128 ? 1024 : 256;
     larget_coding_unit_ptr->final_cu_count = tot_cu_num;
 
-    EB_CALLOC(larget_coding_unit_ptr->final_cu_arr, tot_cu_num, sizeof(CodingUnit));
+    EB_MALLOC_ARRAY(larget_coding_unit_ptr->final_cu_arr, tot_cu_num);
 
     for (cu_i = 0; cu_i < tot_cu_num; ++cu_i) {
         larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd = NULL;
