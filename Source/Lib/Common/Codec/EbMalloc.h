@@ -57,7 +57,7 @@ void eb_remove_mem_entry(void* ptr, EbPtrType type);
 #define EB_NO_THROW_CALLOC(pointer, count, size) \
     do { \
         void* p = calloc(count, size); \
-        EB_ADD_MEM(p, count * size, EB_N_PTR); \
+        EB_ADD_MEM(p, count * size, EB_C_PTR); \
         *(void**)&(pointer) = p; \
     } while (0)
 

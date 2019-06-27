@@ -2173,10 +2173,11 @@ typedef enum DistCalcType
 typedef enum EbPtrType
 {
     EB_N_PTR        = 0,     // malloc'd pointer
-    EB_A_PTR        = 1,     // malloc'd pointer aligned
-    EB_MUTEX        = 2,     // mutex
-    EB_SEMAPHORE    = 3,     // semaphore
-    EB_THREAD       = 4,      // thread handle
+    EB_C_PTR        = 1,     // calloc'd pointer
+    EB_A_PTR        = 2,     // malloc'd pointer aligned
+    EB_MUTEX        = 3,     // mutex
+    EB_SEMAPHORE    = 4,     // semaphore
+    EB_THREAD       = 5,      // thread handle
     EB_PTR_TYPE_TOTAL,
 } EbPtrType;
 

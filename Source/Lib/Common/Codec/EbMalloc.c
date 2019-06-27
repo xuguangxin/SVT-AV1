@@ -149,7 +149,7 @@ static EbBool for_each_mem_entry(uint32_t start, Predicate pred, void* param)
 
 static const char* mem_type_name(EbPtrType type)
 {
-    static const char *name[EB_PTR_TYPE_TOTAL] = {"memory", "aligned memory", "mutex", "semaphore", "thread"};
+    static const char *name[EB_PTR_TYPE_TOTAL] = {"memory", "calloced memory", "aligned memory", "mutex", "semaphore", "thread"};
     return name[type];
 }
 
@@ -184,9 +184,15 @@ void eb_add_mem_entry(void* ptr,  EbPtrType type, size_t count, const char* file
 static EbBool remove_mem_entry(MemoryEntry* e, void* param)
 {
     MemoryEntry* item = (MemoryEntry*)param;
-    if (e->ptr == item->ptr && e->type == item->type) {
-        e->ptr = NULL;
-        return EB_TRUE;
+    if (e->ptr == item->ptr) {
+        if (e->type == item->type) {
+            e->ptr = NULL;
+            return EB_TRUE;
+        } else if (e->type == EB_C_PTR && item->type == EB_N_PTR) {
+            //speical case, we use EB_FREE to free calloced memory
+            e->ptr = NULL;
+            return EB_TRUE;
+        }
     }
     return EB_FALSE;
 }
@@ -324,6 +330,8 @@ void eb_print_memory_usage()
     printf("SVT Memory Usage:\r\n");
     get_memory_usage_and_scale(sum.amount[EB_N_PTR], &usage, &scale);
     printf("    allocated memory:         %.2lf %cB\r\n", usage, scale);
+    get_memory_usage_and_scale(sum.amount[EB_C_PTR], &usage, &scale);
+    printf("    callocated memory:         %.2lf %cB\r\n", usage, scale);
     get_memory_usage_and_scale(sum.amount[EB_A_PTR], &usage, &scale);
     printf("    allocated aligned memory: %.2lf %cB\r\n", usage, scale);
 
