@@ -237,6 +237,78 @@ static void get_memory_usage_and_scale(uint64_t amount, double* usage, char* sca
     *scale = scales[i];
 }
 
+//this need more memory and cpu
+#define PROFILE_MEMORY_USAGE
+#ifdef PROFILE_MEMORY_USAGE
+
+//if we use a static array here, this size + sizeof(g_mem_entry) will exceed max size allowed on windows.
+static MemoryEntry* g_profile_entry;
+
+uint32_t hash_location(FILE* f, int line) {
+#define MASK32 ((((uint64_t)1)<<32)-1)
+
+    uint64_t v = (uint64_t)f;
+    uint64_t low32 = v & MASK32;
+    return (uint32_t)((v >> 32) + low32 + line);
+}
+
+static EbBool add_location(MemoryEntry* e, void* param) {
+    MemoryEntry* new_item = (MemoryEntry*)param;
+    if (!e->ptr) {
+        *e = *new_item;
+        return EB_TRUE;
+    } else if (e->file == new_item->file && e->line == new_item->line) {
+        e->count += new_item->count;
+        return EB_TRUE;
+    }
+    //to next position.
+    return EB_FALSE;
+}
+
+static EbBool collect_mem(MemoryEntry* e, void* param) {
+    EbPtrType type = *(EbPtrType*)param;
+    if (e->ptr && e->type == type) {
+        for_each_hash_entry(g_profile_entry, 0, add_location, e);
+    }
+    //Loop entire bucket.
+    return EB_FALSE;
+}
+
+static int compare_count(const void* a,const void* b)
+{
+    const MemoryEntry* pa = (const MemoryEntry*)a;
+    const MemoryEntry* pb = (const MemoryEntry*)b;
+    if (pb->count < pa->count) return -1;
+    if (pb->count == pa->count) return 0;
+    return 1;
+}
+
+static void print_top_10_locations() {
+    EbHandle m = get_malloc_mutex();
+    EbPtrType type = EB_N_PTR;
+    eb_block_on_mutex(m);
+    g_profile_entry = (MemoryEntry*)calloc(MEM_ENTRY_SIZE, sizeof(MemoryEntry));
+    if (!g_profile_entry) {
+        fprintf(stderr, "not enough memory for memory profile");
+        eb_release_mutex(m);
+        return;
+    }
+
+    for_each_hash_entry(g_mem_entry, 0, collect_mem, &type);
+    qsort(g_profile_entry, MEM_ENTRY_SIZE, sizeof(MemoryEntry), compare_count);
+
+    printf("top 10 %s locations:\r\n", mem_type_name(type));
+    for (int i = 0; i < 10; i++) {
+        double usage;
+        char scale;
+        MemoryEntry* e = g_profile_entry + i;
+        get_memory_usage_and_scale(e->count, &usage, &scale);
+        printf("(%.2lf %cB): %s:%d\r\n", usage, scale, e->file, e->line);
+    }
+    free(g_profile_entry);
+    eb_release_mutex(m);
+}
+#endif
 #endif
 
 void eb_print_memory_usage()
@@ -260,6 +332,9 @@ void eb_print_memory_usage()
     printf("    thread count: %d\r\n", (int)sum.amount[EB_THREAD]);
     fulless = (double)sum.occupied / MEM_ENTRY_SIZE;
     printf("    hash table fulless: %f, hash bucket is %s\r\n", fulless, fulless < .3 ? "healthy":"too full" );
+#ifdef PROFILE_MEMORY_USAGE
+    print_top_10_locations();
+#endif
 #endif
 }
 
