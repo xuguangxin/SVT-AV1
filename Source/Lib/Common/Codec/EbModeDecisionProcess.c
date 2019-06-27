@@ -34,17 +34,23 @@ static void mode_decision_context_dctor(EbPtr p)
     EB_FREE_ARRAY(obj->full_cost_array);
     EB_FREE_ARRAY(obj->full_cost_skip_ptr);
     EB_FREE_ARRAY(obj->full_cost_merge_ptr);
-    for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].av1xd);
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0]);
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1]);
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2]);
+    if (obj->md_cu_arr_nsq) {
+        for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].av1xd);
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0]);
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1]);
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2]);
 
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0]);
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1]);
-        EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2]);
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0]);
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1]);
+            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2]);
 
+        }
     }
+
+    EB_FREE_ARRAY(obj->md_local_cu_unit);
+    EB_FREE_ARRAY(obj->md_cu_arr_nsq);
+    EB_FREE_ARRAY(obj->md_ep_pipe_sb);
 }
 
 /******************************************************
@@ -72,6 +78,10 @@ EbErrorType mode_decision_context_ctor(
     // MD rate Estimation tables
     EB_MALLOC_ARRAY(context_ptr->md_rate_estimation_ptr, 1);
     context_ptr->is_md_rate_estimation_ptr_owner = EB_TRUE;
+
+    EB_MALLOC_ARRAY(context_ptr->md_local_cu_unit, BLOCK_MAX_COUNT_SB_128);
+    EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq, BLOCK_MAX_COUNT_SB_128);
+    EB_MALLOC_ARRAY(context_ptr->md_ep_pipe_sb, BLOCK_MAX_COUNT_SB_128);
 
     // Fast Candidate Array
     EB_MALLOC_ARRAY(context_ptr->fast_candidate_array, MODE_DECISION_CANDIDATE_MAX_COUNT);

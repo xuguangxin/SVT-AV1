@@ -90,8 +90,8 @@ extern "C" {
         MdRateEstimationContext      *md_rate_estimation_ptr;
         EbBool                        is_md_rate_estimation_ptr_owner;
         InterPredictionContext       *inter_prediction_context;
-        MdCodingUnit                  md_local_cu_unit[BLOCK_MAX_COUNT_SB_128];
-        CodingUnit                    md_cu_arr_nsq[BLOCK_MAX_COUNT_SB_128];
+        MdCodingUnit                  *md_local_cu_unit;
+        CodingUnit                    *md_cu_arr_nsq;
 
         NeighborArrayUnit            *intra_luma_mode_neighbor_array;
         NeighborArrayUnit            *intra_chroma_mode_neighbor_array;
@@ -146,7 +146,7 @@ extern "C" {
 
         // Entropy Coder
         EntropyCoder                 *coeff_est_entropy_coder_ptr;
-        MdEncPassCuData               md_ep_pipe_sb[BLOCK_MAX_COUNT_SB_128];
+        MdEncPassCuData               *md_ep_pipe_sb;
         uint8_t                         pu_itr;
         uint8_t                         cu_size_log2;
         uint8_t                         best_candidate_index_array[MAX_NFL + 2];
