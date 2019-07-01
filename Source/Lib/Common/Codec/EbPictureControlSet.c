@@ -68,7 +68,10 @@ static void me_sb_results_dctor(EbPtr p)
     MeLcuResults* obj = (MeLcuResults*)p;
 
     EB_FREE_ARRAY(obj->me_candidate);
-    EB_FREE_PTR_ARRAY(obj->me_mv_array, obj->max_number_of_pus_per_lcu);
+    if (obj->me_mv_array) {
+        EB_FREE_ARRAY(obj->me_mv_array[0]);
+    }
+    EB_FREE_ARRAY(obj->me_mv_array);
     EB_FREE_ARRAY(obj->me_candidate_array);
     EB_FREE_ARRAY(obj->total_me_candidate_index);
 
@@ -83,16 +86,19 @@ EbErrorType me_sb_results_ctor(
     uint32_t           maxNumberOfMeCandidatesPerPU){
     uint32_t  puIndex;
 
+    size_t count = ((mrp_mode == 0) ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1);
     objectPtr->dctor = me_sb_results_dctor;
     objectPtr->max_number_of_pus_per_lcu = maxNumberOfPusPerLcu;
 
     EB_MALLOC_ARRAY(objectPtr->me_candidate, maxNumberOfPusPerLcu);
-    EB_ALLOC_PTR_ARRAY(objectPtr->me_mv_array, maxNumberOfPusPerLcu);
+    EB_MALLOC_ARRAY(objectPtr->me_mv_array, maxNumberOfPusPerLcu);
 #if ALIGN_MEM
     objectPtr->meCandidateArray = (MeCandidate_t*)EB_aligned_malloc(sizeof(MeCandidate_t) * maxNumberOfPusPerLcu * maxNumberOfMeCandidatesPerPU, 64);
 #else
     EB_MALLOC_ARRAY(objectPtr->me_candidate_array, maxNumberOfPusPerLcu * maxNumberOfMeCandidatesPerPU);
 #endif
+    EB_MALLOC_ARRAY(objectPtr->me_mv_array[0], maxNumberOfPusPerLcu * count);
+
     for (puIndex = 0; puIndex < maxNumberOfPusPerLcu; ++puIndex) {
         objectPtr->me_candidate[puIndex] = &objectPtr->me_candidate_array[puIndex * maxNumberOfMeCandidatesPerPU];
 
@@ -106,7 +112,7 @@ EbErrorType me_sb_results_ctor(
         objectPtr->me_candidate[puIndex][0].direction = 0;
         objectPtr->me_candidate[puIndex][1].direction = 1;
         objectPtr->me_candidate[puIndex][2].direction = 2;
-        EB_MALLOC_ARRAY(objectPtr->me_mv_array[puIndex], ((mrp_mode == 0) ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1));
+        objectPtr->me_mv_array[puIndex] = objectPtr->me_mv_array[0] + puIndex * count;
     }
     EB_MALLOC_ARRAY(objectPtr->total_me_candidate_index, maxNumberOfPusPerLcu);
 
