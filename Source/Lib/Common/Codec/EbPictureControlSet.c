@@ -1001,16 +1001,16 @@ static void picture_parent_control_set_dctor(EbPtr p)
     if (obj->is_chroma_downsampled_picture_ptr_owner)
         EB_DELETE(obj->chroma_downsampled_picture_ptr);
 
-    EB_FREE_2D(obj->variance, obj->sb_total_count);
-    EB_FREE_2D(obj->y_mean, obj->sb_total_count);
-    EB_FREE_2D(obj->cbMean, obj->sb_total_count);
-    EB_FREE_2D(obj->crMean, obj->sb_total_count);
+    EB_FREE_2D(obj->variance);
+    EB_FREE_2D(obj->y_mean);
+    EB_FREE_2D(obj->cbMean);
+    EB_FREE_2D(obj->crMean);
 
     if (obj->picture_histogram) {
         for (regionInPictureWidthIndex = 0; regionInPictureWidthIndex < MAX_NUMBER_OF_REGIONS_IN_WIDTH; regionInPictureWidthIndex++) {
             if (obj->picture_histogram[regionInPictureWidthIndex]) {
                 for (regionInPictureHeightIndex = 0; regionInPictureHeightIndex < MAX_NUMBER_OF_REGIONS_IN_HEIGHT; regionInPictureHeightIndex++) {
-                    EB_FREE_2D(obj->picture_histogram[regionInPictureWidthIndex][regionInPictureHeightIndex], 3);
+                    EB_FREE_2D(obj->picture_histogram[regionInPictureWidthIndex][regionInPictureHeightIndex]);
                 }
             }
             EB_FREE_PTR_ARRAY(obj->picture_histogram[regionInPictureWidthIndex], MAX_NUMBER_OF_REGIONS_IN_HEIGHT);
@@ -1018,8 +1018,8 @@ static void picture_parent_control_set_dctor(EbPtr p)
         EB_FREE_PTR_ARRAY(obj->picture_histogram, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
     }
 
-    EB_FREE_2D(obj->ois_sb_results, obj->sb_total_count);
-    EB_FREE_2D(obj->ois_candicate, obj->sb_total_count);
+    EB_FREE_2D(obj->ois_sb_results);
+    EB_FREE_2D(obj->ois_candicate);
     EB_FREE_ARRAY(obj->rc_me_distortion);
     // ME and OIS Distortion Histograms
     EB_FREE_ARRAY(obj->me_distortion_histogram);

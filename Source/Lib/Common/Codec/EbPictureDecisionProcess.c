@@ -225,9 +225,9 @@ void picture_decision_context_dctor(EbPtr p)
 {
     PictureDecisionContext* obj = (PictureDecisionContext*)p;
 
-    EB_FREE_2D(obj->ahd_running_avg, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
-    EB_FREE_2D(obj->ahd_running_avg_cr, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
-    EB_FREE_2D(obj->ahd_running_avg_cb, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
+    EB_FREE_2D(obj->ahd_running_avg);
+    EB_FREE_2D(obj->ahd_running_avg_cr);
+    EB_FREE_2D(obj->ahd_running_avg_cb);
 }
 
  /************************************************

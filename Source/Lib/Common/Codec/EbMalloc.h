@@ -112,24 +112,27 @@ void eb_remove_mem_entry(void* ptr, EbPtrType type);
 
 #define EB_MALLOC_2D(p2d, width, height) \
     do {\
-        uint32_t w = 0; \
-        EB_ALLOC_PTR_ARRAY(p2d, width); \
-        for (w = 0; w < width; w++) { \
-            EB_MALLOC(p2d[w], height*sizeof(p2d[0][0])); \
+        EB_MALLOC_ARRAY(p2d, width); \
+        EB_MALLOC_ARRAY(p2d[0], width * height); \
+        for (uint32_t w = 1; w < width; w++) { \
+            p2d[w] = p2d[0] + w * height; \
         } \
     } while (0)
 
 #define EB_CALLOC_2D(p2d, width, height) \
     do {\
-        uint32_t w = 0; \
-        EB_ALLOC_PTR_ARRAY(p2d, width); \
-        for (w = 0; w < width; w++) { \
-            EB_CALLOC(p2d[w], height, sizeof(p2d[0][0])); \
+        EB_MALLOC_ARRAY(p2d, width); \
+        EB_CALLOC_ARRAY(p2d[0], width * height); \
+        for (uint32_t w = 1; w < width; w++) { \
+             p2d[w] = p2d[0] + w * height; \
         } \
     } while (0)
 
-#define EB_FREE_2D(p2d, width) \
-    EB_FREE_PTR_ARRAY(p2d, width)
+#define EB_FREE_2D(p2d) \
+    do { \
+        if (p2d) EB_FREE_ARRAY(p2d[0]); \
+        EB_FREE_ARRAY(p2d); \
+    } while (0)
 
 
 #ifdef _WIN32

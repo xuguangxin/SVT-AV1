@@ -630,7 +630,7 @@ static void PredictionStructureDctor(EbPtr p)
             EB_FREE_ARRAY(pe[i]->dep_list0.list);
             EB_FREE_ARRAY(pe[i]->dep_list1.list);
         }
-        EB_FREE_2D(obj->pred_struct_entry_ptr_array, count);
+        EB_FREE_2D(obj->pred_struct_entry_ptr_array);
     }
     EB_FREE_ARRAY(obj->decodeOrderTable);
     EB_FREE_ARRAY(obj->displayOrderTable);
