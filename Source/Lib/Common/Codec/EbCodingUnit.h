@@ -424,6 +424,8 @@ extern "C" {
 
         CodingUnit                   *final_cu_arr;
         uint32_t                      final_cu_count;
+        //for memory free only
+        MacroBlockD                  *av1xd;
         PartitionType                  *cu_partition_array;
 #if !ADD_DELTA_QP_SUPPORT
         unsigned                        qp                      : 8;

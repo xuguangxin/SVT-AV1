@@ -16,11 +16,7 @@ void largest_coding_unit_dctor(EbPtr p)
     LargestCodingUnit* obj = (LargestCodingUnit*)p;
     uint32_t cu_i;
     EB_DELETE(obj->quantized_coeff);
-    if (obj->final_cu_arr) {
-        for (cu_i = 0; cu_i < obj->final_cu_count; ++cu_i) {
-            EB_FREE(obj->final_cu_arr[cu_i].av1xd);
-        }
-    }
+    EB_FREE_ARRAY(obj->av1xd);
     EB_FREE_ARRAY(obj->final_cu_arr);
     EB_FREE_ARRAY(obj->cu_partition_array);
 }
@@ -64,17 +60,13 @@ EbErrorType largest_coding_unit_ctor(
     larget_coding_unit_ptr->final_cu_count = tot_cu_num;
 
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->final_cu_arr, tot_cu_num);
-
-    for (cu_i = 0; cu_i < tot_cu_num; ++cu_i) {
-        larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd = NULL;
-    }
+    EB_MALLOC_ARRAY(larget_coding_unit_ptr->av1xd, tot_cu_num);
 
     for (cu_i = 0; cu_i < tot_cu_num; ++cu_i) {
         for (tu_index = 0; tu_index < TRANSFORM_UNIT_MAX_COUNT; ++tu_index)
             larget_coding_unit_ptr->final_cu_arr[cu_i].transform_unit_array[tu_index].tu_index = tu_index;
         larget_coding_unit_ptr->final_cu_arr[cu_i].leaf_index = cu_i;
-
-        EB_MALLOC(larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd, sizeof(MacroBlockD));
+        larget_coding_unit_ptr->final_cu_arr[cu_i].av1xd = larget_coding_unit_ptr->av1xd + cu_i;
     }
 
     uint32_t  max_block_count = sb_size_pix == 128 ? BLOCK_MAX_COUNT_SB_128 : BLOCK_MAX_COUNT_SB_64;
