@@ -35,17 +35,9 @@ static void mode_decision_context_dctor(EbPtr p)
     EB_FREE_ARRAY(obj->full_cost_skip_ptr);
     EB_FREE_ARRAY(obj->full_cost_merge_ptr);
     if (obj->md_cu_arr_nsq) {
-        for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].av1xd);
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0]);
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1]);
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2]);
-
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0]);
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1]);
-            EB_FREE_ARRAY(obj->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2]);
-
-        }
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[0].av1xd);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[0].neigh_left_recon[0]);
+        EB_FREE_ARRAY(obj->md_cu_arr_nsq[0].neigh_top_recon[0]);
     }
 
     EB_FREE_ARRAY(obj->md_local_cu_unit);
@@ -117,20 +109,25 @@ EbErrorType mode_decision_context_ctor(
             &(context_ptr->full_cost_merge_ptr[bufferIndex])
         );
     }
+    context_ptr->md_cu_arr_nsq[0].av1xd = NULL;
+    context_ptr->md_cu_arr_nsq[0].neigh_left_recon[0] = NULL;
+    context_ptr->md_cu_arr_nsq[0].neigh_top_recon[0] = NULL;
+    EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[0].av1xd, BLOCK_MAX_COUNT_SB_128);
+    EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[0].neigh_left_recon[0], BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+    EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[0].neigh_top_recon[0], BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+
     uint32_t codedLeafIndex, tu_index;
     for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
         for (tu_index = 0; tu_index < TRANSFORM_UNIT_MAX_COUNT; ++tu_index)
             context_ptr->md_cu_arr_nsq[codedLeafIndex].transform_unit_array[tu_index].tu_index = tu_index;
         const BlockGeom * blk_geom = get_blk_geom_mds(codedLeafIndex);
         UNUSED(blk_geom);
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].av1xd, 1);
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[0], 128);
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[1], 128);
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[2], 128);
-
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[0], 128);
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[1], 128);
-        EB_MALLOC_ARRAY(context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[2], 128);
+        context_ptr->md_cu_arr_nsq[codedLeafIndex].av1xd = context_ptr->md_cu_arr_nsq[0].av1xd + codedLeafIndex;
+        for (int i = 0; i < 3; i++) {
+            size_t offset = codedLeafIndex * 128 * 3 + i * 128;
+            context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_left_recon[i] = context_ptr->md_cu_arr_nsq[0].neigh_left_recon[0] + offset;
+            context_ptr->md_cu_arr_nsq[codedLeafIndex].neigh_top_recon[i] = context_ptr->md_cu_arr_nsq[0].neigh_top_recon[0] + offset;
+        }
 
 #if NO_ENCDEC //SB128_TODO to upgrade
         {
