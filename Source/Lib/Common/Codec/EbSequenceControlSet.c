@@ -337,7 +337,6 @@ EbErrorType eb_sequence_control_set_instance_ctor(
     EbSequenceControlSetInstance *object_dbl_ptr)
 {
     EbSequenceControlSetInitData scsInitData;
-    EbErrorType return_error = EB_ErrorNone;
 
     object_dbl_ptr->dctor = eb_sequence_control_set_instance_dctor;
 

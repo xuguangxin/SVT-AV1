@@ -20,7 +20,6 @@ void eb_trans_quant_buffers_dctor(EbPtr p)
 EbErrorType eb_trans_quant_buffers_ctor(
     EbTransQuantBuffers          *trans_quant_buffers_ptr)
 {
-    EbErrorType return_error = EB_ErrorNone;
     EbPictureBufferDescInitData transCoeffInitArray;
 
     trans_quant_buffers_ptr->dctor = eb_trans_quant_buffers_dctor;

@@ -14,7 +14,6 @@
 void largest_coding_unit_dctor(EbPtr p)
 {
     LargestCodingUnit* obj = (LargestCodingUnit*)p;
-    uint32_t cu_i;
     EB_DELETE(obj->quantized_coeff);
     EB_FREE_ARRAY(obj->av1xd);
     EB_FREE_ARRAY(obj->final_cu_arr);
@@ -38,7 +37,6 @@ EbErrorType largest_coding_unit_ctor(
     PictureControlSet  *picture_control_set)
 
 {
-    EbErrorType return_error = EB_ErrorNone;
     uint32_t tu_index;
     EbPictureBufferDescInitData coeffInitData;
 

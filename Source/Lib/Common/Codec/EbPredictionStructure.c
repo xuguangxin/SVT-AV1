@@ -619,7 +619,7 @@ static void PredictionStructureDctor(EbPtr p)
     PredictionStructureEntry** pe = obj->pred_struct_entry_ptr_array;
     uint32_t count = obj->pred_struct_entry_count;
     if (pe) {
-        for (int i = 0; i < count; i++) {
+        for (uint32_t i = 0; i < count; i++) {
             EB_FREE_ARRAY(pe[i]->ref_list0.reference_list);
             EB_FREE_ARRAY(pe[i]->ref_list0.reference_list);
             EB_FREE_ARRAY(pe[i]->ref_list1.reference_list);
@@ -1669,7 +1669,6 @@ EbErrorType prediction_structure_group_ctor(
     uint32_t          hierarchicalLevelIdx;
     uint32_t          predTypeIdx;
     uint32_t          numberOfReferences;
-    EbErrorType    return_error = EB_ErrorNone;
 
     predictionStructureGroupPtr->dctor = prediction_structure_group_dctor;
 

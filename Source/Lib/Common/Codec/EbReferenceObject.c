@@ -142,7 +142,6 @@ EbErrorType eb_reference_object_ctor(
 
     EbPictureBufferDescInitData    *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
     EbPictureBufferDescInitData    pictureBufferDescInitData16BitPtr = *pictureBufferDescInitDataPtr;
-    EbErrorType return_error = EB_ErrorNone;
 
     referenceObject->dctor = eb_reference_object_dctor;
     //TODO:12bit
@@ -220,7 +219,6 @@ EbErrorType eb_pa_reference_object_ctor(
     EbPtr   object_init_data_ptr)
 {
     EbPictureBufferDescInitData       *pictureBufferDescInitDataPtr = (EbPictureBufferDescInitData*)object_init_data_ptr;
-    EbErrorType return_error = EB_ErrorNone;
 
     paReferenceObject->dctor = eb_pa_reference_object_dctor;
 

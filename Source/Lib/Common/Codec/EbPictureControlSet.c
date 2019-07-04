@@ -1122,8 +1122,6 @@ EbErrorType picture_parent_control_set_ctor(
     EB_MALLOC_2D(object_ptr->cbMean, object_ptr->sb_total_count, 21);
     EB_MALLOC_2D(object_ptr->crMean, object_ptr->sb_total_count, 21);
 
-    // Histograms
-    uint32_t videoComponent;
 
     EB_ALLOC_PTR_ARRAY(object_ptr->picture_histogram, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
 

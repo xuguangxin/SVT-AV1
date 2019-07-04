@@ -12,7 +12,6 @@
 static void mode_decision_context_dctor(EbPtr p)
 {
     ModeDecisionContext* obj = (ModeDecisionContext*)p;
-    uint32_t codedLeafIndex;
 #if NO_ENCDEC //SB128_TODO to upgrade
     int codedLeafIndex;
     for (codedLeafIndex = 0; codedLeafIndex < BLOCK_MAX_COUNT_SB_128; ++codedLeafIndex) {
@@ -55,7 +54,6 @@ EbErrorType mode_decision_context_ctor(
     EbFifo                *mode_decision_output_fifo_ptr){
     uint32_t bufferIndex;
     uint32_t candidateIndex;
-    EbErrorType return_error = EB_ErrorNone;
 
     (void)color_format;
 

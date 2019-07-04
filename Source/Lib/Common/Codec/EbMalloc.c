@@ -230,7 +230,7 @@ static EbBool count_mem_entry(MemoryEntry* e, void* param)
 static void get_memory_usage_and_scale(uint64_t amount, double* usage, char* scale)
 {
     char scales[] = { ' ', 'K', 'M', 'G' };
-    int i;
+    size_t i;
     uint64_t v;
     for (i = 1; i < sizeof(scales); i++) {
         v = (uint64_t)1 << (i * 10);

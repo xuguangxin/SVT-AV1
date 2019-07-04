@@ -187,7 +187,6 @@ EbErrorType mode_decision_candidate_buffer_ctor(
 
     EbPictureBufferDescInitData ThirtyTwoWidthPictureBufferDescInitData;
 
-    EbErrorType return_error = EB_ErrorNone;
 
     buffer_ptr->dctor = mode_decision_candidate_buffer_dctor;
 

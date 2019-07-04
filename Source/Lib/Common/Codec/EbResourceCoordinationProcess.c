@@ -37,7 +37,6 @@ EbErrorType resource_coordination_context_ctor(
     EbCallback                    **app_callback_ptr_array,
     uint32_t                       compute_segments_total_count_array,
     uint32_t                        encode_instances_total_count){
-    uint32_t instance_index;
 
     context_ptr->dctor = resource_coordination_context_dctor;
 

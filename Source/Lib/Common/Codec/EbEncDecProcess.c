@@ -102,7 +102,6 @@ EbErrorType enc_dec_context_ctor(
     uint32_t                max_input_luma_height){
     (void)max_input_luma_width;
     (void)max_input_luma_height;
-    EbErrorType return_error = EB_ErrorNone;
 
     context_ptr->dctor = enc_dec_context_dctor;
     context_ptr->is16bit = is16bit;

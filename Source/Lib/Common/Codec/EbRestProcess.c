@@ -77,7 +77,6 @@ EbErrorType rest_context_ctor(
     uint32_t                max_input_luma_height
    )
 {
-    EbErrorType return_error = EB_ErrorNone;
 
     context_ptr->dctor = rest_context_dctor;
 

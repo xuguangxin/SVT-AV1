@@ -57,7 +57,6 @@ EbErrorType picture_analysis_context_ctor(
     context_ptr->resource_coordination_results_input_fifo_ptr = resource_coordination_results_input_fifo_ptr;
     context_ptr->picture_analysis_results_output_fifo_ptr = picture_analysis_results_output_fifo_ptr;
 
-    EbErrorType return_error = EB_ErrorNone;
     context_ptr->dctor = picture_analysis_context_dctor;
 
     if (denoise_flag == EB_TRUE) {
