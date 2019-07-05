@@ -149,7 +149,7 @@ static EbBool for_each_mem_entry(uint32_t start, Predicate pred, void* param)
 
 static const char* mem_type_name(EbPtrType type)
 {
-    static const char *name[EB_PTR_TYPE_TOTAL] = {"memory", "calloced memory", "aligned memory", "mutex", "semaphore", "thread"};
+    static const char *name[EB_PTR_TYPE_TOTAL] = {"malloced memory", "calloced memory", "aligned memory", "mutex", "semaphore", "thread"};
     return name[type];
 }
 
@@ -331,12 +331,14 @@ void eb_print_memory_usage()
 
     for_each_mem_entry(0, count_mem_entry, &sum);
     printf("SVT Memory Usage:\r\n");
+    get_memory_usage_and_scale(sum.amount[EB_N_PTR] + sum.amount[EB_C_PTR] + sum.amount[EB_A_PTR], &usage, &scale);
+    printf("    total allocated memory:       %.2lf %cB\r\n", usage, scale);
     get_memory_usage_and_scale(sum.amount[EB_N_PTR], &usage, &scale);
-    printf("    allocated memory:         %.2lf %cB\r\n", usage, scale);
+    printf("        malloced memory:          %.2lf %cB\r\n", usage, scale);
     get_memory_usage_and_scale(sum.amount[EB_C_PTR], &usage, &scale);
-    printf("    callocated memory:         %.2lf %cB\r\n", usage, scale);
+    printf("        callocated memory:        %.2lf %cB\r\n", usage, scale);
     get_memory_usage_and_scale(sum.amount[EB_A_PTR], &usage, &scale);
-    printf("    allocated aligned memory: %.2lf %cB\r\n", usage, scale);
+    printf("        allocated aligned memory: %.2lf %cB\r\n", usage, scale);
 
     printf("    mutex count: %d\r\n", (int)sum.amount[EB_MUTEX]);
     printf("    semaphore count: %d\r\n", (int)sum.amount[EB_SEMAPHORE]);
