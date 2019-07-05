@@ -241,6 +241,7 @@ void rate_control_context_dctor(EbPtr p)
 #endif
     EB_DELETE_PTR_ARRAY(obj->rate_control_param_queue, PARALLEL_GOP_MAX_NUMBER);
     EB_DELETE(obj->high_level_rate_control_ptr);
+    EB_DELETE(obj->rc_model_ptr);
 
 }
 
@@ -264,6 +265,8 @@ EbErrorType rate_control_context_ctor(
     EB_NEW(
         context_ptr->high_level_rate_control_ptr,
         high_level_rate_control_context_ctor);
+
+    EB_NEW(context_ptr->rc_model_ptr, rate_control_model_ctor);
 
     EB_ALLOC_PTR_ARRAY(context_ptr->rate_control_param_queue, PARALLEL_GOP_MAX_NUMBER);
 
@@ -3499,9 +3502,7 @@ void* rate_control_kernel(void *input_ptr)
     EbRateControlModel          *rc_model_ptr;
     RATE_CONTROL                 rc;
 
-    /* This memory will leak. We use TerminalThread to stop thread,
-       so we have no way to free rate_contorl_modal yet ...*/
-    EB_NO_THROW_NEW(rc_model_ptr, rate_control_model_ctor);
+    rc_model_ptr = context_ptr->rc_model_ptr;
 
     for (;;) {
         // Get RateControl Task
