@@ -314,8 +314,11 @@ static void print_top_10_locations() {
     free(g_profile_entry);
     eb_release_mutex(m);
 }
-#endif
-#endif
+#endif //PROFILE_MEMORY_USAGE
+
+static int g_component_count;
+
+#endif //DEBUG_MEMORY_USAGE
 
 void eb_print_memory_usage()
 {
@@ -346,7 +349,7 @@ void eb_print_memory_usage()
 #endif
 }
 
-static int g_component_count;
+
 void eb_increase_component_count()
 {
 #ifdef DEBUG_MEMORY_USAGE
