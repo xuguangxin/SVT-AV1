@@ -17,21 +17,19 @@
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
 #include "EbPictureDecisionProcess.h"
+#include "EbMotionEstimationProcess.h"
+#include "EbInitialRateControlProcess.h"
+#include "EbSourceBasedOperationsProcess.h"
+#include "EbPictureManagerProcess.h"
+#include "EbRateControlProcess.h"
+#include "EbModeDecisionConfigurationProcess.h"
+#include "EbEncDecProcess.h"
+#include "EbDlfProcess.h"
+#include "EbCdefProcess.h"
+#include "EbRestProcess.h"
+#include "EbEntropyCodingProcess.h"
+#include "EbPacketizationProcess.h"
 #include "EbObject.h"
-
-
-typedef struct MotionEstimationContext MotionEstimationContext_t;
-typedef struct InitialRateControlContext InitialRateControlContext;
-typedef struct SourceBasedOperationsContext SourceBasedOperationsContext;
-typedef struct PictureManagerContext PictureManagerContext;
-typedef struct RateControlContext RateControlContext;
-typedef struct ModeDecisionConfigurationContext ModeDecisionConfigurationContext;
-typedef struct EncDecContext EncDecContext;
-typedef struct DlfContext DlfContext;
-typedef struct CdefContext_s CdefContext_t;
-typedef struct RestContext RestContext;
-typedef struct EntropyCodingContext EntropyCodingContext;
-typedef struct PacketizationContext PacketizationContext;
 
 /**************************************
  * Component Private Data

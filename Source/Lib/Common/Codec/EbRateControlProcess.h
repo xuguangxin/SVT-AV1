@@ -10,6 +10,7 @@
 #include "EbSystemResourceManager.h"
 #include "EbSvtAv1Enc.h"
 #include "EbPictureControlSet.h"
+#include "RateControlModel.h"
 #include "EbObject.h"
 
 #define CCOEFF_INIT_FACT              2
@@ -192,7 +193,6 @@ typedef struct HighLevelRateControlContext
 #endif
 } HighLevelRateControlContext;
 
-typedef struct RateControlModel EbRateControlModel;
 
 typedef struct RateControlContext
 {
