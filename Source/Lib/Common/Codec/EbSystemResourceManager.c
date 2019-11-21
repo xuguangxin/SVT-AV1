@@ -349,6 +349,15 @@ static EbErrorType EbMuxingQueueObjectPushFront(
     return return_error;
 }
 
+static EbFifo* eb_muxing_queue_get_fifo(
+    EbMuxingQueue        *queue_ptr,
+    uint32_t index)
+{
+    assert(queue_ptr->process_fifo_ptr_array && (queue_ptr->process_total_count > index));
+    return queue_ptr->process_fifo_ptr_array[index];
+}
+
+
 /*********************************************************************
  * eb_object_release_enable
  *   Enables the release_enable member of EbObjectWrapper.  Used by
@@ -570,6 +579,17 @@ EbErrorType eb_system_resource_ctor(
 
     return return_error;
 }
+
+EbFifo* eb_system_resource_get_producer_fifo(const EbSystemResource *resource_ptr, uint32_t index)
+{
+    return eb_muxing_queue_get_fifo(resource_ptr->empty_queue, index);
+}
+
+EbFifo* eb_system_resource_get_consumer_fifo(const EbSystemResource *resource_ptr, uint32_t index)
+{
+    return eb_muxing_queue_get_fifo(resource_ptr->full_queue, index);
+}
+
 
 /*********************************************************************
  * EbSystemResourceReleaseProcess

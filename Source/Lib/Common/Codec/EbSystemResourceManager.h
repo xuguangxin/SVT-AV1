@@ -227,6 +227,30 @@ extern "C" {
         EbDctor             object_destroyer);
 
     /*********************************************************************
+     * eb_system_resource_get_producer_fifo
+     *   get producer fifo
+     *
+     *   resource_ptr
+     *     pointer to SystemResource
+     *
+     *   index
+     *     index to the producer fifo
+     */
+    EbFifo* eb_system_resource_get_producer_fifo(const EbSystemResource *resource_ptr, uint32_t index);
+
+    /*********************************************************************
+     * eb_system_resource_get_consumer_fifo
+     *   get producer fifo
+     *
+     *   resource_ptr
+     *     pointer to SystemResource
+     *
+     *   index
+     *     index to the consumer fifo
+     */
+    EbFifo* eb_system_resource_get_consumer_fifo(const EbSystemResource *resource_ptr, uint32_t index);
+
+    /*********************************************************************
      * EbSystemResourceGetEmptyObject
      *   Dequeues an empty EbObjectWrapper from the SystemResource.  The
      *   new EbObjectWrapper will be populated with the contents of the
