@@ -20,6 +20,18 @@
 #include "EbPictureControlSet.h"
 #include "EbPictureOperators.h"
 #include "EbReferenceObject.h"
+#include "EbResourceCoordinationProcess.h"
+#include "EbPictureDecisionProcess.h"
+#include "EbMotionEstimationProcess.h"
+#include "EbInitialRateControlProcess.h"
+#include "EbSourceBasedOperationsProcess.h"
+#include "EbPictureManagerProcess.h"
+#include "EbRateControlProcess.h"
+#include "EbModeDecisionConfigurationProcess.h"
+#include "EbEncDecProcess.h"
+#include "EbEntropyCodingProcess.h"
+#include "EbPacketizationProcess.h"
+#include "EbResourceCoordinationResults.h"
 #include "EbPictureAnalysisResults.h"
 #include "EbPictureDecisionResults.h"
 #include "EbMotionEstimationResults.h"
@@ -1433,14 +1445,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_NEW(
         enc_handle_ptr->resource_coordination_context_ptr,
         resource_coordination_context_ctor,
-        enc_handle_ptr->input_buffer_consumer_fifo_ptr_array[0],
-        enc_handle_ptr->resource_coordination_results_producer_fifo_ptr_array[0],
-        enc_handle_ptr->picture_parent_control_set_pool_producer_fifo_ptr_dbl_array[0],//ResourceCoordination works with ParentPCS
-        enc_handle_ptr->sequence_control_set_instance_array,
-        enc_handle_ptr->sequence_control_set_pool_producer_fifo_ptr_array[0],
-        enc_handle_ptr->app_callback_ptr_array,
-        enc_handle_ptr->compute_segments_total_count_array,
-        enc_handle_ptr->encode_instance_total_count);
+        enc_handle_ptr);
 
     // Picture Analysis Context
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count);

@@ -11,7 +11,6 @@
 #include "EbPictureBufferDesc.h"
 #include "EbSystemResourceManager.h"
 #include "EbSequenceControlSet.h"
-#include "EbResourceCoordinationProcess.h"
 #include "EbPictureAnalysisProcess.h"
 #include "EbResourceCoordinationResults.h"
 #include "EbPictureDemuxResults.h"
@@ -99,7 +98,7 @@ struct _EbEncHandle
     EbHandle                               packetization_thread_handle;
 
     // Contexts
-    ResourceCoordinationContext            *resource_coordination_context_ptr;
+    EbThreadContext                       *resource_coordination_context_ptr;
     PictureAnalysisContext                 **picture_analysis_context_ptr_array;
     PictureDecisionContext                *picture_decision_context_ptr;
     MotionEstimationContext_t             **motion_estimation_context_ptr_array;
@@ -180,5 +179,6 @@ struct _EbEncHandle
     EbCallback                          **app_callback_ptr_array;
 
 };
+
 
 #endif // EbEncHandle_h
