@@ -23,6 +23,7 @@
 #include "EbSvtAv1ErrorCodes.h"
 #include "EbTemporalFiltering.h"
 #include "EbObject.h"
+#include "EbUtility.h"
 
 
 /************************************************

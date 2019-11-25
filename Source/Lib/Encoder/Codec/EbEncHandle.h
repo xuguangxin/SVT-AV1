@@ -15,7 +15,6 @@
 #include "EbRateControlResults.h"
 #include "EbSourceBasedOperationsProcess.h"
 #include "EbRestProcess.h"
-#include "EbPacketizationProcess.h"
 #include "EbObject.h"
 
 struct _EbThreadContext
@@ -100,7 +99,7 @@ struct _EbEncHandle
     EbThreadContext                       **dlf_context_ptr_array;
     EbThreadContext                       **cdef_context_ptr_array;
     EbThreadContext                       **rest_context_ptr_array;
-    PacketizationContext                  *packetization_context_ptr;
+    EbThreadContext                       *packetization_context_ptr;
 
     // System Resource Managers
     EbSystemResource                     *input_buffer_resource_ptr;
