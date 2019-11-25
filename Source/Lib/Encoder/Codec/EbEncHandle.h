@@ -100,7 +100,7 @@ struct _EbEncHandle
     EntropyCodingContext                 **entropy_coding_context_ptr_array;
     EbThreadContext                       **dlf_context_ptr_array;
     EbThreadContext                       **cdef_context_ptr_array;
-    RestContext                          **rest_context_ptr_array;
+    EbThreadContext                       **rest_context_ptr_array;
     PacketizationContext                  *packetization_context_ptr;
 
     // System Resource Managers
