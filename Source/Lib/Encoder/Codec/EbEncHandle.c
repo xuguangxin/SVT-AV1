@@ -1502,9 +1502,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_NEW(
         enc_handle_ptr->picture_manager_context_ptr,
         picture_manager_context_ctor,
-        enc_handle_ptr->picture_demux_results_consumer_fifo_ptr_array[0],
-        enc_handle_ptr->rate_control_tasks_producer_fifo_ptr_array[RateControlPortLookup(RATE_CONTROL_INPUT_PORT_PICTURE_MANAGER, 0)],
-        enc_handle_ptr->picture_control_set_pool_producer_fifo_ptr_dbl_array[0]);//The Child PCS Pool here
+        enc_handle_ptr,
+        RateControlPortLookup(RATE_CONTROL_INPUT_PORT_PICTURE_MANAGER, 0));
+
     // Rate Control Context
     EB_NEW(
         enc_handle_ptr->rate_control_context_ptr,
