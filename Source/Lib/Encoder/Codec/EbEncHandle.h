@@ -14,7 +14,6 @@
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
 #include "EbSourceBasedOperationsProcess.h"
-#include "EbDlfProcess.h"
 #include "EbCdefProcess.h"
 #include "EbRestProcess.h"
 #include "EbEntropyCodingProcess.h"
@@ -100,7 +99,7 @@ struct _EbEncHandle
     EbThreadContext                       **mode_decision_configuration_context_ptr_array;
     EbThreadContext                       **enc_dec_context_ptr_array;
     EntropyCodingContext                 **entropy_coding_context_ptr_array;
-    DlfContext                           **dlf_context_ptr_array;
+    EbThreadContext                       **dlf_context_ptr_array;
     CdefContext_t                        **cdef_context_ptr_array;
     RestContext                          **rest_context_ptr_array;
     PacketizationContext                  *packetization_context_ptr;

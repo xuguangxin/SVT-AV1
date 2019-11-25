@@ -1552,13 +1552,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         EB_NEW(
             enc_handle_ptr->dlf_context_ptr_array[processIndex],
             dlf_context_ctor,
-            enc_handle_ptr->enc_dec_results_consumer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->dlf_results_producer_fifo_ptr_array[processIndex],             //output to EC
-            is16bit,
-            color_format,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_width,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_height
-        );
+            enc_handle_ptr,
+            processIndex);
     }
 
     //CDEF Contexts
