@@ -14,7 +14,6 @@
 #include "EbResourceCoordinationResults.h"
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
-#include "EbMotionEstimationProcess.h"
 #include "EbInitialRateControlProcess.h"
 #include "EbSourceBasedOperationsProcess.h"
 #include "EbPictureManagerProcess.h"
@@ -99,7 +98,7 @@ struct _EbEncHandle
     EbThreadContext                       *resource_coordination_context_ptr;
     EbThreadContext                       **picture_analysis_context_ptr_array;
     EbThreadContext                       *picture_decision_context_ptr;
-    MotionEstimationContext_t             **motion_estimation_context_ptr_array;
+    EbThreadContext                       **motion_estimation_context_ptr_array;
     InitialRateControlContext             *initial_rate_control_context_ptr;
     SourceBasedOperationsContext         **source_based_operations_context_ptr_array;
     PictureManagerContext                 *picture_manager_context_ptr;

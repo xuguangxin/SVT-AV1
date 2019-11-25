@@ -1478,12 +1478,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         EB_NEW(
             enc_handle_ptr->motion_estimation_context_ptr_array[processIndex],
             motion_estimation_context_ctor,
-            enc_handle_ptr->picture_decision_results_consumer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->motion_estimation_results_producer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_width,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_height,
-            enc_handle_ptr->sequence_control_set_instance_array[instance_index]->sequence_control_set_ptr->nsq_present,
-            enc_handle_ptr->sequence_control_set_instance_array[instance_index]->sequence_control_set_ptr->mrp_mode);
+            enc_handle_ptr,
+            processIndex);
     }
 
     // Initial Rate Control Context
