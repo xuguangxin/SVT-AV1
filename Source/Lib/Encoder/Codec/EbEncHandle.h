@@ -15,7 +15,6 @@
 #include "EbRateControlResults.h"
 #include "EbSourceBasedOperationsProcess.h"
 #include "EbRestProcess.h"
-#include "EbEntropyCodingProcess.h"
 #include "EbPacketizationProcess.h"
 #include "EbObject.h"
 
@@ -97,7 +96,7 @@ struct _EbEncHandle
     EbThreadContext                       *rate_control_context_ptr;
     EbThreadContext                       **mode_decision_configuration_context_ptr_array;
     EbThreadContext                       **enc_dec_context_ptr_array;
-    EntropyCodingContext                 **entropy_coding_context_ptr_array;
+    EbThreadContext                       **entropy_coding_context_ptr_array;
     EbThreadContext                       **dlf_context_ptr_array;
     EbThreadContext                       **cdef_context_ptr_array;
     EbThreadContext                       **rest_context_ptr_array;

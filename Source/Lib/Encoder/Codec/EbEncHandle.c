@@ -1588,10 +1588,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         EB_NEW(
             enc_handle_ptr->entropy_coding_context_ptr_array[processIndex],
             entropy_coding_context_ctor,
-            enc_handle_ptr->rest_results_consumer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->entropy_coding_results_producer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->rate_control_tasks_producer_fifo_ptr_array[RateControlPortLookup(RATE_CONTROL_INPUT_PORT_ENTROPY_CODING, processIndex)],
-            is16bit);
+            enc_handle_ptr,
+            processIndex,
+            RateControlPortLookup(RATE_CONTROL_INPUT_PORT_ENTROPY_CODING, processIndex));
     }
 
     // Packetization Context
