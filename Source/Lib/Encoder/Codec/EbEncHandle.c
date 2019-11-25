@@ -1536,42 +1536,13 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->enc_dec_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->enc_dec_process_init_count);
 
     for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->enc_dec_process_init_count; ++processIndex) {
-#if PAL_SUP
         EB_NEW(
             enc_handle_ptr->enc_dec_context_ptr_array[processIndex],
             enc_dec_context_ctor,
-            enc_handle_ptr->enc_dec_tasks_consumer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->enc_dec_results_producer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->enc_dec_tasks_producer_fifo_ptr_array[EncDecPortLookup(ENCDEC_INPUT_PORT_ENCDEC, processIndex)],
-            enc_handle_ptr->picture_demux_results_producer_fifo_ptr_array[
-                enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count +
-                    //1 +
-                    processIndex], // Add port lookup logic here JMJ
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->static_config.screen_content_mode,
-            is16bit,
-            color_format,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->static_config.enable_hbd_mode_decision,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_width,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_height
-            );
-#else
-        EB_NEW(
-            enc_handle_ptr->enc_dec_context_ptr_array[processIndex],
-            enc_dec_context_ctor,
-            enc_handle_ptr->enc_dec_tasks_consumer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->enc_dec_results_producer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->enc_dec_tasks_producer_fifo_ptr_array[EncDecPortLookup(ENCDEC_INPUT_PORT_ENCDEC, processIndex)],
-            enc_handle_ptr->picture_demux_results_producer_fifo_ptr_array[
-                enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count+
-                //1 +
-                    processIndex], // Add port lookup logic here JMJ
-            is16bit,
-            color_format,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->static_config.enable_hbd_mode_decision,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_width,
-            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_height
-        );
-#endif
+            enc_handle_ptr,
+            processIndex,
+            EncDecPortLookup(ENCDEC_INPUT_PORT_ENCDEC, processIndex),
+            enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count + processIndex);
     }
 
     // Dlf Contexts
