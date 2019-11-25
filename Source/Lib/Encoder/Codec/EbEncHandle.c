@@ -1468,8 +1468,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         EB_NEW(
             enc_handle_ptr->picture_decision_context_ptr,
             picture_decision_context_ctor,
-            enc_handle_ptr->picture_analysis_results_consumer_fifo_ptr_array[0],
-            enc_handle_ptr->picture_decision_results_producer_fifo_ptr_array[0]);
+            enc_handle_ptr);
     }
 
     // Motion Analysis Context
