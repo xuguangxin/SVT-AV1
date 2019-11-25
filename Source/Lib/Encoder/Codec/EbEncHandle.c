@@ -1486,8 +1486,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_NEW(
         enc_handle_ptr->initial_rate_control_context_ptr,
         initial_rate_control_context_ctor,
-        enc_handle_ptr->motion_estimation_results_consumer_fifo_ptr_array[0],
-        enc_handle_ptr->initial_rate_control_results_producer_fifo_ptr_array[0]);
+        enc_handle_ptr);
     // Source Based Operations Context
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->source_based_operations_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->source_based_operations_process_init_count);
 

@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 
+#include "EbEncHandle.h"
 #include "EbPictureControlSet.h"
 #include "EbSequenceControlSet.h"
 #include "EbMotionEstimationResults.h"
@@ -13,6 +14,16 @@
 #include "EbMotionEstimationContext.h"
 #include "EbUtility.h"
 #include "EbReferenceObject.h"
+
+/**************************************
+ * Context
+ **************************************/
+typedef struct InitialRateControlContext
+{
+    EbFifo                    *motion_estimation_results_input_fifo_ptr;
+    EbFifo                    *initialrate_control_results_output_fifo_ptr;
+}InitialRateControlContext;
+
 
 /**************************************
 * Macros
@@ -380,16 +391,30 @@ void DetectGlobalMotion(
 #endif
 }
 
+static void initial_rate_control_context_dctor(EbPtr p)
+{
+    EbThreadContext   *thread_context_ptr = (EbThreadContext*)p;
+    InitialRateControlContext* obj = (InitialRateControlContext*)thread_context_ptr->priv;
+    EB_FREE_ARRAY(obj);
+}
+
+
 /************************************************
 * Initial Rate Control Context Constructor
 ************************************************/
 EbErrorType initial_rate_control_context_ctor(
-    InitialRateControlContext  *context_ptr,
-    EbFifo                     *motion_estimation_results_input_fifo_ptr,
-    EbFifo                     *initialrate_control_results_output_fifo_ptr)
+    EbThreadContext     *thread_context_ptr,
+    const EbEncHandle   *enc_handle_ptr)
 {
-    context_ptr->motion_estimation_results_input_fifo_ptr = motion_estimation_results_input_fifo_ptr;
-    context_ptr->initialrate_control_results_output_fifo_ptr = initialrate_control_results_output_fifo_ptr;
+    InitialRateControlContext  *context_ptr;
+    EB_CALLOC_ARRAY(context_ptr, 1);
+    thread_context_ptr->priv = context_ptr;
+    thread_context_ptr->dctor = initial_rate_control_context_dctor;
+
+    context_ptr->motion_estimation_results_input_fifo_ptr =
+        eb_system_resource_get_consumer_fifo(enc_handle_ptr->motion_estimation_results_resource_ptr, 0);
+    context_ptr->initialrate_control_results_output_fifo_ptr =
+        eb_system_resource_get_producer_fifo(enc_handle_ptr->initial_rate_control_results_resource_ptr, 0);
 
     return EB_ErrorNone;
 }
@@ -1202,7 +1227,8 @@ void DeriveBlockinessPresentFlag(
 ************************************************/
 void* initial_rate_control_kernel(void *input_ptr)
 {
-    InitialRateControlContext       *context_ptr = (InitialRateControlContext*)input_ptr;
+    EbThreadContext                 *thread_context_ptr = (EbThreadContext*)input_ptr;
+    InitialRateControlContext       *context_ptr = (InitialRateControlContext*)thread_context_ptr->priv;
     PictureParentControlSet         *picture_control_set_ptr;
     PictureParentControlSet         *pictureControlSetPtrTemp;
     EncodeContext                   *encode_context_ptr;
