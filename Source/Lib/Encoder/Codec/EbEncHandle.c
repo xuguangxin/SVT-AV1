@@ -1520,10 +1520,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
             EB_NEW(
                 enc_handle_ptr->mode_decision_configuration_context_ptr_array[processIndex],
                 mode_decision_configuration_context_ctor,
-                enc_handle_ptr->rate_control_results_consumer_fifo_ptr_array[processIndex],
-                enc_handle_ptr->enc_dec_tasks_producer_fifo_ptr_array[EncDecPortLookup(ENCDEC_INPUT_PORT_MDC, processIndex)],
-                ((enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_width + BLOCK_SIZE_64 - 1) / BLOCK_SIZE_64) *
-                ((enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_height + BLOCK_SIZE_64 - 1) / BLOCK_SIZE_64));
+                enc_handle_ptr,
+                processIndex,
+                EncDecPortLookup(ENCDEC_INPUT_PORT_MDC, processIndex));
         }
     }
 
