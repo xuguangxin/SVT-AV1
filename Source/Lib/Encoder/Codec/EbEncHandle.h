@@ -11,7 +11,6 @@
 #include "EbPictureBufferDesc.h"
 #include "EbSystemResourceManager.h"
 #include "EbSequenceControlSet.h"
-#include "EbResourceCoordinationResults.h"
 #include "EbPictureDemuxResults.h"
 #include "EbRateControlResults.h"
 #include "EbSourceBasedOperationsProcess.h"
@@ -99,7 +98,7 @@ struct _EbEncHandle
     EbThreadContext                       *picture_decision_context_ptr;
     EbThreadContext                       **motion_estimation_context_ptr_array;
     EbThreadContext                       *initial_rate_control_context_ptr;
-    SourceBasedOperationsContext         **source_based_operations_context_ptr_array;
+    EbThreadContext                       **source_based_operations_context_ptr_array;
     PictureManagerContext                 *picture_manager_context_ptr;
     RateControlContext                    *rate_control_context_ptr;
     ModeDecisionConfigurationContext     **mode_decision_configuration_context_ptr_array;
