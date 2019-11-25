@@ -21,6 +21,7 @@
 #include "EbPictureOperators.h"
 #include "EbReferenceObject.h"
 #include "EbResourceCoordinationProcess.h"
+#include "EbPictureAnalysisProcess.h"
 #include "EbPictureDecisionProcess.h"
 #include "EbMotionEstimationProcess.h"
 #include "EbInitialRateControlProcess.h"
@@ -1451,25 +1452,12 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->picture_analysis_context_ptr_array, enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count);
 
     for (processIndex = 0; processIndex < enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->picture_analysis_process_init_count; ++processIndex) {
-        EbPictureBufferDescInitData  pictureBufferDescConf;
-        pictureBufferDescConf.color_format = color_format;
-        pictureBufferDescConf.max_width = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_width;
-        pictureBufferDescConf.max_height = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->max_input_luma_height;
-        pictureBufferDescConf.bit_depth = EB_8BIT;
-        pictureBufferDescConf.buffer_enable_mask = PICTURE_BUFFER_DESC_Y_FLAG;
-        pictureBufferDescConf.left_padding = 0;
-        pictureBufferDescConf.right_padding = 0;
-        pictureBufferDescConf.top_padding = 0;
-        pictureBufferDescConf.bot_padding = 0;
-        pictureBufferDescConf.split_mode = EB_FALSE;
 
         EB_NEW(
             enc_handle_ptr->picture_analysis_context_ptr_array[processIndex],
             picture_analysis_context_ctor,
-            &pictureBufferDescConf,
-            EB_TRUE,
-            enc_handle_ptr->resource_coordination_results_consumer_fifo_ptr_array[processIndex],
-            enc_handle_ptr->picture_analysis_results_producer_fifo_ptr_array[processIndex]);
+            enc_handle_ptr,
+            processIndex);
    }
 
     // Picture Decision Context
