@@ -1509,9 +1509,8 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     EB_NEW(
         enc_handle_ptr->rate_control_context_ptr,
         rate_control_context_ctor,
-        enc_handle_ptr->rate_control_tasks_consumer_fifo_ptr_array[0],
-        enc_handle_ptr->rate_control_results_producer_fifo_ptr_array[0],
-        enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->intra_period_length);
+        enc_handle_ptr);
+
     // Mode Decision Configuration Contexts
     {
         // Mode Decision Configuration Contexts

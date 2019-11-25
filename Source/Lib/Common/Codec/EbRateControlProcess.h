@@ -193,60 +193,6 @@ typedef struct HighLevelRateControlContext
 } HighLevelRateControlContext;
 
 
-typedef struct RateControlContext
-{
-    EbDctor                            dctor;
-    EbFifo                            *rate_control_input_tasks_fifo_ptr;
-    EbFifo                            *rate_control_output_results_fifo_ptr;
-
-    HighLevelRateControlContext       *high_level_rate_control_ptr;
-
-    RateControlIntervalParamContext  **rate_control_param_queue;
-    uint64_t                           rate_control_param_queue_head_index;
-
-    uint64_t                           frame_rate;
-
-    uint64_t                           virtual_buffer_size;
-
-    int64_t                            virtual_buffer_level_initial_value;
-    int64_t                            previous_virtual_buffer_level;
-
-    int64_t                            virtual_buffer_level;
-
-    //Virtual Buffer Thresholds
-    int64_t                            vb_fill_threshold1;
-    int64_t                            vb_fill_threshold2;
-
-    // Rate Control Previous Bits Queue
-#if OVERSHOOT_STAT_PRINT
-    CodedFramesStatsEntry            **coded_frames_stat_queue;
-    uint32_t                           coded_frames_stat_queue_head_index;
-    uint32_t                           coded_frames_stat_queue_tail_index;
-
-    uint64_t                           total_bit_actual_per_sw;
-    uint64_t                           max_bit_actual_per_sw;
-    uint64_t                           max_bit_actual_per_gop;
-    uint64_t                           min_bit_actual_per_gop;
-    uint64_t                           avg_bit_actual_per_gop;
-
-#endif
-
-    uint64_t                           rate_average_periodin_frames;
-    uint32_t                           base_layer_frames_avg_qp;
-    uint32_t                           base_layer_intra_frames_avg_qp;
-
-    EbBool                            end_of_sequence_region;
-
-    uint32_t                           intra_coef_rate;
-
-    uint64_t                           frames_in_interval[EB_MAX_TEMPORAL_LAYERS];
-    int64_t                            extra_bits;
-    int64_t                            extra_bits_gen;
-    int16_t                            max_rate_adjust_delta_qp;
-
-    uint32_t                           qp_scaling_map[EB_MAX_TEMPORAL_LAYERS][MAX_REF_QP_NUM];
-    uint32_t                           qp_scaling_map_I_SLICE[MAX_REF_QP_NUM];
-} RateControlContext;
 /**************************************
  * Extern Function Declarations
  **************************************/
@@ -261,10 +207,8 @@ extern EbErrorType rate_control_coded_frames_stats_context_ctor(
     uint64_t                  picture_number);
 
 extern EbErrorType rate_control_context_ctor(
-    RateControlContext  *context_ptr,
-    EbFifo              *rate_control_input_tasks_fifo_ptr,
-    EbFifo              *rate_control_output_results_fifo_ptr,
-    int32_t                intra_period_length);
+    EbThreadContext     *thread_context_ptr,
+    const EbEncHandle   *enc_handle_ptr);
 
 extern void* rate_control_kernel(void *input_ptr);
 

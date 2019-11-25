@@ -16,6 +16,7 @@
 #include <stdlib.h>
 
 #include "EbDefinitions.h"
+#include "EbEncHandle.h"
 #include "EbRateControlProcess.h"
 #include "EbSequenceControlSet.h"
 #include "EbPictureControlSet.h"
@@ -27,6 +28,60 @@
 #include "EbRateControlTasks.h"
 
 #include "EbSegmentation.h"
+
+typedef struct RateControlContext
+{
+    EbFifo                            *rate_control_input_tasks_fifo_ptr;
+    EbFifo                            *rate_control_output_results_fifo_ptr;
+
+    HighLevelRateControlContext       *high_level_rate_control_ptr;
+
+    RateControlIntervalParamContext  **rate_control_param_queue;
+    uint64_t                           rate_control_param_queue_head_index;
+
+    uint64_t                           frame_rate;
+
+    uint64_t                           virtual_buffer_size;
+
+    int64_t                            virtual_buffer_level_initial_value;
+    int64_t                            previous_virtual_buffer_level;
+
+    int64_t                            virtual_buffer_level;
+
+    //Virtual Buffer Thresholds
+    int64_t                            vb_fill_threshold1;
+    int64_t                            vb_fill_threshold2;
+
+    // Rate Control Previous Bits Queue
+#if OVERSHOOT_STAT_PRINT
+    CodedFramesStatsEntry            **coded_frames_stat_queue;
+    uint32_t                           coded_frames_stat_queue_head_index;
+    uint32_t                           coded_frames_stat_queue_tail_index;
+
+    uint64_t                           total_bit_actual_per_sw;
+    uint64_t                           max_bit_actual_per_sw;
+    uint64_t                           max_bit_actual_per_gop;
+    uint64_t                           min_bit_actual_per_gop;
+    uint64_t                           avg_bit_actual_per_gop;
+
+#endif
+
+    uint64_t                           rate_average_periodin_frames;
+    uint32_t                           base_layer_frames_avg_qp;
+    uint32_t                           base_layer_intra_frames_avg_qp;
+
+    EbBool                             end_of_sequence_region;
+
+    uint32_t                           intra_coef_rate;
+
+    uint64_t                           frames_in_interval[EB_MAX_TEMPORAL_LAYERS];
+    int64_t                            extra_bits;
+    int64_t                            extra_bits_gen;
+    int16_t                            max_rate_adjust_delta_qp;
+
+    uint32_t                           qp_scaling_map[EB_MAX_TEMPORAL_LAYERS][MAX_REF_QP_NUM];
+    uint32_t                           qp_scaling_map_I_SLICE[MAX_REF_QP_NUM];
+} RateControlContext;
 
 // calculate the QP based on the QP scaling
 uint32_t qp_scaling_calc(
@@ -233,30 +288,37 @@ EbErrorType rate_control_coded_frames_stats_context_ctor(
 
 void rate_control_context_dctor(EbPtr p)
 {
-    RateControlContext* obj = (RateControlContext*)p;
+    EbThreadContext*    thread_context_ptr = (EbThreadContext*)p;
+    RateControlContext* obj = (RateControlContext*)thread_context_ptr->priv;
 #if OVERSHOOT_STAT_PRINT
     EB_DELETE_PTR_ARRAY(obj->coded_frames_stat_queue, CODED_FRAMES_STAT_QUEUE_MAX_DEPTH);
 #endif
     EB_DELETE_PTR_ARRAY(obj->rate_control_param_queue, PARALLEL_GOP_MAX_NUMBER);
     EB_DELETE(obj->high_level_rate_control_ptr);
-
+    EB_FREE_ARRAY(obj);
 }
 
 EbErrorType rate_control_context_ctor(
-    RateControlContext *context_ptr,
-    EbFifo             *rate_control_input_tasks_fifo_ptr,
-    EbFifo             *rate_control_output_results_fifo_ptr,
-    int32_t             intra_period)
+    EbThreadContext     *thread_context_ptr,
+    const EbEncHandle   *enc_handle_ptr)
 {
     uint32_t interval_index;
 
 #if OVERSHOOT_STAT_PRINT
     uint32_t picture_index;
 #endif
+    int32_t             intra_period = enc_handle_ptr->sequence_control_set_instance_array[0]->sequence_control_set_ptr->intra_period_length;
 
-    context_ptr->dctor = rate_control_context_dctor;
-    context_ptr->rate_control_input_tasks_fifo_ptr = rate_control_input_tasks_fifo_ptr;
-    context_ptr->rate_control_output_results_fifo_ptr = rate_control_output_results_fifo_ptr;
+    RateControlContext *context_ptr;
+    EB_CALLOC_ARRAY(context_ptr, 1);
+    thread_context_ptr->priv = context_ptr;
+    thread_context_ptr->dctor = rate_control_context_dctor;
+
+    context_ptr->rate_control_input_tasks_fifo_ptr =
+        eb_system_resource_get_consumer_fifo(enc_handle_ptr->rate_control_tasks_resource_ptr, 0);
+    context_ptr->rate_control_output_results_fifo_ptr =
+        eb_system_resource_get_producer_fifo(enc_handle_ptr->rate_control_results_resource_ptr, 0);
+
 
     // High level RC
     EB_NEW(
@@ -4148,7 +4210,8 @@ static void sb_qp_derivation(
 void* rate_control_kernel(void *input_ptr)
 {
     // Context
-    RateControlContext                *context_ptr = (RateControlContext  *)input_ptr;
+    EbThreadContext                   *thread_context_ptr = (EbThreadContext*)input_ptr;
+    RateControlContext                *context_ptr = (RateControlContext  *)thread_context_ptr->priv;
 
     RateControlIntervalParamContext   *rate_control_param_ptr;
 
