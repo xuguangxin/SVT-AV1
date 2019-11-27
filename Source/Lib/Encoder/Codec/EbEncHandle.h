@@ -11,10 +11,6 @@
 #include "EbPictureBufferDesc.h"
 #include "EbSystemResourceManager.h"
 #include "EbSequenceControlSet.h"
-#include "EbPictureDemuxResults.h"
-#include "EbRateControlResults.h"
-#include "EbSourceBasedOperationsProcess.h"
-#include "EbRestProcess.h"
 #include "EbObject.h"
 
 struct _EbThreadContext
