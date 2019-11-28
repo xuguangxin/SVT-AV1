@@ -31,6 +31,12 @@
 #include "EbPacketizationProcess.h"
 #include "EbObject.h"
 
+typedef struct EbThreadContext
+{
+    EbDctor dctor;
+    EbPtr   priv;
+} EbThreadContext;
+
 /**************************************
  * Component Private Data
  **************************************/
