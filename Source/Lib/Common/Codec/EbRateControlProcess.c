@@ -29,6 +29,91 @@
 
 #include "EbSegmentation.h"
 
+static const uint32_t  rate_percentage_layer_array[EB_MAX_TEMPORAL_LAYERS][EB_MAX_TEMPORAL_LAYERS] =
+{
+    {100,  0,  0,  0,  0,  0 },
+    { 70, 30,  0,  0,  0,  0 },
+    { 70, 15, 15,  0,  0,  0 },
+    { 55, 15, 15, 15,  0,  0 },
+    { 40, 15, 15, 15, 15,  0 },
+    { 30, 10, 15, 15, 15, 15 }
+};
+
+// range from 0 to 51
+// precision is 16 bits
+static const uint64_t two_to_power_qp_over_three[] =
+{
+         0x10000,      0x1428A,     0x19660,     0x20000,
+         0x28514,      0x32CC0,     0x40000,     0x50A29,
+         0x65980,      0x80000,     0xA1451,     0xCB2FF,
+        0x100000,     0x1428A3,    0x1965FF,    0x200000,
+        0x285146,     0x32CBFD,    0x400000,    0x50A28C,
+        0x6597FB,     0x800000,    0xA14518,    0xCB2FF5,
+       0x1000000,    0x1428A30,   0x1965FEA,   0x2000000,
+       0x285145F,    0x32CBFD5,   0x4000000,   0x50A28BE,
+       0x6597FA9,    0x8000000,   0xA14517D,   0xCB2FF53,
+      0x10000000,   0x1428A2FA,  0x1965FEA5,  0x20000000,
+      0x285145F3,   0x32CBFD4A,  0x40000000,  0x50A28BE6,
+      0x6597FA95,   0x80000000,  0xA14517CC,  0xCB2FF52A,
+     0x100000000,  0x1428A2F99, 0x1965FEA54, 0x200000000
+};
+
+
+/**************************************
+ * Coded Frames Stats
+ **************************************/
+typedef struct CodedFramesStatsEntry
+{
+    EbDctor                dctor;
+    uint64_t               picture_number;
+    int64_t               frame_total_bit_actual;
+    EbBool              end_of_sequence_flag;
+} CodedFramesStatsEntry;
+
+
+typedef struct RateControlIntervalParamContext
+{
+    EbDctor                      dctor;
+    uint64_t                     first_poc;
+    uint64_t                     last_poc;
+    EbBool                       in_use;
+    EbBool                       was_used;
+    uint64_t                     processed_frames_number;
+    EbBool                       last_gop;
+    RateControlLayerContext   **rate_control_layer_array;
+
+    int64_t                      virtual_buffer_level;
+    int64_t                      previous_virtual_buffer_level;
+    uint32_t                     intra_frames_qp;
+    uint8_t                      intra_frames_qp_bef_scal;
+
+    uint32_t                     next_gop_intra_frame_qp;
+    uint64_t                     first_pic_pred_bits;
+    uint64_t                     first_pic_actual_bits;
+    uint16_t                     first_pic_pred_qp;
+    uint16_t                     first_pic_actual_qp;
+    EbBool                       first_pic_actual_qp_assigned;
+    EbBool                       scene_change_in_gop;
+    EbBool                       min_target_rate_assigned;
+    int64_t                      extra_ap_bit_ratio_i;
+} RateControlIntervalParamContext;
+
+typedef struct HighLevelRateControlContext
+{
+    EbDctor  dctor;
+    uint64_t target_bit_rate;
+    uint64_t frame_rate;
+    uint64_t channel_bit_rate_per_frame;
+    uint64_t channel_bit_rate_per_sw;
+    uint64_t bit_constraint_per_sw;
+    uint64_t pred_bits_ref_qpPerSw[MAX_REF_QP_NUM];
+#if RC_UPDATE_TARGET_RATE
+    uint32_t prev_intra_selected_ref_qp;
+    uint32_t prev_intra_org_selected_ref_qp;
+    uint64_t previous_updated_bit_constraint_per_sw;
+#endif
+} HighLevelRateControlContext;
+
 typedef struct RateControlContext
 {
     EbFifo                            *rate_control_input_tasks_fifo_ptr;
