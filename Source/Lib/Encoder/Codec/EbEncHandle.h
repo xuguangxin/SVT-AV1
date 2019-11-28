@@ -31,16 +31,16 @@
 #include "EbPacketizationProcess.h"
 #include "EbObject.h"
 
-typedef struct EbThreadContext
+struct _EbThreadContext
 {
     EbDctor dctor;
     EbPtr   priv;
-} EbThreadContext;
+};
 
 /**************************************
  * Component Private Data
  **************************************/
-typedef struct EbEncHandle
+struct _EbEncHandle
 {
     EbDctor                                   dctor;
     // Encode Instances & Compute Segments
@@ -179,6 +179,6 @@ typedef struct EbEncHandle
     // Callbacks
     EbCallback                          **app_callback_ptr_array;
 
-} EbEncHandle;
+};
 
 #endif // EbEncHandle_h

@@ -4144,6 +4144,8 @@ static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
     83,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,
     84,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
 };
+typedef struct _EbEncHandle EbEncHandle;
+typedef struct _EbThreadContext EbThreadContext;
 #ifdef __cplusplus
 }
 #endif
