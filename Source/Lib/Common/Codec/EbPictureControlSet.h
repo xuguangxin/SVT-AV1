@@ -58,7 +58,14 @@ extern "C" {
 
 // BDP OFF
 #define MD_NEIGHBOR_ARRAY_INDEX                0
+#if MULTI_PASS_PD
+#define MULTI_STAGE_PD_NEIGHBOR_ARRAY_INDEX    4
+#endif
+#if MULTI_PASS_PD
+#define NEIGHBOR_ARRAY_TOTAL_COUNT             5
+#else
 #define NEIGHBOR_ARRAY_TOTAL_COUNT             4
+#endif
 #define AOM_QM_BITS                            5
 #define QM_TOTAL_SIZE                          3344
 
@@ -13619,6 +13626,24 @@ extern "C" {
         uint32_t          tot_d1_blocks; //how many d1 bloks every parent square would have
         uint8_t           leaf_index;
         EbBool            split_flag;
+#if PREDICT_NSQ_SHAPE
+        //uint8_t           open_loop_ranking;
+        uint8_t           early_split_flag;
+#if COMBINE_MDC_NSQ_TABLE
+        uint8_t           ol_best_nsq_shape1;
+        uint8_t           ol_best_nsq_shape2;
+        uint8_t           ol_best_nsq_shape3;
+        uint8_t           ol_best_nsq_shape4;
+        uint8_t           ol_best_nsq_shape5;
+        uint8_t           ol_best_nsq_shape6;
+        uint8_t           ol_best_nsq_shape7;
+        uint8_t           ol_best_nsq_shape8;
+#endif
+#endif
+#if ADD_MDC_REFINEMENT_LOOP || MULTI_PASS_PD
+        uint8_t           consider_block;
+        uint8_t           refined_split_flag;
+#endif
     } EbMdcLeafData;
 
     typedef struct MdcLcuData
@@ -13650,7 +13675,7 @@ extern "C" {
      * Picture Control Set
      **************************************/
     struct CodedTreeblock_s;
-    struct LargestCodingUnit;
+    struct SuperBlock;
 #define MAX_MESH_STEP 4
 
     typedef struct MeshPattern
@@ -13658,6 +13683,15 @@ extern "C" {
         int range;
         int interval;
     } MeshPattern;
+
+#if AUTO_MAX_PARTITION
+    enum {
+        NOT_IN_USE,
+        DIRECT_PRED,
+        RELAXED_PRED,
+        ADAPT_PRED
+    } UENUM1BYTE(MAX_PART_PRED_MODE);
+#endif
 
     typedef struct SpeedFeatures
     {
@@ -13677,6 +13711,13 @@ extern "C" {
 
         // Pattern to be used for any exhaustive mesh searches.
         MeshPattern mesh_patterns[MAX_MESH_STEP];
+
+#if AUTO_MAX_PARTITION
+        // Sets min and max square partition levels for this superblock based on
+        // motion vector and prediction error distribution produced from 16x16
+        // simple motion search
+        MAX_PART_PRED_MODE auto_max_partition_based_on_simple_motion;
+#endif
     } SpeedFeatures;
 
     typedef struct PictureControlSet
@@ -13704,6 +13745,9 @@ extern "C" {
 
         uint8_t                               ref_pic_qp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
         EB_SLICE                              ref_slice_type_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#if TWO_PASS
+        uint64_t                            ref_pic_referenced_area_avg_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
         // GOP
         uint64_t                              picture_number;
         uint8_t                               temporal_layer_index;
@@ -13752,19 +13796,15 @@ extern "C" {
         // Rate Control
         uint8_t                               picture_qp;
         uint8_t                               dif_cu_delta_qp_depth;
-        uint8_t                               use_delta_qp;
 
         // SB Array
         uint8_t                               sb_max_depth;
         uint16_t                              sb_total_count;
-        LargestCodingUnit                 **sb_ptr_array;
+        SuperBlock                            **sb_ptr_array;
         // DLF
         uint8_t                              *qp_array;
         uint16_t                              qp_array_stride;
         uint32_t                              qp_array_size;
-        // QP Assignment
-        uint8_t                               prev_coded_qp;
-        uint8_t                               prev_quant_group_coded_qp;
         // EncDec Entropy Coder (for rate estimation)
         EntropyCoder                       *coeff_est_entropy_coder_ptr;
 
@@ -13779,7 +13819,8 @@ extern "C" {
         NeighborArrayUnit                  *md_tx_depth_1_luma_recon_neighbor_array[NEIGHBOR_ARRAY_TOTAL_COUNT];
         NeighborArrayUnit                  *md_cb_recon_neighbor_array[NEIGHBOR_ARRAY_TOTAL_COUNT];
         NeighborArrayUnit                  *md_cr_recon_neighbor_array[NEIGHBOR_ARRAY_TOTAL_COUNT];
-        EbBool                             hbd_mode_decision;
+
+        uint8_t                             hbd_mode_decision;
         NeighborArrayUnit                  *md_luma_recon_neighbor_array16bit[NEIGHBOR_ARRAY_TOTAL_COUNT];
         NeighborArrayUnit                  *md_tx_depth_1_luma_recon_neighbor_array16bit[NEIGHBOR_ARRAY_TOTAL_COUNT];
         NeighborArrayUnit                  *md_cb_recon_neighbor_array16bit[NEIGHBOR_ARRAY_TOTAL_COUNT];
@@ -13860,10 +13901,16 @@ extern "C" {
         FRAME_CONTEXT * ec_ctx_array;
         struct MdRateEstimationContext* rate_est_array;
         uint8_t  update_cdf;
-#if ENABLE_CDF_UPDATE
         FRAME_CONTEXT           ref_frame_context[REF_FRAMES];
         EbWarpedMotionParams    ref_global_motion[TOTAL_REFS_PER_FRAME];
         struct MdRateEstimationContext *md_rate_estimation_array;
+        int8_t ref_frame_side[REF_FRAMES];
+        TPL_MV_REF  *tpl_mvs;
+#if FILTER_INTRA_FLAG
+        uint8_t pic_filter_intra_mode;
+#endif
+#if PAL_SUP
+        TOKENEXTRA *tile_tok[64][64];
 #endif
     } PictureControlSet;
 
@@ -13879,11 +13926,12 @@ extern "C" {
         uint8_t   height;
         uint8_t   is_complete_sb;
         EbBool    raster_scan_cu_validity[CU_MAX_COUNT];
-#if !INCOMPLETE_SB_FIX
-        EbBool    block_is_inside_md_scan[BLOCK_MAX_COUNT_SB_128];
-#endif
         uint8_t   potential_logo_sb;
         uint8_t   is_edge_sb;
+        uint32_t  tile_start_x;
+        uint32_t  tile_start_y;
+        uint32_t  tile_end_x;
+        uint32_t  tile_end_y;
     } SbParams;
 
     typedef struct SbGeom
@@ -13896,9 +13944,7 @@ extern "C" {
         uint8_t    height;
         uint8_t    is_complete_sb;
         EbBool     block_is_inside_md_scan[BLOCK_MAX_COUNT_SB_128];
-#if INCOMPLETE_SB_FIX
         EbBool     block_is_allowed[BLOCK_MAX_COUNT_SB_128];
-#endif
     } SbGeom;
 
     typedef struct CuStat
@@ -13960,6 +14006,9 @@ extern "C" {
         EbBool                                eos_coming;
         uint8_t                               picture_qp;
         uint64_t                              picture_number;
+        uint8_t                               wedge_mode;
+        uint32_t                             cur_order_hint;
+        uint32_t                             ref_order_hint[7];
         EbPicnoiseClass                       pic_noise_class;
         EB_SLICE                              slice_type;
         uint8_t                               pred_struct_index;
@@ -14031,7 +14080,8 @@ extern "C" {
         uint8_t                              *sharp_edge_sb_flag;
         EbBool                                logo_pic_flag;                    // used by EncDecProcess()
         uint16_t                              non_moving_index_average;            // used by ModeDecisionConfigurationProcess()
-
+        int16_t                               non_moving_index_min_distance;
+        int16_t                               non_moving_index_max_distance;
         uint16_t                              qp_scaling_average_complexity;
         uint8_t                               grass_percentage_in_picture;
         uint8_t                               percentage_of_edgein_light_background;
@@ -14073,6 +14123,10 @@ extern "C" {
         MeLcuResults                        **me_results;
         uint32_t                             *rc_me_distortion;
 
+        // Global motion estimation results
+        EbBool                                is_global_motion[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+        EbWarpedMotionParams                  global_motion_estimation[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+
         // Motion Estimation Distortion and OIS Historgram
         uint16_t                             *me_distortion_histogram;
         uint16_t                             *ois_distortion_histogram;
@@ -14104,6 +14158,9 @@ extern "C" {
 
         // MD
         EbEncMode                             enc_mode;
+#if TWO_PASS_USE_2NDP_ME_IN_1STP
+        EbEncMode                             snd_pass_enc_mode;
+#endif
         EB_SB_DEPTH_MODE                     *sb_depth_mode_array;
         EbSbComplexityStatus                 *complex_sb_array;
         EbCu8x8Mode                           cu8x8_mode;
@@ -14116,9 +14173,7 @@ extern "C" {
         uint8_t                               intra_pred_mode;
         uint8_t                               skip_sub_blks;
         uint8_t                               atb_mode;
-#if ENABLE_CDF_UPDATE
         uint8_t                               frame_end_cdf_update_mode; // mm-signal: 0: OFF, 1:ON
-#endif
         //**********************************************************************************************************//
         Av1RpsNode                          av1_ref_signal;
         EbBool                                has_show_existing;
@@ -14134,6 +14189,9 @@ extern "C" {
         /* profile settings */
 #if CONFIG_ENTROPY_STATS
         int32_t                               coef_cdf_category;
+#endif
+#if PREDICT_NSQ_SHAPE
+        uint16_t                              base_qindex;
 #endif
         int32_t                               separate_uv_delta_q;
 
@@ -14157,11 +14215,16 @@ extern "C" {
         uint64_t                              frame_offset;
         uint32_t                              large_scale_tile;
         int32_t                               nb_cdef_strengths;
+#if PREDICT_NSQ_SHAPE
+        ReferenceMode                         reference_mode;
+        int32_t                               delta_q_present_flag;
+        int32_t                               reduced_tx_set_used;
+#endif
 
 #if ADD_DELTA_QP_SUPPORT
         // Resolution of delta quant
         int32_t                               num_tg;
-        int32_t                               monochrome = 0; //NM - hadcoded to zero. to be set to one to support the coding of monochrome contents.
+        int32_t                               monochrome;
         int32_t                               prev_qindex;
         // Since actual frame level loop filtering level value is not available
         // at the beginning of the tile (only available during actual filtering)
@@ -14207,12 +14270,16 @@ extern "C" {
         int32_t                               cdef_frame_strength;
         int32_t                               cdf_ref_frame_strenght;
         int32_t                               use_ref_frame_cdef_strength;
+#if !MULTI_PASS_PD
         uint8_t                               tx_search_level;
         uint64_t                              tx_weight;
         uint8_t                               tx_search_reduced_set;
-        uint8_t                               skip_tx_search;
         uint8_t                               interpolation_search_level;
+#endif
         uint8_t                               nsq_search_level;
+#if PAL_SUP
+        uint8_t                               palette_mode;
+#endif
         uint8_t                               nsq_max_shapes_md; // max number of shapes to be tested in MD
         uint8_t                              sc_content_detected;
         uint8_t                              ibc_mode;
@@ -14225,6 +14292,8 @@ extern "C" {
         uint8_t                               altref_strength;
         int32_t                               pic_decision_reorder_queue_idx;
         struct PictureParentControlSet       *temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
+        EbByte                               save_enhanced_picture_ptr[3];
+        EbByte                               save_enhanced_picture_bit_inc_ptr[3];
         EbHandle temp_filt_done_semaphore;
         EbHandle temp_filt_mutex;
         EbHandle debug_mutex;
@@ -14235,19 +14304,41 @@ extern "C" {
         int16_t                               tf_segments_total_count;
         uint8_t                               tf_segments_column_count;
         uint8_t                               tf_segments_row_count;
-#if ALTREF_TF_ADAPTIVE_WINDOW_SIZE
         uint8_t                               past_altref_nframes;
         uint8_t                               future_altref_nframes;
-#else
-        uint8_t                               altref_nframes;
-#endif
-#if QPS_TUNING
+        EbBool                                temporal_filtering_on;
         uint64_t                              filtered_sse; // the normalized SSE between filtered and original alt_ref with 8 bit precision.
                                                             // I Slice has the value of the next ALT_REF picture
         uint64_t                              filtered_sse_uv;
-#endif
-
         FrameHeader                           frm_hdr;
+#if !MULTI_PASS_PD
+        MD_COMP_TYPE                          compound_types_to_try;
+#endif
+        uint8_t                               compound_mode;
+        uint8_t                               prune_unipred_at_me;
+        uint8_t                               coeff_based_skip_atb;
+        uint16_t*                             altref_buffer_highbd[3];
+#if II_COMP_FLAG
+        uint8_t                              enable_inter_intra;
+#endif
+#if OBMC_FLAG
+        uint8_t                              pic_obmc_mode;
+#endif
+#if TWO_PASS
+        stat_struct_t*                       stat_struct_first_pass_ptr; // pointer to stat_struct in the first pass
+        struct stat_struct_t                 stat_struct; // stat_struct used in the second pass
+        uint64_t                             referenced_area_avg; // average referenced area per frame
+        uint8_t                              referenced_area_has_non_zero;
+#endif
+#if PREDICT_NSQ_SHAPE && !MDC_ADAPTIVE_LEVEL
+        uint8_t                                mdc_depth_level;
+#endif
+#if MDC_ADAPTIVE_LEVEL
+        uint8_t                                enable_adaptive_ol_partitioning;
+#endif
+#if GM_OPT
+        uint8_t                                gm_level;
+#endif
     } PictureParentControlSet;
 
     typedef struct PictureControlSetInitData
@@ -14261,6 +14352,9 @@ extern "C" {
         EbBitDepthEnum                     bit_depth;
         EbColorFormat                      color_format;
         uint32_t                           sb_sz;
+#if PAL_SUP
+        uint8_t                            cfg_palette;
+#endif
         uint32_t                           sb_size_pix;   //since we still have lot of code assuming 64x64 LCU, we add a new paramter supporting both128x128 and 64x64,
                                                           //ultimately the fixed code supporting 64x64 should be upgraded to use 128x128 and the above could be removed.
         uint32_t                           max_depth;
@@ -14271,16 +14365,15 @@ extern "C" {
         uint16_t                           enc_dec_segment_row;
         EbEncMode                          enc_mode;
         uint8_t                            speed_control;
-        EbBool                             hbd_mode_decision;
+        uint8_t                            hbd_mode_decision;
         uint16_t                           film_grain_noise_level;
         EbBool                             ext_block_flag;
         EbBool                             in_loop_me_flag;
         uint8_t                            mrp_mode;
         uint8_t                            cdf_mode;
         uint8_t                            nsq_present;
-#if INCOMPLETE_SB_FIX
         uint8_t                            over_boundary_block_mode;
-#endif
+        uint8_t                            mfmv;
     } PictureControlSetInitData;
 
     typedef struct Av1Comp

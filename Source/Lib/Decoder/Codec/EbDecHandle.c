@@ -18,15 +18,19 @@
 #include "EbDecHandle.h"
 #include "EbDecMemInit.h"
 #include "EbDecPicMgr.h"
+#include "grainSynthesis.h"
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifndef _WIN32
 #include <pthread.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #endif
 
-#define RTCD_C
+#if defined(_MSC_VER)
+# include <intrin.h>
+#endif
+
 #include "aom_dsp_rtcd.h"
 
 /**************************************
@@ -50,12 +54,15 @@ uint32_t                         lib_mutex_count = 0;
 
 void asmSetConvolveAsmTable(void);
 void init_intra_dc_predictors_c_internal(void);
+void asmSetConvolveHbdAsmTable(void);
 void init_intra_predictors_internal(void);
+extern void av1_init_wedge_masks(void);
+
 EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr,
-                                uint8_t **data, size_t data_size);
+                                uint8_t **data, size_t data_size, uint32_t is_annexb);
 
 void SwitchToRealTime(){
-#if defined(__linux__) || defined(__APPLE__)
+#ifndef _WIN32
 
     struct sched_param schedParam = {
         .sched_priority = 99
@@ -64,6 +71,27 @@ void SwitchToRealTime(){
     int32_t retValue = pthread_setschedparam(pthread_self(), SCHED_FIFO, &schedParam);
     UNUSED(retValue);
 #endif
+}
+
+static int32_t can_use_intel_core_4th_gen_features()
+{
+    static int32_t the_4th_gen_features_available = -1;
+    /* test is performed once */
+    if (the_4th_gen_features_available < 0)
+        the_4th_gen_features_available = Check4thGenIntelCoreFeatures();
+    return the_4th_gen_features_available;
+}
+
+static EbAsm get_cpu_asm_type()
+{
+    EbAsm asm_type = ASM_NON_AVX2;
+
+    if (can_use_intel_core_4th_gen_features() == 1)
+        asm_type = ASM_AVX2;
+    else
+        // Need to change to support lower CPU Technologies
+        asm_type = ASM_NON_AVX2;
+    return asm_type;
 }
 
 /***********************************
@@ -103,104 +131,209 @@ int svt_dec_out_buf(
     EbPictureBufferDesc *recon_picture_buf = dec_handle_ptr->cur_pic_buf[0]->ps_pic_buf;
     EbSvtIOFormat       *out_img = (EbSvtIOFormat*)p_buffer->p_buffer;
 
+    uint8_t *luma = NULL;
+    uint8_t *cb   = NULL;
+    uint8_t *cr   = NULL;
+
     /* TODO: Should add logic for show_existing_frame */
     if (0 == dec_handle_ptr->show_frame) {
         assert(0 == dec_handle_ptr->show_existing_frame);
         return 0;
     }
 
-    int wd = dec_handle_ptr->frame_header.frame_size.frame_width;
-    int ht = dec_handle_ptr->frame_header.frame_size.frame_height;
-    int i, sx, sy;
+    uint32_t wd = dec_handle_ptr->frame_header.frame_size.superres_upscaled_width;
+    uint32_t ht = dec_handle_ptr->frame_header.frame_size.frame_height;
+    uint32_t i, sx = 0, sy = 0;
+
+    if (out_img->height != ht || out_img->width != wd ||
+        out_img->color_fmt != recon_picture_buf->color_format ||
+        out_img->bit_depth != (EbBitDepth)recon_picture_buf->bit_depth)
+    {
+        int size = (dec_handle_ptr->seq_header.color_config.bit_depth ==
+                    EB_EIGHT_BIT) ? sizeof(uint8_t) : sizeof(uint16_t);
+        int luma_size = size * ht * wd;
+        int chroma_size = -1;
+
+        out_img->color_fmt = recon_picture_buf->color_format;
+        switch (recon_picture_buf->color_format) {
+            case EB_YUV400:
+                out_img->cb_stride = INT32_MAX;
+                out_img->cr_stride = INT32_MAX;
+                break;
+            case EB_YUV420:
+                out_img->cb_stride = (wd + 1) >> 1;
+                out_img->cr_stride = (wd + 1) >> 1;
+                chroma_size = size * (((wd + 1) >> 1) * ((ht + 1) >> 1));
+                break;
+            case EB_YUV422:
+                out_img->cb_stride = (wd + 1) >> 1;
+                out_img->cr_stride = (wd + 1) >> 1;
+                chroma_size = size * (((wd + 1) >> 1) * ht);
+                break;
+            case EB_YUV444:
+                out_img->cb_stride = wd;
+                out_img->cr_stride = wd;
+                chroma_size = size * ht * wd;
+                break;
+            default:
+                printf("Unsupported colour format. \n");
+                return 0;
+            }
+
+            out_img->y_stride = wd;
+            out_img->width = wd;
+            out_img->height = ht;
+            if (out_img->bit_depth != (EbBitDepth)recon_picture_buf->bit_depth) {
+                printf("Warning : Output bit depth conversion not supported."
+                    " Output depth set to %d. ", recon_picture_buf->bit_depth);
+                out_img->bit_depth = (EbBitDepth)recon_picture_buf->bit_depth;
+            }
+
+            free(out_img->luma);
+            if (recon_picture_buf->color_format != EB_YUV400) {
+                free(out_img->cb);
+                free(out_img->cr);
+            }
+            out_img->luma = (uint8_t*)malloc(luma_size);
+            if (recon_picture_buf->color_format != EB_YUV400) {
+            out_img->cb = (uint8_t*)malloc(chroma_size);
+            out_img->cr = (uint8_t*)malloc(chroma_size);
+        }
+    }
 
     switch (recon_picture_buf->color_format) {
-        case EB_YUV420 :
+        case EB_YUV400:
+            sx = -1;
+            sy = -1;
+            break;
+        case EB_YUV420:
             sx = 1;
             sy = 1;
+            break;
+        case EB_YUV422:
+            sx = 1;
+            sy = 0;
+            break;
+        case EB_YUV444:
+            sx = 0;
+            sy = 0;
             break;
         default :
             assert(0);
     }
 
-    if (recon_picture_buf->bit_depth == EB_8BIT) {
-    uint8_t *dst;
-    uint8_t *src;
+    int32_t use_high_bit_depth = recon_picture_buf->bit_depth==EB_8BIT ? 0 : 1;
 
-    /* Luma */
-    dst = out_img->luma + out_img->origin_x +
-            (out_img->origin_y * out_img->y_stride);
-    src = recon_picture_buf->buffer_y + recon_picture_buf->origin_x +
-        (recon_picture_buf->origin_y * recon_picture_buf->stride_y);
-
-    for (i = 0; i < ht; i++) {
-        memcpy(dst, src, wd);
-        dst += out_img->y_stride;
-        src += recon_picture_buf->stride_y;
+    luma = out_img->luma + ((out_img->origin_y * out_img->y_stride
+        + out_img->origin_x) << use_high_bit_depth);
+    if (recon_picture_buf->color_format != EB_YUV400) {
+        cb = out_img->cb + ((out_img->cb_stride * (out_img->origin_y >> sy)
+            + (out_img->origin_x >> sx)) << use_high_bit_depth);
+        cr = out_img->cr + ((out_img->cr_stride * (out_img->origin_y >> sy)
+            + (out_img->origin_x >> sx)) << use_high_bit_depth);
     }
 
-    /* Cb */
-        dst = out_img->cb + (out_img->origin_x >> sx) +
-            ((out_img->origin_y >> sy) * out_img->cb_stride);
-        src = recon_picture_buf->buffer_cb + (recon_picture_buf->origin_x >> sx) +
-            ((recon_picture_buf->origin_y >> sy) * recon_picture_buf->stride_cb);
+    /* Memcpy to dst buffer */
+    {
+        if (recon_picture_buf->bit_depth == EB_8BIT) {
+            uint8_t *src, *dst;
+            dst = luma;
+            src = recon_picture_buf->buffer_y + recon_picture_buf->origin_x +
+                (recon_picture_buf->origin_y * recon_picture_buf->stride_y);
 
-        for (i = 0; i < ht >> sy; i++) {
-            memcpy(dst, src, wd >> sx);
-        dst += out_img->cb_stride;
-        src += recon_picture_buf->stride_cb;
-    }
+            for (i = 0; i < ht; i++) {
+                memcpy(dst, src, wd);
+                dst += out_img->y_stride;
+                src += recon_picture_buf->stride_y;
+            }
 
-    /* Cr */
-        dst = out_img->cr + (out_img->origin_x >> sx) +
-            ((out_img->origin_y >> sy) * out_img->cr_stride);
-        src = recon_picture_buf->buffer_cr + (recon_picture_buf->origin_x >> sx) +
-            ((recon_picture_buf->origin_y >> sy)* recon_picture_buf->stride_cr);
+            if (recon_picture_buf->color_format != EB_YUV400) {
+                /* Cb */
+                dst = cb;
+                src = recon_picture_buf->buffer_cb + (recon_picture_buf->origin_x >> sx) +
+                    ((recon_picture_buf->origin_y >> sy) * recon_picture_buf->stride_cb);
 
-        for (i = 0; i < ht >> sy; i++) {
-            memcpy(dst, src, wd >> sx);
-        dst += out_img->cr_stride;
-        src += recon_picture_buf->stride_cr;
-    }
-    } else {
-        uint16_t *pu2_dst;
-        uint16_t *pu2_src;
+                for (i = 0; i < ((ht + sy) >> sy); i++) {
+                    memcpy(dst, src, ((wd + sx) >> sx));
+                    dst += out_img->cb_stride;
+                    src += recon_picture_buf->stride_cb;
+                }
 
-        /* Luma */
-        pu2_dst = (uint16_t *)out_img->luma + out_img->origin_x +
-                (out_img->origin_y * out_img->y_stride);
-        pu2_src = (uint16_t *)recon_picture_buf->buffer_y + recon_picture_buf->origin_x +
-            (recon_picture_buf->origin_y * recon_picture_buf->stride_y);
+                /* Cr */
+                dst = cr;
+                src = recon_picture_buf->buffer_cr + (recon_picture_buf->origin_x >> sx) +
+                    ((recon_picture_buf->origin_y >> sy)* recon_picture_buf->stride_cr);
 
-        for (i = 0; i < ht; i++) {
-            memcpy(pu2_dst, pu2_src, sizeof(uint16_t) * wd);
-            pu2_dst += out_img->y_stride;
-            pu2_src += recon_picture_buf->stride_y;
+                for (i = 0; i < ((ht + sy) >> sy); i++) {
+                    memcpy(dst, src, ((wd + sx) >> sx));
+                    dst += out_img->cr_stride;
+                    src += recon_picture_buf->stride_cr;
+                }
+            }
         }
+        else {
+            uint16_t *pu2_dst;
+            uint16_t *pu2_src;
 
-        /* Cb */
-        pu2_dst = (uint16_t *)out_img->cb + (out_img->origin_x >> sx) +
-            ((out_img->origin_y >> sy) * out_img->cb_stride);
-        pu2_src = (uint16_t *)recon_picture_buf->buffer_cb + (recon_picture_buf->origin_x >> sx) +
-            ((recon_picture_buf->origin_y >> sy) * recon_picture_buf->stride_cb);
+            /* Luma */
+            pu2_dst = (uint16_t *)luma;
+            pu2_src = (uint16_t *)recon_picture_buf->buffer_y + recon_picture_buf->origin_x +
+                (recon_picture_buf->origin_y * recon_picture_buf->stride_y);
 
-        for (i = 0; i < ht >> sy; i++) {
-            memcpy(pu2_dst, pu2_src, sizeof(uint16_t) * wd >> sx);
-            pu2_dst += out_img->cb_stride;
-            pu2_src += recon_picture_buf->stride_cb;
-        }
+            for (i = 0; i < ht; i++) {
+                memcpy(pu2_dst, pu2_src, sizeof(uint16_t) * wd);
+                pu2_dst += out_img->y_stride;
+                pu2_src += recon_picture_buf->stride_y;
+            }
 
-        /* Cr */
-        pu2_dst = (uint16_t *)out_img->cr + (out_img->origin_x >> sx) +
-            ((out_img->origin_y >> sy) * out_img->cr_stride);
-        pu2_src = (uint16_t *)recon_picture_buf->buffer_cr + (recon_picture_buf->origin_x >> sx) +
-            ((recon_picture_buf->origin_y >> sy)* recon_picture_buf->stride_cr);
+            if (recon_picture_buf->color_format != EB_YUV400) {
+                /* Cb */
+                pu2_dst = (uint16_t *)cb;
+                pu2_src = (uint16_t *)recon_picture_buf->buffer_cb + (recon_picture_buf->origin_x >> sx) +
+                    ((recon_picture_buf->origin_y >> sy) * recon_picture_buf->stride_cb);
 
-        for (i = 0; i < ht >> sy; i++) {
-            memcpy(pu2_dst, pu2_src, sizeof(uint16_t) * wd >> sx);
-            pu2_dst += out_img->cr_stride;
-            pu2_src += recon_picture_buf->stride_cr;
+                for (i = 0; i < ((ht + sy) >> sy); i++) {
+                    memcpy(pu2_dst, pu2_src, sizeof(uint16_t) * ((wd + sx) >> sx));
+                    pu2_dst += out_img->cb_stride;
+                    pu2_src += recon_picture_buf->stride_cb;
+                }
+
+                /* Cr */
+                pu2_dst = (uint16_t *)cr;
+                pu2_src = (uint16_t *)recon_picture_buf->buffer_cr + (recon_picture_buf->origin_x >> sx) +
+                    ((recon_picture_buf->origin_y >> sy)* recon_picture_buf->stride_cr);
+
+                for (i = 0; i < ((ht + sy) >> sy); i++) {
+                    memcpy(pu2_dst, pu2_src, sizeof(uint16_t) * ((wd + sx) >> sx));
+                    pu2_dst += out_img->cr_stride;
+                    pu2_src += recon_picture_buf->stride_cr;
+                }
+            }
         }
     }
+
+    if (!dec_handle_ptr->dec_config.skip_film_grain) {
+        /* Need to fill the dst buf with recon data before calling film_grain */
+        aom_film_grain_t *film_grain_ptr = &dec_handle_ptr->cur_pic_buf[0]->
+            film_grain_params;
+        if (film_grain_ptr->apply_grain) {
+
+            switch (recon_picture_buf->bit_depth) {
+            case EB_8BIT:
+                film_grain_ptr->bit_depth = 8;
+                break;
+            case EB_10BIT:
+                film_grain_ptr->bit_depth = 10;
+                break;
+            default:
+                assert(0);
+            }
+
+            eb_av1_add_film_grain_run(film_grain_ptr, luma, cb, cr, ht, wd, out_img->y_stride,
+                out_img->cb_stride, use_high_bit_depth, sy, sx);
+        }
+    }
+
     return 1;
 }
 
@@ -276,7 +409,7 @@ static EbErrorType init_svt_av1_decoder_handle(
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_dec_init_handle(
@@ -316,7 +449,7 @@ EB_API EbErrorType eb_dec_init_handle(
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_svt_dec_set_parameter(
@@ -333,7 +466,7 @@ EB_API EbErrorType eb_svt_dec_set_parameter(
     return EB_ErrorNone;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_init_decoder(
@@ -357,13 +490,17 @@ EB_API EbErrorType eb_init_decoder(
     dec_handle_ptr->show_frame          = 0;
     dec_handle_ptr->showable_frame      = 0;
 
-    assert(0 == dec_handle_ptr->dec_config.asm_type);
+    dec_handle_ptr->dec_config.asm_type = get_cpu_asm_type();
     setup_rtcd_internal(dec_handle_ptr->dec_config.asm_type);
     asmSetConvolveAsmTable();
 
     init_intra_dc_predictors_c_internal();
 
+    asmSetConvolveHbdAsmTable();
+
     init_intra_predictors_internal();
+
+    av1_init_wedge_masks();
 
     /************************************
     * Decoder Memory Init
@@ -375,13 +512,14 @@ EB_API EbErrorType eb_init_decoder(
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_svt_decode_frame(
     EbComponentType     *svt_dec_component,
     const uint8_t       *data,
-    const size_t         data_size)
+    const size_t         data_size,
+    uint32_t             is_annexb)
 {
     EbErrorType return_error = EB_ErrorNone;
     if (svt_dec_component == NULL)
@@ -390,19 +528,21 @@ EB_API EbErrorType eb_svt_decode_frame(
     EbDecHandle *dec_handle_ptr = (EbDecHandle *)svt_dec_component->p_component_private;
     uint8_t *data_start = (uint8_t *)data;
     uint8_t *data_end = (uint8_t *)data + data_size;
+    dec_handle_ptr->seen_frame_header = 0;
 
-    while (data_start < (data + data_size))
+    while (data_start < data_end)
     {
         /*TODO : Remove or move. For Test purpose only */
         dec_handle_ptr->dec_cnt++;
-        printf("\n SVT-AV1 Dec : Decoding Pic #%d", dec_handle_ptr->dec_cnt);
+        //printf("\n SVT-AV1 Dec : Decoding Pic #%d", dec_handle_ptr->dec_cnt);
 
         uint64_t frame_size = 0;
-        /*if (ctx->is_annexb) {
-        }
-        else*/
         frame_size = data_end - data_start;
-        return_error = decode_multiple_obu(dec_handle_ptr, &data_start, frame_size);
+        return_error = decode_multiple_obu(dec_handle_ptr, &data_start,
+            frame_size, is_annexb);
+
+        if (return_error != EB_ErrorNone)
+            assert(0);
 
         dec_pic_mgr_update_ref_pic(dec_handle_ptr, (EB_ErrorNone == return_error)
                     ? 1 : 0, dec_handle_ptr->frame_header.refresh_frame_flags);
@@ -413,12 +553,18 @@ EB_API EbErrorType eb_svt_decode_frame(
             if (marker) break;
             ++data;
         }
+
+        /*printf("\nDecoding Pic #%d  frm_w : %d    frm_h : %d
+            frm_typ : %d", dec_handle_ptr->dec_cnt,
+            dec_handle_ptr->frame_header.frame_size.frame_width,
+            dec_handle_ptr->frame_header.frame_size.frame_height,
+            dec_handle_ptr->frame_header.frame_type);*/
     }
 
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_svt_dec_get_picture(
@@ -441,7 +587,7 @@ EB_API EbErrorType eb_svt_dec_get_picture(
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_deinit_decoder(
@@ -507,7 +653,7 @@ EbErrorType eb_dec_component_de_init(EbComponentType  *svt_dec_component)
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_dec_deinit_handle(
@@ -525,7 +671,7 @@ EB_API EbErrorType eb_dec_deinit_handle(
     return return_error;
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#ifdef __GNUC__
 __attribute__((visibility("default")))
 #endif
 EB_API EbErrorType eb_dec_set_frame_buffer_callbacks(

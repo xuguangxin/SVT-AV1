@@ -53,6 +53,8 @@ class CrashDeathTest : public SvtAv1E2ETestFramework {
   protected:
     void config_test() override {
         enable_stat = true;
+        enable_config = true;
+        SvtAv1E2ETestFramework::config_test();
     }
 };
 
@@ -86,6 +88,8 @@ class ConformanceDeathTest : public SvtAv1E2ETestFramework {
         enable_decoder = true;
         enable_recon = true;
         enable_stat = true;
+        enable_config = true;
+        SvtAv1E2ETestFramework::config_test();
     }
 };
 
@@ -94,8 +98,13 @@ TEST_P(ConformanceDeathTest, DefaultSettingTest) {
 }
 
 /* clang-format off */
+std::vector<TestVideoVector> parkjoy = {
+    std::make_tuple("park_joy_90p_8_420.y4m", Y4M_VIDEO_FILE, IMG_FMT_420, 160,
+                    90, 8, 0, 0, 0),
+};
+
 static const std::vector<EncTestSetting> default_enc_settings = {
-    {"EncModeTest1", {{"EncoderMode", "1"}}, default_test_vectors},
+    {"EncModeTest1", {{"EncoderMode", "0"}}, default_test_vectors},
     {"EncModeTest2", {{"EncoderMode", "3"}}, default_test_vectors},
     {"EncModeTest3", {{"EncoderMode", "5"}}, default_test_vectors},
     {"EncModeTest4", {{"EncoderMode", "8"}}, default_test_vectors},
@@ -125,9 +134,6 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     // partition_depth and ext_block_flag, since they are
     // not used in encoder;
 
-    // test improve_sharpness, defaut is 0
-    {"SharpnessTest1", {{"ImproveSharpness", "1"}}, default_test_vectors},
-
     // test constrained intra, default is 0
     {"ConstrainIntraTest1", {{"ConstrainedIntra", "1"}}, default_test_vectors},
 
@@ -145,7 +151,7 @@ static const std::vector<EncTestSetting> default_enc_settings = {
 
     // test ScreenContentMode, default 2 auto detection mode;
     {"ScreenToolTest1", {{"ScreenContentMode", "0"}}, default_test_vectors},
-    {"ScreenToolTest2", {{"ScreenContentMode", "1"}}, screen_test_vectors},
+    {"ScreenToolTest2", {{"ScreenContentMode", "1"}, {"EncoderMode", "1"}}, screen_test_vectors},
 
     // test enable_adaptive_quantization, default is 0
     {"AdapQTest1", {{"AdaptiveQuantization", "1"}}, default_test_vectors},
@@ -159,8 +165,102 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     {"TileTest3", {{"TileCol", "1"}, {"TileRow", "1"}}, default_test_vectors},
 
     {"SpeedControlTest1", {{"SpeedControlFlag", "1"}}, default_test_vectors},
+
+    // Validate by setting a low bitrate and MaxQpAllowed, push the encoder to producing
+    // large partitions.
+    {"IncompleteSbTest1",
+     {{"RateControlMode", "2"}, {"TargetBitRate", "100000"}, {"MaxQpAllowed", "40"}},
+     parkjoy},
+    // Validate by setting a high bitrate and MinQpAllowed, push the encoder to producing
+    // small partitions.
+    {"IncompleteSbTest2",
+     {{"RateControlMode", "2"}, {"TargetBitRate", "1000000"}, {"MixQpAllowed", "10"}},
+     parkjoy},
+
+    // test pallete mode
+    {"PaletteModeTest1",
+     {{"PaletteMode", "1"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+    {"PaletteModeTest2",
+     {{"PaletteMode", "2"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+    {"PaletteModeTest3",
+     {{"PaletteMode", "3"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+    {"PaletteModeTest4",
+     {{"PaletteMode", "4"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+    {"PaletteModeTest5",
+     {{"PaletteMode", "5"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+    {"PaletteModeTest6",
+     {{"PaletteMode", "6"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+    {"PaletteModeTest7",
+     {{"PaletteMode", "0"}, {"ScreenContentMode", "1"}, {"EncoderMode", "1"}},
+     screen_test_vectors},
+
+    // test by using a dummy source of color bar
+    {"DummySrcTest1", {{"EncoderMode", "8"}}, dummy_test_vectors},
+    {"DummySrcTest2", {{"EncoderMode", "8"}, {"Profile", "2"}}, dummy_422_test_vectors},
+    {"DummySrcTest3", {{"EncoderMode", "8"}, {"Profile", "1"}}, dummy_444_test_vectors},
 };
+
 /* clang-format on */
 INSTANTIATE_TEST_CASE_P(SvtAv1, ConformanceDeathTest,
                         ::testing::ValuesIn(default_enc_settings),
+                        EncTestSetting::GetSettingName);
+
+class LongtimeConformanceTest : public ConformanceDeathTest {};
+
+TEST_P(LongtimeConformanceTest, DISABLED_LongtimeTest) {
+    run_death_test();
+}
+
+INSTANTIATE_TEST_CASE_P(SvtAv1, LongtimeConformanceTest,
+                        ::testing::ValuesIn(generate_vector_from_config(
+                            "longtime_comformance_test.cfg")),
+                        EncTestSetting::GetSettingName);
+/**
+ * @brief SVT-AV1 encoder E2E test with comparing the reconstructed frame with
+ * output frame from decoder buffer list when the tile is inverted to prove
+ * tile independence.
+ *
+ * Test strategy:
+ * Setup SVT-AV1 encoder with different tile parameter, and encode the input YUV
+ * data frames. Do the decode in inverted tile ordering and collect the
+ * reconstructed frames and compared them with reference decoder output.
+ *
+ * Expected result:
+ * No error is reported in encoding progress. The reconstructed frame data is
+ * same as the output frame from reference decoder,which proved tiles are
+ * considered independent and the test passes.
+ *
+ * Test coverage:
+ * All test vectors of 640*480 */
+
+class TileIndependenceTest : public SvtAv1E2ETestFramework {
+  protected:
+    void config_test() override {
+        enable_decoder = true;
+        enable_recon = true;
+        enable_stat = true;
+        enable_config = true;
+        enable_invert_tile_decoding = true;
+        SvtAv1E2ETestFramework::config_test();
+    }
+};
+
+TEST_P(TileIndependenceTest, TileTest) {
+    run_death_test();
+}
+
+static const std::vector<EncTestSetting> tile_settings = {
+    {"TileTest1", {{"TileCol", "0"}, {"TileRow", "0"}}, default_test_vectors},
+    {"TileTest2", {{"TileCol", "0"}, {"TileRow", "1"}}, default_test_vectors},
+    {"TileTest3", {{"TileCol", "1"}, {"TileRow", "0"}}, default_test_vectors},
+    {"TileTest4", {{"TileCol", "1"}, {"TileRow", "1"}}, default_test_vectors}};
+
+INSTANTIATE_TEST_CASE_P(TILETEST, TileIndependenceTest,
+                        ::testing::ValuesIn(tile_settings),
                         EncTestSetting::GetSettingName);

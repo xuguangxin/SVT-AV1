@@ -20,12 +20,12 @@
 #endif
 
 #if _WIN32
-#define fseeko64 _fseeki64
-#define ftello64 _ftelli64
+#define fseeko _fseeki64
+#define ftello _ftelli64
 #define FOPEN(f, s, m) fopen_s(&f, s, m)
 #else
-#define fseeko64 fseek
-#define ftello64 ftell
+#define fseeko fseek
+#define ftello ftell
 #define FOPEN(f, s, m) f = fopen(s, m)
 #endif
 
@@ -75,7 +75,7 @@ class FrameQueueFile : public FrameQueue {
             frame->timestamp < (uint64_t)frame_count_) {
             if (frame->timestamp >=
                 max_frame_ts_) {  // new frame is larger than max timestamp
-                fseeko64(recon_file_, 0, SEEK_END);
+                fseeko(recon_file_, 0, SEEK_END);
                 for (size_t i = max_frame_ts_; i < frame->timestamp + 1; ++i) {
                     fwrite(frame->buffer, 1, frame->buf_size, recon_file_);
                 }
@@ -85,7 +85,7 @@ class FrameQueueFile : public FrameQueue {
             rewind(recon_file_);
             uint64_t frameNum = frame->timestamp;
             while (frameNum > 0) {
-                int ret = fseeko64(recon_file_, frame->buf_size, SEEK_CUR);
+                int ret = fseeko(recon_file_, frame->buf_size, SEEK_CUR);
                 if (ret != 0) {
                     return;
                 }
@@ -102,13 +102,13 @@ class FrameQueueFile : public FrameQueue {
             return nullptr;
 
         VideoFrame *new_frame = nullptr;
-        fseeko64(recon_file_, 0, SEEK_END);
-        int64_t actual_size = ftello64(recon_file_);
+        fseeko(recon_file_, 0, SEEK_END);
+        int64_t actual_size = ftello(recon_file_);
         if (actual_size > 0 &&
             ((uint64_t)actual_size) > ((time_stamp + 1) * frame_size_)) {
-            int ret = fseeko64(recon_file_, time_stamp * frame_size_, 0);
+            int ret = fseeko(recon_file_, time_stamp * frame_size_, 0);
             if (ret != 0) {
-                // printf("Error in fseeko64  returnVal %i\n", ret);
+                // printf("Error in fseeko  returnVal %i\n", ret);
                 return nullptr;
             }
             new_frame = get_empty_frame();
@@ -301,10 +301,12 @@ class RefQueue : public ICompareQueue, FrameQueueBuffer {
     void draw_frames(const VideoFrame *frame, const VideoFrame *friend_frame) {
 #ifdef ENABLE_DEBUG_MONITOR
         if (ref_monitor_ == nullptr) {
+            /** walk-around for bit-depth is fixed set 10-bit from ref-decoder,
+             * here to use bit-depth of friend frame*/
             ref_monitor_ = new VideoMonitor(frame->width,
                                             frame->height,
                                             frame->stride[0],
-                                            frame->bits_per_sample,
+                                            friend_frame->bits_per_sample,
                                             false,
                                             "Ref decode");
         }
@@ -314,13 +316,12 @@ class RefQueue : public ICompareQueue, FrameQueueBuffer {
         }
         // Output to monitor for debug
         if (recon_monitor_ == nullptr) {
-            recon_monitor_ = new VideoMonitor(
-                frame->width,
-                frame->height,
-                frame->width * (frame->bits_per_sample > 8 ? 2 : 1),
-                frame->bits_per_sample,
-                false,
-                "Recon");
+            recon_monitor_ = new VideoMonitor(friend_frame->width,
+                                              friend_frame->height,
+                                              friend_frame->stride[0],
+                                              friend_frame->bits_per_sample,
+                                              false,
+                                              "Recon");
         }
         if (recon_monitor_) {
             recon_monitor_->draw_frame(friend_frame->planes[0],

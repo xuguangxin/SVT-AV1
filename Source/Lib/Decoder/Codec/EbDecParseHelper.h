@@ -6,11 +6,9 @@
 #ifndef EbDecParseHelper_h
 #define EbDecParseHelper_h
 
-#define ACCT_STR __func__
+#include "EbObuParse.h"
 
-static const PredictionMode fimode_to_intradir[FILTER_INTRA_MODES] = {
-  DC_PRED, V_PRED, H_PRED, D157_PRED, DC_PRED
-};
+#define ACCT_STR __func__
 
 typedef struct MvCount{
     uint8_t newmv_count;
@@ -20,60 +18,66 @@ typedef struct MvCount{
     uint8_t found_left_match;
 }MvCount;
 
-int neg_deinterleave(const int diff, int ref, int max);
-void set_segment_id(EbDecHandle *dec_handle, int mi_offset,
-    int x_mis, int y_mis, int segment_id);
-int bsize_to_max_depth(BlockSize bsize);
-int get_tx_size_context(const PartitionInfo_t *xd, ParseCtxt *parse_ctx);
-TxSize depth_to_tx_size(int depth, BlockSize bsize);
+static INLINE CflAllowedType is_cfl_allowed(PartitionInfo_t *xd,
+    EbColorConfig* color_cfg, uint8_t *lossless_array)
+{
+    const BlockModeInfo *mbmi = xd->mi;
+    const BlockSize bsize = mbmi->sb_type;
+    assert(bsize < BlockSizeS_ALL);
+    if (lossless_array[mbmi->segment_id]) {
+        // In lossless, CfL is available when the partition size is equal to the
+        // transform size.
+        const int ssx = color_cfg->subsampling_x;
+        const int ssy = color_cfg->subsampling_y;
+        const int plane_bsize = get_plane_block_size(bsize, ssx, ssy);
+        return (CflAllowedType)(plane_bsize == BLOCK_4X4);
+    }
+    // Spec: CfL is available to luma partitions lesser than or equal to 32x32
+    return (CflAllowedType)(block_size_wide[bsize] <= 32 &&
+        block_size_high[bsize] <= 32);
+}
+
+extern int is_inter_block(const BlockModeInfo *mbmi);
+
+static INLINE int allow_palette(int allow_screen_content_tools, BlockSize sb_type) {
+    return allow_screen_content_tools && block_size_wide[sb_type] <= 64 &&
+        block_size_high[sb_type] <= 64 && sb_type >= BLOCK_8X8;
+}
+
+static INLINE int max_block_wide(PartitionInfo_t *part_info, int plane_bsize, int subx) {
+    int max_blocks_wide = block_size_wide[plane_bsize];
+    if (part_info->mb_to_right_edge < 0)
+        max_blocks_wide += part_info->mb_to_right_edge >> (3 + subx);
+    //Scale width in the transform block unit.
+    return max_blocks_wide >> tx_size_wide_log2[0];
+}
+
+static INLINE int max_block_high(PartitionInfo_t *part_info, int plane_bsize, int suby) {
+    int max_blocks_high = block_size_high[plane_bsize];
+    if (part_info->mb_to_bottom_edge < 0)
+        max_blocks_high += part_info->mb_to_bottom_edge >> (3 + suby);
+    // Scale the height in the transform block unit.
+    return max_blocks_high >> tx_size_high_log2[0];
+}
+
 TxSize read_selected_tx_size(PartitionInfo_t *xd, SvtReader *r,
     EbDecHandle *dec_handle);
-int dec_is_inter_block(const ModeInfo_t *mbmi);
-int is_intrabc_block(const ModeInfo_t *mbmi);
-int max_block_wide(PartitionInfo_t *part_info, int plane_bsize, int subx);
-int max_block_high(PartitionInfo_t *part_info, int plane_bsize, int suby);
-TxSize get_sqr_tx_size(int tx_dim);
-int txfm_partition_context(TXFM_CONTEXT *above_ctx, TXFM_CONTEXT *left_ctx,
-    BlockSize bsize, TxSize tx_size);
-int get_segdata(SegmentationParams *seg, int segment_id, SEG_LVL_FEATURES feature_id);
-int get_intra_inter_context(PartitionInfo_t *xd);
-int use_angle_delta(BlockSize bsize);
 PredictionMode read_intra_mode(SvtReader *r, AomCdfProb *cdf);
-int dec_is_chroma_reference(int mi_row, int mi_col, BlockSize bsize,
-    int subsampling_x, int subsampling_y);
 UvPredictionMode read_intra_mode_uv(FRAME_CONTEXT *ec_ctx, SvtReader *r,
     CflAllowedType cfl_allowed, PredictionMode y_mode);
-CflAllowedType is_cfl_allowed(PartitionInfo_t *xd, EbColorConfig* color_cfg,
-    uint8_t *lossless_array);
-int allow_palette(int allow_screen_content_tools, BlockSize sb_type);
-int filter_intra_allowed_bsize(EbDecHandle *dec_handle, BlockSize bs);
-int filter_intra_allowed(EbDecHandle *dec_handle, const ModeInfo_t *mbmi);
-int allow_intrabc(const EbDecHandle *dec_handle);
-PredictionMode dec_get_uv_mode(UvPredictionMode mode);
-TxType intra_mode_to_tx_type(const ModeInfo_t *mbmi, PlaneType plane_type);
-int has_second_ref(const ModeInfo_t *mbmi);
-IntMv_dec gm_get_motion_vector(const GlobalMotionParams *gm, int allow_hp,
+IntMv gm_get_motion_vector(const GlobalMotionParams *gm, int allow_hp,
     BlockSize bsize, int mi_col, int mi_row, int is_integer);
-int get_txb_wide(TxSize tx_size);
-int get_txb_high(TxSize tx_size);
-int get_lower_levels_ctx_eob(int bwl, int height, int scan_idx);
-uint8_t *set_levels(uint8_t *const levels_buf, const int width);
-int get_padded_idx(const int idx, const int bwl);
-int get_txb_bwl(TxSize tx_size);
-int get_comp_reference_type_context(const PartitionInfo_t *xd);
-AomCdfProb *get_y_mode_cdf(FRAME_CONTEXT *tile_ctx, const ModeInfo_t *above_mi,
-    const ModeInfo_t *left_mi);
 
-int is_interintra_allowed_bsize(const BlockSize bsize);
-int is_interintra_allowed_mode(const PredictionMode mode);
-int is_interintra_allowed_ref(const MvReferenceFrame rf[2]);
-int is_interintra_allowed(const ModeInfo_t *mbmi);
-MotionMode dec_motion_mode_allowed();
+void set_segment_id(EbDecHandle *dec_handle, int mi_offset,
+    int x_mis, int y_mis, int segment_id);
 void update_tx_context(ParseCtxt *parse_ctxt, PartitionInfo_t *pi,
     BlockSize bsize, TxSize txSize, int blk_row, int blk_col);
+
+int neg_deinterleave(const int diff, int ref, int max);
+int get_intra_inter_context(PartitionInfo_t *xd);
+int get_comp_reference_type_context(const PartitionInfo_t *xd);
 int seg_feature_active(SegmentationParams *seg, int segment_id,
     SEG_LVL_FEATURES feature_id);
-
 int find_warp_samples(EbDecHandle *dec_handle, PartitionInfo_t *pi,
-    int mi_row, int mi_col, int *pts, int *pts_inref);
+    int *pts, int *pts_inref);
 #endif  // EbDecParseHelper_h

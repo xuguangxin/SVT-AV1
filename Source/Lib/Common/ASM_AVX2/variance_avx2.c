@@ -14,18 +14,6 @@
 #include "aom_dsp_rtcd.h"
 #include "EbVariance_SSE2.h"
 
- // Various blending functions and macros.
- // See also the aom_blend_* functions in aom_dsp_rtcd.h
-
- // Alpha blending with alpha values from the range [0, 64], where 64
- // means use the first input and 0 means use the second input.
-
-#define AOM_BLEND_A64_ROUND_BITS 6
-#define AOM_BLEND_A64_MAX_ALPHA (1 << AOM_BLEND_A64_ROUND_BITS)  // 64
-
-#define AOM_BLEND_A64(a, v0, v1)                                          \
-  ROUND_POWER_OF_TWO((a) * (v0) + (AOM_BLEND_A64_MAX_ALPHA - (a)) * (v1), \
-                     AOM_BLEND_A64_ROUND_BITS)
 
 // Alpha blending with alpha values from the range [0, 256], where 256
 // means use the first input and 0 means use the second input.
@@ -172,7 +160,7 @@ static INLINE void variance128_no_sum_avx2(const uint8_t *src, const int32_t src
 }
 
 #define AOM_VAR_NO_LOOP_NO_SUM_AVX2(bw, bh, bits, max_pixel)                         \
-  void aom_variance##bw##x##bh##_no_sum_avx2(                                \
+  void eb_aom_variance##bw##x##bh##_no_sum_avx2(                                \
       const uint8_t *src, int32_t src_stride, const uint8_t *ref, int32_t ref_stride, \
       uint32_t *sse) {                                                    \
     __m256i vsse = _mm256_setzero_si256();                                    \
@@ -182,10 +170,10 @@ static INLINE void variance128_no_sum_avx2(const uint8_t *src, const int32_t src
 
 AOM_VAR_NO_LOOP_NO_SUM_AVX2(16, 16, 8, 512);
 
-uint32_t aom_mse16x16_avx2(const uint8_t *src, int32_t src_stride,
+uint32_t eb_aom_mse16x16_avx2(const uint8_t *src, int32_t src_stride,
     const uint8_t *ref, int32_t ref_stride,
     uint32_t *sse) {
-    aom_variance16x16_no_sum_avx2(src, src_stride, ref, ref_stride, sse);
+    eb_aom_variance16x16_no_sum_avx2(src, src_stride, ref, ref_stride, sse);
     return *sse;
 }
 
@@ -424,7 +412,7 @@ static INLINE void variance128_avx2(const uint8_t *src, const int src_stride,
 }
 
 #define AOM_VAR_NO_LOOP_AVX2(bw, bh, bits, max_pixel)                         \
-  unsigned int aom_variance##bw##x##bh##_avx2(                                \
+  unsigned int eb_aom_variance##bw##x##bh##_avx2(                                \
       const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
       unsigned int *sse) {                                                    \
     __m256i vsse = _mm256_setzero_si256();                                    \
@@ -449,7 +437,7 @@ AOM_VAR_NO_LOOP_AVX2(64, 16, 10, 1024);
 AOM_VAR_NO_LOOP_AVX2(64, 32, 11, 2048);
 
 #define AOM_VAR_LOOP_AVX2(bw, bh, bits, uh)                                   \
-  unsigned int aom_variance##bw##x##bh##_avx2(                                \
+  unsigned int eb_aom_variance##bw##x##bh##_avx2(                                \
       const uint8_t *src, int src_stride, const uint8_t *ref, int ref_stride, \
       unsigned int *sse) {                                                    \
     __m256i vsse = _mm256_setzero_si256();                                    \

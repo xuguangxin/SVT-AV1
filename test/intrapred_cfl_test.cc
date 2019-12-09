@@ -7,8 +7,8 @@
  * @file intrapred_edge_filter_test.cc
  *
  * @brief Unit test for chroma from luma prediction:
- * - cfl_predict_hbd_avx2
- * - cfl_predict_lbd_avx2
+ * - eb_cfl_predict_hbd_avx2
+ * - eb_cfl_predict_lbd_avx2
  *
  * @author Cidana-Wenyao
  *
@@ -31,8 +31,8 @@ using CFL_PRED_LBD = void (*)(const int16_t *pred_buf_q3, uint8_t *pred,
                               int32_t bit_depth, int32_t width, int32_t height);
 /**
  * @brief Unit test for chroma from luma prediction:
- * - cfl_predict_hbd_avx2
- * - cfl_predict_lbd_avx2
+ * - eb_cfl_predict_hbd_avx2
+ * - eb_cfl_predict_lbd_avx2
  *
  * Test strategy:
  * Verify this assembly code by comparing with reference c implementation.
@@ -66,7 +66,7 @@ class CflPredTest {
     void RunAllTest() {
         // for pred_buf, after sampling and subtracted from average
         SVTRandom pred_rnd(bd_ + 3 + 1, true);
-        SVTRandom dst_rnd(4, false);
+        SVTRandom dst_rnd(8, false);
         for (int tx = TX_4X4; tx < TX_SIZES_ALL; ++tx) {
             const int c_w = tx_size_wide[tx] >> 1;
             const int c_h = tx_size_high[tx] >> 1;
@@ -77,13 +77,15 @@ class CflPredTest {
 
             for (int alpha_q3 = -16; alpha_q3 <= 16; ++alpha_q3) {
                 // prepare data
+                // Implicit assumption: The dst_buf is supposed to be populated
+                // by dc prediction before cfl prediction.
+                const Sample rnd_dc = dst_rnd.random();
                 for (int y = 0; y < c_h; ++y) {
                     for (int x = 0; x < c_w; ++x) {
                         pred_buf_q3[y * c_stride + x] =
                             (Sample)pred_rnd.random();
                         dst_buf_ref_[y * c_stride + x] =
-                            dst_buf_tst_[y * c_stride + x] =
-                                (Sample)dst_rnd.random();
+                            dst_buf_tst_[y * c_stride + x] = rnd_dc;
                     }
                 }
 
@@ -143,8 +145,8 @@ class LbdCflPredTest : public CflPredTest<uint8_t, CFL_PRED_LBD> {
   public:
     LbdCflPredTest() {
         bd_ = 8;
-        ref_func_ = cfl_predict_lbd_c;
-        tst_func_ = cfl_predict_lbd_avx2;
+        ref_func_ = eb_cfl_predict_lbd_c;
+        tst_func_ = eb_cfl_predict_lbd_avx2;
         common_init();
     }
 };
@@ -153,8 +155,8 @@ class HbdCflPredTest : public CflPredTest<uint16_t, CFL_PRED_HBD> {
   public:
     HbdCflPredTest() {
         bd_ = 10;
-        ref_func_ = cfl_predict_hbd_c;
-        tst_func_ = cfl_predict_hbd_avx2;
+        ref_func_ = eb_cfl_predict_hbd_c;
+        tst_func_ = eb_cfl_predict_hbd_avx2;
         common_init();
     }
 };

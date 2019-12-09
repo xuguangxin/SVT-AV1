@@ -17,7 +17,8 @@
 #include "gtest/gtest.h"
 #include "SvtAv1E2EFramework.h"
 #include "../api_test/params.h"
-#include "ConfigEncoder.h"
+#include "RefDecoder.h"
+
 /**
  * @brief SVT-AV1 encoder parameter coverage E2E test
  *
@@ -130,30 +131,12 @@ static const std::vector<EncTestSetting> default_enc_settings = {
 
 class CodingOptionTest : public SvtAv1E2ETestFramework {
   public:
-    CodingOptionTest() {
-        enc_config_ = create_enc_config();
-    }
-
-    virtual ~CodingOptionTest() {
-        release_enc_config(enc_config_);
-    }
-
     void config_test() override {
         enable_recon = true;
         enable_decoder = true;
         enable_analyzer = true;
-        // iterate the mappings and update config
-        for (auto &x : enc_setting.setting) {
-            set_enc_config(enc_config_, x.first.c_str(), x.second.c_str());
-            printf("EncSetting: %s = %s\n", x.first.c_str(), x.second.c_str());
-        }
-    }
-
-    void update_enc_setting() override {
-        copy_enc_param(&av1enc_ctx_.enc_params, enc_config_);
-        setup_src_param(video_src_, av1enc_ctx_.enc_params);
-        if (recon_queue_)
-            av1enc_ctx_.enc_params.recon_enabled = 1;
+        enable_config = true;
+        SvtAv1E2ETestFramework::config_test();
     }
 
     void post_process() override {
@@ -203,9 +186,10 @@ class CodingOptionTest : public SvtAv1E2ETestFramework {
         EXPECT_GE(config->max_qp_allowed, actual_max_qp)
             << "Max qp allowd " << config->max_qp_allowed << " actual "
             << actual_max_qp;
-        if (config->rate_control_mode == 0)
+        if (config->rate_control_mode == 0) {
             EXPECT_EQ(actual_min_qp, actual_max_qp)
                 << "QP fluctuate in const qp mode";
+        }
 
         // verify the bitrate
         if (config->rate_control_mode == 3) {
@@ -221,11 +205,11 @@ class CodingOptionTest : public SvtAv1E2ETestFramework {
 
         // verify tile row and tile column
         uint32_t expect_cols =
-            (uint32_t)((video_src_->get_width_with_padding() / 4) /
-                       std::pow(2, config->tile_columns));
+            (uint32_t)((video_src_->get_width_with_padding() >> 2) /
+                       (1 << config->tile_columns));
         uint32_t expect_rows =
-            (uint32_t)((video_src_->get_height_with_padding() / 4) /
-                       std::pow(2, config->tile_rows));
+            (uint32_t)((video_src_->get_height_with_padding() >> 2) /
+                       (1 << config->tile_rows));
         printf("expect_cols %d, expect_rows %d\n", expect_cols, expect_rows);
         printf("tile_cols %d, tile_rows %d\n",
                stream_info->tile_cols,
@@ -271,9 +255,6 @@ class CodingOptionTest : public SvtAv1E2ETestFramework {
         }
         return true;
     }
-
-  protected:
-    void *enc_config_;
 };
 
 TEST_P(CodingOptionTest, CheckEncOptionsUsingBitstream) {

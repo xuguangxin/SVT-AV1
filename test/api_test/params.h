@@ -339,22 +339,6 @@ static const vector<uint64_t> invalid_frames_to_be_encoded = {
     // none
 };
 
-/* The visual quality knob that allows the use of adaptive quantization
- * within the picture and enables visual quality algorithms that improve the
- * sharpness of the background. Only available for 4k resolution and
- *
- * Default is 0. */
-static const vector<EbBool> default_improve_sharpness = {
-    EB_FALSE,
-};
-static const vector<EbBool> valid_improve_sharpness = {
-    EB_FALSE,
-    EB_TRUE,
-};
-static const vector<EbBool> invalid_improve_sharpness = {
-    // none
-};
-
 /* Super block size for motion estimation
  *
  * Default is 64. */
@@ -523,6 +507,20 @@ static const vector<EbBool> invalid_enable_warped_motion = {
     // none
 };
 
+/* Global motion
+ *
+ * Default is 1. */
+static const vector<EbBool> default_enable_global_motion = {
+    EB_TRUE,
+};
+static const vector<EbBool> valid_enable_global_motion = {
+    EB_FALSE,
+    EB_TRUE,
+};
+static const vector<EbBool> invalid_enable_global_motion = {
+    // none
+};
+
 /* Flag to enable the use of default ME HME parameters.
  *
  * Default is 1. */
@@ -607,6 +605,21 @@ static const vector<uint32_t> invalid_search_area_height = {
 };
 
 // MD Parameters
+/* Palette Mode
+ *-1:Auto Mode(ON at level6 when SC is detected)
+ * 0:OFF
+ * 1:Slow    NIC=7/4/4
+ * 2:        NIC=7/2/2
+ * 3:        NIC=7/2/2 + No K means for non ref
+ * 4:        NIC=4/2/1
+ * 5:        NIC=4/2/1 + No K means for Inter frame
+ * 6:Fastest NIC=4/2/1 + No K means for non base + step for non base for
+ * most dominant
+ * Default is -1. */
+static const vector<int32_t> default_enable_palette = {-1};
+static const vector<int32_t> valid_enable_palette = {-1, 0, 1, 2, 3, 4, 5, 6};
+static const vector<int32_t> invalid_enable_palette = {-2, 7};
+
 /* Enable the use of Constrained Intra, which yields sending two picture
  * parameter sets in the elementary streams .
  *

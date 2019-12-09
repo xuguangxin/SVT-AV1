@@ -13,9 +13,10 @@
 #include "synonyms.h"
 #include "synonyms_avx2.h"
 #include "aom_dsp_rtcd.h"
-#include "EbPictureOperators_AVX2.h"
+#include "EbPictureOperators_Inline_AVX2.h"
 #include "EbRestoration.h"
 #include "EbRestorationPick.h"
+#include "EbUtility.h"
 #include "pickrst_avx2.h"
 #include "transpose_sse2.h"
 #include "transpose_avx2.h"
@@ -3341,13 +3342,10 @@ static INLINE void compute_stats_win7_avx2(
     } while (++i < wiener_win);
 }
 
-void *aom_memalign(size_t align, size_t size);
-void aom_free(void *memblk);
-
-void av1_compute_stats_avx2(int32_t wiener_win, const uint8_t *dgd,
-                            const uint8_t *src, int32_t h_start, int32_t h_end,
-                            int32_t v_start, int32_t v_end, int32_t dgd_stride,
-                            int32_t src_stride, int64_t *M, int64_t *H) {
+void eb_av1_compute_stats_avx2(int32_t wiener_win, const uint8_t *dgd,
+    const uint8_t *src, int32_t h_start, int32_t h_end, int32_t v_start,
+    int32_t v_end, int32_t dgd_stride, int32_t src_stride, int64_t *M,
+    int64_t *H) {
     const int32_t wiener_win2 = wiener_win * wiener_win;
     const int32_t wiener_halfwin = wiener_win >> 1;
     const uint8_t avg =
@@ -3362,7 +3360,7 @@ void av1_compute_stats_avx2(int32_t wiener_win, const uint8_t *dgd,
     // (9 / 4) * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX. Enlarge to
     // 3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX considering
     // paddings.
-    d = aom_memalign(32,
+    d = eb_aom_memalign(32,
             sizeof(*d) * 6 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX);
     s = d + 3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX;
 
@@ -3400,10 +3398,10 @@ void av1_compute_stats_avx2(int32_t wiener_win, const uint8_t *dgd,
     // We can copy it down to the lower triangle outside the (i, j) loops.
     diagonal_copy_stats_avx2(wiener_win2, H);
 
-    aom_free(d);
+    eb_aom_free(d);
 }
 
-void av1_compute_stats_highbd_avx2(int32_t wiener_win, const uint8_t *dgd8,
+void eb_av1_compute_stats_highbd_avx2(int32_t wiener_win, const uint8_t *dgd8,
                                    const uint8_t *src8, int32_t h_start,
                                    int32_t h_end, int32_t v_start,
                                    int32_t v_end, int32_t dgd_stride,
@@ -3428,7 +3426,7 @@ void av1_compute_stats_highbd_avx2(int32_t wiener_win, const uint8_t *dgd8,
     // (9 / 4) * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX. Enlarge to
     // 3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX considering
     // paddings.
-    d = aom_memalign(32,
+    d = eb_aom_memalign(32,
             sizeof(*d) * 6 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX);
     s = d + 3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX;
 
@@ -3504,7 +3502,7 @@ void av1_compute_stats_highbd_avx2(int32_t wiener_win, const uint8_t *dgd8,
         div16_diagonal_copy_stats_avx2(wiener_win2, H);
     }
 
-    aom_free(d);
+    eb_aom_free(d);
 }
 
 static INLINE __m256i pair_set_epi16(uint16_t a, uint16_t b) {
@@ -3512,22 +3510,28 @@ static INLINE __m256i pair_set_epi16(uint16_t a, uint16_t b) {
         (int32_t)(((uint16_t)(a)) | (((uint32_t)(b)) << 16)));
 }
 
-int64_t av1_lowbd_pixel_proj_error_avx2(
-    const uint8_t *src8, int32_t width, int32_t height, int32_t src_stride,
-    const uint8_t *dat8, int32_t dat_stride, int32_t *flt0, int32_t flt0_stride,
-    int32_t *flt1, int32_t flt1_stride, int32_t xq[2], const SgrParamsType *params) {
-    int32_t i, j, k;
+int64_t eb_av1_lowbd_pixel_proj_error_avx2(const uint8_t *src8, int32_t width,
+    int32_t height, int32_t src_stride,
+    const uint8_t *dat8,
+    int32_t dat_stride, int32_t *flt0,
+    int32_t flt0_stride, int32_t *flt1,
+    int32_t flt1_stride, int32_t xq[2],
+    const SgrParamsType *params) {
     const int32_t shift = SGRPROJ_RST_BITS + SGRPROJ_PRJ_BITS;
-    const __m256i rounding = _mm256_set1_epi32(1 << (shift - 1));
-    __m256i sum64 = _mm256_setzero_si256();
     const uint8_t *src = src8;
     const uint8_t *dat = dat8;
     int64_t err = 0;
+    int32_t y = height;
+    int32_t j;
+    const __m256i rounding = _mm256_set1_epi32(1 << (shift - 1));
+    __m256i sum64 = _mm256_setzero_si256();
 
     if (params->r[0] > 0 && params->r[1] > 0) {
-        __m256i xq_coeff = pair_set_epi16(xq[0], xq[1]);
-        for (i = 0; i < height; ++i) {
+        const __m256i xq_coeff = pair_set_epi16(xq[0], xq[1]);
+
+        do {
             __m256i sum32 = _mm256_setzero_si256();
+
             for (j = 0; j <= width - 16; j += 16) {
                 const __m256i d0 = _mm256_cvtepu8_epi16(xx_loadu_128(dat + j));
                 const __m256i s0 = _mm256_cvtepu8_epi16(xx_loadu_128(src + j));
@@ -3543,9 +3547,11 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                 const __m256i flt0_0_sub_u = _mm256_sub_epi16(flt0_16b, u0);
                 const __m256i flt1_0_sub_u = _mm256_sub_epi16(flt1_16b, u0);
                 const __m256i v0 = _mm256_madd_epi16(
-                    xq_coeff, _mm256_unpacklo_epi16(flt0_0_sub_u, flt1_0_sub_u));
+                    xq_coeff,
+                    _mm256_unpacklo_epi16(flt0_0_sub_u, flt1_0_sub_u));
                 const __m256i v1 = _mm256_madd_epi16(
-                    xq_coeff, _mm256_unpackhi_epi16(flt0_0_sub_u, flt1_0_sub_u));
+                    xq_coeff,
+                    _mm256_unpackhi_epi16(flt0_0_sub_u, flt1_0_sub_u));
                 const __m256i vr0 =
                     _mm256_srai_epi32(_mm256_add_epi32(v0, rounding), shift);
                 const __m256i vr1 =
@@ -3555,12 +3561,15 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                 const __m256i err0 = _mm256_madd_epi16(e0, e0);
                 sum32 = _mm256_add_epi32(sum32, err0);
             }
-            for (k = j; k < width; ++k) {
-                const int32_t u = (int32_t)(dat[k] << SGRPROJ_RST_BITS);
-                int32_t v = xq[0] * (flt0[k] - u) + xq[1] * (flt1[k] - u);
-                const int32_t e = ROUND_POWER_OF_TWO(v, shift) + dat[k] - src[k];
+
+            for (; j < width; ++j) {
+                const int32_t u = (int32_t)(dat[j] << SGRPROJ_RST_BITS);
+                int32_t v = xq[0] * (flt0[j] - u) + xq[1] * (flt1[j] - u);
+                const int32_t e =
+                    ROUND_POWER_OF_TWO(v, shift) + dat[j] - src[j];
                 err += e * e;
             }
+
             dat += dat_stride;
             src += src_stride;
             flt0 += flt0_stride;
@@ -3571,16 +3580,19 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                 _mm256_cvtepi32_epi64(_mm256_extracti128_si256(sum32, 1));
             sum64 = _mm256_add_epi64(sum64, sum64_0);
             sum64 = _mm256_add_epi64(sum64, sum64_1);
-        }
+        } while (--y);
     }
     else if (params->r[0] > 0 || params->r[1] > 0) {
         const int32_t xq_active = (params->r[0] > 0) ? xq[0] : xq[1];
         const __m256i xq_coeff =
             pair_set_epi16(xq_active, (-xq_active * (1 << SGRPROJ_RST_BITS)));
         const int32_t *flt = (params->r[0] > 0) ? flt0 : flt1;
-        const int32_t flt_stride = (params->r[0] > 0) ? flt0_stride : flt1_stride;
-        for (i = 0; i < height; ++i) {
+        const int32_t flt_stride =
+            (params->r[0] > 0) ? flt0_stride : flt1_stride;
+
+        do {
             __m256i sum32 = _mm256_setzero_si256();
+
             for (j = 0; j <= width - 16; j += 16) {
                 const __m256i d0 = _mm256_cvtepu8_epi16(xx_loadu_128(dat + j));
                 const __m256i s0 = _mm256_cvtepu8_epi16(xx_loadu_128(src + j));
@@ -3588,10 +3600,10 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                     _mm256_packs_epi32(yy_loadu_256(flt + j),
                         yy_loadu_256(flt + j + 8)),
                     0xd8);
-                const __m256i v0 =
-                    _mm256_madd_epi16(xq_coeff, _mm256_unpacklo_epi16(flt_16b, d0));
-                const __m256i v1 =
-                    _mm256_madd_epi16(xq_coeff, _mm256_unpackhi_epi16(flt_16b, d0));
+                const __m256i v0 = _mm256_madd_epi16(
+                    xq_coeff, _mm256_unpacklo_epi16(flt_16b, d0));
+                const __m256i v1 = _mm256_madd_epi16(
+                    xq_coeff, _mm256_unpackhi_epi16(flt_16b, d0));
                 const __m256i vr0 =
                     _mm256_srai_epi32(_mm256_add_epi32(v0, rounding), shift);
                 const __m256i vr1 =
@@ -3601,12 +3613,15 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                 const __m256i err0 = _mm256_madd_epi16(e0, e0);
                 sum32 = _mm256_add_epi32(sum32, err0);
             }
-            for (k = j; k < width; ++k) {
-                const int32_t u = (int32_t)(dat[k] << SGRPROJ_RST_BITS);
-                int32_t v = xq_active * (flt[k] - u);
-                const int32_t e = ROUND_POWER_OF_TWO(v, shift) + dat[k] - src[k];
+
+            for (; j < width; ++j) {
+                const int32_t u = (int32_t)(dat[j] << SGRPROJ_RST_BITS);
+                int32_t v = xq_active * (flt[j] - u);
+                const int32_t e =
+                    ROUND_POWER_OF_TWO(v, shift) + dat[j] - src[j];
                 err += e * e;
             }
+
             dat += dat_stride;
             src += src_stride;
             flt += flt_stride;
@@ -3616,11 +3631,12 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                 _mm256_cvtepi32_epi64(_mm256_extracti128_si256(sum32, 1));
             sum64 = _mm256_add_epi64(sum64, sum64_0);
             sum64 = _mm256_add_epi64(sum64, sum64_1);
-        }
+        } while (--y);
     }
     else {
         __m256i sum32 = _mm256_setzero_si256();
-        for (i = 0; i < height; ++i) {
+
+        do {
             for (j = 0; j <= width - 16; j += 16) {
                 const __m256i d0 = _mm256_cvtepu8_epi16(xx_loadu_128(dat + j));
                 const __m256i s0 = _mm256_cvtepu8_epi16(xx_loadu_128(src + j));
@@ -3628,26 +3644,27 @@ int64_t av1_lowbd_pixel_proj_error_avx2(
                 const __m256i err0 = _mm256_madd_epi16(diff0, diff0);
                 sum32 = _mm256_add_epi32(sum32, err0);
             }
-            for (k = j; k < width; ++k) {
-                const int32_t e = (int32_t)(dat[k]) - src[k];
+
+            for (; j < width; ++j) {
+                const int32_t e = (int32_t)(dat[j]) - src[j];
                 err += e * e;
             }
+
             dat += dat_stride;
             src += src_stride;
-        }
+        } while (--y);
+
         const __m256i sum64_0 =
             _mm256_cvtepi32_epi64(_mm256_castsi256_si128(sum32));
         const __m256i sum64_1 =
             _mm256_cvtepi32_epi64(_mm256_extracti128_si256(sum32, 1));
         sum64 = _mm256_add_epi64(sum64_0, sum64_1);
     }
-    int64_t sum[4];
-    yy_storeu_256(sum, sum64);
-    err += sum[0] + sum[1] + sum[2] + sum[3];
-    return err;
+
+    return err + _mm_cvtsi128_si64(hadd_64_avx2(sum64));
 }
 
-int64_t av1_highbd_pixel_proj_error_avx2(
+int64_t eb_av1_highbd_pixel_proj_error_avx2(
     const uint8_t *src8, int32_t width, int32_t height, int32_t src_stride,
     const uint8_t *dat8, int32_t dat_stride, int32_t *flt0, int32_t flt0_stride,
     int32_t *flt1, int32_t flt1_stride, int32_t xq[2], const SgrParamsType *params) {

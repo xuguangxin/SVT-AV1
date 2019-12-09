@@ -120,7 +120,7 @@ uint16_t get_variance_for_cu(const BlockGeom *blk_geom,
 void apply_segmentation_based_quantization(
         const BlockGeom *blk_geom,
         PictureControlSet *picture_control_set_ptr,
-        LargestCodingUnit *sb_ptr,
+    SuperBlock            *sb_ptr,
         CodingUnit *cu_ptr) {
     uint16_t *variance_ptr = picture_control_set_ptr->parent_pcs_ptr->variance[sb_ptr->index];
     SegmentationParams *segmentation_params = &picture_control_set_ptr->parent_pcs_ptr->frm_hdr.segmentation_params;
@@ -143,9 +143,9 @@ void setup_segmentation(
         RateControlLayerContext *rateControlLayerPtr)
 {
     SegmentationParams *segmentation_params = &picture_control_set_ptr->parent_pcs_ptr->frm_hdr.segmentation_params;
-    segmentation_params->segmentation_enabled = (EbBool) sequence_control_set_ptr->static_config.enable_adaptive_quantization;
+    segmentation_params->segmentation_enabled = (EbBool)(sequence_control_set_ptr->static_config.enable_adaptive_quantization == 1);
     if (segmentation_params->segmentation_enabled) {
-        int32_t segment_qps[MAX_SEGMENTS];
+        int32_t segment_qps[MAX_SEGMENTS] = {0};
         segmentation_params->segmentation_update_data = 1; //always updating for now. Need to set this based on actual deltas
         segmentation_params->segmentation_update_map = 1;
         segmentation_params->segmentation_temporal_update = EB_FALSE; //!(picture_control_set_ptr->parent_pcs_ptr->av1FrameType == KEY_FRAME || picture_control_set_ptr->parent_pcs_ptr->av1FrameType == INTRA_ONLY_FRAME);
@@ -224,4 +224,3 @@ void temporally_update_qps(
         segment_qp_ptr[i] = temporal_update ? diff : segment_qp_ptr[i];
     }
 }
-

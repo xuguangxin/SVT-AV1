@@ -153,10 +153,8 @@ class BitstreamWriterTest : public ::testing::Test {
 
         // setup test bits
         switch (bit_gen_method) {
-        case 0: memset(test_bits, 0, total_bits * sizeof(test_bits[0])); break;
-        case 1:
-            for (int i = 0; i < total_bits; ++i)
-                test_bits[i] = 1;
+        case 0:
+        case 1: memset(test_bits, bit_gen_method, total_bits * sizeof(test_bits[0])); break;
         default:
             for (int i = 0; i < total_bits; ++i)
                 test_bits[i] = bit_dist(gen_);
@@ -208,7 +206,7 @@ TEST(Entropy_BitstreamWriter, write_symbol_no_update) {
     const int base_qindex = 20;
     FRAME_CONTEXT fc;
     memset(&fc, 0, sizeof(fc));
-    av1_default_coef_probs(&fc, base_qindex);
+    eb_av1_default_coef_probs(&fc, base_qindex);
 
     // write random bit sequences and expect read out
     // the same random sequences.
@@ -249,7 +247,7 @@ TEST(Entropy_BitstreamWriter, write_symbol_with_update) {
     FRAME_CONTEXT fc;
     memset(&fc, 0, sizeof(fc));
 
-    av1_default_coef_probs(&fc, base_qindex);
+    eb_av1_default_coef_probs(&fc, base_qindex);
 
     // write random bit sequences and expect read out
     // the same random sequences.
@@ -270,7 +268,7 @@ TEST(Entropy_BitstreamWriter, write_symbol_with_update) {
     SvtReader br;
     svt_reader_init(&br, stream_buffer, bw.pos);
     br.allow_update_cdf = 1;
-    av1_default_coef_probs(&fc, base_qindex);  // reset cdf
+    eb_av1_default_coef_probs(&fc, base_qindex);  // reset cdf
     for (int i = 0; i < 500; i++) {
         ASSERT_EQ(svt_read_symbol(&br, fc.txb_skip_cdf[0][0], 2, nullptr),
                   rnd(gen));

@@ -20,7 +20,6 @@
 #include "EbTransforms.h"
 #include <immintrin.h>
 #include "txfm_common_avx2.h"
-#include "txfm_common_sse2.h"
 
 void Av1TransformConfig(
     TxType tx_type,
@@ -775,7 +774,7 @@ static void fadst8x8_avx2(const __m256i *in, __m256i *out, int8_t bit, const int
     out[7 * col_num] = v0;
 }
 
-void av1_fwd_txfm2d_8x8_avx2(int16_t *input, int32_t *coeff, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_8x8_avx2(int16_t *input, int32_t *coeff, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[8], out[8];
     const int8_t *shift = fwd_txfm_shift_ls[TX_8X8];
@@ -2552,7 +2551,7 @@ static void fadst16x16_avx2(const __m256i *in, __m256i *out, int8_t bit, const i
     }
 }
 
-void av1_fwd_txfm2d_16x16_avx2(int16_t *input, int32_t *coeff, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_16x16_avx2(int16_t *input, int32_t *coeff, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[32], out[32];
     const int8_t *shift = fwd_txfm_shift_ls[TX_16X16];
@@ -4064,7 +4063,7 @@ static INLINE void fwd_txfm2d_32x32_avx2(const int16_t *input, int32_t *output,
     transpose_32_avx2(txfm_size, buf_256, out_256);
 }
 
-void av1_fwd_txfm2d_32x32_avx2(int16_t *input, int32_t *output,
+void eb_av1_fwd_txfm2d_32x32_avx2(int16_t *input, int32_t *output,
     uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     DECLARE_ALIGNED(32, int32_t, txfm_buf[1024]);
@@ -4113,7 +4112,7 @@ static INLINE void load_buffer_64x64_avx2(const int16_t *input,
     }
 }
 
-void av1_fwd_txfm2d_64x64_avx2(int16_t *input, int32_t *output,
+void eb_av1_fwd_txfm2d_64x64_avx2(int16_t *input, int32_t *output,
     uint32_t stride, TxType tx_type, uint8_t  bd) {
     (void)bd;
     __m256i in[512];
@@ -4270,7 +4269,7 @@ static INLINE void write_buffer_16x8_avx2(const __m256i *res, int32_t *output,
     _mm256_storeu_si256((__m256i *)(output + (stride * 7)), res[7]);
 }
 
-void av1_fwd_txfm2d_32x64_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_32x64_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     (void)tx_type;
     __m256i in[256];
@@ -4301,7 +4300,7 @@ void av1_fwd_txfm2d_32x64_avx2(int16_t *input, int32_t *output, uint32_t stride,
     (void)bd;
 }
 
-void av1_fwd_txfm2d_64x32_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_64x32_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     (void)tx_type;
     __m256i in[256];
@@ -4336,7 +4335,7 @@ void av1_fwd_txfm2d_64x32_avx2(int16_t *input, int32_t *output, uint32_t stride,
     (void)bd;
 }
 
-void av1_fwd_txfm2d_16x64_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_16x64_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[128];
     __m256i *outcoeff256 = (__m256i *)output;
@@ -4372,7 +4371,7 @@ void av1_fwd_txfm2d_16x64_avx2(int16_t *input, int32_t *output, uint32_t stride,
     (void)bd;
 }
 
-void av1_fwd_txfm2d_64x16_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_64x16_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[128];
     __m256i *outcoeff256 = (__m256i *)output;
@@ -4545,7 +4544,7 @@ static const fwd_transform_1d_avx2 row_fwdtxfm_8x16_arr[TX_TYPES] = {
 };
 
 /* call this function only for DCT_DCT, IDTX */
-void av1_fwd_txfm2d_16x32_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_16x32_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[64];
     __m256i *outcoef256 = (__m256i *)output;
@@ -4580,7 +4579,7 @@ void av1_fwd_txfm2d_16x32_avx2(int16_t *input, int32_t *output, uint32_t stride,
 }
 
 /* call this function only for IDTX */
-void av1_fwd_txfm2d_32x16_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_32x16_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[64];
     __m256i *outcoef256 = (__m256i *)output;
@@ -4613,7 +4612,7 @@ void av1_fwd_txfm2d_32x16_avx2(int16_t *input, int32_t *output, uint32_t stride,
 }
 
 /* call this function only for DCT_DCT, IDTX */
-void av1_fwd_txfm2d_8x32_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_8x32_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[32];
     __m256i *outcoef256 = (__m256i *)output;
@@ -4647,7 +4646,7 @@ void av1_fwd_txfm2d_8x32_avx2(int16_t *input, int32_t *output, uint32_t stride, 
 }
 
 /* call this function only for DCT_DCT, IDTX */
-void av1_fwd_txfm2d_32x8_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_32x8_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[32];
     __m256i *outcoef256 = (__m256i *)output;
@@ -4679,7 +4678,7 @@ void av1_fwd_txfm2d_32x8_avx2(int16_t *input, int32_t *output, uint32_t stride, 
 }
 
 /* call this function for all 16 transform types */
-void av1_fwd_txfm2d_8x16_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_8x16_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[16], out[16];
     const int8_t *shift = fwd_txfm_shift_ls[TX_8X16];
@@ -4714,7 +4713,7 @@ void av1_fwd_txfm2d_8x16_avx2(int16_t *input, int32_t *output, uint32_t stride, 
 }
 
 /* call this function for all 16 transform types */
-void av1_fwd_txfm2d_16x8_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
+void eb_av1_fwd_txfm2d_16x8_avx2(int16_t *input, int32_t *output, uint32_t stride, TxType tx_type, uint8_t  bd)
 {
     __m256i in[16], out[16]={0};
     const int8_t *shift = fwd_txfm_shift_ls[TX_16X8];
@@ -4756,7 +4755,7 @@ void av1_fwd_txfm2d_16x8_avx2(int16_t *input, int32_t *output, uint32_t stride, 
     (void)bd;
 }
 
-void av1_fwd_txfm2d_4x8_avx2(int16_t *input, int32_t *output, uint32_t stride,
+void eb_av1_fwd_txfm2d_4x8_avx2(int16_t *input, int32_t *output, uint32_t stride,
     TxType tx_type, uint8_t  bd)
 {
     __m256i in[4];
@@ -4918,7 +4917,7 @@ void av1_fwd_txfm2d_4x8_avx2(int16_t *input, int32_t *output, uint32_t stride,
     (void)bd;
 }
 
-void av1_fwd_txfm2d_8x4_avx2(int16_t *input, int32_t *output, uint32_t stride,
+void eb_av1_fwd_txfm2d_8x4_avx2(int16_t *input, int32_t *output, uint32_t stride,
     TxType tx_type, uint8_t  bd)
 {
     __m256i in[4];
@@ -5079,7 +5078,7 @@ void av1_fwd_txfm2d_8x4_avx2(int16_t *input, int32_t *output, uint32_t stride,
     (void)bd;
 }
 
-void av1_fwd_txfm2d_4x16_avx2(int16_t *input, int32_t *output, uint32_t stride,
+void eb_av1_fwd_txfm2d_4x16_avx2(int16_t *input, int32_t *output, uint32_t stride,
     TxType tx_type, uint8_t  bd)
 {
     __m256i in[8];
@@ -5240,7 +5239,7 @@ void av1_fwd_txfm2d_4x16_avx2(int16_t *input, int32_t *output, uint32_t stride,
     (void)bd;
 }
 
-void av1_fwd_txfm2d_16x4_avx2(int16_t *input, int32_t *output, uint32_t stride,
+void eb_av1_fwd_txfm2d_16x4_avx2(int16_t *input, int32_t *output, uint32_t stride,
     TxType tx_type, uint8_t  bd) {
     __m256i in[8];
     __m256i *outcoeff256 = (__m256i *)output;

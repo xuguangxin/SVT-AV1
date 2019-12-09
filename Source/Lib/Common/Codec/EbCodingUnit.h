@@ -139,6 +139,11 @@ extern "C" {
     static INLINE int32_t av1_is_directional_mode(PredictionMode mode) {
         return mode >= V_PRED && mode <= D67_PRED;
     }
+
+    static INLINE EbBool av1_use_angle_delta(BlockSize bsize) {
+        return bsize >= BLOCK_8X8;
+    }
+
     struct PictureControlSet;
 
     typedef struct MV
@@ -153,6 +158,11 @@ extern "C" {
         MV as_mv;
     } IntMv; /* facilitates faster equality tests and copies */
 
+    typedef struct mv32 {
+        int32_t row;
+        int32_t col;
+    } MV32;
+
     typedef struct CandidateMv
     {
         IntMv this_mv;
@@ -162,38 +172,139 @@ extern "C" {
 
 #define INTER_TX_SIZE_BUF_LEN 16
 #define TXK_TYPE_BUF_LEN 64
+
+    typedef struct FilterIntraModeInfo {
+        /*!< Specifies the type of intra filtering, and can represent any of the following:
+         * FILTER_DC_PRED, FILTER_V_PRED, FILTER_H_PRED, FILTER_D157_PRED, FILTER_PAETH_PRED */
+        FilterIntraMode filter_intra_mode;
+
+        /*!< This bit specifies whether or not intra filtering can be used. */
+        uint8_t use_filter_intra;
+    } FilterIntraModeInfo_t;
+
+    typedef struct InterIntraModeParams {
+        /*!< Specifies the type of intra prediction to be used */
+        InterIntraMode interintra_mode;
+
+        /*!< equal to 1 specifies that wedge blending should be used.
+            * wedge_interintra equal to 0 specifies that intra blending should be used. */
+        uint8_t wedge_interintra;
+
+        /*!< Used to derive the direction and offset of the wedge mask used during blending. */
+        uint8_t interintra_wedge_index;
+
+        /*!< Specifies the sign of the wedge blend. */
+        // int interintra_wedge_sign; Always 0
+    } InterIntraModeParams;
+
+    typedef struct BlockModeInfo {
+        // Common for both INTER and INTRA blocks
+        BlockSize          sb_type;
+        PredictionMode      mode;
+        int8_t              skip;
+
+        PartitionType       partition;
+
+        /*!< 1 indicates that this block will use some default settings and skip mode info.
+            * 0 indicates that the mode info is not skipped. */
+        int8_t              skip_mode;
+
+        /*!< Specifies which segment is associated with the current intra block being decoded. */
+        int8_t segment_id;
+
+        /*!< Equal to 1 specifies that the segment_id is taken from the segmentation map. */
+        int8_t seg_id_predicted;
+
+        /*!< For Lossy mode   : Specifies number of TUs in a block for each plane
+             For Lossless mode: Specifies number of TUs for a block of size other than
+                                128x128, 128x64, 64x128 and 64x64 - computed based on blocksize */
+        uint8_t         num_tus[MAX_MB_PLANE - 1];
+
+        /*!< Offset of first transform info from strat of SB pointer for each plane */
+        uint16_t        first_tu_offset[MAX_MB_PLANE - 1];
+
+        // Only for INTRA blocks
+        UvPredictionMode   uv_mode;
+
+        uint8_t             use_intrabc;
+
+        // Only for INTER blocks
+
+        MvReferenceFrame    ref_frame[2];
+        IntMv               mv[2];
+
+        uint16_t            ref_mv_idx;
+
+        // interinter members
+
+        InterIntraModeParams    interintra_mode_params;
+
+        /*!< Specifies the type of motion compensation to perform. */
+        MotionMode         motion_mode;
+
+        InterIntraMode     is_inter_intra;
+
+        /*!< 0 indicates that a distance based weighted scheme should be used for blending.
+         *   1 indicates that the averaging scheme should be used for blending.*/
+        uint8_t            compound_idx;
+
+        InterInterCompoundData  inter_inter_compound;
+        FilterIntraModeInfo_t  filter_intra_mode_info;
+
+        /*!< Specifies how the motion vector used by inter prediction is obtained when using compound prediction. */
+        uint8_t             compound_mode;
+
+        /*!< Specifies the type of filter used in inter prediction. Values 0..3 are allowed
+        * with the same interpretation as for interpolation_filter. One filter type is specified
+        * for the vertical filter direction and one for the horizontal filter direction.*/
+        uint32_t interp_filters;
+
+        /*!< Index of the alpha Cb and alpha Cr combination */
+        uint8_t cfl_alpha_idx;
+
+        /*!< Contains the sign of the alpha values for U and V packed together into a single syntax element. */
+        uint8_t cfl_alpha_signs;
+
+        /*!< The actual prediction angle is the base angle + (angle_delta * step). */
+        int8_t angle_delta[PLANE_TYPES];
+
+        // Number of base colors for Y (0) and UV (1)
+        uint8_t palette_size[MAX_MB_PLANE-1];
+
+#if MODE_INFO_DBG
+        int32_t mi_row;
+        int32_t mi_col;
+#endif
+    } BlockModeInfo;
+
     typedef struct MbModeInfo
     {
-        // Common for both INTER and INTRA blocks
-        BlockSize sb_type;
-        PredictionMode mode;
-        // Only for INTRA blocks
-        UvPredictionMode uv_mode;
-        uint8_t use_intrabc;
-        // Only for INTER blocks
-        //InterpFilters interp_filters;
-        MvReferenceFrame ref_frame[2];
-        IntMv mv[2];
-        PartitionType partition;
-        /* deringing gain *per-superblock* */
 #if CONFIG_RD_DEBUG
         RD_STATS rd_stats;
         int32_t mi_row;
         int32_t mi_col;
 #endif
         EbWarpedMotionParams wm_params;
-        // Index of the alpha Cb and alpha Cr combination
-        // int32_t cfl_alpha_idx;
-        // Joint sign of alpha Cb and alpha Cr
-        // int32_t cfl_alpha_signs;
-        //int32_t compound_idx;
-        //int32_t comp_group_idx;
-        int8_t skip;
+        int32_t comp_group_idx;
+
         int8_t cdef_strength;
         TxSize tx_size;
         uint8_t inter_tx_size[INTER_TX_SIZE_BUF_LEN];
         uint8_t tx_depth;
+        BlockModeInfo block_mi;
+#if PAL_SUP
+        PaletteModeInfo palette_mode_info;
+#endif
     } MbModeInfo;
+
+    typedef struct {
+        IntMv mfmv0;
+        uint8_t ref_frame_offset;
+    } TPL_MV_REF;
+    typedef struct {
+        IntMv mv;
+        MvReferenceFrame ref_frame;
+    } MV_REF;
 
     typedef struct ModeInfo {
         MbModeInfo mbmi;
@@ -288,6 +399,9 @@ extern "C" {
         TXFM_CONTEXT *left_txfm_context;
         TXFM_CONTEXT left_txfm_context_buffer[MAX_MIB_SIZE];
         struct macroblockd_plane plane[MAX_MB_PLANE];
+#if OBMC_FLAG
+        BlockSize sb_type;
+#endif
     } MacroBlockD;
 
     typedef struct Macroblock
@@ -331,12 +445,13 @@ extern "C" {
     {
         TransformUnit             transform_unit_array[TRANSFORM_UNIT_MAX_COUNT]; // 2-bytes * 21 = 42-bytes
         PredictionUnit            prediction_unit_array[MAX_NUM_OF_PU_PER_CU];    // 35-bytes * 4 = 140 bytes
-
+        InterInterCompoundData                 interinter_comp;
+        uint8_t                                compound_idx;
+        uint8_t                                comp_group_idx;
         unsigned                    skip_flag_context       : 2;
         unsigned                    prediction_mode_flag    : 2;
         unsigned                    block_has_coeff         : 1;
         unsigned                    split_flag_context      : 2;
-
 #if !ADD_DELTA_QP_SUPPORT
         unsigned                    qp                      : 6;
         signed                      delta_qp                : 8; // can be signed 8bits
@@ -384,6 +499,19 @@ extern "C" {
         uint16_t                   *neigh_top_recon_16bit[3];
         uint32_t                    best_d1_blk;
         uint8_t                     tx_depth;
+#if II_COMP_FLAG
+        INTERINTRA_MODE             interintra_mode;
+        uint8_t                     is_interintra_used;
+        uint8_t                     use_wedge_interintra;
+        int32_t                     interintra_wedge_index;
+        int32_t                     ii_wedge_sign;
+#endif
+#if FILTER_INTRA_FLAG
+       uint8_t                      filter_intra_mode;
+#endif
+#if PAL_SUP
+       PaletteInfo                          palette_info;
+#endif
     } CodingUnit;
 
         typedef struct OisCandidate
@@ -419,7 +547,7 @@ extern "C" {
         uint8_t  isolated_high_intensity_sb; // to be cleanedup
     } EdgeLcuResults;
 
-    typedef struct LargestCodingUnit
+    typedef struct SuperBlock
     {
         EbDctor                       dctor;
         struct PictureControlSet     *picture_control_set_ptr;
@@ -447,11 +575,17 @@ extern "C" {
 
         // Quantized Coefficients
         EbPictureBufferDesc          *quantized_coeff;
+#if MDC_ADAPTIVE_LEVEL
+        uint8_t                       depth_ranking[NUMBER_OF_DEPTH];
+#endif
+#if MDC_ADAPTIVE_LEVEL || MULTI_PASS_PD
+        uint64_t                      depth_cost[NUMBER_OF_DEPTH];
+#endif
         TileInfo tile_info;
-    } LargestCodingUnit;
+    } SuperBlock;
 
     extern EbErrorType largest_coding_unit_ctor(
-        LargestCodingUnit             *larget_coding_unit_ptr,
+        SuperBlock                  *larget_coding_unit_ptr,
         uint8_t                        sb_sz,
         uint16_t                       sb_origin_x,
         uint16_t                       sb_origin_y,

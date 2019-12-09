@@ -17,77 +17,18 @@
 #include "convolve.h"
 #include "synonyms.h"
 #include "synonyms_avx2.h"
+#include "convolve_avx2.h"
 
 DECLARE_ALIGNED(32, static const uint8_t, filt_center_global_avx2[32]) = {
   3, 255, 4, 255, 5, 255, 6, 255, 7, 255, 8, 255, 9, 255, 10, 255,
   3, 255, 4, 255, 5, 255, 6, 255, 7, 255, 8, 255, 9, 255, 10, 255
 };
 
-DECLARE_ALIGNED(32, static const uint8_t, filt1_global_avx2[32]) = {
-  0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8,
-  0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8
-};
-
-DECLARE_ALIGNED(32, static const uint8_t, filt2_global_avx2[32]) = {
-  2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10,
-  2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10
-};
-
-DECLARE_ALIGNED(32, static const uint8_t, filt3_global_avx2[32]) = {
-  4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12,
-  4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12
-};
-
-DECLARE_ALIGNED(32, static const uint8_t, filt4_global_avx2[32]) = {
-  6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14,
-  6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14
-};
-
-static INLINE __m256i convolve_lowbd(const __m256i *const s,
-    const __m256i *const coeffs) {
-    const __m256i res_01 = _mm256_maddubs_epi16(s[0], coeffs[0]);
-    const __m256i res_23 = _mm256_maddubs_epi16(s[1], coeffs[1]);
-    const __m256i res_45 = _mm256_maddubs_epi16(s[2], coeffs[2]);
-    const __m256i res_67 = _mm256_maddubs_epi16(s[3], coeffs[3]);
-
-    // order: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-    const __m256i res = _mm256_add_epi16(_mm256_add_epi16(res_01, res_45),
-        _mm256_add_epi16(res_23, res_67));
-
-    return res;
-}
-
-static INLINE __m256i convolve_lowbd_x(const __m256i data,
-    const __m256i *const coeffs,
-    const __m256i *const filt) {
-    __m256i s[4];
-
-    s[0] = _mm256_shuffle_epi8(data, filt[0]);
-    s[1] = _mm256_shuffle_epi8(data, filt[1]);
-    s[2] = _mm256_shuffle_epi8(data, filt[2]);
-    s[3] = _mm256_shuffle_epi8(data, filt[3]);
-
-    return convolve_lowbd(s, coeffs);
-}
-
-static INLINE __m256i convolve(const __m256i *const s,
-    const __m256i *const coeffs) {
-    const __m256i res_0 = _mm256_madd_epi16(s[0], coeffs[0]);
-    const __m256i res_1 = _mm256_madd_epi16(s[1], coeffs[1]);
-    const __m256i res_2 = _mm256_madd_epi16(s[2], coeffs[2]);
-    const __m256i res_3 = _mm256_madd_epi16(s[3], coeffs[3]);
-
-    const __m256i res = _mm256_add_epi32(_mm256_add_epi32(res_0, res_1),
-        _mm256_add_epi32(res_2, res_3));
-
-    return res;
-}
-
- // 128-bit xmmwords are written as [ ... ] with the MSB on the left.
- // 256-bit ymmwords are written as two xmmwords, [ ... ][ ... ] with the MSB
- // on the left.
- // A row of, say, 8-bit pixels with values p0, p1, p2, ..., p30, p31 will be
- // loaded and stored as [ p31 ... p17 p16 ][ p15 ... p1 p0 ].
+// 128-bit xmmwords are written as [ ... ] with the MSB on the left.
+// 256-bit ymmwords are written as two xmmwords, [ ... ][ ... ] with the MSB
+// on the left.
+// A row of, say, 8-bit pixels with values p0, p1, p2, ..., p30, p31 will be
+// loaded and stored as [ p31 ... p17 p16 ][ p15 ... p1 p0 ].
 
 // Exploiting the range of wiener filter coefficients,
 // horizontal filtering can be done in 16 bit intermediate precision.
@@ -102,12 +43,13 @@ static INLINE __m256i convolve(const __m256i *const s,
 // the centre pixel by 2^(FILTER_BITS - round_0) and add it to get the
 // horizontal filter output.
 
-void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
+void eb_av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
     uint8_t *dst, ptrdiff_t dst_stride,
     const int16_t *filter_x, int32_t x_step_q4,
     const int16_t *filter_y, int32_t y_step_q4,
     int32_t w, int32_t h,
     const ConvolveParams *conv_params) {
+    const int32_t bd = 8;
     assert(x_step_q4 == 16 && y_step_q4 == 16);
     assert(!(w & 7));
     (void)x_step_q4;
@@ -124,10 +66,10 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
 
     assert(conv_params->round_0 > 0);
 
-    filt[0] = _mm256_load_si256((__m256i const *)filt1_global_avx2);
-    filt[1] = _mm256_load_si256((__m256i const *)filt2_global_avx2);
-    filt[2] = _mm256_load_si256((__m256i const *)filt3_global_avx2);
-    filt[3] = _mm256_load_si256((__m256i const *)filt4_global_avx2);
+    filt[0] = _mm256_load_si256((__m256i const *)filt1_global_avx);
+    filt[1] = _mm256_load_si256((__m256i const *)filt2_global_avx);
+    filt[2] = _mm256_load_si256((__m256i const *)filt3_global_avx);
+    filt[3] = _mm256_load_si256((__m256i const *)filt4_global_avx);
 
     filt_center = _mm256_load_si256((__m256i const *)filt_center_global_avx2);
 
@@ -149,6 +91,11 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
 
     const __m256i round_const_h =
         _mm256_set1_epi16((1 << (conv_params->round_0 - 1)));
+    const __m256i round_const_horz =
+        _mm256_set1_epi16((1 << (bd + FILTER_BITS - conv_params->round_0 - 1)));
+    const __m256i clamp_low = _mm256_setzero_si256();
+    const __m256i clamp_high =
+        _mm256_set1_epi16(WIENER_CLAMP_LIMIT(conv_params->round_0, bd) - 1);
     const __m128i round_shift_h = _mm_cvtsi32_si128(conv_params->round_0);
 
     // Add an offset to account for the "add_src" part of the convolve function.
@@ -168,7 +115,8 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
     coeffs_v[3] = _mm256_shuffle_epi32(filter_coeffs_y, 0xff);
 
     const __m256i round_const_v =
-        _mm256_set1_epi32((1 << (conv_params->round_1 - 1)));
+        _mm256_set1_epi32((1 << (conv_params->round_1 - 1)) -
+                          (1 << (bd + conv_params->round_1 - 1)));
     const __m128i round_shift_v = _mm_cvtsi32_si128(conv_params->round_1);
 
     for (j = 0; j < w; j += 8) {
@@ -184,7 +132,7 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
                     (__m128i *)&src_ptr[(i * src_stride) + j + src_stride]),
                     1);
 
-            __m256i res = convolve_lowbd_x(data, coeffs_h, filt);
+            __m256i res = x_convolve_8tap_avx2(data, coeffs_h, filt);
 
             res =
                 _mm256_sra_epi16(_mm256_add_epi16(res, round_const_h), round_shift_h);
@@ -195,8 +143,10 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
             // the result
             data_0 = _mm256_slli_epi16(data_0, FILTER_BITS - conv_params->round_0);
             res = _mm256_add_epi16(res, data_0);
-
-            _mm256_store_si256((__m256i *)&im_block[i * im_stride], res);
+            res = _mm256_add_epi16(res, round_const_horz);
+            res = _mm256_max_epi16(res, clamp_low);
+            const __m256i res_clamped = _mm256_min_epi16(res, clamp_high);
+            _mm256_store_si256((__m256i *)&im_block[i * im_stride], res_clamped);
         }
 
         /* Vertical filter */
@@ -228,8 +178,8 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
                 s[3] = _mm256_unpacklo_epi16(s6, s7);
                 s[7] = _mm256_unpackhi_epi16(s6, s7);
 
-                __m256i res_a = convolve(s, coeffs_v);
-                __m256i res_b = convolve(s + 4, coeffs_v);
+                __m256i res_a = convolve16_8tap_avx2(s, coeffs_v);
+                __m256i res_b = convolve16_8tap_avx2(s + 4, coeffs_v);
 
                 const __m256i res_a_round = _mm256_sra_epi32(
                     _mm256_add_epi32(res_a, round_const_v), round_shift_v);
@@ -273,7 +223,7 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
                 __m128i s7 = _mm_unpackhi_epi16(s6_, s7_);
 
                 s[3] = _mm256_inserti128_si256(_mm256_castsi128_si256(s3), s7, 1);
-                __m256i convolveres = convolve(s, coeffs_v);
+                __m256i convolveres = convolve16_8tap_avx2(s, coeffs_v);
 
                 const __m256i res_round = _mm256_sra_epi32(
                     _mm256_add_epi32(convolveres, round_const_v), round_shift_v);
@@ -298,7 +248,7 @@ void av1_wiener_convolve_add_src_avx2(const uint8_t *src, ptrdiff_t src_stride,
 // on the left.
 // A row of, say, 16-bit pixels with values p0, p1, p2, ..., p14, p15 will be
 // loaded and stored as [ p15 ... p9 p8 ][ p7 ... p1 p0 ].
-void av1_highbd_wiener_convolve_add_src_avx2(
+void eb_av1_highbd_wiener_convolve_add_src_avx2(
     const uint8_t *src8, ptrdiff_t src_stride, uint8_t *dst8,
     ptrdiff_t dst_stride, const int16_t *filter_x, int32_t x_step_q4,
     const int16_t *filter_y, int32_t y_step_q4, int32_t w, int32_t h,

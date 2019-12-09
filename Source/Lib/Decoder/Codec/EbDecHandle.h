@@ -29,6 +29,8 @@ extern "C" {
 /** Maximum picture buffers needed **/
 #define MAX_PIC_BUFS (REF_FRAMES + 1 + DEC_MAX_NUM_FRM_PRLL)
 
+/*Optimisation of Coeff Buffer in Single Thread*/
+#define SINGLE_THRD_COEFF_BUF_OPT   1
 /** Picture Structure **/
 typedef struct EbDecPicBuf {
 
@@ -41,6 +43,19 @@ typedef struct EbDecPicBuf {
 
     uint32_t            order_hint;
     uint32_t            ref_order_hints[INTER_REFS_PER_FRAME];
+    FrameType           frame_type;
+
+    /*!< Height of the frame in luma samples */
+    uint16_t            frame_width;
+    /* Following 4 prms needed for frame_size_with_refs */
+    /*!< Height of the frame in luma samples */
+    uint16_t            frame_height;
+    /*!< Render width of the frame in luma samples */
+    uint16_t            render_width;
+    /*!< Render height of the frame in luma samples */
+    uint16_t            render_height;
+    /*!< Width of Upscaled SuperRes */
+    uint16_t            superres_upscaled_width;
 
     EbPictureBufferDesc *ps_pic_buf;
 
@@ -49,9 +64,15 @@ typedef struct EbDecPicBuf {
     GlobalMotionParams  global_motion[REF_FRAMES];
 
     /* MV at 8x8 lvl */
+    TemporalMvRef       *mvs;
+
     /* seg map */
+    uint8_t *segment_maps;
+    SegmentationParams seg_params;
+
     /* order hint */
     /* film grain */
+    aom_film_grain_t    film_grain_params;
 
 } EbDecPicBuf;
 
@@ -59,7 +80,7 @@ typedef struct EbDecPicBuf {
 typedef struct CurFrameBuf {
     SBInfo          *sb_info;
 
-    ModeInfo_t      *mode_info;
+    BlockModeInfo   *mode_info;
 
     int32_t         *coeff[MAX_MB_PLANE];
 
@@ -68,6 +89,9 @@ typedef struct CurFrameBuf {
     int8_t          *cdef_strength;
     int32_t         *delta_q;
     int32_t         *delta_lf;
+
+    // Loop Restoration Unit
+    RestorationUnitInfo    *lr_unit[MAX_MB_PLANE];
 
     /* Tile Map at SB level : TODO. Can be removed? */
     uint8_t         *tile_map_sb;
@@ -159,6 +183,10 @@ typedef struct EbDecHandle {
 
     void   *pv_dec_mod_ctxt;
 
+    void   *pv_lf_ctxt;
+
+    void   *pv_lr_ctxt;
+
     /** Pointer to Picture manager structure **/
     void   *pv_pic_mgr;
 
@@ -179,6 +207,10 @@ typedef struct EbDecHandle {
     // Note: INTRA_FRAME always refers to the current frame, so there's no need to
     // have a remapped index for the same.
     int32_t remapped_ref_idx[REF_FRAMES];
+
+    struct ScaleFactors ref_scale_factors[REF_FRAMES];
+    /*Scale of the current frame with respect to itself.*/
+    struct ScaleFactors sf_identity;
 
     /* TODO:  Move ref_frame_map, remapped_ref_idx, cur_pic_buf and frame_header to a FrameStr! */
     EbDecPicBuf *ref_frame_map[REF_FRAMES];
@@ -201,6 +233,10 @@ typedef struct EbDecHandle {
     EbMemoryMapEntry            *memory_map;
     uint32_t                     memory_map_index;
     uint64_t                     total_lib_memory;
+    struct Av1Common             cm;
+
+    // Loop filter frame level flag
+    uint8_t              is_lf_enabled;
 }EbDecHandle;
 
 #ifdef __cplusplus

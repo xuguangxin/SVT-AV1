@@ -25,6 +25,8 @@
 #include "EbTime.h"
 #ifdef _WIN32
 #include <Windows.h>
+#include <io.h>     /* _setmode() */
+#include <fcntl.h>  /* _O_BINARY */
 #else
 #include <pthread.h>
 #include <semaphore.h>
@@ -32,10 +34,6 @@
 #include <errno.h>
 #endif
 
-#ifdef _MSC_VER
-#include <io.h>     /* _setmode() */
-#include <fcntl.h>  /* _O_BINARY */
-#endif
 /***************************************
  * External Functions
  ***************************************/
@@ -63,7 +61,7 @@ void EventHandler(int32_t dummy) {
 }
 
 void AssignAppThreadGroup(uint8_t target_socket) {
-#ifdef _MSC_VER
+#ifdef _WIN32
     if (GetActiveProcessorGroupCount() == 2) {
         GROUP_AFFINITY           group_affinity;
         GetThreadGroupAffinity(GetCurrentThread(), &group_affinity);
@@ -76,12 +74,14 @@ void AssignAppThreadGroup(uint8_t target_socket) {
 #endif
 }
 
+double get_psnr(double sse, double max);
+
 /***************************************
  * Encoder App Main
  ***************************************/
 int32_t main(int32_t argc, char* argv[])
 {
-#ifdef _MSC_VER
+#ifdef _WIN32
     _setmode(_fileno(stdin), _O_BINARY);
     _setmode(_fileno(stdout), _O_BINARY);
 #endif
@@ -113,8 +113,11 @@ int32_t main(int32_t argc, char* argv[])
         // Initialize config
         for (instanceCount = 0; instanceCount < num_channels; ++instanceCount) {
             configs[instanceCount] = (EbConfig*)malloc(sizeof(EbConfig));
-            if (!configs[instanceCount])
+            if (!configs[instanceCount]) {
+                while(instanceCount-- > 0)
+                    free(configs[instanceCount]);
                 return EB_ErrorInsufficientResources;
+            }
             eb_config_ctor(configs[instanceCount]);
             return_errors[instanceCount] = EB_ErrorNone;
         }
@@ -122,8 +125,11 @@ int32_t main(int32_t argc, char* argv[])
         // Initialize appCallback
         for (instanceCount = 0; instanceCount < num_channels; ++instanceCount) {
             appCallbacks[instanceCount] = (EbAppContext*)malloc(sizeof(EbAppContext));
-            if (!appCallbacks[instanceCount])
+            if (!appCallbacks[instanceCount]) {
+                while(instanceCount-- > 0)
+                    free(appCallbacks[instanceCount]);
                 return EB_ErrorInsufficientResources;
+            }
         }
 
         for (instanceCount = 0; instanceCount < MAX_CHANNEL_NUMBER; ++instanceCount) {
@@ -221,8 +227,14 @@ int32_t main(int32_t argc, char* argv[])
 
                 for (instanceCount = 0; instanceCount < num_channels; ++instanceCount) {
                     if (exitConditions[instanceCount] == APP_ExitConditionFinished && return_errors[instanceCount] == EB_ErrorNone) {
-                        double frame_rate;
-                        uint64_t frame_count = (uint32_t)configs[instanceCount]->performance_context.frame_count;
+                        double      frame_rate;
+                        uint64_t    frame_count = (uint32_t)configs[instanceCount]->performance_context.frame_count;
+                        uint32_t    max_luma_value = (configs[instanceCount]->encoder_bit_depth == 8) ? 255 : 1023;
+                        double      max_luma_sse = (double)max_luma_value*max_luma_value *
+                                    (configs[instanceCount]->source_width*configs[instanceCount]->source_height);
+                        double      max_chroma_sse = (double)max_luma_value*max_luma_value *
+                            (configs[instanceCount]->source_width/2*configs[instanceCount]->source_height/2);
+
                         if ((configs[instanceCount]->frame_rate_numerator != 0 && configs[instanceCount]->frame_rate_denominator != 0) || configs[instanceCount]->frame_rate != 0) {
                             if (configs[instanceCount]->frame_rate_numerator && configs[instanceCount]->frame_rate_denominator && (configs[instanceCount]->frame_rate_numerator != 0 && configs[instanceCount]->frame_rate_denominator != 0))
                                 frame_rate = ((double)configs[instanceCount]->frame_rate_numerator) / ((double)configs[instanceCount]->frame_rate_denominator);
@@ -240,22 +252,25 @@ int32_t main(int32_t argc, char* argv[])
                                     // Interlaced Video
                                     if (configs[instanceCount]->interlaced_video || configs[instanceCount]->separate_fields)
                                         fprintf(configs[instanceCount]->stat_file, "Total Fields\tAverage QP  \tY-PSNR   \tU-PSNR   \tV-PSNR   \tBitrate\n");
-                                    else
-
-                                        fprintf(configs[instanceCount]->stat_file, "Total Frames\tAverage QP  \tY-PSNR   \tU-PSNR   \tV-PSNR   \tBitrate\n");
-                                    fprintf(configs[instanceCount]->stat_file, "%10ld  \t   %2.2f    \t%3.2f dB\t%3.2f dB\t%3.2f dB\t%.2f kbps\n",
+                                    else {
+                                        fprintf(configs[instanceCount]->stat_file, "\n\t\t\t\t\t\t\tAverage PSNR (using per-frame PSNR)\t\t|\tOverall PSNR (using per-frame MSE)\n");
+                                        fprintf(configs[instanceCount]->stat_file, "Total Frames\tAverage QP  \tY-PSNR   \tU-PSNR   \tV-PSNR\t\t| \tY-PSNR   \tU-PSNR   \tV-PSNR   \t|\tBitrate\n");
+                                    }
+                                    fprintf(configs[instanceCount]->stat_file, "%10ld  \t   %2.2f    \t%3.2f dB\t%3.2f dB\t%3.2f dB  \t|\t%3.2f dB\t%3.2f dB\t%3.2f dB \t|\t%.2f kbps\n",
                                          (long int)frame_count,
                                          (float)configs[instanceCount]->performance_context.sum_qp        / frame_count,
                                          (float)configs[instanceCount]->performance_context.sum_luma_psnr / frame_count,
-                                         (float)configs[instanceCount]->performance_context.sum_cr_psnr   / frame_count,
                                          (float)configs[instanceCount]->performance_context.sum_cb_psnr   / frame_count,
+                                         (float)configs[instanceCount]->performance_context.sum_cr_psnr   / frame_count,
+                                         (float)(get_psnr((configs[instanceCount]->performance_context.sum_luma_sse  / frame_count) , max_luma_sse)),
+                                         (float)(get_psnr((configs[instanceCount]->performance_context.sum_cb_sse    / frame_count) , max_chroma_sse)),
+                                         (float)(get_psnr((configs[instanceCount]->performance_context.sum_cr_sse    / frame_count) , max_chroma_sse)),
                                         ((double)(configs[instanceCount]->performance_context.byte_count << 3) * frame_rate / (configs[instanceCount]->frames_encoded * 1000)));
                                 }
                             }
 
                             printf("\nSUMMARY --------------------------------- Channel %u  --------------------------------\n", instanceCount + 1);
                             {
-                                // Interlaced Video
                                 if (configs[instanceCount]->interlaced_video || configs[instanceCount]->separate_fields)
                                     printf("Total Fields\t\tFrame Rate\t\tByte Count\t\tBitrate\n");
                                 else
@@ -268,13 +283,16 @@ int32_t main(int32_t argc, char* argv[])
                             }
 
                             if (configs[instanceCount]->stat_report) {
-                                // Interlaced Video
-                                printf("\nAverage QP\t\tY-PSNR\t\t\tU-PSNR\t\t\tV-PSNR\t\n");
-                                printf("%11.2f\t\t%4.2f dB\t\t%8.2fdB\t\t%5.2fdB\n",
+                                printf("\n\t\t\t\tAverage PSNR (using per-frame PSNR)\t\t\t|\t\tOverall PSNR (using per-frame MSE)\n");
+                                printf("Average QP\t\tY-PSNR\t\t\tU-PSNR\t\t\tV-PSNR\t\t|\tY-PSNR\t\t\tU-PSNR\t\t\tV-PSNR\t\n");
+                                printf("%11.2f\t\t%4.2f dB\t\t%4.2f dB\t\t%4.2f dB\t|\t%4.2f dB\t\t%4.2f dB\t\t%4.2f dB\n",
                                     (float)configs[instanceCount]->performance_context.sum_qp / frame_count,
                                     (float)configs[instanceCount]->performance_context.sum_luma_psnr / frame_count,
+                                    (float)configs[instanceCount]->performance_context.sum_cb_psnr / frame_count,
                                     (float)configs[instanceCount]->performance_context.sum_cr_psnr / frame_count,
-                                    (float)configs[instanceCount]->performance_context.sum_cb_psnr / frame_count);
+                                    (float)(get_psnr((configs[instanceCount]->performance_context.sum_luma_sse / frame_count), max_luma_sse)),
+                                    (float)(get_psnr((configs[instanceCount]->performance_context.sum_cb_sse / frame_count), max_chroma_sse)),
+                                    (float)(get_psnr((configs[instanceCount]->performance_context.sum_cr_sse / frame_count), max_chroma_sse)));
                             }
 
                             fflush(stdout);

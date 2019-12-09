@@ -109,13 +109,6 @@ extern "C" {
 
         // Quantization
         uint32_t                                qp;
-
-        // tmvp enable
-        uint32_t                                enable_tmvp_sps;
-
-        // MV merge
-        uint32_t                                mv_merge_total_count;
-
         // Picture Analysis
         uint32_t                                picture_analysis_number_of_regions_per_width;
         uint32_t                                picture_analysis_number_of_regions_per_height;
@@ -201,6 +194,7 @@ extern "C" {
         *
         * Default is 0. */
         uint8_t                                 down_sampling_method_me_search;
+        uint8_t                                 mfmv_enabled; // 1:Enabled  0:Disabled
         uint8_t                                 trans_coeff_shape_array[2][8][4];    // [componantTypeIndex][resolutionIndex][levelIndex][tuSizeIndex]
         EbBlockMeanPrec                         block_mean_calc_prec;
         BitstreamLevel                          level[MAX_NUM_OPERATING_POINTS];
@@ -215,14 +209,18 @@ extern "C" {
         uint64_t                                pred_count[5];
         uint64_t                                pred1_nfl_count[5];
 #endif
-#if INCOMPLETE_SB_FIX
         /* over_boundary_block (mm-signal; 0: No over boundary blk allowed, 1: over boundary blk allowed)
         *
         * Default is 0.
         * To enable when md_skip_blk is on*/
         uint8_t                                 over_boundary_block_mode;
-#endif
         SeqHeader                               seq_header;
+        uint8_t                                 compound_mode;
+
+#if TWO_PASS
+        EbBool                                  use_input_stat_file;
+        EbBool                                  use_output_stat_file;
+#endif
     } SequenceControlSet;
 
     typedef struct EbSequenceControlSetInitData

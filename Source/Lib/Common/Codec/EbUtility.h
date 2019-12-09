@@ -98,6 +98,17 @@ extern "C" {
         return ss_size_lookup[bsize][subsampling_x][subsampling_y];
     }
 
+    static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_x,
+        int32_t subsampling_y)
+    {
+        const BlockSize plane_bsize =
+            get_plane_block_size(bsize, subsampling_x, subsampling_y);
+        TxSize uv_tx = TX_INVALID;
+        if (plane_bsize < BlockSizeS_ALL)
+            uv_tx = max_txsize_rect_lookup[plane_bsize];
+        return av1_get_adjusted_tx_size(uv_tx);
+    }
+
 #define NOT_USED_VALUE  0
     static const uint32_t parent_depth_offset[2][6] =
     { /*64x64*/ { NOT_USED_VALUE, 832, 208, 52, 8 ,NOT_USED_VALUE},
@@ -143,10 +154,10 @@ extern "C" {
         uint8_t  offset_y;
     } TransformUnitStats;
 
-    extern void *aom_memalign(size_t align, size_t size);
-    extern void *aom_malloc(size_t size);
-    extern void aom_free(void *memblk);
-    extern void *aom_memset16(void *dest, int32_t val, size_t length);
+    extern void *eb_aom_memalign(size_t align, size_t size);
+    extern void *eb_aom_malloc(size_t size);
+    extern void eb_aom_free(void *memblk);
+    extern void *eb_aom_memset16(void *dest, int32_t val, size_t length);
 
     extern uint64_t log2f_high_precision(uint64_t x, uint8_t precision);
 

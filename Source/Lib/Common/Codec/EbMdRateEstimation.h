@@ -72,7 +72,7 @@ extern "C" {
 
         // Compouned Mode
         int32_t inter_compound_mode_fac_bits[INTER_MODE_CONTEXTS][CDF_SIZE(INTER_COMPOUND_MODES)];
-        int32_t compound_type_fac_bits[BlockSizeS_ALL][CDF_SIZE(COMPOUND_TYPES - 1)];
+        int32_t compound_type_fac_bits[BlockSizeS_ALL][CDF_SIZE(MASKED_COMPOUND_TYPES)];
         int32_t single_ref_fac_bits[REF_CONTEXTS][SINGLE_REFS - 1][CDF_SIZE(2)];
         int32_t comp_ref_type_fac_bits[COMP_REF_TYPE_CONTEXTS][CDF_SIZE(2)];
         int32_t uni_comp_ref_fac_bits[UNI_COMP_REF_CONTEXTS][UNIDIR_COMP_REFS - 1][CDF_SIZE(2)];
@@ -107,8 +107,13 @@ extern "C" {
         // Palette Mode
         int32_t palette_ysize_fac_bits[PALATTE_BSIZE_CTXS][CDF_SIZE(PALETTE_SIZES)];
         int32_t palette_uv_size_fac_bits[PALATTE_BSIZE_CTXS][CDF_SIZE(PALETTE_SIZES)];
+#if PAL_SUP
+        int32_t palette_ycolor_fac_bitss[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS][PALETTE_COLORS];
+        int32_t palette_uv_color_fac_bits[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS][PALETTE_COLORS];
+#else
         int32_t palette_ycolor_fac_bitss[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)];
         int32_t palette_uv_color_fac_bits[PALETTE_SIZES][PALETTE_COLOR_INDEX_CONTEXTS][CDF_SIZE(PALETTE_COLORS)];
+#endif
         int32_t palette_ymode_fac_bits[PALATTE_BSIZE_CTXS][PALETTE_Y_MODE_CONTEXTS][CDF_SIZE(2)];
         int32_t palette_uv_mode_fac_bits[PALETTE_UV_MODE_CONTEXTS][CDF_SIZE(2)];
 
@@ -123,12 +128,6 @@ extern "C" {
         int32_t switchable_interp_fac_bitss[SWITCHABLE_FILTER_CONTEXTS][SWITCHABLE_FILTERS];
         int32_t initialized;
     } MdRateEstimationContext;
-#if !ENABLE_CDF_UPDATE
-    /**************************************
-    * Extern Function Declarations
-    **************************************/
-    extern EbErrorType md_rate_estimation_context_init(MdRateEstimationContext *md_rate_estimation_array);
-#endif
     /***************************************************************************
     * AV1 Probability table
     * // round(-log2(i/256.) * (1 << AV1_PROB_COST_SHIFT)); i = 128~255.

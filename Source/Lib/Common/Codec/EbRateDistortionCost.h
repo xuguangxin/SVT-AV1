@@ -20,7 +20,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    extern uint64_t av1_cost_coeffs_txb(
+    extern uint64_t eb_av1_cost_coeffs_txb(
         uint8_t                             allow_update_cdf,
         FRAME_CONTEXT                      *ec_ctx,
         struct ModeDecisionCandidateBuffer *candidate_buffer_ptr,
@@ -108,7 +108,7 @@ extern "C" {
         uint64_t                               lambda,
         PictureControlSet                   *picture_control_set_ptr);
     extern EbErrorType  merge_skip_full_cost(
-        LargestCodingUnit           *sb_ptr,
+        SuperBlock                  *sb_ptr,
         CodingUnit                  *cu_ptr,
         uint32_t                       cu_size,
         uint32_t                       cu_size_log2,
@@ -171,7 +171,11 @@ extern "C" {
         const BlockGeom         *blk_geom,
         uint32_t                 miRow,
         uint32_t                 miCol,
-        uint8_t                 md_pass,
+#if MULTI_PASS_PD
+        uint8_t                  enable_inter_intra,
+        EbBool                   full_cost_shut_fast_rate_flag,
+#endif
+        uint8_t                  md_pass,
         uint32_t                 left_neighbor_mode,
         uint32_t                 top_neighbor_mode);
 
@@ -188,9 +192,25 @@ extern "C" {
         const BlockGeom         *blk_geom,
         uint32_t                 miRow,
         uint32_t                 miCol,
-        uint8_t                 md_pass,
+#if MULTI_PASS_PD
+        uint8_t                  enable_inter_intra,
+        EbBool                   full_cost_shut_fast_rate_flag,
+#endif
+        uint8_t                  md_pass,
         uint32_t                 left_neighbor_mode,
         uint32_t                 top_neighbor_mode);
+
+#if ADD_MDC_FULL_COST
+    uint64_t mdc_av1_inter_fast_cost(
+        CodingUnit             *cu_ptr,
+        ModeDecisionCandidate  *candidate_ptr,
+        uint64_t                 luma_distortion,
+        uint64_t                 lambda,
+        EbBool                   use_ssd,
+        PictureControlSet       *picture_control_set_ptr,
+        CandidateMv             *ref_mv_stack,
+        const BlockGeom         *blk_geom);
+#endif
 
     extern EbErrorType av1_intra_full_cost(
         PictureControlSet                    *picture_control_set_ptr,
@@ -220,6 +240,24 @@ extern "C" {
         uint64_t                                 *cr_coeff_bits,
         BlockSize                                bsize);
 
+#if ADD_MDC_FULL_COST
+    int32_t av1_cost_skip_txb(
+        uint8_t                                 allow_update_cdf,
+        FRAME_CONTEXT                           *ec_ctx,
+        struct ModeDecisionCandidateBuffer    *candidate_buffer_ptr,
+        TxSize                                  transform_size,
+        PlaneType                               plane_type,
+        int16_t                                   txb_skip_ctx);
+#endif
+
+#if ENHANCE_ATB
+    extern uint64_t get_tx_size_bits(
+        ModeDecisionCandidateBuffer          *candidateBuffer,
+        ModeDecisionContext                  *context_ptr,
+        PictureControlSet                    *picture_control_set_ptr,
+        uint8_t                               tx_depth,
+        EbBool                                block_has_coeff);
+#endif
 #ifdef __cplusplus
 }
 #endif

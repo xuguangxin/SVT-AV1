@@ -3,28 +3,19 @@
 * SPDX - License - Identifier: BSD - 2 - Clause - Patent
 */
 
+#include <time.h>
+#include <stdio.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <stdlib.h>
+#include <sys/time.h>
+#endif
+
 #include "EbDefinitions.h"
 #include "EbUtility.h"
 #include "EbTime.h"
-
-#ifdef _WIN32
-//#if  (WIN_ENCODER_TIMING || WIN_DECODER_TIMING)
-#include <time.h>
-#include <stdio.h>
-#include <windows.h>
-//#endif
-
-#elif defined(__linux__) || defined(__APPLE__)
-#include <stdio.h>
-#include <stdlib.h>
-//#if   (LINUX_ENCODER_TIMING || LINUX_DECODER_TIMING)
-#include <sys/time.h>
-#include <time.h>
-//#endif
-
-#else
-#error OS/Platform not supported.
-#endif
 /********************************************************************************************
 * faster memcopy for <= 64B blocks, great w/ inlining and size known at compile time (or w/ PGO)
 * THIS NEEDS TO STAY IN A HEADER FOR BEST PERFORMANCE
@@ -32,10 +23,8 @@
 
 #include <immintrin.h>
 
-#if defined(__linux__)
-#ifndef __clang__
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__ICC__)
 __attribute__((optimize("unroll-loops")))
-#endif
 #endif
 static void eb_memcpy_small(void* dst_ptr, void const* src_ptr, size_t size) {
     const char* src = (const char*)src_ptr;
@@ -643,15 +632,7 @@ uint32_t search_matching_from_mds(
 
     return matched;
 }
-static INLINE TxSize av1_get_max_uv_txsize(BlockSize bsize, int32_t subsampling_x,
-    int32_t subsampling_y) {
-    const BlockSize plane_bsize =
-        get_plane_block_size(bsize, subsampling_x, subsampling_y);
-    TxSize uv_tx = TX_INVALID;
-    if (plane_bsize < BlockSizeS_ALL)
-        uv_tx = max_txsize_rect_lookup[plane_bsize];
-    return av1_get_adjusted_tx_size(uv_tx);
-}
+
 static INLINE TxSize av1_get_tx_size(
     BlockSize  sb_type,
     int32_t plane/*, const MacroBlockD *xd*/) {

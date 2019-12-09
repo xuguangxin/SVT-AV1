@@ -19,6 +19,10 @@ extern "C" {
         const uint16_t *ref, int32_t ref_stride,
         uint32_t *sse, int32_t *sum);
 
+    uint32_t aom_highbd_calc4x4var_sse2(const uint16_t *src, int32_t src_stride,
+        const uint16_t *ref, int32_t ref_stride,
+        uint32_t *sse, int32_t *sum);
+
     uint32_t aom_highbd_calc8x8var_sse2(const uint16_t *src, int32_t src_stride,
         const uint16_t *ref, int32_t ref_stride,
         uint32_t *sse, int32_t *sum);
@@ -96,7 +100,7 @@ static void highbd_12_variance_sse2(const uint16_t *src, int32_t src_stride,
 }
 
 #define HIGH_GET_VAR(S)                                                       \
-  void aom_highbd_get##S##x##S##var_sse2(const uint8_t *src8, int32_t src_stride, \
+  void eb_aom_highbd_get##S##x##S##var_sse2(const uint8_t *src8, int32_t src_stride, \
                                          const uint8_t *ref8, int32_t ref_stride, \
                                          uint32_t *sse, int32_t *sum) {           \
     uint16_t *src = CONVERT_TO_SHORTPTR(src8);                                \
@@ -105,7 +109,7 @@ static void highbd_12_variance_sse2(const uint16_t *src, int32_t src_stride,
                                        sum);                                  \
   }                                                                           \
                                                                               \
-  void aom_highbd_10_get##S##x##S##var_sse2(                                  \
+  void eb_aom_highbd_10_get##S##x##S##var_sse2(                                  \
       const uint8_t *src8, int32_t src_stride, const uint8_t *ref8,               \
       int32_t ref_stride, uint32_t *sse, int32_t *sum) {                              \
     uint16_t *src = CONVERT_TO_SHORTPTR(src8);                                \
@@ -116,7 +120,7 @@ static void highbd_12_variance_sse2(const uint16_t *src, int32_t src_stride,
     *sse = ROUND_POWER_OF_TWO(*sse, 4);                                       \
   }                                                                           \
                                                                               \
-  void aom_highbd_12_get##S##x##S##var_sse2(                                  \
+  void eb_aom_highbd_12_get##S##x##S##var_sse2(                                  \
       const uint8_t *src8, int32_t src_stride, const uint8_t *ref8,               \
       int32_t ref_stride, uint32_t *sse, int32_t *sum) {                              \
     uint16_t *src = CONVERT_TO_SHORTPTR(src8);                                \
@@ -133,7 +137,7 @@ HIGH_GET_VAR(8);
 #undef HIGH_GET_VAR
 
 #define VAR_FN(w, h, block_size, shift)                                    \
-  uint32_t aom_highbd_8_variance##w##x##h##_sse2(                          \
+  uint32_t eb_aom_highbd_8_variance##w##x##h##_sse2(                          \
       const uint8_t *src8, int32_t src_stride, const uint8_t *ref8,            \
       int32_t ref_stride, uint32_t *sse) {                                     \
     int32_t sum;                                                               \
@@ -145,7 +149,7 @@ HIGH_GET_VAR(8);
     return *sse - (uint32_t)(((int64_t)sum * sum) >> shift);               \
   }                                                                        \
                                                                            \
-  uint32_t aom_highbd_10_variance##w##x##h##_sse2(                         \
+  uint32_t eb_aom_highbd_10_variance##w##x##h##_sse2(                         \
       const uint8_t *src8, int32_t src_stride, const uint8_t *ref8,            \
       int32_t ref_stride, uint32_t *sse) {                                     \
     int32_t sum;                                                               \
@@ -159,7 +163,7 @@ HIGH_GET_VAR(8);
     return (var >= 0) ? (uint32_t)var : 0;                                 \
   }                                                                        \
                                                                            \
-  uint32_t aom_highbd_12_variance##w##x##h##_sse2(                         \
+  uint32_t eb_aom_highbd_12_variance##w##x##h##_sse2(                         \
       const uint8_t *src8, int32_t src_stride, const uint8_t *ref8,            \
       int32_t ref_stride, uint32_t *sse) {                                     \
     int32_t sum;                                                               \
@@ -183,7 +187,7 @@ VAR_FN(16, 16, 16, 8);
 VAR_FN(16, 8, 8, 7);
 VAR_FN(8, 16, 8, 7);
 VAR_FN(8, 8, 8, 6);
-VAR_FN(16, 4, 16, 6);
+VAR_FN(16, 4, 4, 6);
 VAR_FN(8, 32, 8, 8);
 VAR_FN(32, 8, 8, 8);
 VAR_FN(16, 64, 16, 10);
@@ -191,7 +195,7 @@ VAR_FN(64, 16, 16, 10);
 
 #undef VAR_FN
 
-void aom_highbd_8_mse16x16_sse2(const uint8_t *src8, int32_t src_stride,
+void eb_aom_highbd_8_mse16x16_sse2(const uint8_t *src8, int32_t src_stride,
     const uint8_t *ref8, int32_t ref_stride,
     uint32_t *sse) {
     int32_t sum;

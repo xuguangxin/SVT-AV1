@@ -8,7 +8,6 @@
 
 #include <immintrin.h>  // AVX2
 #include "aom_dsp_rtcd.h"
-#include "EbPictureOperators_AVX2.h"
 #include "EbRestoration.h"
 #include "transpose_sse2.h"
 #include "transpose_avx2.h"
@@ -458,10 +457,6 @@ static INLINE void msub_avx2(const __m256i src, const __m256i dgd,
                              __m256i *sum) {
     const __m256i sd = _mm256_madd_epi16(src, dgd);
     *sum = _mm256_sub_epi32(*sum, sd);
-}
-
-static void _mm_storeh_epi64(__m128i *p, __m128i x) {
-    _mm_storeh_pd((double *)p, _mm_castsi128_pd(x));
 }
 
 static INLINE void update_2_stats_sse2(const int64_t *const src,

@@ -28,7 +28,7 @@ void av1_foreach_rest_unit_in_frame_seg(Av1Common *cm, int32_t plane,
     PictureControlSet   *picture_control_set_ptr,
     uint32_t segment_index);
 
-void av1_selfguided_restoration_c(const uint8_t *dgd8, int32_t width, int32_t height,
+void eb_av1_selfguided_restoration_c(const uint8_t *dgd8, int32_t width, int32_t height,
     int32_t dgd_stride, int32_t *flt0, int32_t *flt1,
     int32_t flt_stride, int32_t sgr_params_idx,
     int32_t bit_depth, int32_t highbd);
@@ -54,9 +54,9 @@ typedef int64_t(*sse_part_extractor_type)(const Yv12BufferConfig *a,
 #define NUM_EXTRACTORS (3 * (1 + 1))
 
 static const sse_part_extractor_type sse_part_extractors[NUM_EXTRACTORS] = {
-  aom_get_y_sse_part,        aom_get_u_sse_part,
-  aom_get_v_sse_part,        aom_highbd_get_y_sse_part,
-  aom_highbd_get_u_sse_part, aom_highbd_get_v_sse_part,
+  eb_aom_get_y_sse_part,        eb_aom_get_u_sse_part,
+  eb_aom_get_v_sse_part,        eb_aom_highbd_get_y_sse_part,
+  eb_aom_highbd_get_u_sse_part, eb_aom_highbd_get_v_sse_part,
 };
 static int64_t sse_restoration_unit(const RestorationTileLimits *limits,
     const Yv12BufferConfig *src,
@@ -178,7 +178,7 @@ static int64_t try_restoration_unit(const RestSearchCtxt *rsc,
     // also used in encoder.
     const int32_t optimized_lr = 0;
 
-    av1_loop_restoration_filter_unit(
+    eb_av1_loop_restoration_filter_unit(
         1,
         limits, rui, &rsi->boundaries, &rlbs, tile_rect, rsc->tile_stripe0,
         is_uv && cm->subsampling_x, is_uv && cm->subsampling_y, highbd, bit_depth,
@@ -205,7 +205,7 @@ static int64_t try_restoration_unit_seg(const RestSearchCtxt *rsc,
     // also used in encoder.
     const int32_t optimized_lr = 0;
 
-    av1_loop_restoration_filter_unit(
+    eb_av1_loop_restoration_filter_unit(
         1,
         limits, rui, &rsi->boundaries, &rlbs, tile_rect, rsc->tile_stripe0,
         is_uv && cm->subsampling_x, is_uv && cm->subsampling_y, highbd, bit_depth,
@@ -215,7 +215,7 @@ static int64_t try_restoration_unit_seg(const RestSearchCtxt *rsc,
     return sse_restoration_unit(limits, rsc->src, rsc->dst, plane, highbd);
 }
 
-int64_t av1_lowbd_pixel_proj_error_c(const uint8_t *src8, int32_t width, int32_t height,
+int64_t eb_av1_lowbd_pixel_proj_error_c(const uint8_t *src8, int32_t width, int32_t height,
     int32_t src_stride, const uint8_t *dat8,
     int32_t dat_stride, int32_t *flt0,
     int32_t flt0_stride, int32_t *flt1,
@@ -289,7 +289,7 @@ int64_t av1_lowbd_pixel_proj_error_c(const uint8_t *src8, int32_t width, int32_t
     return err;
 }
 
-int64_t av1_highbd_pixel_proj_error_c(const uint8_t *src8, int32_t width,
+int64_t eb_av1_highbd_pixel_proj_error_c(const uint8_t *src8, int32_t width,
     int32_t height, int32_t src_stride,
     const uint8_t *dat8, int32_t dat_stride,
     int32_t *flt0, int32_t flt0_stride,
@@ -373,14 +373,14 @@ static int64_t get_pixel_proj_error(const uint8_t *src8, int32_t width, int32_t 
     int32_t *flt1, int32_t flt1_stride, int32_t *xqd,
     const SgrParamsType *params) {
     int32_t xq[2];
-    decode_xq(xqd, xq, params);
+    eb_decode_xq(xqd, xq, params);
     if (!use_highbitdepth) {
-        return av1_lowbd_pixel_proj_error(src8, width, height, src_stride, dat8,
+        return eb_av1_lowbd_pixel_proj_error(src8, width, height, src_stride, dat8,
             dat_stride, flt0, flt0_stride, flt1,
             flt1_stride, xq, params);
     }
     else {
-        return av1_highbd_pixel_proj_error(src8, width, height, src_stride, dat8,
+        return eb_av1_highbd_pixel_proj_error(src8, width, height, src_stride, dat8,
             dat_stride, flt0, flt0_stride, flt1,
             flt1_stride, xq, params);
     }
@@ -585,7 +585,7 @@ static INLINE void apply_sgr(int32_t sgr_params_idx, const uint8_t *dat8,
             const int32_t w = AOMMIN(pu_width, width - j);
 
             //CHKN SSE
-            av1_selfguided_restoration(dat8_row + j, w, h, dat_stride, flt0_row + j,
+            eb_av1_selfguided_restoration(dat8_row + j, w, h, dat_stride, flt0_row + j,
                 flt1_row + j, flt_stride, sgr_params_idx,
                 bit_depth, use_highbd);
         }
@@ -625,7 +625,7 @@ static SgrprojInfo search_selfguided_restoration(
         apply_sgr(ep, dat8, width, height, dat_stride, use_highbitdepth, bit_depth,
             pu_width, pu_height, flt0, flt1, flt_stride);
         aom_clear_system_state();
-        const SgrParamsType *const params = &sgr_params[ep];
+        const SgrParamsType *const params = &eb_sgr_params[ep];
         get_proj_subspace(src8, width, height, src_stride, dat8, dat_stride,
             use_highbitdepth, flt0, flt_stride, flt1, flt_stride, exq,
             params);
@@ -649,19 +649,19 @@ static SgrprojInfo search_selfguided_restoration(
     ret.xqd[1] = bestxqd[1];
     return ret;
 }
-extern int32_t aom_count_primitive_refsubexpfin(uint16_t n, uint16_t k, uint16_t ref, uint16_t v);
+extern int32_t eb_aom_count_primitive_refsubexpfin(uint16_t n, uint16_t k, uint16_t ref, uint16_t v);
 
 static int32_t count_sgrproj_bits(SgrprojInfo *sgrproj_info,
     SgrprojInfo *ref_sgrproj_info) {
     int32_t bits = SGRPROJ_PARAMS_BITS;
-    const SgrParamsType *params = &sgr_params[sgrproj_info->ep];
+    const SgrParamsType *params = &eb_sgr_params[sgrproj_info->ep];
     if (params->r[0] > 0)
-        bits += aom_count_primitive_refsubexpfin(
+        bits += eb_aom_count_primitive_refsubexpfin(
             SGRPROJ_PRJ_MAX0 - SGRPROJ_PRJ_MIN0 + 1, SGRPROJ_PRJ_SUBEXP_K,
             (uint16_t)(ref_sgrproj_info->xqd[0] - SGRPROJ_PRJ_MIN0),
             (uint16_t)(sgrproj_info->xqd[0] - SGRPROJ_PRJ_MIN0));
     if (params->r[1] > 0)
-        bits += aom_count_primitive_refsubexpfin(
+        bits += eb_aom_count_primitive_refsubexpfin(
             SGRPROJ_PRJ_MAX1 - SGRPROJ_PRJ_MIN1 + 1, SGRPROJ_PRJ_SUBEXP_K,
             (uint16_t)(ref_sgrproj_info->xqd[1] - SGRPROJ_PRJ_MIN1),
             (uint16_t)(sgrproj_info->xqd[1] - SGRPROJ_PRJ_MIN1));
@@ -750,7 +750,7 @@ static void search_sgrproj(const RestorationTileLimits *limits,
     if (cost_sgr < cost_none) rsc->sgrproj = rusi->sgrproj;
 }
 
-void av1_compute_stats_c(int32_t wiener_win, const uint8_t *dgd, const uint8_t *src,
+void eb_av1_compute_stats_c(int32_t wiener_win, const uint8_t *dgd, const uint8_t *src,
     int32_t h_start, int32_t h_end, int32_t v_start, int32_t v_end,
     int32_t dgd_stride, int32_t src_stride, int64_t *M,
     int64_t *H) {
@@ -790,7 +790,353 @@ void av1_compute_stats_c(int32_t wiener_win, const uint8_t *dgd, const uint8_t *
     }
 }
 
-void av1_compute_stats_highbd_c(int32_t wiener_win, const uint8_t *dgd8,
+#if 0
+// Note: Don't delete! This is the code base for optimizations, and 4.8x, 9x or
+//       16x faster than the above original C version for win 3, 5 and 7
+//       respectively, while keeping the bit-exactness.
+
+// Demostration of TAP 3:
+//                       (Left Edge)         (Left Edge)
+//  \lj   00    10    20      01    11    21      02    12    22
+// ki-------------------------------------------------------------
+// 00| 00X00 00X10 00X20 | 00X01 00X11 00X21 | 00X02 00X12 00X22 |(Top Edge)
+// 10|       10x10 10x20 | 10X01 10x11 10x21 | 10X02 10x12 10x22 |(Top Row)
+// 20|             20x20 | 20X01 20x11 20x21 | 20X02 20x12 20x22 |
+//   |                   --------------------|-------------------|
+// 01|                     01x01 01x11 01x21 | 01x02 01x12 01x22 |(Top Edge)
+// 11|                           11x11 11x21 | 11x02 11x12 11x22 |(Mid Rows)
+// 21|                                 21x21 | 21x02 21x12 21x22 |
+//   |                                       --------------------|
+// 02|                                         02x02 02x12 02x22 |(Top Edge)
+// 12|                                               12x12 12x22 |(Btm Row)
+// 22|                                                     22x22 |
+//   -------------------------------------------------------------
+// kiXlj means the multiply-accumulate must be calculated from scratch, and
+// starts from a[k * a_stride + i] * b[l * b_stride + j].
+// kixlj means the multiply-accumulate could be derived from a neighbor.
+
+static INLINE void sub_avg_block(const uint8_t *src, const int32_t src_stride,
+    const uint8_t avg, const int32_t width,
+    const int32_t height, int16_t *dst,
+    const int32_t dst_stride) {
+    for (int32_t i = 0; i < height; i++) {
+        for (int32_t j = 0; j < width; j++)
+            dst[i * dst_stride + j] = (int16_t)src[i * src_stride + j] - avg;
+    }
+}
+
+void av1_compute_stats_base(int32_t wiener_win, const uint8_t *dgd,
+    const uint8_t *src, int32_t h_start, int32_t h_end,
+    int32_t v_start, int32_t v_end, int32_t dgd_stride,
+    int32_t src_stride, int64_t *M, int64_t *H) {
+    const int32_t wiener_win2 = wiener_win * wiener_win;
+    const int32_t wiener_halfwin = wiener_win >> 1;
+    const uint8_t avg =
+        find_average(dgd, h_start, h_end, v_start, v_end, dgd_stride);
+    const int32_t width = h_end - h_start;
+    const int32_t height = v_end - v_start;
+    const int32_t d_stride = (width + 2 * wiener_halfwin + 15) & ~15;
+    const int32_t s_stride = (width + 15) & ~15;
+    // The maximum input size is width * height, which is
+    // (9 / 4) * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX. Enlarge to
+    // 3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX considering
+    // paddings.
+    int16_t d[3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX];
+    int16_t s[3 * RESTORATION_UNITSIZE_MAX * RESTORATION_UNITSIZE_MAX];
+    int32_t i, j, k, l, x, y;
+
+    sub_avg_block(src + v_start * src_stride + h_start,
+        src_stride,
+        avg,
+        width,
+        height,
+        s,
+        s_stride);
+    sub_avg_block(dgd + (v_start - wiener_halfwin) * dgd_stride + h_start -
+        wiener_halfwin,
+        dgd_stride,
+        avg,
+        width + 2 * wiener_halfwin,
+        height + 2 * wiener_halfwin,
+        d,
+        d_stride);
+
+    // Step 1: Calculate the top edge of the whole matrix, i.e., the top edge of
+    // each triangle and square on the top row.
+    // Demostration of TAP 3:
+    //                       (Left Edge)         (Left Edge)
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00| 00X00 00X10 00X20 | 00X01 00X11 00X21 | 00X02 00X12 00X22 |(Top Edge)
+    // 10|                                                           |(Top Row)
+    // 20|                                                           |
+    //   |                   --------------------|-------------------|
+    // 01|                                                           |(Top Edge)
+    // 11|                                                           |(Mid Rows)
+    // 21|                                                           |
+    //   |                                       --------------------|
+    // 02|                                                           |(Top Edge)
+    // 12|                                                           |(Btm Row)
+    // 22|                                                           |
+    //   -------------------------------------------------------------
+    for (j = 0; j < wiener_win; j++) {
+        for (l = 0; l < wiener_win; l++) {
+            int64_t sumM = 0;
+            int64_t sumH = 0;
+
+            for (y = 0; y < height; y++) {
+                for (x = 0; x < width; x++) {
+                    sumM += s[y * s_stride + x] * d[(l + y) * d_stride + j + x];
+                    sumH += d[y * d_stride + x] * d[(l + y) * d_stride + j + x];
+                }
+            }
+
+            M[j * wiener_win + l] = sumM;
+            H[j * wiener_win + l] = sumH;
+        }
+    }
+
+    // Step 2: Calculate the left edge of each square on the top row.
+    // Demostration of TAP 3:
+    //                       (Left Edge)         (Left Edge)
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00|                                                           |(Top Edge)
+    // 10|                   | 10X01             | 10X02             |(Top Row)
+    // 20|                   | 20X01             | 20X02             |
+    //   |                   --------------------|-------------------|
+    // 01|                                                           |(Top Edge)
+    // 11|                                                           |(Mid Rows)
+    // 21|                                                           |
+    //   |                                       --------------------|
+    // 02|                                                           |(Top Edge)
+    // 12|                                                           |(Btm Row)
+    // 22|                                                           |
+    //   -------------------------------------------------------------
+    for (j = 1; j < wiener_win; j++) {
+        for (k = 1; k < wiener_win; k++) {
+            int64_t sumH = 0;
+
+            for (y = 0; y < height; y++) {
+                for (x = 0; x < width; x++)
+                    sumH += d[(k + y) * d_stride + x] * d[y * d_stride + j + x];
+            }
+
+            H[k * wiener_win2 + j * wiener_win] = sumH;
+        }
+    }
+
+    // Step 3: Derive the top edge of each triangle along the diagonal. No
+    // triangle in top row.
+    // Demostration of TAP 3:
+    //                       (Left Edge)         (Left Edge)
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00|                                                           |(Top Edge)
+    // 10|                                                           |(Top Row)
+    // 20|                                                           |
+    //   |                   --------------------|-------------------|
+    // 01|                     01x01 01x11 01x21 |                   |(Top Edge)
+    // 11|                                                           |(Mid Rows)
+    // 21|                                                           |
+    //   |                                       --------------------|
+    // 02|                                         02x02 02x12 02x22 |(Top Edge)
+    // 12|                                                           |(Btm Row)
+    // 22|                                                           |
+    //   -------------------------------------------------------------
+    for (i = 1; i < wiener_win; i++) {
+        for (l = 0; l < wiener_win; l++) {
+            int32_t delta = 0;
+
+            for (y = 0; y < height; y++) {
+                delta -=
+                    d[y * d_stride + i - 1] * d[(l + y) * d_stride + i - 1];
+                delta += d[y * d_stride + i - 1 + width] *
+                    d[(l + y) * d_stride + i - 1 + width];
+            }
+
+            H[i * wiener_win * wiener_win2 + i * wiener_win + l] =
+                H[(i - 1) * wiener_win * wiener_win2 + (i - 1) * wiener_win +
+                l] +
+                delta;
+        }
+    }
+
+    // Step 4: Derive the top and left edge of each square. No square in top and
+    // bottom row. (There is only 1 square in this step for TAP 3, but there are
+    // many for TAP 5 and 7.)
+    // Demostration of TAP 3:
+    //                       (Left Edge)         (Left Edge)
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00|                                                           |(Top Edge)
+    // 10|                                                           |(Top Row)
+    // 20|                                                           |
+    //   |                   --------------------|-------------------|
+    // 01|                                       | 01x02 01x12 01x22 |(Top Edge)
+    // 11|                                       | 11x02             |(Mid Rows)
+    // 21|                                       | 21x02             |
+    //   |                                       --------------------|
+    // 02|                                                           |(Top Edge)
+    // 12|                                                           |(Btm Row)
+    // 22|                                                           |
+    //   -------------------------------------------------------------
+    for (i = 1; i < wiener_win - 1; i++) {
+        for (j = i + 1; j < wiener_win; j++) {
+            for (l = 0; l < wiener_win; l++) {
+                int32_t delta = 0;
+
+                for (y = 0; y < height; y++) {
+                    delta -=
+                        d[y * d_stride + i - 1] * d[(l + y) * d_stride + j - 1];
+                    delta += d[y * d_stride + i - 1 + width] *
+                        d[(l + y) * d_stride + j - 1 + width];
+                }
+
+                H[i * wiener_win * wiener_win2 + j * wiener_win + l] =
+                    H[(i - 1) * wiener_win * wiener_win2 +
+                    (j - 1) * wiener_win + l] +
+                    delta;
+            }
+
+            for (k = 1; k < wiener_win; k++) {
+                int32_t delta = 0;
+
+                for (y = 0; y < height; y++) {
+                    delta -=
+                        d[(k + y) * d_stride + i - 1] * d[y * d_stride + j - 1];
+                    delta += d[(k + y) * d_stride + i - 1 + width] *
+                        d[y * d_stride + j - 1 + width];
+                }
+
+                H[(i * wiener_win + k) * wiener_win2 + j * wiener_win] =
+                    H[((i - 1) * wiener_win + k) * wiener_win2 +
+                    (j - 1) * wiener_win] +
+                    delta;
+            }
+        }
+    }
+
+    // Step 5: Derive other points of each square. No square in bottom row.
+    // Demostration of TAP 3:
+    //                       (Left Edge)         (Left Edge)
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00|                   |                   |                   |(Top Edge)
+    // 10|                   |       10x11 10x21 |       10x12 10x22 |(Top Row)
+    // 20|                   |       20x11 20x21 |       20x12 20x22 |
+    //   |                   --------------------|-------------------|
+    // 01|                                       |                   |(Top Edge)
+    // 11|                                       |       11x12 11x22 |(Mid Rows)
+    // 21|                                       |       21x12 21x22 |
+    //   |                                       --------------------|
+    // 02|                                                           |(Top Edge)
+    // 12|                                                           |(Btm Row)
+    // 22|                                                           |
+    //   -------------------------------------------------------------
+    for (i = 0; i < wiener_win - 1; i++) {
+        for (j = i + 1; j < wiener_win; j++) {
+            for (k = 1; k < wiener_win; k++) {
+                for (l = 1; l < wiener_win; l++) {
+                    int32_t delta = 0;
+
+                    for (x = 0; x < width; x++) {
+                        delta -= d[(k - 1) * d_stride + i + x] *
+                            d[(l - 1) * d_stride + j + x];
+                        delta += d[(k - 1 + height) * d_stride + i + x] *
+                            d[(l - 1 + height) * d_stride + j + x];
+                    }
+
+                    H[(i * wiener_win + k) * wiener_win2 + j * wiener_win + l] =
+                        H[(i * wiener_win + k - 1) * wiener_win2 +
+                        j * wiener_win + l - 1] +
+                        delta;
+                }
+            }
+        }
+    }
+
+    // Step 6: Derive other points of each upper triangle along the diagonal.
+    // Demostration of TAP 3:
+    //                       (Left Edge)         (Left Edge)
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00|                   |                   |                   |(Top Edge)
+    // 10|       10x10 10x20 |                   |                   |(Top Row)
+    // 20|             20x20 |                   |                   |
+    //   |                   --------------------|-------------------|
+    // 01|                                       |                   |(Top Edge)
+    // 11|                           11x11 11x21 |                   |(Mid Rows)
+    // 21|                                 21x21 |                   |
+    //   |                                       --------------------|
+    // 02|                                                           |(Top Edge)
+    // 12|                                               12x12 12x22 |(Btm Row)
+    // 22|                                                     22x22 |
+    //   -------------------------------------------------------------
+    for (i = 0; i < wiener_win; i++) {
+        for (k = 1; k < wiener_win; k++) {
+            for (l = k; l < wiener_win; l++) {
+                int32_t delta = 0;
+
+                for (x = 0; x < width; x++) {
+                    delta -= d[(k - 1) * d_stride + i + x] *
+                        d[(l - 1) * d_stride + i + x];
+                    delta += d[(k - 1 + height) * d_stride + i + x] *
+                        d[(l - 1 + height) * d_stride + i + x];
+                }
+
+                H[(i * wiener_win + k) * wiener_win2 + i * wiener_win + l] =
+                    H[(i * wiener_win + k - 1) * wiener_win2 + i * wiener_win +
+                    l - 1] +
+                    delta;
+            }
+        }
+    }
+
+    // H is a symmetric matrix, so we only need to fill out the upper triangle.
+    // We can copy it down to the lower triangle outside the (i, j) loops.
+    // Divided into 4x4 squares to do load-and-transpose-and-store in
+    // optimization.
+    // Demostration of TAP 3:
+    //  \lj   00    10    20    01      11    21    02    12      22
+    // ki-------------------------------------------------------------
+    // 00|                                                           |
+    //   |------                                                     |
+    // 10| 00X10                                                     |
+    // 20| 00X20 10x20                                               |
+    // 01| 00X01 10X01 20X01                                         |
+    // 11| 00X11 10x11 20x11 01x11                                   |
+    //   |--------------------------                                 |
+    // 21| 00X21 10x21 20x21 01x21 | 11x21                           |
+    // 02| 00X02 10X02 20X02 01x02 | 11x02 21x02                     |
+    // 12| 00X12 10x12 20x12 01x12 | 11x12 21x12 02x12               |
+    // 22| 00X22 10x22 20x22 01x22 | 11x22 21x22 02x22 12x22 |       |
+    //   -------------------------------------------------------------
+    for (i = 0; i < wiener_win2; i++) {
+        for (j = i + 1; j < wiener_win2; j++)
+            H[j * wiener_win2 + i] = H[i * wiener_win2 + j];
+    }
+
+    // Finally we get the whole matrix.
+    // Demostration of TAP 3:
+    //  \lj   00    10    20      01    11    21      02    12    22
+    // ki-------------------------------------------------------------
+    // 00| 00X00 00X10 00X20 | 00X01 00X11 00X21 | 00X02 00X12 00X22 |
+    // 10| 00X10 10x10 10x20 | 10X01 10x11 10x21 | 10X02 10x12 10x22 |
+    // 20| 00X20 10x20 20x20 | 20X01 20x11 20x21 | 20X02 20x12 20x22 |
+    //   |-----------------------------------------------------------|
+    // 01| 00X01 10X01 20X01 | 01x01 01x11 01x21 | 01x02 01x12 01x22 |
+    // 11| 00X11 10x11 20x11 | 01x11 11x11 11x21 | 11x02 11x12 11x22 |
+    // 21| 00X21 10x21 20x21 | 01x21 11x21 21x21 | 21x02 21x12 21x22 |
+    //   |-----------------------------------------------------------|
+    // 02| 00X02 10X02 20X02 | 01x02 11x02 21x02 | 02x02 02x12 02x22 |
+    // 12| 00X12 10x12 20x12 | 01x12 11x12 21x12 | 02x12 12x12 12x22 |
+    // 22| 00X22 10x22 20x22 | 01x22 11x22 21x22 | 02x22 12x22 22x22 |
+    //   -------------------------------------------------------------
+}
+#endif
+
+void eb_av1_compute_stats_highbd_c(int32_t wiener_win, const uint8_t *dgd8,
     const uint8_t *src8, int32_t h_start, int32_t h_end,
     int32_t v_start, int32_t v_end, int32_t dgd_stride,
     int32_t src_stride, int64_t *M, int64_t *H,
@@ -1112,33 +1458,33 @@ static int32_t count_wiener_bits(int32_t wiener_win, WienerInfo *wiener_info,
     WienerInfo *ref_wiener_info) {
     int32_t bits = 0;
     if (wiener_win == WIENER_WIN)
-        bits += aom_count_primitive_refsubexpfin(
+        bits += eb_aom_count_primitive_refsubexpfin(
             WIENER_FILT_TAP0_MAXV - WIENER_FILT_TAP0_MINV + 1,
             WIENER_FILT_TAP0_SUBEXP_K,
             ref_wiener_info->vfilter[0] - WIENER_FILT_TAP0_MINV,
             wiener_info->vfilter[0] - WIENER_FILT_TAP0_MINV);
-    bits += aom_count_primitive_refsubexpfin(
+    bits += eb_aom_count_primitive_refsubexpfin(
         WIENER_FILT_TAP1_MAXV - WIENER_FILT_TAP1_MINV + 1,
         WIENER_FILT_TAP1_SUBEXP_K,
         ref_wiener_info->vfilter[1] - WIENER_FILT_TAP1_MINV,
         wiener_info->vfilter[1] - WIENER_FILT_TAP1_MINV);
-    bits += aom_count_primitive_refsubexpfin(
+    bits += eb_aom_count_primitive_refsubexpfin(
         WIENER_FILT_TAP2_MAXV - WIENER_FILT_TAP2_MINV + 1,
         WIENER_FILT_TAP2_SUBEXP_K,
         ref_wiener_info->vfilter[2] - WIENER_FILT_TAP2_MINV,
         wiener_info->vfilter[2] - WIENER_FILT_TAP2_MINV);
     if (wiener_win == WIENER_WIN)
-        bits += aom_count_primitive_refsubexpfin(
+        bits += eb_aom_count_primitive_refsubexpfin(
             WIENER_FILT_TAP0_MAXV - WIENER_FILT_TAP0_MINV + 1,
             WIENER_FILT_TAP0_SUBEXP_K,
             ref_wiener_info->hfilter[0] - WIENER_FILT_TAP0_MINV,
             wiener_info->hfilter[0] - WIENER_FILT_TAP0_MINV);
-    bits += aom_count_primitive_refsubexpfin(
+    bits += eb_aom_count_primitive_refsubexpfin(
         WIENER_FILT_TAP1_MAXV - WIENER_FILT_TAP1_MINV + 1,
         WIENER_FILT_TAP1_SUBEXP_K,
         ref_wiener_info->hfilter[1] - WIENER_FILT_TAP1_MINV,
         wiener_info->hfilter[1] - WIENER_FILT_TAP1_MINV);
-    bits += aom_count_primitive_refsubexpfin(
+    bits += eb_aom_count_primitive_refsubexpfin(
         WIENER_FILT_TAP2_MAXV - WIENER_FILT_TAP2_MINV + 1,
         WIENER_FILT_TAP2_SUBEXP_K,
         ref_wiener_info->hfilter[2] - WIENER_FILT_TAP2_MINV,
@@ -1384,20 +1730,20 @@ static void search_wiener(const RestorationTileLimits *limits,
     if (cm->use_highbitdepth)
     {
         if (rsc->plane == AOM_PLANE_Y) {
-            av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
+            eb_av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
                 limits->h_start, limits->h_end, limits->v_start,
                 limits->v_end, rsc->dgd_stride, rsc->src_stride, M,
                 H, (AomBitDepth)cm->bit_depth);
         }
         else {
-            av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
+            eb_av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
                 limits->h_start, limits->h_end, limits->v_start,
                 limits->v_end, rsc->dgd_stride, rsc->src_stride, M,
                 H, (AomBitDepth)cm->bit_depth);
         }
     }
     else {
-        av1_compute_stats(wiener_win, rsc->dgd_buffer, rsc->src_buffer, limits->h_start,
+        eb_av1_compute_stats(wiener_win, rsc->dgd_buffer, rsc->src_buffer, limits->h_start,
             limits->h_end, limits->v_start, limits->v_end,
             rsc->dgd_stride, rsc->src_stride, M, H);
     }
@@ -1565,10 +1911,10 @@ static int32_t rest_tiles_in_plane(const Av1Common *cm, int32_t plane) {
     return rsi->units_per_tile;
 }
 
-void *aom_memalign(size_t align, size_t size);
-void aom_free(void *memblk);
+void *eb_aom_memalign(size_t align, size_t size);
+void eb_aom_free(void *memblk);
 
-void av1_pick_filter_restoration(const Yv12BufferConfig *src, Yv12BufferConfig * trial_frame_rst /*Av1Comp *cpi*/, Macroblock *x, Av1Common *const cm) {
+void eb_av1_pick_filter_restoration(const Yv12BufferConfig *src, Yv12BufferConfig * trial_frame_rst /*Av1Comp *cpi*/, Macroblock *x, Av1Common *const cm) {
     //CHKN Av1Common *const cm = &cpi->common;
     const int32_t num_planes = 3;// av1_num_planes(cm);
    // assert(!cm->all_lossless);
@@ -1580,7 +1926,7 @@ void av1_pick_filter_restoration(const Yv12BufferConfig *src, Yv12BufferConfig *
 
     assert(ntiles[1] <= ntiles[0]);
     RestUnitSearchInfo *rusi =
-        (RestUnitSearchInfo *)aom_memalign(16, sizeof(*rusi) * ntiles[0]);
+        (RestUnitSearchInfo *)eb_aom_memalign(16, sizeof(*rusi) * ntiles[0]);
 
     // If the restoration unit dimensions are not multiples of
     // rsi->restoration_unit_size then some elements of the rusi array may be
@@ -1604,7 +1950,7 @@ void av1_pick_filter_restoration(const Yv12BufferConfig *src, Yv12BufferConfig *
         RestorationType best_rtype = RESTORE_NONE;
         const int32_t highbd = rsc.cm->use_highbitdepth;
 
-        extend_frame(rsc.dgd_buffer, rsc.plane_width, rsc.plane_height,
+        eb_extend_frame(rsc.dgd_buffer, rsc.plane_width, rsc.plane_height,
             rsc.dgd_stride, RESTORATION_BORDER, RESTORATION_BORDER,
             highbd);
 
@@ -1634,7 +1980,7 @@ void av1_pick_filter_restoration(const Yv12BufferConfig *src, Yv12BufferConfig *
         }
     }
 
-    aom_free(rusi);
+    eb_aom_free(rusi);
 }
 
 static void search_sgrproj_seg(const RestorationTileLimits *limits,
@@ -1724,20 +2070,20 @@ static void search_wiener_seg(const RestorationTileLimits *limits,
     if (cm->use_highbitdepth)
     {
         if (rsc->plane == AOM_PLANE_Y) {
-            av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
+            eb_av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
                 limits->h_start, limits->h_end, limits->v_start,
                 limits->v_end, rsc->dgd_stride, rsc->src_stride, M,
                 H, (AomBitDepth)cm->bit_depth);
         }
         else {
-            av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
+            eb_av1_compute_stats_highbd(wiener_win, rsc->dgd_buffer, rsc->src_buffer,
                 limits->h_start, limits->h_end, limits->v_start,
                 limits->v_end, rsc->dgd_stride, rsc->src_stride, M,
                 H, (AomBitDepth)cm->bit_depth);
         }
     }
     else {
-        av1_compute_stats(wiener_win, rsc->dgd_buffer, rsc->src_buffer, limits->h_start,
+        eb_av1_compute_stats(wiener_win, rsc->dgd_buffer, rsc->src_buffer, limits->h_start,
             limits->h_end, limits->v_start, limits->v_end,
             rsc->dgd_stride, rsc->src_stride, M, H);
     }
@@ -1902,7 +2248,7 @@ void restoration_seg_search(
         rsc_p->tmpbuf = context_ptr->rst_tmpbuf;
 
         const int32_t highbd = rsc.cm->use_highbitdepth;
-        extend_frame(rsc.dgd_buffer, rsc.plane_width, rsc.plane_height,
+        eb_extend_frame(rsc.dgd_buffer, rsc.plane_width, rsc.plane_height,
             rsc.dgd_stride, RESTORATION_BORDER, RESTORATION_BORDER,
             highbd);
 
@@ -1922,7 +2268,7 @@ void rest_finish_search(Macroblock *x, Av1Common *const cm)
 
     assert(ntiles[1] <= ntiles[0]);
     RestUnitSearchInfo *rusi =
-        (RestUnitSearchInfo *)aom_memalign(16, sizeof(*rusi) * ntiles[0]);
+        (RestUnitSearchInfo *)eb_aom_memalign(16, sizeof(*rusi) * ntiles[0]);
 
     // If the restoration unit dimensions are not multiples of
     // rsi->restoration_unit_size then some elements of the rusi array may be
@@ -1976,5 +2322,5 @@ void rest_finish_search(Macroblock *x, Av1Common *const cm)
         }
     }
 
-    aom_free(rusi);
+    eb_aom_free(rusi);
 }

@@ -1,8 +1,71 @@
 # Changelog
 
-## [upcoming]
+## [0.7.5] - 2019-11-24
 
-- Decoder Inter support
+Encoder
+- RDOQ for 10-bit
+- Inter Intra Class pruning at MD-Staging
+- Global Motion Vector support for 8-bit and 10-bit
+- Interpolation Filter Search support for 10-bit
+- Palette Prediction support
+- 2-pass encoding support
+- ATB 10-bit support at the encode pass
+- Simplified MD Staging [only 3 stages]
+- Inter-Inter and Inter-Intra Compound for 10-bit
+- Intra Paeth for 10-bit
+- Filter Intra Prediction
+- New-Near and Near-New support
+- OBMC Support for 8-bit and 10-bit
+- RDOQ Chroma
+- ATB Support for Inter Blocks
+- Temporal Filtering for 10-bit
+- Eight-pel support in predictive ME
+- MCTS Tiles support
+- Added AVX512 Optimizations
+- Added AVX2 Optimizations
+
+Decoder
+- SuperRes support
+- Reference Frame Scaling support
+- 12-bit support
+- Annex B support
+
+Build and Testing
+- Bug fixes
+- Improve CI
+- Improve Unit Test Coverage
+- Address C vs asm mismatches
+
+## [0.7.0] - 2019-09-26
+
+Encoder
+- Enhanced MRP Reference Frames
+- Intra Inter Compound
+- QP Modulation support
+- MFMV Support
+- MD Staging design [Up to 4 MD stages and 3 prediction classes: Intra / Inter / Compound]
+- Compound Motion prediction
+- 10-bit Mode Decision support for Intra
+- Thread safe resource allocation
+- Added AVX512 Optimizations
+- Added AVX2 Optimizations
+
+Decoder
+- Screen Content Tools
+- Temporal MV scan support
+- Inter support
+- Screen Content Tools support
+- Post Processing Filters support
+- Compound Mode (InterInter & InterIntra) Tool support
+- Decoder Film Grain support
+
+Build and Testing
+- Improve CI
+- Improve build scripts
+- Improve cmake lists
+- Improve Unit Test Coverage
+- API update
+- Bug fixes
 
 ## [0.6.0] - 2019-06-28
 

@@ -91,12 +91,12 @@ void ProcessInputFieldBufferingMode(
     ebInputPtr = lumaInputPtr;
     // Skip 1 luma row if bottom field (point to the bottom field)
     if (processed_frame_count % 2 != 0)
-        fseeko64(input_file, (long)sourceLumaRowSize, SEEK_CUR);
+        fseeko(input_file, (long)sourceLumaRowSize, SEEK_CUR);
 
     for (inputRowIndex = 0; inputRowIndex < input_padded_height; inputRowIndex++) {
         *filledLen += (uint32_t)fread(ebInputPtr, 1, sourceLumaRowSize, input_file);
         // Skip 1 luma row (only fields)
-        fseeko64(input_file, (long)sourceLumaRowSize, SEEK_CUR);
+        fseeko(input_file, (long)sourceLumaRowSize, SEEK_CUR);
         ebInputPtr += sourceLumaRowSize;
     }
 
@@ -104,14 +104,14 @@ void ProcessInputFieldBufferingMode(
     ebInputPtr = cbInputPtr;
     // Step back 1 luma row if bottom field (undo the previous jump), and skip 1 chroma row if bottom field (point to the bottom field)
     if (processed_frame_count % 2 != 0) {
-        fseeko64(input_file, -(long)sourceLumaRowSize, SEEK_CUR);
-        fseeko64(input_file, (long)sourceChromaRowSize, SEEK_CUR);
+        fseeko(input_file, -(long)sourceLumaRowSize, SEEK_CUR);
+        fseeko(input_file, (long)sourceChromaRowSize, SEEK_CUR);
     }
 
     for (inputRowIndex = 0; inputRowIndex < input_padded_height >> 1; inputRowIndex++) {
         *filledLen += (uint32_t)fread(ebInputPtr, 1, sourceChromaRowSize, input_file);
         // Skip 1 chroma row (only fields)
-        fseeko64(input_file, (long)sourceChromaRowSize, SEEK_CUR);
+        fseeko(input_file, (long)sourceChromaRowSize, SEEK_CUR);
         ebInputPtr += sourceChromaRowSize;
     }
 
@@ -123,13 +123,13 @@ void ProcessInputFieldBufferingMode(
     for (inputRowIndex = 0; inputRowIndex < input_padded_height >> 1; inputRowIndex++) {
         *filledLen += (uint32_t)fread(ebInputPtr, 1, sourceChromaRowSize, input_file);
         // Skip 1 chroma row (only fields)
-        fseeko64(input_file, (long)sourceChromaRowSize, SEEK_CUR);
+        fseeko(input_file, (long)sourceChromaRowSize, SEEK_CUR);
         ebInputPtr += sourceChromaRowSize;
     }
 
     // Step back 1 chroma row if bottom field (undo the previous jump)
     if (processed_frame_count % 2 != 0)
-        fseeko64(input_file, -(long)sourceChromaRowSize, SEEK_CUR);
+        fseeko(input_file, -(long)sourceChromaRowSize, SEEK_CUR);
 }
 
 /***********************************************
@@ -150,12 +150,19 @@ EbErrorType CopyConfigurationParameters(
 
     // Initialize Port Activity Flags
     callback_data->output_stream_port_active = APP_PortActive;
+
     callback_data->eb_enc_parameters.source_width = config->source_width;
     callback_data->eb_enc_parameters.source_height = config->source_height;
+    callback_data->eb_enc_parameters.render_width = config->input_padded_width;
+    callback_data->eb_enc_parameters.render_height = config->input_padded_height;
+
     callback_data->eb_enc_parameters.intra_period_length = config->intra_period;
     callback_data->eb_enc_parameters.intra_refresh_type = config->intra_refresh_type;
     callback_data->eb_enc_parameters.base_layer_switch_mode = config->base_layer_switch_mode;
     callback_data->eb_enc_parameters.enc_mode = (EbBool)config->enc_mode;
+#if TWO_PASS_USE_2NDP_ME_IN_1STP
+    callback_data->eb_enc_parameters.snd_pass_enc_mode = (EbBool)config->snd_pass_enc_mode;
+#endif
     callback_data->eb_enc_parameters.frame_rate = config->frame_rate;
     callback_data->eb_enc_parameters.frame_rate_denominator = config->frame_rate_denominator;
     callback_data->eb_enc_parameters.frame_rate_numerator = config->frame_rate_numerator;
@@ -176,9 +183,17 @@ EbErrorType CopyConfigurationParameters(
     callback_data->eb_enc_parameters.enable_adaptive_quantization = (EbBool)config->enable_adaptive_quantization;
     callback_data->eb_enc_parameters.qp = config->qp;
     callback_data->eb_enc_parameters.use_qp_file = (EbBool)config->use_qp_file;
+#if TWO_PASS
+    callback_data->eb_enc_parameters.input_stat_file = config->input_stat_file;
+    callback_data->eb_enc_parameters.output_stat_file = config->output_stat_file;
+#endif
     callback_data->eb_enc_parameters.stat_report = (EbBool)config->stat_report;
     callback_data->eb_enc_parameters.disable_dlf_flag = (EbBool)config->disable_dlf_flag;
     callback_data->eb_enc_parameters.enable_warped_motion = (EbBool)config->enable_warped_motion;
+    callback_data->eb_enc_parameters.enable_global_motion = (EbBool)config->enable_global_motion;
+    callback_data->eb_enc_parameters.enable_obmc = (EbBool)config->enable_obmc;
+    callback_data->eb_enc_parameters.enable_rdoq = config->enable_rdoq;
+    callback_data->eb_enc_parameters.enable_filter_intra = (EbBool)config->enable_filter_intra;
     callback_data->eb_enc_parameters.use_default_me_hme = (EbBool)config->use_default_me_hme;
     callback_data->eb_enc_parameters.enable_hme_flag = (EbBool)config->enable_hme_flag;
     callback_data->eb_enc_parameters.enable_hme_level0_flag = (EbBool)config->enable_hme_level0_flag;
@@ -192,10 +207,11 @@ EbErrorType CopyConfigurationParameters(
     callback_data->eb_enc_parameters.hme_level0_total_search_area_height = config->hme_level0_total_search_area_height;
     callback_data->eb_enc_parameters.screen_content_mode = (EbBool)config->screen_content_mode;
     callback_data->eb_enc_parameters.enable_hbd_mode_decision = (EbBool)config->enable_hbd_mode_decision;
+    callback_data->eb_enc_parameters.enable_palette = config->enable_palette;
+    callback_data->eb_enc_parameters.olpd_refinement = config->olpd_refinement;
     callback_data->eb_enc_parameters.constrained_intra = (EbBool)config->constrained_intra;
     callback_data->eb_enc_parameters.channel_id = config->channel_id;
     callback_data->eb_enc_parameters.active_channel_count = config->active_channel_count;
-    callback_data->eb_enc_parameters.improve_sharpness = (uint8_t)config->improve_sharpness;
     callback_data->eb_enc_parameters.high_dynamic_range_input = config->high_dynamic_range_input;
     callback_data->eb_enc_parameters.encoder_bit_depth = config->encoder_bit_depth;
     callback_data->eb_enc_parameters.encoder_color_format =
@@ -209,6 +225,7 @@ EbErrorType CopyConfigurationParameters(
     callback_data->eb_enc_parameters.asm_type = config->asm_type;
     callback_data->eb_enc_parameters.logical_processors = config->logical_processors;
     callback_data->eb_enc_parameters.target_socket = config->target_socket;
+    callback_data->eb_enc_parameters.unrestricted_motion_vector = config->unrestricted_motion_vector;
     callback_data->eb_enc_parameters.recon_enabled = config->recon_file ? EB_TRUE : EB_FALSE;
     // --- start: ALTREF_FILTERING_SUPPORT
     callback_data->eb_enc_parameters.enable_altrefs  = (EbBool)config->enable_altrefs;
@@ -229,140 +246,167 @@ EbErrorType CopyConfigurationParameters(
         callback_data->eb_enc_parameters.hme_level2_search_area_in_height_array[hmeRegionIndex] = config->hme_level2_search_area_in_height_array[hmeRegionIndex];
     }
 
+    callback_data->eb_enc_parameters.sq_weight = config->sq_weight;
+    callback_data->eb_enc_parameters.enable_auto_max_partition = config->enable_auto_max_partition;
+
+    callback_data->eb_enc_parameters.md_stage_1_cand_prune_th = config->md_stage_1_cand_prune_th;
+    callback_data->eb_enc_parameters.md_stage_1_class_prune_th = config->md_stage_1_class_prune_th;
+    callback_data->eb_enc_parameters.md_stage_2_cand_prune_th = config->md_stage_2_cand_prune_th;
+    callback_data->eb_enc_parameters.md_stage_2_class_prune_th = config->md_stage_2_class_prune_th;
+
     return return_error;
 }
 
-static EbErrorType AllocateFrameBuffer(
-    EbConfig          *config,
-    uint8_t               *p_buffer){
-    EbErrorType   return_error = EB_ErrorNone;
-    const int32_t tenBitPackedMode = (config->encoder_bit_depth > 8) && (config->compressed_ten_bit_format == 0) ? 1 : 0;
+static EbErrorType AllocateFrameBuffer(EbConfig *config, uint8_t *p_buffer)
+{
+    const int32_t tenBitPackedMode =
+        (config->encoder_bit_depth > 8) &&
+        (config->compressed_ten_bit_format == 0) ? 1 : 0;
+
+    // Chroma subsampling
     const EbColorFormat color_format =
-        (EbColorFormat)config->encoder_color_format;  // Chroma subsampling
+        (EbColorFormat)config->encoder_color_format;
     const uint8_t subsampling_x = (color_format == EB_YUV444 ? 1 : 2) - 1;
 
     // Determine size of each plane
-    const size_t luma8bitSize =
-
-        config->input_padded_width    *
-        config->input_padded_height   *
-
-        (1 << tenBitPackedMode);
+    const size_t luma8bitSize = config->input_padded_width *
+        config->input_padded_height * (1 << tenBitPackedMode);
 
     const size_t chroma8bitSize = luma8bitSize >> (3 - color_format);
-    const size_t luma10bitSize = (config->encoder_bit_depth > 8 && tenBitPackedMode == 0) ? luma8bitSize : 0;
-    const size_t chroma10bitSize = (config->encoder_bit_depth > 8 && tenBitPackedMode == 0) ? chroma8bitSize : 0;
+
+    const size_t luma10bitSize =
+        (config->encoder_bit_depth > 8 && tenBitPackedMode == 0) ?
+            luma8bitSize : 0;
+
+    const size_t chroma10bitSize =
+        (config->encoder_bit_depth > 8 && tenBitPackedMode == 0) ?
+            chroma8bitSize : 0;
 
     // Determine
     EbSvtIOFormat* inputPtr = (EbSvtIOFormat*)p_buffer;
     inputPtr->y_stride = config->input_padded_width;
     inputPtr->cr_stride = config->input_padded_width >> subsampling_x;
     inputPtr->cb_stride = config->input_padded_width >> subsampling_x;
+
     if (luma8bitSize) {
-        EB_APP_MALLOC(uint8_t*, inputPtr->luma, luma8bitSize, EB_N_PTR, EB_ErrorInsufficientResources);
-    }
-    else
+        EB_APP_MALLOC(uint8_t*, inputPtr->luma, luma8bitSize, EB_N_PTR,
+                      EB_ErrorInsufficientResources);
+    } else {
         inputPtr->luma = 0;
-    if (chroma8bitSize) {
-        EB_APP_MALLOC(uint8_t*, inputPtr->cb, chroma8bitSize, EB_N_PTR, EB_ErrorInsufficientResources);
     }
-    else
+
+    if (chroma8bitSize) {
+        EB_APP_MALLOC(uint8_t*, inputPtr->cb, chroma8bitSize, EB_N_PTR,
+                      EB_ErrorInsufficientResources);
+    } else {
         inputPtr->cb = 0;
+    }
+
     if (chroma8bitSize) {
-        EB_APP_MALLOC(uint8_t*, inputPtr->cr, chroma8bitSize, EB_N_PTR, EB_ErrorInsufficientResources);
-    }
-    else
+        EB_APP_MALLOC(uint8_t*, inputPtr->cr, chroma8bitSize, EB_N_PTR,
+                      EB_ErrorInsufficientResources);
+    } else {
         inputPtr->cr = 0;
+    }
+
     if (luma10bitSize) {
-        EB_APP_MALLOC(uint8_t*, inputPtr->luma_ext, luma10bitSize, EB_N_PTR, EB_ErrorInsufficientResources);
-    }
-    else
+        EB_APP_MALLOC(uint8_t*, inputPtr->luma_ext, luma10bitSize, EB_N_PTR,
+                      EB_ErrorInsufficientResources);
+    } else {
         inputPtr->luma_ext = 0;
-    if (chroma10bitSize) {
-        EB_APP_MALLOC(uint8_t*, inputPtr->cb_ext, chroma10bitSize, EB_N_PTR, EB_ErrorInsufficientResources);
     }
-    else
+
+    if (chroma10bitSize) {
+        EB_APP_MALLOC(uint8_t*, inputPtr->cb_ext, chroma10bitSize, EB_N_PTR,
+                      EB_ErrorInsufficientResources);
+    } else {
         inputPtr->cb_ext = 0;
+    }
+
     if (chroma10bitSize) {
-        EB_APP_MALLOC(uint8_t*, inputPtr->cr_ext, chroma10bitSize, EB_N_PTR, EB_ErrorInsufficientResources);
-    }
-    else
+        EB_APP_MALLOC(uint8_t*, inputPtr->cr_ext, chroma10bitSize, EB_N_PTR,
+                      EB_ErrorInsufficientResources);
+    } else {
         inputPtr->cr_ext = 0;
-    return return_error;
-}
-
-EbErrorType AllocateInputBuffers(
-    EbConfig                *config,
-    EbAppContext            *callback_data)
-{
-    EbErrorType   return_error = EB_ErrorNone;
-    {
-        EB_APP_MALLOC(EbBufferHeaderType*, callback_data->input_buffer_pool, sizeof(EbBufferHeaderType), EB_N_PTR, EB_ErrorInsufficientResources);
-
-        // Initialize Header
-        callback_data->input_buffer_pool->size                       = sizeof(EbBufferHeaderType);
-
-        EB_APP_MALLOC(uint8_t*, callback_data->input_buffer_pool->p_buffer, sizeof(EbSvtIOFormat), EB_N_PTR, EB_ErrorInsufficientResources);
-
-        if (config->buffered_input == -1) {
-            // Allocate frame buffer for the p_buffer
-            AllocateFrameBuffer(
-                    config,
-                    callback_data->input_buffer_pool->p_buffer);
-        }
-
-        // Assign the variables
-        callback_data->input_buffer_pool->p_app_private = NULL;
-        callback_data->input_buffer_pool->pic_type   = EB_AV1_INVALID_PICTURE;
     }
 
-    return return_error;
+    return EB_ErrorNone;
 }
-EbErrorType AllocateOutputReconBuffers(
-    EbConfig                *config,
-    EbAppContext            *callback_data)
+
+EbErrorType AllocateInputBuffers(EbConfig *config, EbAppContext *callback_data)
 {
-    EbErrorType   return_error = EB_ErrorNone;
+    EB_APP_MALLOC(EbBufferHeaderType*, callback_data->input_buffer_pool,
+                  sizeof(EbBufferHeaderType), EB_N_PTR,
+                  EB_ErrorInsufficientResources);
+
+    // Initialize Header
+    callback_data->input_buffer_pool->size = sizeof(EbBufferHeaderType);
+
+    EB_APP_MALLOC(uint8_t*, callback_data->input_buffer_pool->p_buffer,
+                  sizeof(EbSvtIOFormat), EB_N_PTR,
+                  EB_ErrorInsufficientResources);
+
+    // Allocate frame buffer for the p_buffer
+    if (config->buffered_input == -1)
+        AllocateFrameBuffer(config, callback_data->input_buffer_pool->p_buffer);
+
+    // Assign the variables
+    callback_data->input_buffer_pool->p_app_private = NULL;
+    callback_data->input_buffer_pool->pic_type = EB_AV1_INVALID_PICTURE;
+
+    return EB_ErrorNone;
+}
+
+EbErrorType AllocateOutputReconBuffers(EbConfig *config,
+                                       EbAppContext *callback_data)
+{
     const size_t luma_size =
-        config->input_padded_width    *
-        config->input_padded_height;
+        config->input_padded_width * config->input_padded_height;
+
     // both u and v
     const size_t chromaSize = luma_size >> (3 - config->encoder_color_format);
     const size_t tenBit = (config->encoder_bit_depth > 8);
     const size_t frameSize = (luma_size + 2 * chromaSize) << tenBit;
 
-// ... Recon Port
-    EB_APP_MALLOC(EbBufferHeaderType*, callback_data->recon_buffer, sizeof(EbBufferHeaderType), EB_N_PTR, EB_ErrorInsufficientResources);
+    // Recon Port
+    EB_APP_MALLOC(EbBufferHeaderType*, callback_data->recon_buffer,
+                  sizeof(EbBufferHeaderType), EB_N_PTR,
+                  EB_ErrorInsufficientResources);
 
     // Initialize Header
     callback_data->recon_buffer->size = sizeof(EbBufferHeaderType);
 
-    EB_APP_MALLOC(uint8_t*, callback_data->recon_buffer->p_buffer, frameSize, EB_N_PTR, EB_ErrorInsufficientResources);
+    EB_APP_MALLOC(uint8_t*, callback_data->recon_buffer->p_buffer, frameSize,
+                  EB_N_PTR, EB_ErrorInsufficientResources);
 
     callback_data->recon_buffer->n_alloc_len = (uint32_t)frameSize;
     callback_data->recon_buffer->p_app_private = NULL;
-    return return_error;
+
+    return EB_ErrorNone;
 }
 
-EbErrorType AllocateOutputBuffers(
-    EbConfig                *config,
-    EbAppContext            *callback_data)
+EbErrorType AllocateOutputBuffers(EbConfig *config, EbAppContext *callback_data)
 {
-    EbErrorType   return_error = EB_ErrorNone;
-    uint32_t           outputStreamBufferSize = (uint32_t)(EB_OUTPUTSTREAMBUFFERSIZE_MACRO(config->input_padded_height * config->input_padded_width));;
-    {
-        EB_APP_MALLOC(EbBufferHeaderType*, callback_data->stream_buffer_pool, sizeof(EbBufferHeaderType), EB_N_PTR, EB_ErrorInsufficientResources);
+    uint32_t outputStreamBufferSize =
+        (uint32_t)(EB_OUTPUTSTREAMBUFFERSIZE_MACRO(
+                    config->input_padded_height * config->input_padded_width));
 
-        // Initialize Header
-        callback_data->stream_buffer_pool->size = sizeof(EbBufferHeaderType);
+    EB_APP_MALLOC(EbBufferHeaderType*, callback_data->stream_buffer_pool,
+                  sizeof(EbBufferHeaderType), EB_N_PTR,
+                  EB_ErrorInsufficientResources);
 
-        EB_APP_MALLOC(uint8_t*, callback_data->stream_buffer_pool->p_buffer, outputStreamBufferSize, EB_N_PTR, EB_ErrorInsufficientResources);
+    // Initialize Header
+    callback_data->stream_buffer_pool->size = sizeof(EbBufferHeaderType);
 
-        callback_data->stream_buffer_pool->n_alloc_len = outputStreamBufferSize;
-        callback_data->stream_buffer_pool->p_app_private = NULL;
-        callback_data->stream_buffer_pool->pic_type = EB_AV1_INVALID_PICTURE;
-    }
-    return return_error;
+    EB_APP_MALLOC(uint8_t*, callback_data->stream_buffer_pool->p_buffer,
+                  outputStreamBufferSize, EB_N_PTR,
+                  EB_ErrorInsufficientResources);
+
+    callback_data->stream_buffer_pool->n_alloc_len = outputStreamBufferSize;
+    callback_data->stream_buffer_pool->p_app_private = NULL;
+    callback_data->stream_buffer_pool->pic_type = EB_AV1_INVALID_PICTURE;
+
+    return EB_ErrorNone;
 }
 
 EbErrorType PreloadFramesIntoRam(
@@ -572,9 +616,7 @@ EbErrorType init_encoder(
     ///********************** APPLICATION INIT [START] ******************///
 
     // STEP 6: Allocate input buffers carrying the yuv frames in
-    return_error = AllocateInputBuffers(
-        config,
-        callback_data);
+    return_error = AllocateInputBuffers(config, callback_data);
 
     if (return_error != EB_ErrorNone)
         return return_error;

@@ -48,6 +48,7 @@ extern "C" {
         // Picture Parameters
         uint16_t          origin_x;         // Horizontal padding distance
         uint16_t          origin_y;         // Vertical padding distance
+        uint16_t          origin_bot_y;     // Vertical bottom padding distance
         uint16_t          width;            // Luma picture width which excludes the padding
         uint16_t          height;           // Luma picture height which excludes the padding
         uint16_t          max_width;        // input Luma picture width
@@ -299,6 +300,7 @@ extern "C" {
         uint16_t          bot_padding;
         EbBool            split_mode;         //ON: allocate 8bit data seperately from nbit data
         EbBool            down_sampled_filtered;
+        uint8_t           mfmv;
     } EbPictureBufferDescInitData;
 
     /**************************************

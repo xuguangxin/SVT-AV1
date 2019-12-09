@@ -26,7 +26,7 @@
 void ReconOutput(
     PictureControlSet    *picture_control_set_ptr,
     SequenceControlSet   *sequence_control_set_ptr);
-void av1_loop_restoration_filter_frame(Yv12BufferConfig *frame,
+void eb_av1_loop_restoration_filter_frame(Yv12BufferConfig *frame,
     Av1Common *cm, int32_t optimized_lr);
 void CopyStatisticsToRefObject(
     PictureControlSet    *picture_control_set_ptr,
@@ -60,7 +60,7 @@ static void rest_context_dctor(EbPtr p)
     EB_DELETE(obj->temp_lf_recon_picture16bit_ptr);
     EB_DELETE(obj->trial_frame_rst);
     EB_DELETE(obj->org_rec_frame);
-    EB_FREE(obj->rst_tmpbuf);
+    EB_FREE_ALIGNED(obj->rst_tmpbuf);
 }
 
 /******************************************************
@@ -275,7 +275,7 @@ void* rest_kernel(void *input_ptr)
                     cm->rst_info[1].frame_restoration_type != RESTORE_NONE ||
                     cm->rst_info[2].frame_restoration_type != RESTORE_NONE)
                 {
-                    av1_loop_restoration_filter_frame(
+                    eb_av1_loop_restoration_filter_frame(
                         cm->frame_to_show,
                         cm,
                         0);
@@ -310,7 +310,7 @@ void* rest_kernel(void *input_ptr)
                     picture_control_set_ptr,
                     sequence_control_set_ptr);
 
-            // Pad the reference picture and set up TMVP flag and ref POC
+            // Pad the reference picture and set ref POC
             if (picture_control_set_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
                 PadRefAndSetFlags(
                     picture_control_set_ptr,

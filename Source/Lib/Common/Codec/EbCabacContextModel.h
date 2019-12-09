@@ -36,6 +36,18 @@ extern "C" {
     // TODO(negge): Rename this AomProb once we remove vpxbool.
     typedef uint16_t AomCdfProb;
 
+#if PAL_SUP
+    typedef struct {
+        AomCdfProb *color_map_cdf;
+        // TODO( use packed enum type if appropriate)
+        uint8_t token;
+    } TOKENEXTRA;
+    typedef struct {
+        TOKENEXTRA *start;
+        TOKENEXTRA *stop;
+        unsigned int count;
+    } TOKENLIST;
+#endif
 #define CDF_SIZE(x) ((x) + 1)
 #define CDF_PROB_BITS 15
 #define CDF_PROB_TOP (1 << CDF_PROB_BITS)
@@ -715,104 +727,13 @@ extern "C" {
 
     struct AV1Common;
     struct FrameContexts;
-    void av1_reset_cdf_symbol_counters(struct FrameContexts *fc);
-    void av1_default_coef_probs(struct FrameContexts *fc, int32_t base_qindex);
+    void eb_av1_reset_cdf_symbol_counters(struct FrameContexts *fc);
+    void eb_av1_default_coef_probs(struct FrameContexts *fc, int32_t base_qindex);
     void init_mode_probs(struct FrameContexts *fc);
 
     struct FrameContexts;
 
     typedef char EntropyContext;
-
-    static INLINE int32_t combine_entropy_contexts(EntropyContext a,
-        EntropyContext b) {
-        return (a != 0) + (b != 0);
-    }
-
-    static INLINE int32_t get_entropy_context(TxSize tx_size, const EntropyContext *a,
-        const EntropyContext *l) {
-        EntropyContext above_ec = 0, left_ec = 0;
-
-        switch (tx_size) {
-        case TX_4X4:
-            above_ec = a[0] != 0;
-            left_ec = l[0] != 0;
-            break;
-        case TX_4X8:
-            above_ec = a[0] != 0;
-            left_ec = !!*(const uint16_t *)l;
-            break;
-        case TX_8X4:
-            above_ec = !!*(const uint16_t *)a;
-            left_ec = l[0] != 0;
-            break;
-        case TX_8X16:
-            above_ec = !!*(const uint16_t *)a;
-            left_ec = !!*(const uint32_t *)l;
-            break;
-        case TX_16X8:
-            above_ec = !!*(const uint32_t *)a;
-            left_ec = !!*(const uint16_t *)l;
-            break;
-        case TX_16X32:
-            above_ec = !!*(const uint32_t *)a;
-            left_ec = !!*(const uint64_t *)l;
-            break;
-        case TX_32X16:
-            above_ec = !!*(const uint64_t *)a;
-            left_ec = !!*(const uint32_t *)l;
-            break;
-        case TX_8X8:
-            above_ec = !!*(const uint16_t *)a;
-            left_ec = !!*(const uint16_t *)l;
-            break;
-        case TX_16X16:
-            above_ec = !!*(const uint32_t *)a;
-            left_ec = !!*(const uint32_t *)l;
-            break;
-        case TX_32X32:
-            above_ec = !!*(const uint64_t *)a;
-            left_ec = !!*(const uint64_t *)l;
-            break;
-        case TX_64X64:
-            above_ec = !!(*(const uint64_t *)a | *(const uint64_t *)(a + 8));
-            left_ec = !!(*(const uint64_t *)l | *(const uint64_t *)(l + 8));
-            break;
-        case TX_32X64:
-            above_ec = !!*(const uint64_t *)a;
-            left_ec = !!(*(const uint64_t *)l | *(const uint64_t *)(l + 8));
-            break;
-        case TX_64X32:
-            above_ec = !!(*(const uint64_t *)a | *(const uint64_t *)(a + 8));
-            left_ec = !!*(const uint64_t *)l;
-            break;
-        case TX_4X16:
-            above_ec = a[0] != 0;
-            left_ec = !!*(const uint32_t *)l;
-            break;
-        case TX_16X4:
-            above_ec = !!*(const uint32_t *)a;
-            left_ec = l[0] != 0;
-            break;
-        case TX_8X32:
-            above_ec = !!*(const uint16_t *)a;
-            left_ec = !!*(const uint64_t *)l;
-            break;
-        case TX_32X8:
-            above_ec = !!*(const uint64_t *)a;
-            left_ec = !!*(const uint16_t *)l;
-            break;
-        case TX_16X64:
-            above_ec = !!*(const uint32_t *)a;
-            left_ec = !!(*(const uint64_t *)l | *(const uint64_t *)(l + 8));
-            break;
-        case TX_64X16:
-            above_ec = !!(*(const uint64_t *)a | *(const uint64_t *)(a + 8));
-            left_ec = !!*(const uint32_t *)l;
-            break;
-        default: assert(0 && "Invalid transform size."); break;
-        }
-        return combine_entropy_contexts(above_ec, left_ec);
-    }
 
     //**********************************************************************************************************************//
     // txb_Common.h
@@ -995,7 +916,7 @@ extern "C" {
 
         AomCdfProb inter_compound_mode_cdf[INTER_MODE_CONTEXTS]
             [CDF_SIZE(INTER_COMPOUND_MODES)];
-        AomCdfProb compound_type_cdf[BlockSizeS_ALL][CDF_SIZE(COMPOUND_TYPES - 1)];
+        AomCdfProb compound_type_cdf[BlockSizeS_ALL][CDF_SIZE(MASKED_COMPOUND_TYPES)];
         AomCdfProb wedge_idx_cdf[BlockSizeS_ALL][CDF_SIZE(16)];
         AomCdfProb interintra_cdf[BlockSize_GROUPS][CDF_SIZE(2)];
         AomCdfProb wedge_interintra_cdf[BlockSizeS_ALL][CDF_SIZE(2)];

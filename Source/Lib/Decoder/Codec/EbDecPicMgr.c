@@ -53,7 +53,14 @@
 *******************************************************************************
 */
 
-EbErrorType dec_pic_mgr_init(EbDecPicMgr **pps_pic_mgr) {
+EbErrorType dec_pic_mgr_init(EbDecHandle  *dec_handle_ptr) {
+
+    EbDecPicMgr **pps_pic_mgr = (EbDecPicMgr **)&dec_handle_ptr->pv_pic_mgr;
+    uint32_t mi_cols = 2 * ((dec_handle_ptr->seq_header.max_frame_width + 7)
+                       >> 3);
+    uint32_t mi_rows = 2 * ((dec_handle_ptr->seq_header.max_frame_height + 7)
+                       >> 3);
+    int size = mi_cols * mi_rows;
 
     EbErrorType return_error = EB_ErrorNone;
     int32_t i;
@@ -67,11 +74,27 @@ EbErrorType dec_pic_mgr_init(EbDecPicMgr **pps_pic_mgr) {
         ps_pic_mgr->as_dec_pic[i].is_free    = 1;
         ps_pic_mgr->as_dec_pic[i].size       = 0;
         ps_pic_mgr->as_dec_pic[i].ref_count  = 0;
+        ps_pic_mgr->as_dec_pic[i].mvs = NULL;
+        EB_MALLOC_DEC(uint8_t*, ps_pic_mgr->as_dec_pic[i].segment_maps,
+            size * sizeof(uint8_t), EB_N_PTR);
+        memset(ps_pic_mgr->as_dec_pic[i].segment_maps, 0, size);
     }
 
     ps_pic_mgr->num_pic_bufs = 0;
 
     return return_error;
+}
+
+static INLINE EbErrorType mvs_8x8_memory_alloc(TemporalMvRef **mvs,
+    FrameHeader *frame_info)
+{
+    const int frame_mvs_stride = ROUND_POWER_OF_TWO(frame_info->mi_cols, 1);
+    const int frame_mvs_rows = ROUND_POWER_OF_TWO(frame_info->mi_rows, 1);
+    const int mvs_buff_size = frame_mvs_stride * frame_mvs_rows;
+
+    EB_MALLOC_DEC(TemporalMvRef *, *mvs, mvs_buff_size * sizeof(*mvs), EB_N_PTR);
+
+    return EB_ErrorNone;
 }
 
 /**
@@ -126,8 +149,9 @@ EbDecPicBuf * dec_pic_mgr_get_cur_pic(EbDecPicMgr *ps_pic_mgr,
         input_picture_buffer_desc_init_data.max_width = seq_header->max_frame_width;
         input_picture_buffer_desc_init_data.max_height = seq_header->max_frame_height;
         input_picture_buffer_desc_init_data.bit_depth = (EbBitDepthEnum)cc->bit_depth;
-
-        input_picture_buffer_desc_init_data.color_format = color_format;
+        assert(IMPLIES(cc->mono_chrome, color_format == EB_YUV400));
+        input_picture_buffer_desc_init_data.color_format = cc->mono_chrome ?
+                                                        EB_YUV400 : color_format;
         input_picture_buffer_desc_init_data.buffer_enable_mask = cc->mono_chrome ?
             PICTURE_BUFFER_DESC_LUMA_MASK : PICTURE_BUFFER_DESC_FULL_MASK;
 
@@ -144,12 +168,20 @@ EbDecPicBuf * dec_pic_mgr_get_cur_pic(EbDecPicMgr *ps_pic_mgr,
         if (return_error != EB_ErrorNone) return NULL;
 
         ps_pic_mgr->as_dec_pic[i].size = frame_size;
+
+        /* Memory for storing MV's at 8x8 lvl*/
+        EbErrorType ret_err = mvs_8x8_memory_alloc(
+            &ps_pic_mgr->as_dec_pic[i].mvs, frame_info);
+        if (ret_err != EB_ErrorNone) return NULL;
+
         ps_pic_mgr->num_pic_bufs++;
     }
     else
         assert(ps_pic_mgr->as_dec_pic[i].ps_pic_buf != NULL);
 
     ps_pic_mgr->as_dec_pic[i].is_free = 0;
+    ps_pic_mgr->as_dec_pic[i].ref_count = 1;
+
     pic_buf = &ps_pic_mgr->as_dec_pic[i];
 
     return pic_buf;
@@ -208,8 +240,7 @@ void dec_pic_mgr_update_ref_pic(EbDecHandle *dec_handle_ptr, int32_t frame_decod
             dec_handle_ptr->next_ref_frame_map[ref_index] = NULL;
         }
 
-        if (dec_handle_ptr->frame_header.show_existing_frame ||
-            dec_handle_ptr->frame_header.show_frame)
+        if (dec_handle_ptr->frame_header.show_existing_frame)
         {
             //TODO: Add output Q logic
             //assert(0);
@@ -266,7 +297,7 @@ void generate_next_ref_frame_map(EbDecHandle *dec_handle_ptr) {
 // These functions take a reference frame label between LAST_FRAME and
 // EXTREF_FRAME inclusive.  Note that this is different to the indexing
 // previously used by the frame_refs[] array.
-static INLINE int32_t get_ref_frame_map_idx(EbDecHandle *dec_handle_ptr,
+static INLINE int32_t get_ref_frame_map_with_idx(EbDecHandle *dec_handle_ptr,
                                         const MvReferenceFrame ref_frame)
 {
     return (ref_frame >= LAST_FRAME && ref_frame <= REF_FRAMES)
@@ -277,8 +308,16 @@ static INLINE int32_t get_ref_frame_map_idx(EbDecHandle *dec_handle_ptr,
 EbDecPicBuf *get_ref_frame_buf(EbDecHandle *dec_handle_ptr,
                                const MvReferenceFrame ref_frame)
 {
-    const int32_t map_idx = get_ref_frame_map_idx(dec_handle_ptr, ref_frame);
+    const int32_t map_idx = get_ref_frame_map_with_idx(dec_handle_ptr, ref_frame);
     return (map_idx != INVALID_IDX) ? dec_handle_ptr->ref_frame_map[map_idx] : NULL;
+}
+
+ScaleFactors *get_ref_scale_factors(EbDecHandle *dec_handle_ptr,
+                                    const MvReferenceFrame ref_frame)
+{
+    const int map_idx = get_ref_frame_map_with_idx(dec_handle_ptr, ref_frame);
+    return (map_idx != INVALID_IDX) ?
+                        &dec_handle_ptr->ref_scale_factors[map_idx] : NULL;
 }
 
 /* Compares the sort_idx fields. If they are equal, then compares the map_idx
@@ -460,4 +499,27 @@ void svt_set_frame_refs(EbDecHandle *dec_handle_ptr, int32_t lst_map_idx,
 
     for (int32_t i = 0; i < INTER_REFS_PER_FRAME; i++)
         assert(ref_flag_list[i] == 1);
+}
+
+void svt_setup_frame_buf_refs(EbDecHandle *dec_handle_ptr)
+{
+    EbDecPicBuf *cur_pic_buf = dec_handle_ptr->cur_pic_buf[0];
+    FrameHeader *frame_header = &dec_handle_ptr->frame_header;
+
+    cur_pic_buf->order_hint = frame_header->order_hint;
+    cur_pic_buf->frame_type = frame_header->frame_type;
+    cur_pic_buf->frame_width  = frame_header->frame_size.frame_width;
+    cur_pic_buf->frame_height = frame_header->frame_size.frame_height;
+    cur_pic_buf->render_width = frame_header->frame_size.render_width;
+    cur_pic_buf->render_height = frame_header->frame_size.render_height;
+    cur_pic_buf->superres_upscaled_width = frame_header->
+                                frame_size.superres_upscaled_width;
+
+    MvReferenceFrame ref_frame;
+    for (ref_frame = LAST_FRAME; ref_frame <= ALTREF_FRAME; ++ref_frame) {
+        const EbDecPicBuf *const buf = get_ref_frame_buf(dec_handle_ptr, ref_frame);
+        if (buf != NULL)
+            dec_handle_ptr->cur_pic_buf[0]->ref_order_hints[ref_frame - LAST_FRAME]
+                = buf->order_hint;
+    }
 }

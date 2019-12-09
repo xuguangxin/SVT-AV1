@@ -33,8 +33,6 @@ typedef struct EntropyCodingContext
     uint32_t                        sb_total_count;
     // Lambda
 #if ADD_DELTA_QP_SUPPORT
-    uint16_t                        qp;
-    uint16_t                        chroma_qp;
 #else
     uint8_t                         qp;
     uint8_t                         chroma_qp;
@@ -73,6 +71,9 @@ typedef struct EntropyCodingContext
     EbBool                            is16bit; //enable 10 bit encode in CL
     int32_t                           coded_area_sb;
     int32_t                           coded_area_sb_uv;
+#if PAL_SUP
+    TOKENEXTRA *tok;
+#endif
 } EntropyCodingContext;
 
 /**************************************

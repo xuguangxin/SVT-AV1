@@ -98,6 +98,12 @@ void av1_estimate_syntax_rate___partial(
         }
     }
 }
+#if FILTER_INTRA_FLAG
+int av1_filter_intra_allowed_bsize(  uint8_t enable_filter_intra,  BlockSize bs);
+#if !PAL_SUP
+int av1_filter_intra_allowed(uint8_t   enable_filter_intra, BlockSize bsize, uint32_t  mode);
+#endif
+#endif
 /*************************************************************
 * av1_estimate_syntax_rate()
 * Estimate the rate for each syntax elements and for
@@ -135,7 +141,12 @@ void av1_estimate_syntax_rate(
     }
 
     av1_get_syntax_rate_from_cdf(md_rate_estimation_array->filter_intra_mode_fac_bits, fc->filter_intra_mode_cdf, NULL);
-
+#if FILTER_INTRA_FLAG
+    for (i = 0; i < BlockSizeS_ALL; ++i) {
+        if (av1_filter_intra_allowed_bsize(1,i))
+            av1_get_syntax_rate_from_cdf(md_rate_estimation_array->filter_intra_fac_bits[i], fc->filter_intra_cdfs[i], NULL);
+    }
+#else
     // NM - To be added when intra filtering is adopted
     /*for (i = 0; i < BlockSizeS_ALL; ++i) {
         if (av1_filter_intra_allowed_bsize(cm, i))
@@ -144,7 +155,7 @@ void av1_estimate_syntax_rate(
     }*/
 
     // NM - To be added when inter filtering is adopted
-
+#endif
     for (i = 0; i < SWITCHABLE_FILTER_CONTEXTS; ++i)
         av1_get_syntax_rate_from_cdf(md_rate_estimation_array->switchable_interp_fac_bitss[i], fc->switchable_interp_cdf[i], NULL);
 
@@ -334,11 +345,11 @@ MvClassType av1_get_mv_class(int32_t z, int32_t *offset) {
     return c;
 }
 
-//void av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2],
+//void eb_av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2],
 //    const NmvContext *ctx,
 //    MvSubpelPrecision precision)
 
-void av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2],
+void eb_av1_build_nmv_cost_table(int32_t *mvjoint, int32_t *mvcost[2],
     const NmvContext *ctx,
     MvSubpelPrecision precision);
 
@@ -361,18 +372,23 @@ void av1_estimate_mv_rate(
     nmvcost_hp[0] = &md_rate_estimation_array->nmv_costs_hp[0][MV_MAX];
     nmvcost_hp[1] = &md_rate_estimation_array->nmv_costs_hp[1][MV_MAX];
 
-    av1_build_nmv_cost_table(
+    eb_av1_build_nmv_cost_table(
         md_rate_estimation_array->nmv_vec_cost,//out
         frm_hdr->allow_high_precision_mv ? nmvcost_hp : nmvcost, //out
         nmv_ctx,
         frm_hdr->allow_high_precision_mv);
-
+#if EIGHT_PEL_FIX
+    md_rate_estimation_array->nmvcoststack[0] = frm_hdr->allow_high_precision_mv ?
+        &md_rate_estimation_array->nmv_costs_hp[0][MV_MAX] : &md_rate_estimation_array->nmv_costs[0][MV_MAX];
+    md_rate_estimation_array->nmvcoststack[1] = frm_hdr->allow_high_precision_mv ?
+        &md_rate_estimation_array->nmv_costs_hp[1][MV_MAX] : &md_rate_estimation_array->nmv_costs[1][MV_MAX];
+#else
     md_rate_estimation_array->nmvcoststack[0] = &md_rate_estimation_array->nmv_costs[0][MV_MAX];
     md_rate_estimation_array->nmvcoststack[1] = &md_rate_estimation_array->nmv_costs[1][MV_MAX];
-
+#endif
     if (frm_hdr->allow_intrabc) {
         int32_t *dvcost[2] = { &md_rate_estimation_array->dv_cost[0][MV_MAX], &md_rate_estimation_array->dv_cost[1][MV_MAX] };
-        av1_build_nmv_cost_table(md_rate_estimation_array->dv_joint_cost, dvcost, &picture_control_set_ptr->coeff_est_entropy_coder_ptr->fc->ndvc,
+        eb_av1_build_nmv_cost_table(md_rate_estimation_array->dv_joint_cost, dvcost, &picture_control_set_ptr->coeff_est_entropy_coder_ptr->fc->ndvc,
             MV_SUBPEL_NONE);
     }
 }
@@ -475,42 +491,3 @@ void av1_estimate_coefficients_rate(
         }
     }
 }
-#if !ENABLE_CDF_UPDATE
-EbErrorType md_rate_estimation_context_init(MdRateEstimationContext *md_rate_estimation_array)
-{
-    uint32_t                      caseIndex1;
-    uint32_t                      caseIndex2;
-    uint32_t                      sliceIndex;
-    uint32_t                      qp_index;
-    MdRateEstimationContext  *mdRateEstimationTemp;
-
-    uint32_t                      cabacContextModelArrayOffset1 = 0;
-    uint32_t                      cabacContextModelArrayOffset2;
-
-    // Loop over all slice types
-    for (sliceIndex = 0; sliceIndex < TOTAL_NUMBER_OF_SLICE_TYPES; sliceIndex++) {
-        cabacContextModelArrayOffset1 = sliceIndex * TOTAL_NUMBER_OF_QP_VALUES;
-        // Loop over all Qps
-        for (qp_index = 0; qp_index < TOTAL_NUMBER_OF_QP_VALUES; qp_index++) {
-            cabacContextModelArrayOffset2 = qp_index;
-            mdRateEstimationTemp = (&md_rate_estimation_array[cabacContextModelArrayOffset1 + cabacContextModelArrayOffset2]);
-
-            // Split Flag Bits Table
-            // 0: Symbol = 0 & CtxSplit = 0
-            // 1: Symbol = 0 & CtxSplit = 1
-            // 2: Symbol = 0 & CtxSplit = 2
-            // 3: Symbol = 1 & CtxSplit = 0
-            // 4: Symbol = 1 & CtxSplit = 1
-            // 5: Symbol = 1 & CtxSplit = 2
-            for (caseIndex1 = 0; caseIndex1 < 2; caseIndex1++) {
-                for (caseIndex2 = 0; caseIndex2 < (NUMBER_OF_SPLIT_FLAG_CASES >> 1); caseIndex2++)
-                    mdRateEstimationTemp->split_flag_bits[(NUMBER_OF_SPLIT_FLAG_CASES >> 1)*caseIndex1 + caseIndex2] = 0;
-            }
-            for (caseIndex1 = 0; caseIndex1 < NUMBER_OF_MVD_CASES; caseIndex1++)
-                mdRateEstimationTemp->mvd_bits[caseIndex1] = 0;
-            mdRateEstimationTemp->initialized = 0;
-        }
-    }
-    return EB_ErrorNone;
-}
-#endif

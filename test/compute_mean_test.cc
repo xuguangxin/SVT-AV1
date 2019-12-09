@@ -12,8 +12,9 @@
  * - compute_sub_mean8x8_sse2_intrin
  * - compute_subd_mean_of_squared_values8x8_sse2_intrin
  * - compute_mean8x8_avx2_intrin
+ * - compute_interm_var_four8x8_avx2_intrin
  *
- * @author Cidana-Edmond
+ * @author Cidana-Edmond,Cidana-Ivy
  *
  ******************************************************************************/
 
@@ -44,10 +45,6 @@
  * random 8-bit integer, and in boundary test are the large random integer
  * between 0xE0 and 0xFF
  */
-
-extern "C" {
-#include "EbComputeMean_C.c"
-}
 
 namespace {
 
@@ -95,7 +92,7 @@ TEST(ComputeMeanTest, run_compute_mean_test) {
                 compute_mean8x8_sse2_intrin(input_data, 8, 8, 8);
             uint64_t output_avx2_tst =
                 compute_mean8x8_avx2_intrin(input_data, 8, 8, 8);
-            uint64_t output_c_ref = compute_mean(input_data, 8, 8, 8);
+            uint64_t output_c_ref = compute_mean_c(input_data, 8, 8, 8);
 
             // compare results
             ASSERT_EQ(output_sse2_tst, output_c_ref)
@@ -127,7 +124,7 @@ TEST(ComputeMeanTest, run_compute_mean_squared_values_test) {
                 compute_mean_of_squared_values8x8_sse2_intrin(
                     input_data, 8, 8, 8);
             uint64_t output_c_ref =
-                compute_mean_squared_values(input_data, 8, 8, 8);
+                compute_mean_squared_values_c(input_data, 8, 8, 8);
 
             // compare results
             ASSERT_EQ(output_sse2_tst, output_c_ref)
@@ -153,7 +150,7 @@ TEST(ComputeMeanTest, run_compute_sub_mean_test) {
             // compute mean
             uint64_t output_sse2_tst =
                 compute_sub_mean8x8_sse2_intrin(input_data, 8);
-            uint64_t output_c_ref = compute_sub_mean(input_data, 8, 8, 8);
+            uint64_t output_c_ref = compute_sub_mean_c(input_data, 8, 8, 8);
 
             // compare results
             ASSERT_EQ(output_sse2_tst, output_c_ref)
@@ -181,7 +178,7 @@ TEST(ComputeMeanTest, run_compute_sub_mean_squared_values_test) {
                 compute_subd_mean_of_squared_values8x8_sse2_intrin(input_data,
                                                                    8);
             uint64_t output_c_ref =
-                compute_sub_mean_squared_values(input_data, 8, 8, 8);
+                compute_sub_mean_squared_values_c(input_data, 8, 8, 8);
 
             // compare results
             ASSERT_EQ(output_sse2_tst, output_c_ref)
@@ -189,6 +186,39 @@ TEST(ComputeMeanTest, run_compute_sub_mean_squared_values_test) {
                 << "compute sub mean of squared values with asm SSE2 failed!\n"
                 << print_data(input_data, 8, 8);
         }
+    }
+}
+
+TEST(ComputeMeanTest, run_compute_mean_avx2_test) {
+    SVTRandom rnd[2] = {
+        SVTRandom(8, false),  /**< random generator of normal test vector */
+        SVTRandom(0xE0, 0xFF) /**< random generator of boundary test vector */
+    };
+
+    uint8_t input_data[block_size];
+
+    for (int i = 0; i < 2; i++) {
+        // prepare data
+        prepare_data_8x8(input_data, &rnd[i]);
+
+        // compute mean
+        uint64_t output_sse2_squared_tst =
+            compute_subd_mean_of_squared_values8x8_sse2_intrin(input_data, 8);
+        uint64_t output_sse2_tst =
+            compute_sub_mean8x8_sse2_intrin(input_data, 8);
+
+        uint64_t output_avx2_tst[4] = {0};
+        uint64_t output_avx2_squared_tst[4] = {0};
+        compute_interm_var_four8x8_avx2_intrin(
+            input_data, 8, output_avx2_tst, output_avx2_squared_tst);
+
+        // compare results
+        EXPECT_EQ(output_avx2_tst[0], output_sse2_tst)
+            << "compare mean of 8x8 block error"
+            << print_data(input_data, 8, 8);
+        EXPECT_EQ(output_avx2_squared_tst[0], output_sse2_squared_tst)
+            << "compare mean of 8x8 squared block error"
+            << print_data(input_data, 8, 8);
     }
 }
 

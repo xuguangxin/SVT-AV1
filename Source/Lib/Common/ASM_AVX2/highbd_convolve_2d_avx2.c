@@ -19,7 +19,7 @@
 #include "synonyms.h"
 #include "convolve.h"
 
-void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
+void eb_av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
     uint16_t *dst, int32_t dst_stride, int32_t w, int32_t h,
     const InterpFilterParams *filter_params_x,
     const InterpFilterParams *filter_params_y,
@@ -57,8 +57,8 @@ void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
         _mm256_set1_epi16(bd == 10 ? 1023 : (bd == 12 ? 4095 : 255));
     const __m256i zero = _mm256_setzero_si256();
 
-    prepare_coeffs(filter_params_x, subpel_x_q4, coeffs_x);
-    prepare_coeffs(filter_params_y, subpel_y_q4, coeffs_y);
+    prepare_coeffs_8tap_avx2(filter_params_x, subpel_x_q4, coeffs_x);
+    prepare_coeffs_8tap_avx2(filter_params_y, subpel_y_q4, coeffs_y);
 
     for (j = 0; j < w; j += 8) {
         /* Horizontal filter */
@@ -80,7 +80,7 @@ void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
                 s[2] = _mm256_alignr_epi8(r1, r0, 8);
                 s[3] = _mm256_alignr_epi8(r1, r0, 12);
 
-                __m256i res_even = convolve(s, coeffs_x);
+                __m256i res_even = convolve16_8tap_avx2(s, coeffs_x);
                 res_even = _mm256_sra_epi32(_mm256_add_epi32(res_even, round_const_x),
                     round_shift_x);
 
@@ -90,7 +90,7 @@ void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
                 s[2] = _mm256_alignr_epi8(r1, r0, 10);
                 s[3] = _mm256_alignr_epi8(r1, r0, 14);
 
-                __m256i res_odd = convolve(s, coeffs_x);
+                __m256i res_odd = convolve16_8tap_avx2(s, coeffs_x);
                 res_odd = _mm256_sra_epi32(_mm256_add_epi32(res_odd, round_const_x),
                     round_shift_x);
 
@@ -130,7 +130,7 @@ void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
                 s[3] = _mm256_unpacklo_epi16(s6, s7);
                 s[7] = _mm256_unpackhi_epi16(s6, s7);
 
-                const __m256i res_a = convolve(s, coeffs_y);
+                const __m256i res_a = convolve16_8tap_avx2(s, coeffs_y);
                 __m256i res_a_round = _mm256_sra_epi32(
                     _mm256_add_epi32(res_a, round_const_y), round_shift_y);
 
@@ -138,7 +138,7 @@ void av1_highbd_convolve_2d_sr_avx2(const uint16_t *src, int32_t src_stride,
                     _mm256_add_epi32(res_a_round, round_const_bits), round_shift_bits);
 
                 if (w - j > 4) {
-                    const __m256i res_b = convolve(s + 4, coeffs_y);
+                    const __m256i res_b = convolve16_8tap_avx2(s + 4, coeffs_y);
                     __m256i res_b_round = _mm256_sra_epi32(
                         _mm256_add_epi32(res_b, round_const_y), round_shift_y);
                     res_b_round =
@@ -220,7 +220,7 @@ static INLINE void copy_128(const uint16_t *src, uint16_t *dst) {
     _mm256_storeu_si256((__m256i *)(dst + 7 * 16), s[7]);
 }
 
-void av1_highbd_convolve_2d_copy_sr_avx2(
+void eb_av1_highbd_convolve_2d_copy_sr_avx2(
     const uint16_t *src, int32_t src_stride, uint16_t *dst, int32_t dst_stride, int32_t w,
     int32_t h, const InterpFilterParams *filter_params_x,
     const InterpFilterParams *filter_params_y, const int32_t subpel_x_q4,

@@ -14,26 +14,35 @@
 extern "C" {
 #endif
 
-    typedef uint64_t(*EbComputeMeanFunc)(
-        uint8_t *input_samples,
-        uint32_t input_stride,
-        uint32_t input_area_width,
+    uint64_t compute_mean_c(
+        uint8_t* input_samples,     /**< input parameter, input samples Ptr */
+        uint32_t input_stride,      /**< input parameter, input stride */
+        uint32_t input_area_width,  /**< input parameter, input area width */
+        uint32_t input_area_height);/**< input parameter, input area height */
+
+    uint64_t compute_mean_squared_values_c(
+        uint8_t* input_samples,     /**< input parameter, input samples Ptr */
+        uint32_t input_stride,      /**< input parameter, input stride */
+        uint32_t input_area_width,  /**< input parameter, input area width */
+        uint32_t input_area_height);/**< input parameter, input area height */
+
+    uint64_t compute_sub_mean_c(
+        uint8_t* input_samples,     /**< input parameter, input samples Ptr */
+        uint32_t input_stride,      /**< input parameter, input stride */
+        uint32_t input_area_width,  /**< input parameter, input area width */
         uint32_t input_area_height);
 
-    static const EbComputeMeanFunc compute_mean_func[2][ASM_TYPE_TOTAL] = {
-        {
-            // NON_AVX2
-            compute_mean8x8_sse2_intrin,
-            // AVX2
-            compute_mean8x8_avx2_intrin
-        },
-        {
-            // NON_AVX2
-            compute_mean_of_squared_values8x8_sse2_intrin,
-            // AVX2
-            compute_mean_of_squared_values8x8_sse2_intrin
-        }
-    };
+    uint64_t compute_sub_mean_squared_values_c(
+        uint8_t* input_samples,     /**< input parameter, input samples Ptr */
+        uint32_t input_stride,      /**< input parameter, input stride */
+        uint32_t input_area_width,  /**< input parameter, input area width */
+        uint32_t input_area_height);/**< input parameter, input area height */
+
+    void compute_interm_var_four8x8_c(
+        uint8_t *  input_samples,
+        uint16_t   input_stride,
+        uint64_t * mean_of8x8_blocks,      // mean of four  8x8
+        uint64_t * mean_of_squared8x8_blocks);  // meanSquared
 
 #ifdef __cplusplus
 }

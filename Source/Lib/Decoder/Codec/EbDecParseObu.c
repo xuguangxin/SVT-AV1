@@ -23,12 +23,13 @@
 #include"EbAv1Structs.h"
 #include "EbDecStruct.h"
 #include "EbDecBlock.h"
-
 #include "EbDecHandle.h"
 
 #include "EbObuParse.h"
 #include "EbDecMemInit.h"
 #include "EbDecPicMgr.h"
+#include "EbRestoration.h"
+#include "EbDecRestoration.h"
 
 #include "EbDecParseObuUtil.h"
 
@@ -38,13 +39,21 @@
 
 #include "EbDecNbr.h"
 #include "EbDecUtils.h"
+#include "EbDecLF.h"
+
+#include "EbDecCdef.h"
 
 
 #define CONFIG_MAX_DECODE_PROFILE 2
 #define INT_MAX       2147483647    // maximum (signed) int value
 
-int Remap_Lr_Type[4] = {
+void dec_init_intra_predictors_12b_internal(void);
+
+int remap_lr_type[4] = {
     RESTORE_NONE, RESTORE_SWITCHABLE, RESTORE_WIENER, RESTORE_SGRPROJ };
+
+void av1_superres_upscale(Av1Common *cm, FrameHeader *frm_hdr, SeqHeader*seq_hdr,
+    EbPictureBufferDesc *recon_picture_src);
 
 /* Checks that the remaining bits start with a 1 and ends with 0s.
  * It consumes an additional byte, if already byte aligned before the check. */
@@ -67,30 +76,11 @@ int byte_alignment(bitstrm_t *bs)
     return 0;
 }
 
-void compute_image_size(FrameHeader *frm)
-{
-    frm->mi_cols = 2 * ((frm->frame_size.frame_width + 7 - 1) >> 3);
-    frm->mi_rows = 2 * ((frm->frame_size.frame_height + 7 - 1) >> 3);
-    frm->mi_stride = ALIGN_POWER_OF_TWO(frm->mi_cols, MAX_MIB_SIZE_LOG2);
-}
-
-/*TODO: Harmonize with encoder function */
-// Find smallest k>=0 such that (blk_size << k) >= target
-static int32_t dec_tile_log2(int32_t blk_size, int32_t target) {
-    int32_t k;
-    for (k = 0; (blk_size << k) < target; k++) {
-    }
-    return k;
-}
-
-int inverse_recenter(int r, int v)
-{
-    if (v > 2 * r)
-        return v;
-    else if (v & 1)
-        return r - ((v + 1) >> 1);
-    else
-        return r + (v >> 1);
+void compute_image_size(SeqHeader *seq_header, FrameHeader *frm) {
+    frm->mi_cols = 2 * ((frm->frame_size.frame_width + 7) >> 3);
+    frm->mi_rows = 2 * ((frm->frame_size.frame_height + 7) >> 3);
+    frm->mi_stride = (ALIGN_POWER_OF_TWO(seq_header->max_frame_width,
+        MAX_SB_SIZE_LOG2)) >> MI_SIZE_LOG2;
 }
 
 // Returns 1 when OBU type is valid, and 0 otherwise.
@@ -151,8 +141,8 @@ void read_decoder_model_info(bitstrm_t *bs, DecoderModelInfo   *model_info)
     PRINT("buffer_delay_length_minus_1", model_info->buffer_delay_length_minus_1);
     model_info->num_units_in_decoding_tick = dec_get_bits(bs, 32);
     PRINT("num_units_in_decoding_tick", model_info->num_units_in_decoding_tick);
-    model_info->buffer_delay_length_minus_1 = dec_get_bits(bs, 5);
-    PRINT("buffer_delay_length_minus_1", model_info->buffer_delay_length_minus_1);
+    model_info->buffer_removal_time_length_minus_1 = dec_get_bits(bs, 5);
+    PRINT("buffer_removal_time_length_minus_1", model_info->buffer_removal_time_length_minus_1);
     model_info->frame_presentation_time_length_minus_1 = dec_get_bits(bs, 5);
     PRINT("frame_presentation_time_length_minus_1",
         model_info->frame_presentation_time_length_minus_1);
@@ -488,8 +478,6 @@ EbErrorType read_obu_header(bitstrm_t *bs, ObuHeader   *header)
     PRINT("obu_extension_flag", header->obu_extension_flag);
     header->obu_has_size_field = dec_get_bits(bs, 1);
     PRINT("obu_has_size_field", header->obu_has_size_field);
-    if (!header->obu_has_size_field)
-        return EB_Corrupt_Frame;
 
     if (dec_get_bits(bs, 1) != 0) {
         // obu_reserved_1bit must be set to 0
@@ -531,7 +519,7 @@ EbErrorType read_obu_size(bitstrm_t *bs, size_t bytes_available,
 }
 
 /** Reads OBU header and size */
-EbErrorType open_bistream_unit(bitstrm_t *bs, ObuHeader *header, size_t size,
+EbErrorType read_obu_header_size(bitstrm_t *bs, ObuHeader *header, size_t size,
     size_t *const length_size)
 {
     EbErrorType status;
@@ -540,9 +528,11 @@ EbErrorType open_bistream_unit(bitstrm_t *bs, ObuHeader *header, size_t size,
     if (status != EB_ErrorNone)
         return status;
 
-    status = read_obu_size(bs, size, &header->payload_size, length_size);
-    if (status != EB_ErrorNone)
-        return status;
+    if (header->obu_has_size_field) {
+        status = read_obu_size(bs, size, &header->payload_size, length_size);
+        if (status != EB_ErrorNone)
+            return status;
+    }
 
     return EB_ErrorNone;
 }
@@ -560,13 +550,13 @@ void superres_params(bitstrm_t *bs, SeqHeader   *seq_header, FrameHeader   *fram
         use_superres = dec_get_bits(bs, 1);
     else
         use_superres = 0;
-
     PRINT_NAME("use_superres");
+
     if (use_superres) {
         coded_denom = dec_get_bits(bs, SUPERRES_SCALE_BITS);
-        PRINT_FRAME("coded_denom", coded_denom);
         frame_info->frame_size.superres_denominator = coded_denom +
             SUPERRES_SCALE_DENOMINATOR_MIN;
+        PRINT_FRAME("coded_denom", frame_info->frame_size.superres_denominator);
     }
     else
         frame_info->frame_size.superres_denominator = SCALE_NUMERATOR;
@@ -582,9 +572,9 @@ static void read_frame_size(bitstrm_t *bs, SeqHeader   *seq_header, FrameHeader
 {
     if (frame_size_override_flag) {
         frame_info->frame_size.frame_width =
-            dec_get_bits(bs, seq_header->frame_width_bits + 1) + 1;
+            dec_get_bits(bs, seq_header->frame_width_bits) + 1;
         frame_info->frame_size.frame_height
-            = dec_get_bits(bs, seq_header->frame_height_bits + 1) + 1;
+            = dec_get_bits(bs, seq_header->frame_height_bits) + 1;
     }
     else {
         frame_info->frame_size.frame_width = seq_header->max_frame_width;
@@ -593,7 +583,7 @@ static void read_frame_size(bitstrm_t *bs, SeqHeader   *seq_header, FrameHeader
     PRINT_FRAME("frame_width", frame_info->frame_size.frame_width);
     PRINT_FRAME("frame_height", frame_info->frame_size.frame_height);
     superres_params(bs, seq_header, frame_info);
-    compute_image_size(frame_info);
+    compute_image_size(seq_header, frame_info);
 
     assert((frame_info->frame_size.frame_width) <= seq_header->max_frame_width);
     assert((frame_info->frame_size.frame_height) <= seq_header->max_frame_height);
@@ -617,17 +607,27 @@ void read_render_size(bitstrm_t *bs, FrameHeader   *frame_info)
     PRINT_FRAME("render_height", frame_info->frame_size.render_height);
 }
 
-static void frame_size_with_refs(bitstrm_t *bs, SeqHeader   *seq_header, FrameHeader
-    *frame_info, int frame_size_override_flag)
+static void frame_size_with_refs(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
+                                 int frame_size_override_flag)
 {
+    SeqHeader *seq_header = &dec_handle_ptr->seq_header;
+    FrameHeader *frame_info = &dec_handle_ptr->frame_header;
+
     int found_ref;
     for (int i = 0; i < REFS_PER_FRAME; i++) {
         found_ref = dec_get_bits(bs, 1);
         PRINT_FRAME("found_ref", found_ref);
         if (found_ref == 1) {
-            // width = frame_info->frame_size.superres_upscaled_width;
-            // height = frame_info->frame_size.superres_upscaled_height;
-            // TODO: Assign FrameWidth/Height
+            FrameSize *frame_size = &frame_info->frame_size;
+            EbDecPicBuf *ref_buf = get_ref_frame_buf(dec_handle_ptr, (i + 1));
+            assert(ref_buf != NULL);
+
+            frame_size->superres_upscaled_width =
+                                            ref_buf->superres_upscaled_width;
+            frame_size->frame_width     = ref_buf->superres_upscaled_width;
+            frame_size->frame_height    = ref_buf->frame_height;
+            frame_size->render_width    = ref_buf->render_width;
+            frame_size->render_height   = ref_buf->render_height;
             break;
         }
     }
@@ -639,7 +639,7 @@ static void frame_size_with_refs(bitstrm_t *bs, SeqHeader   *seq_header, FrameHe
     else
     {
         superres_params(bs, seq_header, frame_info);
-        compute_image_size(frame_info);
+        compute_image_size(seq_header, frame_info);
     }
 }
 
@@ -672,11 +672,11 @@ void read_tile_info(bitstrm_t *bs, TilesInfo *tile_info, SeqHeader *seq_header,
 
     tile_info->max_tile_width_sb = MAX_TILE_WIDTH >> sb_size;
     tile_info->max_tile_height_sb = (MAX_TILE_AREA / MAX_TILE_WIDTH) >> sb_size;
-    tile_info->min_log2_tile_cols = dec_tile_log2(tile_info->max_tile_width_sb, sb_cols);
-    tile_info->max_log2_tile_cols = dec_tile_log2(1, MIN(sb_cols, MAX_TILE_COLS));
-    tile_info->max_log2_tile_rows = dec_tile_log2(1, MIN(sb_rows, MAX_TILE_ROWS));
+    tile_info->min_log2_tile_cols = tile_log2(tile_info->max_tile_width_sb, sb_cols);
+    tile_info->max_log2_tile_cols = tile_log2(1, MIN(sb_cols, MAX_TILE_COLS));
+    tile_info->max_log2_tile_rows = tile_log2(1, MIN(sb_rows, MAX_TILE_ROWS));
     tile_info->min_log2_tiles = MAX(tile_info->min_log2_tile_cols,
-        dec_tile_log2(max_tile_area_sb, sb_rows * sb_cols));
+        tile_log2(max_tile_area_sb, sb_rows * sb_cols));
     tile_info->uniform_tile_spacing_flag = dec_get_bits(bs, 1);
     PRINT_FRAME("uniform_tile_spacing_flag", tile_info->uniform_tile_spacing_flag);
     if (tile_info->uniform_tile_spacing_flag) {
@@ -693,10 +693,10 @@ void read_tile_info(bitstrm_t *bs, TilesInfo *tile_info, SeqHeader *seq_header,
         assert(tile_width_sb <= tile_info->max_tile_width_sb); // Bitstream conformance
         i = 0;
         for (start_sb = 0; start_sb < sb_cols; start_sb += tile_width_sb) {
-            tile_info->tile_col_start_sb[i] = start_sb << sb_shift;
+            tile_info->tile_col_start_mi[i] = start_sb << sb_shift;
             i += 1;
         }
-        tile_info->tile_col_start_sb[i] = frame_info->mi_cols;
+        tile_info->tile_col_start_mi[i] = frame_info->mi_cols;
         tile_info->tile_cols = i;
 
         tile_info->min_log2_tile_rows = MAX(tile_info->min_log2_tiles -
@@ -714,17 +714,17 @@ void read_tile_info(bitstrm_t *bs, TilesInfo *tile_info, SeqHeader *seq_header,
         assert(tile_height_sb <= tile_info->max_tile_height_sb); // Bitstream conformance
         i = 0;
         for (start_sb = 0; start_sb < sb_rows; start_sb += tile_height_sb) {
-            tile_info->tile_row_start_sb[i] = start_sb << sb_shift;
+            tile_info->tile_row_start_mi[i] = start_sb << sb_shift;
             i += 1;
         }
-        tile_info->tile_row_start_sb[i] = frame_info->mi_rows;
+        tile_info->tile_row_start_mi[i] = frame_info->mi_rows;
         tile_info->tile_rows = i;
     }
     else {
         int widest_tile_sb = 0;
         start_sb = 0;
         for (i = 0; start_sb < sb_cols; i++) {
-            tile_info->tile_col_start_sb[i] = start_sb << sb_shift;
+            tile_info->tile_col_start_mi[i] = start_sb << sb_shift;
             max_width = MIN(sb_cols - start_sb, tile_info->max_tile_width_sb);
             width_in_sbs_minus_1 = dec_get_bits_ns(bs, max_width);
             PRINT("width_in_sbs_minus_1", width_in_sbs_minus_1)
@@ -734,9 +734,9 @@ void read_tile_info(bitstrm_t *bs, TilesInfo *tile_info, SeqHeader *seq_header,
         }
         assert(start_sb == sb_cols); // Bitstream conformance
 
-        tile_info->tile_col_start_sb[i] = frame_info->mi_cols;
+        tile_info->tile_col_start_mi[i] = frame_info->mi_cols;
         tile_info->tile_cols = i;
-        tile_info->tile_cols_log2 = dec_tile_log2(1, tile_info->tile_cols);
+        tile_info->tile_cols_log2 = tile_log2(1, tile_info->tile_cols);
         if (tile_info->min_log2_tiles > 0)
             max_tile_area_sb = (sb_rows * sb_cols) >> (tile_info->min_log2_tiles + 1);
         else
@@ -745,7 +745,7 @@ void read_tile_info(bitstrm_t *bs, TilesInfo *tile_info, SeqHeader *seq_header,
 
         start_sb = 0;
         for (i = 0; start_sb < sb_rows; i++) {
-            tile_info->tile_row_start_sb[i] = start_sb << sb_shift;
+            tile_info->tile_row_start_mi[i] = start_sb << sb_shift;
             max_height = MIN(sb_rows - start_sb, tile_info->max_tile_height_sb);
             height_in_sbs_minus_1 = dec_get_bits_ns(bs, max_height);
             PRINT("height_in_sbs_minus_1", height_in_sbs_minus_1)
@@ -754,9 +754,9 @@ void read_tile_info(bitstrm_t *bs, TilesInfo *tile_info, SeqHeader *seq_header,
         }
         assert(start_sb == sb_rows); // Bitstream conformance
 
-        tile_info->tile_row_start_sb[i] = frame_info->mi_rows;
+        tile_info->tile_row_start_mi[i] = frame_info->mi_rows;
         tile_info->tile_rows = i;
-        tile_info->tile_rows_log2 = dec_tile_log2(1, tile_info->tile_rows);
+        tile_info->tile_rows_log2 = tile_log2(1, tile_info->tile_rows);
     }
 
     // Bitstream conformance
@@ -794,6 +794,7 @@ void read_frame_delta_q_params(bitstrm_t *bs, FrameHeader *frame_info)
     }
     if (frame_info->delta_q_params.delta_q_present) {
         frame_info->delta_q_params.delta_q_res = dec_get_bits(bs, 2);
+        PRINT_FRAME("delta_q_res", 1 << frame_info->delta_q_params.delta_q_res);
     }
     PRINT_FRAME("delta_q_present", frame_info->delta_q_params.delta_q_present);
 }
@@ -806,7 +807,7 @@ void read_frame_delta_lf_params(bitstrm_t *bs, FrameHeader *frame_info)
     if (frame_info->delta_q_params.delta_q_present) {
         if (!frame_info->allow_intrabc) {
             frame_info->delta_lf_params.delta_lf_present = dec_get_bits(bs, 1);
-            PRINT_FRAME("delta_lf_present", frame_info->delta_lf_params.delta_lf_present);
+            PRINT_FRAME("delta_lf_present_flag", frame_info->delta_lf_params.delta_lf_present);
         }
         if (frame_info->delta_lf_params.delta_lf_present) {
             frame_info->delta_lf_params.delta_lf_res = dec_get_bits(bs, 2);
@@ -823,8 +824,9 @@ void read_quantization_params(bitstrm_t *bs, QuantizationParams *quant_params,
     uint8_t diff_uv_delta;
     quant_params->base_q_idx = dec_get_bits(bs, 8);
     PRINT_FRAME("base_q_idx", quant_params->base_q_idx);
-    quant_params->delta_q_y_dc = read_delta_q(bs);
-    PRINT_FRAME("delta_q_y_dc", quant_params->delta_q_y_dc);
+    quant_params->delta_q_dc[AOM_PLANE_Y] = read_delta_q(bs);
+    PRINT_FRAME("delta_q_y_dc", quant_params->delta_q_dc[0]);
+    quant_params->delta_q_ac[AOM_PLANE_Y] = 0;
     if (num_planes > 1)
     {
         if (color_info->separate_uv_delta_q) {
@@ -833,111 +835,136 @@ void read_quantization_params(bitstrm_t *bs, QuantizationParams *quant_params,
         }
         else
             diff_uv_delta = 0;
-        quant_params->delta_q_u_dc = read_delta_q(bs);
-        quant_params->delta_q_u_ac = read_delta_q(bs);
+        quant_params->delta_q_dc[AOM_PLANE_U] = read_delta_q(bs); //U Plane
+        quant_params->delta_q_ac[AOM_PLANE_U] = read_delta_q(bs); //U Plane
         if (diff_uv_delta) {
-            quant_params->delta_q_v_dc = read_delta_q(bs);
-            quant_params->delta_q_v_ac = read_delta_q(bs);
+            quant_params->delta_q_dc[AOM_PLANE_V] = read_delta_q(bs); //V Plane
+            quant_params->delta_q_ac[AOM_PLANE_V] = read_delta_q(bs); //V Plane
         }
         else {
-            quant_params->delta_q_v_dc = quant_params->delta_q_u_dc;
-            quant_params->delta_q_v_ac = quant_params->delta_q_u_ac;
+            quant_params->delta_q_dc[AOM_PLANE_V] = quant_params->delta_q_dc[AOM_PLANE_U];
+            quant_params->delta_q_ac[AOM_PLANE_V] = quant_params->delta_q_ac[AOM_PLANE_U];
         }
     }
     else {
-        quant_params->delta_q_u_dc = 0;
-        quant_params->delta_q_u_ac = 0;
-        quant_params->delta_q_v_dc = 0;
-        quant_params->delta_q_v_ac = 0;
+        quant_params->delta_q_dc[AOM_PLANE_U] = 0;
+        quant_params->delta_q_ac[AOM_PLANE_U] = 0;
+        quant_params->delta_q_dc[AOM_PLANE_V] = 0;
+        quant_params->delta_q_ac[AOM_PLANE_V] = 0;
     }
-    PRINT_FRAME("u_dc_delta_q", quant_params->delta_q_u_dc);
-    PRINT_FRAME("u_ac_delta_q", quant_params->delta_q_u_ac);
-    PRINT_FRAME("v_dc_delta_q", quant_params->delta_q_v_dc);
-    PRINT_FRAME("v_ac_delta_q", quant_params->delta_q_v_ac);
+    PRINT_FRAME("u_dc_delta_q", quant_params->delta_q_dc[AOM_PLANE_U]);
+    PRINT_FRAME("u_ac_delta_q", quant_params->delta_q_ac[AOM_PLANE_U]);
+    PRINT_FRAME("v_dc_delta_q", quant_params->delta_q_dc[AOM_PLANE_V]);
+    PRINT_FRAME("v_ac_delta_q", quant_params->delta_q_ac[AOM_PLANE_V]);
     quant_params->using_qmatrix = dec_get_bits(bs, 1);
     PRINT_FRAME("using_qmatrix", quant_params->using_qmatrix);
     if (quant_params->using_qmatrix) {
-        quant_params->qm_y = dec_get_bits(bs, 4);
-        quant_params->qm_u = dec_get_bits(bs, 4);
+        quant_params->qm[AOM_PLANE_Y] = dec_get_bits(bs, 4);
+        quant_params->qm[AOM_PLANE_U] = dec_get_bits(bs, 4);
         if (!color_info->separate_uv_delta_q)
-            quant_params->qm_v = quant_params->qm_u;
+            quant_params->qm[AOM_PLANE_V] = quant_params->qm[AOM_PLANE_U];
         else
-            quant_params->qm_v = dec_get_bits(bs, 4);
+            quant_params->qm[AOM_PLANE_V] = dec_get_bits(bs, 4);
     }
     else {
-        quant_params->qm_y = 0;
-        quant_params->qm_u = 0;
-        quant_params->qm_v = 0;
+        quant_params->qm[AOM_PLANE_Y] = 0;
+        quant_params->qm[AOM_PLANE_U] = 0;
+        quant_params->qm[AOM_PLANE_V] = 0;
     }
-    PRINT_FRAME("qm_y", quant_params->qm_y);
-    PRINT_FRAME("qm_u", quant_params->qm_u);
-    PRINT_FRAME("qm_v", quant_params->qm_v);
+    PRINT_FRAME("qm_y", quant_params->qm[AOM_PLANE_Y]);
+    PRINT_FRAME("qm_u", quant_params->qm[AOM_PLANE_U]);
+    PRINT_FRAME("qm_v", quant_params->qm[AOM_PLANE_V]);
 }
 
-void read_segmentation_params(bitstrm_t *bs, SegmentationParams *seg_params, FrameHeader *frame_info)
+static INLINE void segfeatures_copy(SegmentationParams *dst,
+    SegmentationParams *src)
+{
+    int i, j;
+    for (i = 0; i < MAX_SEGMENTS; i++) {
+        for (j = 0; j < SEG_LVL_MAX; j++) {
+            dst->feature_data[i][j] = src->feature_data[i][j];
+            dst->feature_enabled[i][j] = src->feature_enabled[i][j];
+        }
+    }
+    dst->seg_id_pre_skip = src->seg_id_pre_skip;
+    dst->last_active_seg_id = src->last_active_seg_id;
+}
+
+void read_segmentation_params(bitstrm_t *bs, EbDecHandle *dec_handle_ptr, FrameHeader *frame_info)
 {
     int feature_value, feature_enabled, clippedValue, bitsToRead, limit, i, j;
+    SegmentationParams *seg_params = &frame_info->segmentation_params;
+    EbDecPicBuf *cur_buf = dec_handle_ptr->cur_pic_buf[0];
+    EbDecPicBuf *prev_buf = NULL;
+    if (frame_info->primary_ref_frame != PRIMARY_REF_NONE) {
+        prev_buf = get_ref_frame_buf(dec_handle_ptr, frame_info->primary_ref_frame + 1);
+        if (prev_buf == NULL)
+            assert(0);
+    }
+
     seg_params->segmentation_enabled = dec_get_bits(bs, 1);
     PRINT_FRAME("segmentation_enabled", seg_params->segmentation_enabled);
-    if (seg_params->segmentation_enabled == 1) {
-        if (frame_info->primary_ref_frame == PRIMARY_REF_NONE) {
-            seg_params->segmentation_update_map = 1;
-            seg_params->segmentation_temporal_update = 0;
-            seg_params->segmentation_update_data = 1;
-        }
-        else {
-            seg_params->segmentation_update_map = dec_get_bits(bs, 1);
-            if (seg_params->segmentation_update_map)
-                seg_params->segmentation_temporal_update = dec_get_bits(bs, 1);
-            else
-                seg_params->segmentation_temporal_update = 0;
-            seg_params->segmentation_update_data = dec_get_bits(bs, 1);
-        }
-        PRINT_FRAME("segmentation_update_map", seg_params->segmentation_update_map);
-        PRINT_FRAME("segmentation_temporal_update",
-            seg_params->segmentation_temporal_update);
-        PRINT_FRAME("segmentation_update_data", seg_params->segmentation_update_data);
-        if (seg_params->segmentation_update_data == 1) {
-            for (i = 0; i < MAX_SEGMENTS; i++) {
-                for (j = 0; j < SEG_LVL_MAX; j++) {
-                    feature_value = 0;
-                    feature_enabled = dec_get_bits(bs, 1);
-                    PRINT_FRAME("feature_enabled", feature_enabled);
-                    seg_params->feature_enabled[i][j] = feature_enabled;
-                    clippedValue = 0;
-                    if (feature_enabled == 1) {
-                        bitsToRead = segmentation_feature_bits[j];
-                        limit = segmentation_feature_max[j];
-                        if (segmentation_feature_signed[j] == 1) {
-                            feature_value = dec_get_bits_su(bs, 1 + bitsToRead);
-                            clippedValue = CLIP3(-limit, limit, feature_value);
-                        }
-                        else {
-                            feature_value = dec_get_bits(bs, bitsToRead);
-                            clippedValue = CLIP3(0, limit, feature_value);
-                        }
-                        PRINT_FRAME("feature_value", feature_value)
-                    }
-                    if (clippedValue < 0) {
-                        assert(segmentation_feature_signed[j]);
-                        assert(-clippedValue <= segmentation_feature_max[j]);
-                    }
-                    else
-                        assert(clippedValue <= segmentation_feature_max[j]);
-                    seg_params->feature_data[i][j] = clippedValue;
-                }
-            }
-        }
+    if (!seg_params->segmentation_enabled) {
+        if (cur_buf->segment_maps)
+            memset(cur_buf->segment_maps, 0, (frame_info->mi_rows * frame_info->mi_cols));
+
+        memset(seg_params, 0, sizeof(*seg_params));
+        segfeatures_copy(&cur_buf->seg_params, seg_params);
+        return;
+    }
+
+    if (frame_info->primary_ref_frame == PRIMARY_REF_NONE) {
+        seg_params->segmentation_update_map = 1;
+        seg_params->segmentation_temporal_update = 0;
+        seg_params->segmentation_update_data = 1;
     }
     else {
-        seg_params->seg_id_pre_skip = 0;
+        seg_params->segmentation_update_map = dec_get_bits(bs, 1);
+        if (seg_params->segmentation_update_map)
+            seg_params->segmentation_temporal_update = dec_get_bits(bs, 1);
+        else
+            seg_params->segmentation_temporal_update = 0;
+        seg_params->segmentation_update_data = dec_get_bits(bs, 1);
+    }
+    PRINT_FRAME("segmentation_update_map", seg_params->segmentation_update_map);
+    PRINT_FRAME("segmentation_temporal_update",
+        seg_params->segmentation_temporal_update);
+    PRINT_FRAME("segmentation_update_data", seg_params->segmentation_update_data);
+    if (seg_params->segmentation_update_data == 1) {
         for (i = 0; i < MAX_SEGMENTS; i++) {
             for (j = 0; j < SEG_LVL_MAX; j++) {
-                seg_params->feature_enabled[i][j] = 0;
-                seg_params->feature_data[i][j] = 0;
+                feature_value = 0;
+                feature_enabled = dec_get_bits(bs, 1);
+                PRINT_FRAME("feature_enabled", feature_enabled);
+                seg_params->feature_enabled[i][j] = feature_enabled;
+                clippedValue = 0;
+                if (feature_enabled == 1) {
+                    bitsToRead = segmentation_feature_bits[j];
+                    limit = segmentation_feature_max[j];
+                    if (segmentation_feature_signed[j] == 1) {
+                        feature_value = dec_get_bits_su(bs, 1 + bitsToRead);
+                        clippedValue = CLIP3(-limit, limit, feature_value);
+                    }
+                    else {
+                        feature_value = dec_get_bits(bs, bitsToRead);
+                        clippedValue = CLIP3(0, limit, feature_value);
+                    }
+                    PRINT_FRAME("feature_value", feature_value)
+                }
+                if (clippedValue < 0) {
+                    assert(segmentation_feature_signed[j]);
+                    assert(-clippedValue <= segmentation_feature_max[j]);
+                }
+                else
+                    assert(clippedValue <= segmentation_feature_max[j]);
+                seg_params->feature_data[i][j] = clippedValue;
             }
         }
     }
+    else if (prev_buf) {
+        segfeatures_copy(seg_params, &prev_buf->seg_params);
+    }
+    segfeatures_copy(&cur_buf->seg_params, seg_params);
 
     seg_params->last_active_seg_id = 0;
     seg_params->seg_id_pre_skip = 0;
@@ -1041,9 +1068,9 @@ void read_lr_params(bitstrm_t *bs, FrameHeader *frame_info, SeqHeader *seq_heade
 
     if (frame_info->coded_lossless || frame_info->allow_intrabc ||
         !seq_header->enable_restoration) {
-        frame_info->LR_params[0].frame_restoration_type = RESTORE_NONE;
-        frame_info->LR_params[1].frame_restoration_type = RESTORE_NONE;
-        frame_info->LR_params[2].frame_restoration_type = RESTORE_NONE;
+        frame_info->lr_params[0].frame_restoration_type = RESTORE_NONE;
+        frame_info->lr_params[1].frame_restoration_type = RESTORE_NONE;
+        frame_info->lr_params[2].frame_restoration_type = RESTORE_NONE;
         uses_lr = 0;
         return;
     }
@@ -1051,9 +1078,10 @@ void read_lr_params(bitstrm_t *bs, FrameHeader *frame_info, SeqHeader *seq_heade
     uses_chroma_lr = 0;
     for (i = 0; i < num_planes; i++) {
         lr_type = dec_get_bits(bs, 2);
-        frame_info->LR_params[i].frame_restoration_type = Remap_Lr_Type[lr_type];
-        PRINT_FRAME("frame_restoration_type", frame_info->LR_params[i].frame_restoration_type);
-        if (frame_info->LR_params[i].frame_restoration_type != RESTORE_NONE) {
+        PRINT_NAME("lr_type")
+        frame_info->lr_params[i].frame_restoration_type = remap_lr_type[lr_type];
+        PRINT_FRAME("frame_restoration_type", frame_info->lr_params[i].frame_restoration_type);
+        if (frame_info->lr_params[i].frame_restoration_type != RESTORE_NONE) {
             uses_lr = 1;
             if (i > 0)
                 uses_chroma_lr = 1;
@@ -1072,21 +1100,26 @@ void read_lr_params(bitstrm_t *bs, FrameHeader *frame_info, SeqHeader *seq_heade
                 lr_unit_shift += lr_unit_extra_shift;
             }
         }
-        frame_info->LR_params[0].loop_restoration_size
-            = RESTORATION_TILESIZE_MAX >> (2 - lr_unit_shift);
-        PRINT_FRAME("restoration_unit_size", frame_info->LR_params[0].loop_restoration_size);
+        frame_info->lr_params[0].loop_restoration_size
+            = (RESTORATION_TILESIZE_MAX >> (2 - lr_unit_shift));
+        PRINT_FRAME("restoration_unit_size", frame_info->lr_params[0].loop_restoration_size);
         if (seq_header->color_config.subsampling_x &&
             seq_header->color_config.subsampling_y && uses_chroma_lr) {
             lr_uv_shift = dec_get_bits(bs, 1);
         }
         else
             lr_uv_shift = 0;
-        frame_info->LR_params[1].loop_restoration_size
-            = frame_info->LR_params[0].loop_restoration_size >> lr_uv_shift;
-        frame_info->LR_params[2].loop_restoration_size
-            = frame_info->LR_params[0].loop_restoration_size >> lr_uv_shift;
-        PRINT_FRAME("cm->rst_info[1].restoration_unit_size", frame_info->LR_params[1].loop_restoration_size);
+        frame_info->lr_params[1].loop_restoration_size
+            = frame_info->lr_params[0].loop_restoration_size >> lr_uv_shift;
+        frame_info->lr_params[2].loop_restoration_size
+            = frame_info->lr_params[0].loop_restoration_size >> lr_uv_shift;
     }
+    else {
+        frame_info->lr_params[0].loop_restoration_size = RESTORATION_TILESIZE_MAX;
+        frame_info->lr_params[1].loop_restoration_size = RESTORATION_TILESIZE_MAX;
+        frame_info->lr_params[2].loop_restoration_size = RESTORATION_TILESIZE_MAX;
+    }
+    PRINT_FRAME("cm->rst_info[1].restoration_unit_size", frame_info->lr_params[1].loop_restoration_size);
 }
 
 void read_frame_cdef_params(bitstrm_t *bs, FrameHeader *frame_info, SeqHeader *seq_header,
@@ -1103,20 +1136,17 @@ void read_frame_cdef_params(bitstrm_t *bs, FrameHeader *frame_info, SeqHeader *s
         frame_info->CDEF_params.cdef_damping = 3;
         return;
     }
-    frame_info->CDEF_params.cdef_damping = dec_get_bits(bs, 2);
+    frame_info->CDEF_params.cdef_damping = dec_get_bits(bs, 2) + 3;
     frame_info->CDEF_params.cdef_bits = dec_get_bits(bs, 2);
-    PRINT_FRAME("cdef_damping", frame_info->CDEF_params.cdef_damping + 3);
+    PRINT_FRAME("cdef_damping", frame_info->CDEF_params.cdef_damping);
     PRINT_FRAME("cdef_bits", frame_info->CDEF_params.cdef_bits);
     for (i = 0; i < (1 << frame_info->CDEF_params.cdef_bits); i++) {
         frame_info->CDEF_params.cdef_y_strength[i] = dec_get_bits(bs, 6);
         PRINT_FRAME("Primary Y cdef", frame_info->CDEF_params.cdef_y_strength[i]);
-        if (frame_info->CDEF_params.cdef_y_strength[i + 8] == 3)
-            frame_info->CDEF_params.cdef_y_strength[i + 8] += 1;
+
         if (num_planes > 1) {
             frame_info->CDEF_params.cdef_uv_strength[i] = dec_get_bits(bs, 6);
             PRINT_FRAME("Primary UV cdef", frame_info->CDEF_params.cdef_uv_strength[i]);
-            if (frame_info->CDEF_params.cdef_uv_strength[i + 8] == 3)
-                frame_info->CDEF_params.cdef_uv_strength[i + 8] += 1;
         }
     }
 }
@@ -1259,7 +1289,7 @@ void read_global_motion_params(bitstrm_t *bs, EbDecHandle *dec_handle,
             wm_global->wmtype = cur_buf->global_motion[ref].gm_type;
             memcpy(wm_global->wmmat, cur_buf->global_motion[ref].gm_params,
                 sizeof(cur_buf->global_motion[ref].gm_params));
-            int return_val = get_shear_params(wm_global);
+            int return_val = eb_get_shear_params(wm_global);
             assert(1 == return_val);
             (void)return_val;
         }
@@ -1355,36 +1385,50 @@ void read_skip_mode_params(bitstrm_t *bs, FrameHeader *frame_info, int FrameIsIn
     PRINT_FRAME("skip_mode_present", frame_info->skip_mode_params.skip_mode_flag);
 }
 
-// Read film grain parameters
-void read_film_grain_params(bitstrm_t *bs, aom_film_grain_t *grain_params,
-    SeqHeader *seq_header, FrameHeader *frame_info)
+void load_grain_params(EbDecHandle *dec_handle_ptr,
+    aom_film_grain_t *grain_params,
+    int film_grain_params_ref_idx)
 {
-    int /*film_grain_params_ref_idx,*/ temp_grain_seed, i, numPosLuma, numPosChroma;
+    EbDecPicBuf *ref_buf = dec_handle_ptr->
+        ref_frame_map[film_grain_params_ref_idx];
+    assert(ref_buf != NULL);
+    *grain_params = ref_buf->film_grain_params;
+}
+
+// Read film grain parameters
+void read_film_grain_params(EbDecHandle * dec_handle,
+    bitstrm_t *bs, aom_film_grain_t *grain_params)
+{
+    SeqHeader *seq_header = &dec_handle->seq_header;
+    FrameHeader *frame_info = &dec_handle->frame_header;
+    int film_grain_params_ref_idx, temp_grain_seed, i, numPosLuma, numPosChroma;
 
     if (!seq_header->film_grain_params_present || (!frame_info->show_frame &&
         !frame_info->showable_frame)) {
-        // TODO: reset_grain_params(grain_params);
+        memset(grain_params, 0, sizeof(*grain_params));
         return;
     }
     grain_params->apply_grain = dec_get_bits(bs, 1);
     PRINT_FRAME("apply_grain", grain_params->apply_grain);
-    if (grain_params->apply_grain) {
-        // TODO: reset_grain_params(grain_params);
+
+    if (!grain_params->apply_grain) {
+        memset(grain_params, 0, sizeof(*grain_params));
         return;
     }
+
     grain_params->random_seed = dec_get_bits(bs, 16);
     PRINT_FRAME("grain_seed", grain_params->random_seed);
     if (frame_info->frame_type == INTER_FRAME)
         grain_params->update_parameters = dec_get_bits(bs, 1);
     else
         grain_params->update_parameters = 1;
-    PRINT_FRAME("grain_seed", grain_params->update_parameters);
+    PRINT_FRAME("update_parameters", grain_params->update_parameters);
     if (!grain_params->update_parameters) {
-        /*film_grain_params_ref_idx = */dec_get_bits(bs, 3);
-        /*PRINT_FRAME("film_grain_params_ref_idx", film_grain_params_ref_idx);*/
+        film_grain_params_ref_idx = dec_get_bits(bs, 3);
+        PRINT_FRAME("film_grain_params_ref_idx", film_grain_params_ref_idx);
         temp_grain_seed = grain_params->random_seed;
-        // TODO: Handle while implementing Inter
-        // load_grain_params( film_grain_params_ref_idx );
+        load_grain_params( dec_handle, grain_params,
+                           film_grain_params_ref_idx);
         grain_params->random_seed = temp_grain_seed;
         return;
     }
@@ -1396,53 +1440,55 @@ void read_film_grain_params(bitstrm_t *bs, aom_film_grain_t *grain_params,
         grain_params->scaling_points_y[i][1] = dec_get_bits(bs, 8);
         if (i > 0)
             assert(grain_params->scaling_points_y[i][0] > grain_params->scaling_points_y[i - 1][0]);
-        PRINT_FRAME("point_y_value[i]", grain_params->scaling_points_y[i][0]);
-        PRINT_FRAME("point_y_scaling[i]", grain_params->scaling_points_y[i][1]);
+        PRINT_FRAME("scaling_points_y[i][0]", grain_params->scaling_points_y[i][0]);
+        PRINT_FRAME("scaling_points_y[i][1]", grain_params->scaling_points_y[i][1]);
     }
     if (seq_header->color_config.mono_chrome)
         grain_params->chroma_scaling_from_luma = 0;
     else
         grain_params->chroma_scaling_from_luma = dec_get_bits(bs, 1);
+    PRINT_FRAME("chroma_scaling_from_luma", grain_params->chroma_scaling_from_luma);
+
     if (seq_header->color_config.mono_chrome || grain_params->chroma_scaling_from_luma
         || ( (seq_header->color_config.subsampling_y == 1) &&
-        (seq_header->color_config.subsampling_x == 1) && grain_params->num_y_points)) {
+        (seq_header->color_config.subsampling_x == 1) && grain_params->num_y_points == 0)) {
         grain_params->num_cb_points = 0;
         grain_params->num_cr_points = 0;
     }
     else {
         grain_params->num_cb_points = dec_get_bits(bs, 4);
+        PRINT_FRAME("num_cb_points", grain_params->num_cb_points);
         assert(grain_params->num_cb_points <= 10);
         for (i = 0; i < grain_params->num_cb_points; i++) {
             grain_params->scaling_points_cb[i][0] = dec_get_bits(bs, 8);
             grain_params->scaling_points_cb[i][1] = dec_get_bits(bs, 8);
+            PRINT_FRAME("scaling_points_cb[i][0]", grain_params->scaling_points_cb[i][0]);
+            PRINT_FRAME("scaling_points_cb[i][1]", grain_params->scaling_points_cb[i][1]);
             if (i > 0)
                 assert(grain_params->scaling_points_cb[i][0] >
                     grain_params->scaling_points_cb[i - 1][0]);
         }
         grain_params->num_cr_points = dec_get_bits(bs, 4);
+        PRINT_FRAME("num_cr_points", grain_params->num_cr_points);
         assert(grain_params->num_cr_points <= 14);
         for (i = 0; i < grain_params->num_cr_points; i++) {
             grain_params->scaling_points_cr[i][0] = dec_get_bits(bs, 8);
             grain_params->scaling_points_cr[i][1] = dec_get_bits(bs, 8);
+            PRINT_FRAME("scaling_points_cr[i][0]", grain_params->scaling_points_cr[i][0]);
+            PRINT_FRAME("scaling_points_cr[i][1]", grain_params->scaling_points_cr[i][1]);
             if (i > 0)
                 assert(grain_params->scaling_points_cr[i][0] >
                     grain_params->scaling_points_cr[i - 1][0]);
         }
     }
-    PRINT_FRAME("num_cb_points", grain_params->num_cb_points);
-    PRINT_FRAME("point_cb_value[i]", grain_params->scaling_points_cb[i][0]);
-    PRINT_FRAME("point_cb_scaling[i]", grain_params->scaling_points_cb[i][1]);
-    PRINT_FRAME("num_cr_points", grain_params->num_cr_points);
-    PRINT_FRAME("point_cr_value[i]", grain_params->scaling_points_cr[i][0]);
-    PRINT_FRAME("point_cr_scaling[i]", grain_params->scaling_points_cr[i][1]);
-    PRINT_FRAME("chroma_scaling_from_luma", grain_params->chroma_scaling_from_luma);
+
     if ((seq_header->color_config.subsampling_x == 1) &&
         (seq_header->color_config.subsampling_y == 1) &&
         (((grain_params->num_cb_points == 0) && (grain_params->num_cr_points != 0)) ||
         ((grain_params->num_cb_points != 0) && (grain_params->num_cr_points == 0))))
         return;// EB_DecUnsupportedBitstream;
 
-    grain_params->grain_scale_shift = dec_get_bits(bs, 2) + 8;
+    grain_params->scaling_shift = dec_get_bits(bs, 2) + 8;
     grain_params->ar_coeff_lag = dec_get_bits(bs, 2);
     PRINT_FRAME("scaling_shift", grain_params->grain_scale_shift);
     PRINT_FRAME("ar_coeff_lag", grain_params->ar_coeff_lag);
@@ -1459,17 +1505,17 @@ void read_film_grain_params(bitstrm_t *bs, aom_film_grain_t *grain_params,
         numPosChroma = numPosLuma;
     if (grain_params->chroma_scaling_from_luma || grain_params->num_cb_points) {
         for (i = 0; i < numPosChroma; i++) {
-            grain_params->ar_coeffs_cb[i] = dec_get_bits(bs, 8);
+            grain_params->ar_coeffs_cb[i] = dec_get_bits(bs, 8) - 128;
             PRINT_FRAME("ar_coeffs_cb[i]", grain_params->ar_coeffs_cb[i]);
         }
     }
     if (grain_params->chroma_scaling_from_luma || grain_params->num_cr_points) {
         for (i = 0; i < numPosChroma; i++) {
-            grain_params->ar_coeffs_cr[i] = dec_get_bits(bs, 8);
+            grain_params->ar_coeffs_cr[i] = dec_get_bits(bs, 8) - 128;
             PRINT_FRAME("ar_coeffs_cr[i]", grain_params->ar_coeffs_cr[i]);
         }
     }
-    grain_params->ar_coeff_shift = dec_get_bits(bs, 2) - 6;
+    grain_params->ar_coeff_shift = dec_get_bits(bs, 2) + 6;
     grain_params->grain_scale_shift = dec_get_bits(bs, 2);
     PRINT_FRAME("ar_coeff_shift", grain_params->ar_coeff_shift);
     PRINT_FRAME("grain_scale_shift", grain_params->grain_scale_shift);
@@ -1516,7 +1562,7 @@ int get_qindex(SegmentationParams *seg_params, int segment_id, int base_q_idx)
 EbErrorType reset_parse_ctx(FRAME_CONTEXT *frm_ctx, uint8_t base_qp) {
     EbErrorType return_error = EB_ErrorNone;
 
-    av1_default_coef_probs(frm_ctx, base_qp);
+    eb_av1_default_coef_probs(frm_ctx, base_qp);
     init_mode_probs(frm_ctx);
 
     return return_error;
@@ -1540,6 +1586,42 @@ void setup_frame_sign_bias(EbDecHandle *dec_handle) {
     }
 }
 
+void setup_past_independence(EbDecHandle *dec_handle_ptr,
+                             FrameHeader *frame_info)
+{
+    int ref, i, j;
+    EbDecPicBuf *cur_buf = dec_handle_ptr->cur_pic_buf[0];
+    SegmentationParams seg = dec_handle_ptr->frame_header.segmentation_params;
+
+    SeqHeader   *seq_header = &dec_handle_ptr->seq_header;
+    int size = (seq_header->max_frame_width * seq_header->max_frame_height) >> 4;
+    if (cur_buf->segment_maps)
+        memset(cur_buf->segment_maps, 0, size);
+
+    for (i = 0; i < MAX_SEGMENTS; i++)
+        for (j = 0; j < SEG_LVL_MAX; j++)
+        {
+            seg.feature_data[i][j] = 0;
+            seg.feature_enabled[i][j] = 0;
+        }
+    UNUSED(seg);
+
+    for (ref = LAST_FRAME; ref <= ALTREF_FRAME; ref++)
+        cur_buf->global_motion[ref].gm_type = IDENTITY;
+
+    frame_info->loop_filter_params.mode_ref_delta_enabled = 1;
+    frame_info->loop_filter_params.ref_deltas[INTRA_FRAME] = 1;
+    frame_info->loop_filter_params.ref_deltas[LAST_FRAME] = 0;
+    frame_info->loop_filter_params.ref_deltas[LAST2_FRAME] = 0;
+    frame_info->loop_filter_params.ref_deltas[LAST3_FRAME] = 0;
+    frame_info->loop_filter_params.ref_deltas[BWDREF_FRAME] = 0;
+    frame_info->loop_filter_params.ref_deltas[GOLDEN_FRAME] = -1;
+    frame_info->loop_filter_params.ref_deltas[ALTREF_FRAME] = -1;
+    frame_info->loop_filter_params.ref_deltas[ALTREF2_FRAME] = -1;
+
+    frame_info->loop_filter_params.mode_deltas[0] = 0;
+    frame_info->loop_filter_params.mode_deltas[1] = 0;
+}
 
 void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
                               ObuHeader *obu_header, int num_planes)
@@ -1587,13 +1669,27 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
                     return; // EB_Corrupt_Frame;
             }
 
-            //frame_type = RefFrameType[ frame_to_show_map_idx ]
-            if (frame_info->frame_type == KEY_FRAME)
+            dec_handle_ptr->cur_pic_buf[0] = dec_handle_ptr->
+                ref_frame_map[frame_to_show_map_idx];
+            frame_info->frame_type = dec_handle_ptr->cur_pic_buf[0]->frame_type;
+
+            if (frame_info->frame_type == KEY_FRAME) {
                 frame_info->refresh_frame_flags = allFrames;
+                frame_info->showable_frame = 0;
+            }
+
             if (seq_header->film_grain_params_present)
-                // TODO: Handle while implementing Inter
-                // load_grain_params(frame_to_show_map_idx);
-                assert(0);
+                load_grain_params(dec_handle_ptr,
+                    &frame_info->film_grain_params, frame_to_show_map_idx);
+
+            generate_next_ref_frame_map(dec_handle_ptr);
+
+            frame_info->show_frame = 1;
+            dec_handle_ptr->cur_pic_buf[0]->film_grain_params =
+                dec_handle_ptr->frame_header.film_grain_params;
+            dec_handle_ptr->show_existing_frame = frame_info->show_existing_frame;
+            dec_handle_ptr->show_frame = frame_info->show_frame;
+            dec_handle_ptr->showable_frame = frame_info->showable_frame;
             return;
         }
 
@@ -1757,7 +1853,7 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             for (i = 0; i < NUM_REF_FRAMES; i++) {
                 ref_order_hint = dec_get_bits(bs,
                     seq_header->order_hint_info.order_hint_bits);
-                PRINT_FRAME("ref_order_hint[i]", frame_info->ref_order_hint);
+                PRINT_FRAME("ref_order_hint[i]", ref_order_hint);
 
                 if (ref_order_hint != (int)frame_info->ref_order_hint[i])
                     frame_info->ref_valid[i] = 0;
@@ -1788,9 +1884,7 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
                 gold_frame_idx = dec_get_bits(bs, 3);
                 PRINT_FRAME("last_frame_idx", last_frame_idx);
                 PRINT_FRAME("gold_frame_idx", gold_frame_idx);
-                (void)last_frame_idx;
-                (void)gold_frame_idx;
-                assert(0); //svt_set_frame_refs();
+                svt_set_frame_refs(dec_handle_ptr, last_frame_idx, gold_frame_idx);
             }
         }
 
@@ -1816,7 +1910,7 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             }
         }
         if (frame_size_override_flag && !frame_info->error_resilient_mode)
-            frame_size_with_refs(bs, seq_header, frame_info,
+            frame_size_with_refs(bs, dec_handle_ptr,
                 frame_size_override_flag);
         else {
             read_frame_size(bs, seq_header, frame_info, frame_size_override_flag);
@@ -1836,18 +1930,42 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
         else
             frame_info->use_ref_frame_mvs = dec_get_bits(bs, 1);
         PRINT_FRAME("use_ref_frame_mvs", frame_info->use_ref_frame_mvs);
-        //for (i = 0; i < INTER_REFS_PER_FRAME; i++) {
-            //int refFrame = LAST_FRAME + i;
-            // int hint = frame_info->ref_order_hint[frame_info->ref_frame_idx[i]];
-            //frame_info->order_hint
-            // RefOrderHint, RefFrameSignBias not available in structure
-        //}
+
+        for (int i = LAST_FRAME; i <= ALTREF_FRAME; ++i) {
+            const EbDecPicBuf *const ref_buf = get_ref_frame_buf(dec_handle_ptr, i);
+            struct ScaleFactors *const ref_scale_factors =
+                get_ref_scale_factors(dec_handle_ptr, i);
+
+            av1_setup_scale_factors_for_frame(
+                ref_scale_factors, ref_buf->superres_upscaled_width,
+                ref_buf->frame_height,
+                frame_info->frame_size.frame_width,
+                frame_info->frame_size.frame_height);
+
+            if ((!av1_is_valid_scale(ref_scale_factors))) {
+                printf("\n Reference frame has invalid dimensions \n");
+                assert(0);
+            }
+        }
     }
 
-    dec_handle_ptr->cur_pic_buf[0] = dec_pic_mgr_get_cur_pic(dec_handle_ptr->pv_pic_mgr,
+    if (seq_header->color_config.subsampling_x == 1 &&
+        seq_header->color_config.subsampling_y == 1)
+        dec_handle_ptr->dec_config.max_color_format = EB_YUV420;
+    else if (seq_header->color_config.subsampling_x == 1 &&
+        seq_header->color_config.subsampling_y == 0)
+        dec_handle_ptr->dec_config.max_color_format = EB_YUV422;
+    else if (seq_header->color_config.subsampling_x == 0 &&
+        seq_header->color_config.subsampling_y == 0)
+        dec_handle_ptr->dec_config.max_color_format = EB_YUV444;
+
+    dec_handle_ptr->cur_pic_buf[0] = dec_pic_mgr_get_cur_pic(
+        dec_handle_ptr->pv_pic_mgr,
         &dec_handle_ptr->seq_header, &dec_handle_ptr->frame_header,
+        dec_handle_ptr->seq_header.color_config.mono_chrome ? EB_YUV400 :
         dec_handle_ptr->dec_config.max_color_format);
-    dec_handle_ptr->cur_pic_buf[0]->order_hint = dec_handle_ptr->frame_header.order_hint;
+
+    svt_setup_frame_buf_refs(dec_handle_ptr);
     /*Temporal MVs allocation */
     check_add_tplmv_buf(dec_handle_ptr);
 
@@ -1862,12 +1980,15 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             ? REFRESH_FRAME_CONTEXT_DISABLED : REFRESH_FRAME_CONTEXT_BACKWARD);
     }
 
+    if (frame_info->primary_ref_frame == PRIMARY_REF_NONE)
+        setup_past_independence(dec_handle_ptr, frame_info);
+
     generate_next_ref_frame_map(dec_handle_ptr);
 
     read_tile_info(bs, &frame_info->tiles_info, seq_header, frame_info);
     read_quantization_params(bs, &frame_info->quantization_params,
         &seq_header->color_config, num_planes);
-    read_segmentation_params(bs, &frame_info->segmentation_params, frame_info);
+    read_segmentation_params(bs, dec_handle_ptr, frame_info);
     read_frame_delta_q_params(bs, frame_info);
     read_frame_delta_lf_params(bs, frame_info);
     setup_segmentation_dequant(dec_handle_ptr, &seq_header->color_config);
@@ -1886,11 +2007,11 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
         int qindex = get_qindex(&frame_info->segmentation_params, i,
             frame_info->quantization_params.base_q_idx);
         frame_info->lossless_array[i] = qindex == 0 &&
-            frame_info->quantization_params.delta_q_y_dc == 0 &&
-            frame_info->quantization_params.delta_q_u_ac == 0 &&
-            frame_info->quantization_params.delta_q_u_dc == 0 &&
-            frame_info->quantization_params.delta_q_v_ac == 0 &&
-            frame_info->quantization_params.delta_q_v_dc == 0;
+            frame_info->quantization_params.delta_q_dc[AOM_PLANE_Y] == 0 &&
+            frame_info->quantization_params.delta_q_ac[AOM_PLANE_U] == 0 &&
+            frame_info->quantization_params.delta_q_dc[AOM_PLANE_U] == 0 &&
+            frame_info->quantization_params.delta_q_ac[AOM_PLANE_V] == 0 &&
+            frame_info->quantization_params.delta_q_dc[AOM_PLANE_V] == 0;
         if (!frame_info->lossless_array[i])
             frame_info->coded_lossless = 0;
         if (frame_info->quantization_params.using_qmatrix) {
@@ -1901,11 +2022,11 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             }
             else {
                 frame_info->segmentation_params.seg_qm_level[0][i]
-                    = frame_info->quantization_params.qm_y;
+                    = frame_info->quantization_params.qm[AOM_PLANE_Y];
                 frame_info->segmentation_params.seg_qm_level[1][i]
-                    = frame_info->quantization_params.qm_u;
+                    = frame_info->quantization_params.qm[AOM_PLANE_U];
                 frame_info->segmentation_params.seg_qm_level[2][i]
-                    = frame_info->quantization_params.qm_v;
+                    = frame_info->quantization_params.qm[AOM_PLANE_V];
             }
         }
     }
@@ -1935,7 +2056,11 @@ void read_uncompressed_header(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
     PRINT_FRAME("allow_warped_motion", frame_info->allow_warped_motion);
     PRINT_FRAME("reduced_tx_set", frame_info->reduced_tx_set);
     read_global_motion_params(bs, dec_handle_ptr, frame_info, FrameIsIntra);
-    read_film_grain_params(bs, &frame_info->film_grain_params, seq_header, frame_info);
+
+    read_film_grain_params(dec_handle_ptr, bs, &frame_info->film_grain_params);
+
+    dec_handle_ptr->cur_pic_buf[0]->film_grain_params =
+                            dec_handle_ptr->frame_header.film_grain_params;
 
     dec_handle_ptr->show_existing_frame = frame_info->show_existing_frame;
     dec_handle_ptr->show_frame          = frame_info->show_frame;
@@ -1956,6 +2081,16 @@ EbErrorType read_frame_header_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
 
     start_position = get_position(bs);
     read_uncompressed_header(bs, dec_handle_ptr, obu_header, num_planes);
+
+    if (allow_intrabc(dec_handle_ptr)) {
+        av1_setup_scale_factors_for_frame(
+            &dec_handle_ptr->sf_identity,
+            dec_handle_ptr->cur_pic_buf[0]->frame_width,
+            dec_handle_ptr->cur_pic_buf[0]->frame_height,
+            dec_handle_ptr->cur_pic_buf[0]->frame_width,
+            dec_handle_ptr->cur_pic_buf[0]->frame_height);
+    }
+
     if (trailing_bit) {
         status = av1_check_trailing_bits(bs);
         if (status != EB_ErrorNone) return status;
@@ -1970,8 +2105,8 @@ EbErrorType read_frame_header_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
     return status;
 }
 
-void clear_above_context(EbDecHandle *dec_handle_ptr, int mi_col_start,
-                         int mi_col_end, const int tile_row)
+void clear_above_context(EbDecHandle *dec_handle_ptr, uint32_t mi_col_start,
+                         uint32_t mi_col_end, const int tile_row)
 {
     assert(0 == tile_row);
 
@@ -1980,31 +2115,40 @@ void clear_above_context(EbDecHandle *dec_handle_ptr, int mi_col_start,
 
     int num_planes  = av1_num_planes(&seq_params->color_config);
     const int width = mi_col_end - mi_col_start;
-
     const int offset_y  = mi_col_start;
-    const int width_y   = width;
-    const int offset_uv = offset_y >> seq_params->color_config.subsampling_y;
+    int width_y   = width;
+
+    if ((mi_col_end + 1) >> 1 == dec_handle_ptr->frame_header.mi_cols >> 1)
+        width_y = parse_ctxt->parse_nbr4x4_ctxt.num_mi_col - mi_col_start;
+
+    const int offset_uv = offset_y >> seq_params->color_config.subsampling_x;
     const int width_uv  = width_y >> seq_params->color_config.subsampling_x;
 
-    ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_level_ctx[0][tile_row]) +
+    int8_t num4_64x64 = mi_size_wide[BLOCK_64X64];
+
+    ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_ctx[0][tile_row]) +
         offset_y, width_y);
-    ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_dc_ctx[0][tile_row]) +
-        offset_y, width_y);
+    ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_palette_colors[0][tile_row]),
+        num4_64x64 * PALETTE_MAX_SIZE);
+
     if (num_planes > 1) {
-        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_level_ctx[1][tile_row]) +
+        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_ctx[1][tile_row]) +
             offset_uv, width_uv);
-        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_dc_ctx[1][tile_row]) +
+        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_palette_colors[1][tile_row]),
+            num4_64x64 * PALETTE_MAX_SIZE);
+        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_ctx[2][tile_row]) +
             offset_uv, width_uv);
-        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_level_ctx[2][tile_row]) +
-            offset_uv, width_uv);
-        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_dc_ctx[2][tile_row]) +
-            offset_uv, width_uv);
+        ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_palette_colors[2][tile_row]),
+            num4_64x64 * PALETTE_MAX_SIZE);
     }
 
     ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_seg_pred_ctx[tile_row]) +
         mi_col_start, width_y);
 
     ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_part_wd[tile_row]) +
+        mi_col_start, width_y);
+
+    ZERO_ARRAY((&parse_ctxt->parse_nbr4x4_ctxt.above_comp_grp_idx[tile_row]) +
         mi_col_start, width_y);
 
     memset((&parse_ctxt->parse_nbr4x4_ctxt.above_tx_wd[tile_row]) + mi_col_start,
@@ -2019,42 +2163,37 @@ void clear_left_context(EbDecHandle *dec_handle_ptr)
     /* Maintained only for 1 left SB! */
     int blk_cnt = seq_params->sb_mi_size;
     int num_planes = av1_num_planes(&seq_params->color_config);
+    int32_t num_4x4_neigh_sb = seq_params->sb_mi_size;
 
     /* TODO :  after Optimizing the allocation for Chroma fix here also */
-    for (int i = 0; i < num_planes; i++) {
-        ZERO_ARRAY(parse_ctxt->parse_nbr4x4_ctxt.left_level_ctx[i], blk_cnt);
-        ZERO_ARRAY(parse_ctxt->parse_nbr4x4_ctxt.left_dc_ctx[i], blk_cnt);
-    }
+    for (int i = 0; i < num_planes; i++)
+        ZERO_ARRAY(parse_ctxt->parse_nbr4x4_ctxt.left_ctx[i], blk_cnt);
 
     ZERO_ARRAY(parse_ctxt->parse_nbr4x4_ctxt.left_seg_pred_ctx, blk_cnt);
 
     ZERO_ARRAY(parse_ctxt->parse_nbr4x4_ctxt.left_part_ht, blk_cnt);
 
+    ZERO_ARRAY(parse_ctxt->parse_nbr4x4_ctxt.left_comp_grp_idx, blk_cnt);
+
+    for (int i = 0; i < num_planes; i++) {
+        ZERO_ARRAY((parse_ctxt->parse_nbr4x4_ctxt.left_palette_colors[i]),
+            num_4x4_neigh_sb * PALETTE_MAX_SIZE);
+    }
+
     memset(parse_ctxt->parse_nbr4x4_ctxt.left_tx_ht, tx_size_high[TX_SIZES_LARGEST],
         blk_cnt*sizeof(parse_ctxt->parse_nbr4x4_ctxt.left_tx_ht[0]));
 }
 
-void clear_cdef(int32_t tile_row, int32_t tile_col, CDEFParams *cdefParams)
+void clear_cdef(int8_t *sb_cdef_strength, int32_t cdef_factor)
 {
-    (void)tile_row;
-    (void)tile_col;
-    for (int i = 0; i < CDEF_MAX_STRENGTHS; i++)
-    {
-        cdefParams->cdef_uv_strength[i] = 0;
-        cdefParams->cdef_y_strength[i] = 0;
-    }
+    memset(sb_cdef_strength, -1, cdef_factor * sizeof(*sb_cdef_strength));
 }
 
-void clear_loop_filter_delta(FrameHeader *fr_header, int num_planes)
+void clear_loop_filter_delta(EbDecHandle *dec_handle)
 {
-    fr_header->delta_lf_params.delta_lf_res = 0;
-
-    const int frame_lf_count =
-        num_planes > 1 ? FRAME_LF_COUNT : FRAME_LF_COUNT - 2;
-    for (int lf_id = 0; lf_id < frame_lf_count; ++lf_id)
-        fr_header->loop_filter_params.ref_deltas[lf_id] = 0;
-    for (int lf_id = 0; lf_id < MAX_MODE_LF_DELTAS; ++lf_id)
-        fr_header->loop_filter_params.mode_deltas[lf_id] = 0;
+    ParseCtxt *parse_ctx = (ParseCtxt*)dec_handle->pv_parse_ctxt;
+    for (int lf_id = 0; lf_id < FRAME_LF_COUNT; ++lf_id)
+        parse_ctx->parse_nbr4x4_ctxt.delta_lf[lf_id] = 0;
 }
 
 void clear_loop_restoration(int num_planes, PartitionInfo_t *part_info)
@@ -2074,15 +2213,27 @@ EbErrorType parse_tile(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
     EbColorConfig *color_config = &dec_handle_ptr->seq_header.color_config;
     int num_planes = av1_num_planes(color_config);
 
-    clear_above_context(dec_handle_ptr, tile_info->tile_col_start_sb[tile_col],
-                        tile_info->tile_col_start_sb[tile_col + 1], 0 /*TODO: For MultiThread*/);
-    clear_loop_filter_delta(&dec_handle_ptr->frame_header, num_planes);
+    clear_above_context(dec_handle_ptr, tile_info->tile_col_start_mi[tile_col],
+                        tile_info->tile_col_start_mi[tile_col + 1], 0 /*TODO: For MultiThread*/);
+    clear_loop_filter_delta(dec_handle_ptr);
+
+    /* Init ParseCtxt */
+    ParseCtxt *parse_ctx = (ParseCtxt*)dec_handle_ptr->pv_parse_ctxt;
+    RestorationUnitInfo *lr_unit[MAX_MB_PLANE];
+
+    // Default initialization of Wiener and SGR Filter
+    for (int p = 0; p < num_planes; ++p) {
+        lr_unit[p] = &parse_ctx->ref_lr_unit[p];
+
+        set_default_wiener(&lr_unit[p]->wiener_info);
+        set_default_sgrproj(&lr_unit[p]->sgrproj_info);
+    }
 
     // to-do access to wiener info that is currently part of PartitionInfo_t
     //clear_loop_restoration(num_planes, part_info);
 
-    for (uint32_t mi_row = tile_info->tile_row_start_sb[tile_row];
-         mi_row < tile_info->tile_row_start_sb[tile_row + 1];
+    for (uint32_t mi_row = tile_info->tile_row_start_mi[tile_row];
+         mi_row < tile_info->tile_row_start_mi[tile_row + 1];
          mi_row += dec_handle_ptr->seq_header.sb_mi_size)
     {
         int32_t sb_row = (mi_row << 2) >> dec_handle_ptr->seq_header.sb_size_log2;
@@ -2093,8 +2244,8 @@ EbErrorType parse_tile(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
         /*add tile level cfl init */
         cfl_init(&((DecModCtxt*)dec_handle_ptr->pv_dec_mod_ctxt)->cfl_ctx, color_config);
 
-        for (uint32_t mi_col = tile_info->tile_col_start_sb[tile_col];
-            mi_col < tile_info->tile_col_start_sb[tile_col + 1];
+        for (uint32_t mi_col = tile_info->tile_col_start_mi[tile_col];
+            mi_col < tile_info->tile_col_start_mi[tile_col + 1];
             mi_col += dec_handle_ptr->seq_header.sb_mi_size)
 
         {
@@ -2103,26 +2254,23 @@ EbErrorType parse_tile(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             uint8_t     sx = color_config->subsampling_x;
             uint8_t     sy = color_config->subsampling_y;
 
-            clear_cdef(tile_row, tile_col, &dec_handle_ptr->frame_header.CDEF_params);
             //clear_block_decoded_flags(r, c, sbSize4)
-            //read_lr(r, c, sbSize)
             MasterFrameBuf *master_frame_buf = &dec_handle_ptr->master_frame_buf;
             CurFrameBuf    *frame_buf        = &master_frame_buf->cur_frame_bufs[0];
             int32_t num_mis_in_sb = master_frame_buf->num_mis_in_sb;
 
             SBInfo  *sb_info = frame_buf->sb_info +
                     (sb_row * master_frame_buf->sb_cols) + sb_col;
+#if !FRAME_MI_MAP
             SBInfo  *left_sb_info = NULL;
-            if(mi_col != tile_info->tile_col_start_sb[tile_col])
+            if(mi_col != tile_info->tile_col_start_mi[tile_col])
                 left_sb_info  = frame_buf->sb_info +
                     (sb_row * master_frame_buf->sb_cols) + sb_col - 1;
             SBInfo  *above_sb_info = NULL;
-            if (mi_row != tile_info->tile_row_start_sb[tile_row])
+            if (mi_row != tile_info->tile_row_start_mi[tile_row])
                 above_sb_info = frame_buf->sb_info +
                     ((sb_row-1) * master_frame_buf->sb_cols) + sb_col;
-            (void)above_sb_info;
-            (void)left_sb_info;
-#if FRAME_MI_MAP
+#else
             *(master_frame_buf->frame_mi_map.pps_sb_info + sb_row *
                 master_frame_buf->frame_mi_map.sb_cols + sb_col) = sb_info;
 #endif
@@ -2137,7 +2285,12 @@ EbErrorType parse_tile(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             sb_info->sb_trans_info[AOM_PLANE_U] = frame_buf->trans_info[AOM_PLANE_U] +
                 (sb_row * num_mis_in_sb * master_frame_buf->sb_cols >> sy) +
                 (sb_col * num_mis_in_sb >> sx);
-
+#if SINGLE_THRD_COEFF_BUF_OPT
+            /*TODO : Change to macro */
+            sb_info->sb_coeff[AOM_PLANE_Y] = frame_buf->coeff[AOM_PLANE_Y];
+            sb_info->sb_coeff[AOM_PLANE_U] = frame_buf->coeff[AOM_PLANE_U];
+            sb_info->sb_coeff[AOM_PLANE_V] = frame_buf->coeff[AOM_PLANE_V];
+#else
             /*TODO : Change to macro */
             sb_info->sb_coeff[AOM_PLANE_Y] = frame_buf->coeff[AOM_PLANE_Y] +
                 (sb_row * num_mis_in_sb * master_frame_buf->sb_cols * (16 + 1))
@@ -2151,24 +2304,22 @@ EbErrorType parse_tile(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
                 (sb_row * num_mis_in_sb * master_frame_buf->sb_cols * (16 + 1)
                     >> (sy + sx))
                 + (sb_col * num_mis_in_sb * (16 + 1) >> (sy + sx));
+#endif
 
             int cdef_factor = dec_handle_ptr->seq_header.use_128x128_superblock ? 4 : 1;
             sb_info->sb_cdef_strength = frame_buf->cdef_strength +
                 (((sb_row * master_frame_buf->sb_cols) + sb_col) * cdef_factor);
 
-            sb_info->sb_delta_lf = frame_buf->delta_lf +
-                (sb_row * master_frame_buf->sb_cols) + sb_col;
+            sb_info->sb_delta_lf = frame_buf->delta_lf + (FRAME_LF_COUNT *
+                ((sb_row * master_frame_buf->sb_cols) + sb_col));
 
             sb_info->sb_delta_q = frame_buf->delta_q +
                 (sb_row * master_frame_buf->sb_cols) + sb_col;
 
-            /* TO DO : Populate other structures as well */
+            clear_cdef(sb_info->sb_cdef_strength, cdef_factor);
 
-            /* Init ParseCtxt */
-            ParseCtxt *parse_ctx = (ParseCtxt*)dec_handle_ptr->pv_parse_ctxt;
-
-            parse_ctx->first_luma_tu_offset = 0;
-            parse_ctx->first_chroma_tu_offset = 0;
+            parse_ctx->first_tu_offset[AOM_PLANE_Y] = 0;
+            parse_ctx->first_tu_offset[AOM_PLANE_U] = 0;
             parse_ctx->cur_mode_info = sb_info->sb_mode_info;
             parse_ctx->cur_mode_info_cnt = 0;
             parse_ctx->sb_row_mi = mi_row;
@@ -2180,8 +2331,6 @@ EbErrorType parse_tile(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             parse_ctx->left_sb_info = left_sb_info;
             parse_ctx->above_sb_info= above_sb_info;
 #endif
-            parse_ctx->prev_blk_has_chroma = 1; //default at start of frame / tile
-
             /* Init DecModCtxt */
             DecModCtxt *dec_mod_ctxt = (DecModCtxt*)dec_handle_ptr->pv_dec_mod_ctxt;
 #if !FRAME_MI_MAP
@@ -2247,9 +2396,9 @@ void svt_tile_init(TileInfo *cur_tile_info, FrameHeader *frame_header,
     /* tile_set_row */
     assert(tile_row < tiles_info->tile_rows);
     cur_tile_info->tile_row     = tile_row;
-    cur_tile_info->mi_row_start = tiles_info->tile_row_start_sb[tile_row];
+    cur_tile_info->mi_row_start = tiles_info->tile_row_start_mi[tile_row];
     cur_tile_info->mi_row_end   = AOMMIN(tiles_info->
-                        tile_row_start_sb[tile_row+1], frame_header->mi_rows);
+        tile_row_start_mi[tile_row+1], frame_header->mi_rows);
 
     assert(cur_tile_info->mi_row_end > cur_tile_info->mi_row_start);
 
@@ -2257,20 +2406,22 @@ void svt_tile_init(TileInfo *cur_tile_info, FrameHeader *frame_header,
     assert(tile_col < tiles_info->tile_cols);
 
     cur_tile_info->tile_col = tile_col;
-    cur_tile_info->mi_col_start = tiles_info->tile_col_start_sb[tile_col];
+    cur_tile_info->mi_col_start = tiles_info->tile_col_start_mi[tile_col];
     cur_tile_info->mi_col_end = AOMMIN(tiles_info->
-                        tile_col_start_sb[tile_col + 1], frame_header->mi_cols);
+        tile_col_start_mi[tile_col + 1], frame_header->mi_cols);
 
     assert(cur_tile_info->mi_col_end > cur_tile_info->mi_col_start);
 }
 
 // Read Tile group information
 EbErrorType read_tile_group_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
-                                TilesInfo *tiles_info, ObuHeader *obu_header)
+    TilesInfo *tiles_info, ObuHeader *obu_header, int *is_last_tg)
 {
     EbErrorType status = EB_ErrorNone;
 
     ParseCtxt   *parse_ctxt = (ParseCtxt *)dec_handle_ptr->pv_parse_ctxt;
+
+    FrameHeader *frame_header = &dec_handle_ptr->frame_header;
 
     int num_tiles, tg_start, tg_end, tile_bits, tile_start_and_end_present_flag = 0;
     int tile_row, tile_col;
@@ -2299,10 +2450,28 @@ EbErrorType read_tile_group_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
     PRINT_FRAME("tg_start", tg_start);
     PRINT_FRAME("tg_end", tg_end);
 
+    *is_last_tg = ((tg_end + 1) == num_tiles);
+
     byte_alignment(bs);
     end_position = get_position(bs);
     header_bytes = (end_position - start_position) / 8;
     obu_header->payload_size -= header_bytes;
+
+    dec_handle_ptr->cm.mi_cols = dec_handle_ptr->frame_header.mi_cols;
+    dec_handle_ptr->cm.mi_rows = dec_handle_ptr->frame_header.mi_rows;
+    dec_handle_ptr->cm.mi_stride = dec_handle_ptr->frame_header.mi_stride;
+    dec_handle_ptr->cm.bit_depth =
+        dec_handle_ptr->seq_header.color_config.bit_depth;
+    dec_handle_ptr->cm.subsampling_x =
+        dec_handle_ptr->seq_header.color_config.subsampling_x;
+    dec_handle_ptr->cm.subsampling_y =
+        dec_handle_ptr->seq_header.color_config.subsampling_y;
+    dec_handle_ptr->cm.frm_size = dec_handle_ptr->frame_header.frame_size;
+    dec_handle_ptr->cm.tiles_info = dec_handle_ptr->frame_header.tiles_info;
+    dec_handle_ptr->is_lf_enabled =
+        (!dec_handle_ptr->frame_header.allow_intrabc &&
+        (dec_handle_ptr->frame_header.loop_filter_params.filter_level[0] ||
+        dec_handle_ptr->frame_header.loop_filter_params.filter_level[1]));
 
     for (int tile_num = tg_start; tile_num <= tg_end; tile_num++) {
         tile_row = tile_num / tiles_info->tile_cols;
@@ -2315,19 +2484,22 @@ EbErrorType read_tile_group_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             obu_header->payload_size -= (tiles_info->tile_size_bytes + tile_size);
         }
         PRINT_FRAME("tile_size", (tile_size));
-        svt_tile_init(&parse_ctxt->cur_tile_info, &dec_handle_ptr->frame_header,
+        svt_tile_init(&parse_ctxt->cur_tile_info, frame_header,
                         tile_row, tile_col);
+
+        parse_ctxt->parse_nbr4x4_ctxt.cur_q_ind =
+            frame_header->quantization_params.base_q_idx;
 
         //init_symbol(tileSize)
 
         status = init_svt_reader(&parse_ctxt->r,
             (const uint8_t *)get_bitsteam_buf(bs), bs->buf_max, tile_size,
-            !(dec_handle_ptr->frame_header.disable_cdf_update));
+            !(frame_header->disable_cdf_update));
         if (status != EB_ErrorNone)
             return status;
 #if 0
         reset_parse_ctx(&parse_ctxt->frm_ctx[0],
-            dec_handle_ptr->frame_header.quantization_params.base_q_idx);
+            frame_header->quantization_params.base_q_idx);
 #else
         parse_ctxt->cur_tile_ctx = parse_ctxt->init_frm_ctx;
 #endif
@@ -2335,12 +2507,12 @@ EbErrorType read_tile_group_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
         status = parse_tile(bs, dec_handle_ptr, tiles_info, tile_row, tile_col);
 
         /* Save CDF */
-        if (!dec_handle_ptr->frame_header.disable_frame_end_update_cdf &&
+        if (!frame_header->disable_frame_end_update_cdf &&
             (tile_num == tiles_info->context_update_tile_id))
         {
             dec_handle_ptr->cur_pic_buf[0]->final_frm_ctx =
                                         parse_ctxt->cur_tile_ctx;
-            av1_reset_cdf_symbol_counters(&dec_handle_ptr->cur_pic_buf[0]->final_frm_ctx);
+            eb_av1_reset_cdf_symbol_counters(&dec_handle_ptr->cur_pic_buf[0]->final_frm_ctx);
         }
 
         dec_bits_init(bs, (uint8_t *)parse_ctxt->r.ec.bptr, obu_header->payload_size);
@@ -2349,11 +2521,72 @@ EbErrorType read_tile_group_obu(bitstrm_t *bs, EbDecHandle *dec_handle_ptr,
             return status;
     }
 
+    if ((tg_end + 1) != num_tiles)
+        return 0;
+
+    if (!dec_handle_ptr->frame_header.allow_intrabc) {
+        if (dec_handle_ptr->frame_header.loop_filter_params.filter_level[0] ||
+            dec_handle_ptr->frame_header.loop_filter_params.filter_level[1])
+        {
+            /*LF Trigger function for each frame*/
+            dec_av1_loop_filter_frame(dec_handle_ptr,
+                dec_handle_ptr->cur_pic_buf[0]->ps_pic_buf,
+                dec_handle_ptr->pv_lf_ctxt,
+                AOM_PLANE_Y, MAX_MB_PLANE);
+        }
+
+        const int32_t do_cdef =
+            !frame_header->coded_lossless &&
+            (frame_header->CDEF_params.cdef_bits ||
+             frame_header->CDEF_params.cdef_y_strength[0] ||
+             frame_header->CDEF_params.cdef_uv_strength[0]);
+
+        int32_t do_upscale = !av1_superres_unscaled(&dec_handle_ptr->
+                             frame_header.frame_size);
+
+        const int opt_lr = !do_cdef && !do_upscale;
+
+        LRParams *lr_param = dec_handle_ptr->frame_header.lr_params;
+        int do_loop_restoration =
+            lr_param[AOM_PLANE_Y].frame_restoration_type != RESTORE_NONE ||
+            lr_param[AOM_PLANE_U].frame_restoration_type != RESTORE_NONE ||
+            lr_param[AOM_PLANE_V].frame_restoration_type != RESTORE_NONE;
+
+        if (!opt_lr) {
+            if (do_loop_restoration)
+                dec_av1_loop_restoration_save_boundary_lines(dec_handle_ptr, 0);
+
+            /*Calling cdef frame level function*/
+            if (do_cdef)
+                svt_cdef_frame(dec_handle_ptr);
+
+            if (do_upscale) {
+                av1_superres_upscale(&dec_handle_ptr->cm, &dec_handle_ptr->frame_header,
+                    &dec_handle_ptr->seq_header,
+                    dec_handle_ptr->cur_pic_buf[0]->ps_pic_buf);
+                dec_handle_ptr->cm.frm_size.frame_width =
+                    dec_handle_ptr->frame_header.frame_size.frame_width;
+            }
+
+            if (do_loop_restoration) {
+                dec_av1_loop_restoration_save_boundary_lines(dec_handle_ptr, 1);
+                dec_av1_loop_restoration_filter_frame(dec_handle_ptr, opt_lr);
+            }
+        }
+        else {
+            if (do_loop_restoration) {
+                /* Padded bits are required for filtering pixel around frame boundary */
+                dec_av1_loop_restoration_filter_frame(dec_handle_ptr, opt_lr);
+            }
+        }
+    }
+
     /* Save CDF */
-    if (dec_handle_ptr->frame_header.disable_frame_end_update_cdf)
+    if (frame_header->disable_frame_end_update_cdf)
         dec_handle_ptr->cur_pic_buf[0]->final_frm_ctx = parse_ctxt->init_frm_ctx;
 
-    pad_pic(dec_handle_ptr->cur_pic_buf[0]->ps_pic_buf);
+    pad_pic(dec_handle_ptr->cur_pic_buf[0]->ps_pic_buf,
+            &dec_handle_ptr->frame_header);
 
     return status;
 }
@@ -2367,12 +2600,27 @@ EbErrorType decode_obu(EbDecHandle *dec_handle_ptr, unsigned char *data, unsigne
 }
 
 // Decode all OBUs in a Frame
-EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, size_t data_size)
+EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data,
+    size_t data_size, uint32_t is_annexb)
 {
     bitstrm_t bs;
     EbErrorType status = EB_ErrorNone;
     ObuHeader obu_header;
     int frame_decoding_finished = 0;
+
+
+#if ENABLE_ENTROPY_TRACE
+    enable_dump = 1;
+#if FRAME_LEVEL_TRACE
+    if (enable_dump) {
+        char str[1000];
+        sprintf(str, "SVT_fr_%d.txt", dec_handle_ptr->dec_cnt);
+        if (temp_fp == NULL) temp_fp = fopen(str, "w");
+    }
+#else
+    if (temp_fp == NULL) temp_fp = fopen("SVT.txt", "w");
+#endif
+#endif
 
     while (!frame_decoding_finished)
     {
@@ -2385,8 +2633,23 @@ EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, siz
 
         dec_bits_init(&bs, *data, data_size);
 
-        status = open_bistream_unit(&bs, &obu_header, data_size, &length_size);
+        if (is_annexb) {
+            // read the size of OBU
+            status = read_obu_size(&bs, data_size, &obu_header.payload_size,
+                &length_size);
+            if (status != EB_ErrorNone)
+                return status;
+
+            *data += length_size;
+            data_size -= length_size;
+            length_size = 0;
+        }
+
+        status = read_obu_header_size(&bs, &obu_header, data_size, &length_size);
         if (status != EB_ErrorNone) return status;
+
+        if (is_annexb)
+            obu_header.payload_size -= obu_header.size;
 
         payload_size = obu_header.payload_size;
 
@@ -2405,13 +2668,24 @@ EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, siz
             break;
 
         case OBU_SEQUENCE_HEADER:
+        {
             PRINT_NAME("**************OBU_SEQUENCE_HEADER*******************")
-                status = read_sequence_header_obu(&bs, &dec_handle_ptr->seq_header);
+            BlockSize prev_sb_size = dec_handle_ptr->seq_header.sb_size;
+            uint16_t prev_max_frame_width = dec_handle_ptr->seq_header.max_frame_width;
+            uint16_t prev_max_frame_height = dec_handle_ptr->seq_header.max_frame_height;
+
+            status = read_sequence_header_obu(&bs, &dec_handle_ptr->seq_header);
             if (status != EB_ErrorNone)
                 return status;
+            if (dec_handle_ptr->seq_header.color_config.bit_depth == EB_TWELVE_BIT)
+                dec_init_intra_predictors_12b_internal();
             dec_handle_ptr->seq_header_done = 1;
+            if (prev_sb_size != dec_handle_ptr->seq_header.sb_size ||
+                prev_max_frame_width != dec_handle_ptr->seq_header.max_frame_width ||
+                prev_max_frame_height != dec_handle_ptr->seq_header.max_frame_height)
+                dec_handle_ptr->mem_init_done = 0;
             break;
-
+        }
         case OBU_FRAME_HEADER:
         case OBU_REDUNDANT_FRAME_HEADER:
         case OBU_FRAME:
@@ -2433,7 +2707,6 @@ EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, siz
                 dec_handle_ptr->seen_frame_header = 1;
                 status = read_frame_header_obu(&bs, dec_handle_ptr, &obu_header,
                                                obu_header.obu_type != OBU_FRAME);
-                frame_decoding_finished = 1;
             }
             /*else {
                  For OBU_REDUNDANT_FRAME_HEADER, previous frame_header is taken from dec_handle_ptr->frame_header
@@ -2441,13 +2714,16 @@ EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, siz
             }*/
 
             if (obu_header.obu_type != OBU_FRAME) break; // For OBU_TILE_GROUP comes under OBU_FRAME
+            goto TITLE_GROUP;
 
         case OBU_TILE_GROUP:
+        TITLE_GROUP:
             PRINT_NAME("**************OBU_TILE_GROUP*******************");
             if (!dec_handle_ptr->seen_frame_header)
                 return EB_Corrupt_Frame;
             status = read_tile_group_obu(&bs, dec_handle_ptr,
-                &dec_handle_ptr->frame_header.tiles_info, &obu_header);
+                &dec_handle_ptr->frame_header.tiles_info,
+                &obu_header, &frame_decoding_finished);
             if (status != EB_ErrorNone) return status;
             if (frame_decoding_finished)
                 dec_handle_ptr->seen_frame_header = 0;
@@ -2463,6 +2739,16 @@ EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, siz
         if (!data_size)
             frame_decoding_finished = 1;
     }
+
+#if ENABLE_ENTROPY_TRACE
+#if FRAME_LEVEL_TRACE
+    if (enable_dump) {
+        fclose(temp_fp);
+        temp_fp = NULL;
+    }
+#endif
+#endif
+
     return status;
 }
 
@@ -2483,7 +2769,7 @@ EB_API EbErrorType eb_get_sequence_info(
         ObuHeader ou;
         memset(&ou, 0, sizeof(ou));
         size_t length_size = 0;
-        status = open_bistream_unit(&bs, &ou, frame_sz, &length_size);
+        status = read_obu_header_size(&bs, &ou, frame_sz, &length_size);
         if (status != EB_ErrorNone)
             return status;
 

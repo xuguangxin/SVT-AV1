@@ -28,8 +28,7 @@ typedef struct RefFrameInfo {
     int32_t     sort_idx;
 } RefFrameInfo;
 
-
-EbErrorType dec_pic_mgr_init(EbDecPicMgr **pps_pic_mgr);
+EbErrorType dec_pic_mgr_init(EbDecHandle *dec_handle_ptr);
 
 EbDecPicBuf * dec_pic_mgr_get_cur_pic(EbDecPicMgr *ps_pic_mgr,
                                       SeqHeader   *seq_header,
@@ -43,6 +42,12 @@ void dec_pic_mgr_update_ref_pic(EbDecHandle *dec_handle_ptr, int32_t frame_decod
 void generate_next_ref_frame_map(EbDecHandle *dec_handle_ptr);
 
 EbDecPicBuf *get_ref_frame_buf(EbDecHandle *dec_handle_ptr, const MvReferenceFrame ref_frame);
+void svt_setup_frame_buf_refs(EbDecHandle *dec_handle_ptr);
+
+ScaleFactors *get_ref_scale_factors(EbDecHandle *dec_handle_ptr, const MvReferenceFrame ref_frame);
+
+void svt_set_frame_refs(EbDecHandle *dec_handle_ptr, int32_t lst_map_idx,
+    int32_t gld_map_idx);
 
 #ifdef __cplusplus
 }

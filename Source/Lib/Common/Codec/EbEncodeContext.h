@@ -124,10 +124,6 @@ typedef struct EncodeContext
 
     // Prediction Structure
     PredictionStructureGroup                       *prediction_structure_group_ptr;
-#if !ENABLE_CDF_UPDATE
-    // MD Rate Estimation Table
-    MdRateEstimationContext                        *md_rate_estimation_array;
-#endif
     // Rate Control Bit Tables
     RateControlTables                              *rate_control_tables_array;
     EbBool                                            rate_control_tables_array_updated;
@@ -152,6 +148,9 @@ typedef struct EncodeContext
     EbHandle                                          shared_reference_mutex;
 
     uint64_t                                          picture_number_alt; // The picture number overlay includes all the overlay frames
+#if TWO_PASS
+    EbHandle                                          stat_file_mutex;
+#endif
 } EncodeContext;
 
 typedef struct EncodeContextInitData {
