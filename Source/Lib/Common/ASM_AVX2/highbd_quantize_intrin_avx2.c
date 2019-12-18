@@ -827,6 +827,8 @@ static INLINE void init_qp_fp(const int16_t *round_ptr, const int16_t *quant_ptr
   init_one_qp(&round, &qp[0]);
   init_one_qp(&quant, &qp[1]);
   init_one_qp(&dequant, &qp[2]);
+  qp[3] = _mm256_setzero_si256();
+  qp[4] = _mm256_setzero_si256();
 }
 
 static INLINE void quantize_highbd_fp(
@@ -895,7 +897,7 @@ void eb_av1_highbd_quantize_fp_avx2(
   (void)zbin_ptr;
   (void)quant_shift_ptr;
   const unsigned int step = 8;
-  __m256i qp[3], coeff;
+  __m256i qp[5], coeff;
 
   init_qp_fp(round_ptr, quant_ptr, dequant_ptr, log_scale, qp);
   coeff = _mm256_loadu_si256((const __m256i *)coeff_ptr);
