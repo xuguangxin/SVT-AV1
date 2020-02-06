@@ -229,9 +229,8 @@ void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
     }
 }
 
-void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc
-    , EbBool is_16bit
-) {
+void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc, uint16_t pad_right, uint16_t pad_bottom, EbBool is_16bit)
+{
     //NOTe:  Not all fileds are connected. add more connections as needed.
     if (!is_16bit) {
         aomBuffDsc->y_buffer = picBuffDsc->buffer_y + picBuffDsc->origin_x +
@@ -255,10 +254,10 @@ void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfi
         aomBuffDsc->subsampling_x = 1;
         aomBuffDsc->subsampling_y = 1;
 
-        aomBuffDsc->y_crop_width   = aomBuffDsc->y_width;
-        aomBuffDsc->uv_crop_width  = aomBuffDsc->uv_width;
-        aomBuffDsc->y_crop_height  = aomBuffDsc->y_height;
-        aomBuffDsc->uv_crop_height = aomBuffDsc->uv_height;
+        aomBuffDsc->y_crop_width   = aomBuffDsc->y_width - pad_right;
+        aomBuffDsc->uv_crop_width  = aomBuffDsc->y_crop_width / 2;
+        aomBuffDsc->y_crop_height  = aomBuffDsc->y_height - pad_bottom;
+        aomBuffDsc->uv_crop_height = aomBuffDsc->y_crop_height / 2;
 
         aomBuffDsc->flags = 0;
     } else {
@@ -313,10 +312,10 @@ void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfi
         aomBuffDsc->subsampling_x = 1;
         aomBuffDsc->subsampling_y = 1;
 
-        aomBuffDsc->y_crop_width   = aomBuffDsc->y_width;
-        aomBuffDsc->uv_crop_width  = aomBuffDsc->uv_width;
-        aomBuffDsc->y_crop_height  = aomBuffDsc->y_height;
-        aomBuffDsc->uv_crop_height = aomBuffDsc->uv_height;
+        aomBuffDsc->y_crop_width   = aomBuffDsc->y_width - pad_right;
+        aomBuffDsc->uv_crop_width  = aomBuffDsc->y_crop_width / 2;
+        aomBuffDsc->y_crop_height  = aomBuffDsc->y_height - pad_bottom;
+        aomBuffDsc->uv_crop_height = aomBuffDsc->y_crop_height / 2;
         aomBuffDsc->flags          = YV12_FLAG_HIGHBITDEPTH;
     }
 }

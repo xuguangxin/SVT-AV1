@@ -793,6 +793,12 @@ typedef struct PictureControlSetInitData {
     uint8_t log2_sb_sz; //in mi unit
     uint8_t allocate_ois_struct; //allocate ois results
     EbBool is_16bit_pipeline;
+
+#if NON8_FIX_REST
+    uint16_t  non_m8_pad_w;
+    uint16_t  non_m8_pad_h;
+#endif
+
 } PictureControlSetInitData;
 
 typedef struct Av1Comp {
