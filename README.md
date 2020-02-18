@@ -1,4 +1,4 @@
-# Scalable Video Technology for AV1 Encoder (SVT-AV1 Encoder)
+ # Scalable Video Technology for AV1 Encoder (SVT-AV1 Encoder)
 
 [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/OpenVisualCloud/SVT-AV1?branch=master&svg=true)](https://ci.appveyor.com/project/OpenVisualCloud/SVT-AV1)
 [![Travis Build Status](https://travis-ci.com/OpenVisualCloud/SVT-AV1.svg?branch=master)](https://travis-ci.com/OpenVisualCloud/SVT-AV1)
