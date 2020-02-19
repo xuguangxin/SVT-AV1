@@ -2088,8 +2088,13 @@ static void  av1_generate_rps_info(
             av1_rps->ref_dpb_index[GOLD] = av1_rps->ref_dpb_index[LAST];
 
             av1_rps->ref_dpb_index[BWD] = base2_idx;
+#if PRED_STR_UPDATE
+            av1_rps->ref_dpb_index[ALT2] = lay2_1_idx;
+            av1_rps->ref_dpb_index[ALT] = lay3_idx;
+#else
             av1_rps->ref_dpb_index[ALT2] = av1_rps->ref_dpb_index[BWD];
             av1_rps->ref_dpb_index[ALT] = av1_rps->ref_dpb_index[BWD];
+#endif
 
             gop_i = 8;
             av1_rps->ref_poc_array[LAST] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[0]);
@@ -2098,8 +2103,13 @@ static void  av1_generate_rps_info(
             av1_rps->ref_poc_array[GOLD] = av1_rps->ref_poc_array[LAST];
 
             av1_rps->ref_poc_array[BWD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[0]);
+#if PRED_STR_UPDATE
+            av1_rps->ref_poc_array[ALT2] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[1]);
+            av1_rps->ref_poc_array[ALT] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[2]);
+#else
             av1_rps->ref_poc_array[ALT2] = av1_rps->ref_poc_array[BWD];
             av1_rps->ref_poc_array[ALT] = av1_rps->ref_poc_array[BWD];
+#endif
             av1_rps->refresh_frame_mask = 1 << (LAY1_OFF + context_ptr->lay1_toggle);
 
             break;
@@ -2133,19 +2143,35 @@ static void  av1_generate_rps_info(
                 av1_rps->ref_dpb_index[LAST] = lay1_1_idx;
                 av1_rps->ref_dpb_index[LAST2] = lay2_1_idx;
                 av1_rps->ref_dpb_index[LAST3] = base1_idx;
+#if PRED_STR_UPDATE
+                av1_rps->ref_dpb_index[GOLD] = lay3_idx;
+#else
                 av1_rps->ref_dpb_index[GOLD] = av1_rps->ref_dpb_index[LAST];
+#endif
 
                 av1_rps->ref_dpb_index[BWD] = base2_idx;
+#if PRED_STR_UPDATE
+                av1_rps->ref_dpb_index[ALT2] = lay4_idx;
+#else
                 av1_rps->ref_dpb_index[ALT2] = av1_rps->ref_dpb_index[BWD];
+#endif
                 av1_rps->ref_dpb_index[ALT] = av1_rps->ref_dpb_index[BWD];
                 gop_i = 12;
                 av1_rps->ref_poc_array[LAST] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[0]);
                 av1_rps->ref_poc_array[LAST2] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[1]);
                 av1_rps->ref_poc_array[LAST3] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[2]);
+#if PRED_STR_UPDATE
+                av1_rps->ref_poc_array[GOLD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[3]);
+#else
                 av1_rps->ref_poc_array[GOLD] = av1_rps->ref_poc_array[LAST];
+#endif
 
                 av1_rps->ref_poc_array[BWD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[0]);
+#if PRED_STR_UPDATE
+                av1_rps->ref_poc_array[ALT2] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[1]);
+#else
                 av1_rps->ref_poc_array[ALT2] = av1_rps->ref_poc_array[BWD];
+#endif
                 av1_rps->ref_poc_array[ALT] = av1_rps->ref_poc_array[BWD];
             }
             av1_rps->refresh_frame_mask = 1 << (LAY2_OFF);
@@ -2225,7 +2251,11 @@ static void  av1_generate_rps_info(
                 av1_rps->ref_dpb_index[GOLD] = base1_idx;
 
                 av1_rps->ref_dpb_index[BWD] = base2_idx;
+#if PRED_STR_UPDATE
+                av1_rps->ref_dpb_index[ALT2] = lay4_idx;
+#else
                 av1_rps->ref_dpb_index[ALT2] = av1_rps->ref_dpb_index[BWD];
+#endif
                 av1_rps->ref_dpb_index[ALT] = av1_rps->ref_dpb_index[BWD];
                 gop_i = 14;
                 av1_rps->ref_poc_array[LAST] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[0]);
@@ -2234,7 +2264,11 @@ static void  av1_generate_rps_info(
                 av1_rps->ref_poc_array[GOLD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[3]);
 
                 av1_rps->ref_poc_array[BWD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[0]);
+#if PRED_STR_UPDATE
+                av1_rps->ref_poc_array[ALT2] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[1]);
+#else
                 av1_rps->ref_poc_array[ALT2] = av1_rps->ref_poc_array[BWD];
+#endif
                 av1_rps->ref_poc_array[ALT] = av1_rps->ref_poc_array[BWD];
             }
             else
@@ -2412,7 +2446,11 @@ static void  av1_generate_rps_info(
                 av1_rps->ref_dpb_index[LAST3] = lay4_idx;
                 av1_rps->ref_dpb_index[GOLD] = lay1_1_idx;
                 av1_rps->ref_dpb_index[BWD] = base2_idx;
+#if PRED_STR_UPDATE
+                av1_rps->ref_dpb_index[ALT2] = base1_idx;
+#else
                 av1_rps->ref_dpb_index[ALT2] = av1_rps->ref_dpb_index[BWD];
+#endif
                 av1_rps->ref_dpb_index[ALT] = av1_rps->ref_dpb_index[BWD];
                 gop_i = 15;
                 av1_rps->ref_poc_array[LAST] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[0]);
@@ -2421,7 +2459,11 @@ static void  av1_generate_rps_info(
                 av1_rps->ref_poc_array[GOLD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list0[3]);
 
                 av1_rps->ref_poc_array[BWD] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[0]);
+#if PRED_STR_UPDATE
+                av1_rps->ref_poc_array[ALT2] = get_ref_poc(context_ptr, pcs_ptr->picture_number, five_level_hierarchical_pred_struct[gop_i].ref_list1[1]);
+#else
                 av1_rps->ref_poc_array[ALT2] = av1_rps->ref_poc_array[BWD];
+#endif
                 av1_rps->ref_poc_array[ALT] = av1_rps->ref_poc_array[BWD];
             }
             else
@@ -4720,6 +4762,27 @@ void* picture_decision_kernel(void *input_ptr)
                                         pcs_ptr->av1_cm->ref_frame_sign_bias[ALTREF2_FRAME] =
                                         pcs_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 1;
                                 }
+#if PRED_STR_UPDATE
+                                if (frm_hdr->reference_mode == REFERENCE_MODE_SELECT &&
+                                    pcs_ptr->temporal_layer_index &&
+                                    scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS)
+                                {
+                                    if (pcs_ptr->av1_ref_signal.ref_poc_array[ALT] >= pcs_ptr->picture_number)
+                                        pcs_ptr->av1_cm->ref_frame_sign_bias[ALTREF_FRAME] = 1;
+                                    else
+                                        pcs_ptr->av1_cm->ref_frame_sign_bias[ALTREF_FRAME] = 0;
+
+                                    if (pcs_ptr->av1_ref_signal.ref_poc_array[ALT2] >= pcs_ptr->picture_number)
+                                        pcs_ptr->av1_cm->ref_frame_sign_bias[ALTREF2_FRAME] = 1;
+                                    else
+                                        pcs_ptr->av1_cm->ref_frame_sign_bias[ALTREF2_FRAME] = 0;
+
+                                    if (pcs_ptr->av1_ref_signal.ref_poc_array[BWD] >= pcs_ptr->picture_number)
+                                        pcs_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 1;
+                                    else
+                                        pcs_ptr->av1_cm->ref_frame_sign_bias[BWDREF_FRAME] = 0;
+                                }
+#endif
 
                                 if (pcs_ptr->slice_type == I_SLICE)
                                     context_ptr->last_i_picture_sc_detection = pcs_ptr->sc_content_detected;
