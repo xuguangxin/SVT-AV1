@@ -79,6 +79,7 @@ extern "C" {
 #define WARP_IMPROVEMENT       1 // Improve Warp motion by adding all the candidates in list0 and list 1
 #define QPS_CHANGE              1 // CQP QP assigment.
                                   // Add support for other prediction structure
+#define QPS_CHANGE_II           1 // Change the QP assignment for I
 #define MR_MODE 0
 
 #define ALT_REF_QP_THRESH 20
