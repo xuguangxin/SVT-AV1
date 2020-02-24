@@ -2061,8 +2061,11 @@ void copy_api_from_app(
     scs_ptr->use_input_stat_file = scs_ptr->static_config.input_stat_file ? 1 : 0;
     scs_ptr->use_output_stat_file = scs_ptr->static_config.output_stat_file ? 1 : 0;
     // Deblock Filter
+#if SHUT_FILTERING
+    scs_ptr->static_config.disable_dlf_flag = 1;
+#else
     scs_ptr->static_config.disable_dlf_flag = ((EbSvtAv1EncConfiguration*)config_struct)->disable_dlf_flag;
-
+#endif
     // Local Warped Motion
     scs_ptr->static_config.enable_warped_motion = EB_TRUE;
 

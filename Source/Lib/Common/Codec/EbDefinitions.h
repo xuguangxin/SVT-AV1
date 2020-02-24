@@ -73,7 +73,10 @@ extern "C" {
 #define MRP_31B_SUPPORT 1
 #define TILES_PARALLEL 1
 #define LOW_DELAY_TUNE 1 // Tuning the 0B, 1B and 3B settings
-
+#define ENCDEC_16BIT 0 // 16Bit pipeline support for encdec
+#if ENCDEC_16BIT
+#define SHUT_FILTERING 0 //1
+#endif
 #if TILES_PARALLEL
 #define MAX_TILE_CNTS 128 // Annex A.3
 #endif

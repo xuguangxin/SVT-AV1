@@ -1134,7 +1134,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     EB_ALLOC_PTR_ARRAY(object_ptr->intra_luma_mode_neighbor_array, total_tile_cnt);
     EB_ALLOC_PTR_ARRAY(object_ptr->txfm_context_array, total_tile_cnt);
     EB_ALLOC_PTR_ARRAY(object_ptr->segmentation_id_pred_array, total_tile_cnt);
+#if ENCDEC_16BIT
+    if (1) {
+#else
     if (is_16bit) {
+#endif
         EB_ALLOC_PTR_ARRAY(object_ptr->ep_luma_recon_neighbor_array16bit, total_tile_cnt);
         EB_ALLOC_PTR_ARRAY(object_ptr->ep_cb_recon_neighbor_array16bit, total_tile_cnt);
         EB_ALLOC_PTR_ARRAY(object_ptr->ep_cr_recon_neighbor_array16bit, total_tile_cnt);
@@ -1381,53 +1385,57 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         };
         return_error = create_neighbor_array_units(data, DIM(data));
         if (return_error == EB_ErrorInsufficientResources) return EB_ErrorInsufficientResources;
-
+#if ENCDEC_16BIT
+        if (1) {
+#else
         if (is_16bit) {
-            InitData data[] = {
-                {
-                    &object_ptr->ep_luma_recon_neighbor_array16bit[tile_idx],
-                    MAX_PICTURE_WIDTH_SIZE,
-                    MAX_PICTURE_HEIGHT_SIZE,
-                    sizeof(uint16_t),
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    NEIGHBOR_ARRAY_UNIT_FULL_MASK,
-                },
-                {
-                    &object_ptr->ep_cb_recon_neighbor_array16bit[tile_idx],
-                    MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-                    MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-                    sizeof(uint16_t),
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    NEIGHBOR_ARRAY_UNIT_FULL_MASK,
-                },
-                {
-                    &object_ptr->ep_cr_recon_neighbor_array16bit[tile_idx],
-                    MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
-                    MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
-                    sizeof(uint16_t),
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
-                    NEIGHBOR_ARRAY_UNIT_FULL_MASK,
-                },
-            };
-            return_error = create_neighbor_array_units(data, DIM(data));
-            if (return_error == EB_ErrorInsufficientResources) return EB_ErrorInsufficientResources;
-        } else {
-            object_ptr->ep_luma_recon_neighbor_array16bit = 0;
-            object_ptr->ep_cb_recon_neighbor_array16bit   = 0;
-            object_ptr->ep_cr_recon_neighbor_array16bit   = 0;
-        }
-        EB_NEW(object_ptr->interpolation_type_neighbor_array[tile_idx],
-                neighbor_array_unit_ctor32,
+#endif
+        InitData data[] = {
+            {
+                &object_ptr->ep_luma_recon_neighbor_array16bit[tile_idx],
                 MAX_PICTURE_WIDTH_SIZE,
                 MAX_PICTURE_HEIGHT_SIZE,
-                sizeof(uint32_t),
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
-                PU_NEIGHBOR_ARRAY_GRANULARITY,
-                NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
+                sizeof(uint16_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_cb_recon_neighbor_array16bit[tile_idx],
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint16_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+            {
+                &object_ptr->ep_cr_recon_neighbor_array16bit[tile_idx],
+                MAX_PICTURE_WIDTH_SIZE >> subsampling_x,
+                MAX_PICTURE_HEIGHT_SIZE >> subsampling_y,
+                sizeof(uint16_t),
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                SAMPLE_NEIGHBOR_ARRAY_GRANULARITY,
+                NEIGHBOR_ARRAY_UNIT_FULL_MASK,
+            },
+        };
+        return_error = create_neighbor_array_units(data, DIM(data));
+        if (return_error == EB_ErrorInsufficientResources) return EB_ErrorInsufficientResources;
     }
+    else {
+        object_ptr->ep_luma_recon_neighbor_array16bit = 0;
+        object_ptr->ep_cb_recon_neighbor_array16bit   = 0;
+        object_ptr->ep_cr_recon_neighbor_array16bit   = 0;
+    }
+    EB_NEW(object_ptr->interpolation_type_neighbor_array[tile_idx],
+           neighbor_array_unit_ctor32,
+           MAX_PICTURE_WIDTH_SIZE,
+           MAX_PICTURE_HEIGHT_SIZE,
+           sizeof(uint32_t),
+           PU_NEIGHBOR_ARRAY_GRANULARITY,
+           PU_NEIGHBOR_ARRAY_GRANULARITY,
+           NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
+}
 
     //Segmentation neighbor arrays
     EB_NEW(object_ptr->segmentation_neighbor_map,

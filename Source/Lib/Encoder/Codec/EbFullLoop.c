@@ -1709,7 +1709,9 @@ int32_t av1_quantize_inv_quantize(
     int16_t dc_sign_context, // Hsan (Trellis): derived @ MD (what about re-generating @ EP ?)
     PredictionMode pred_mode, EbBool is_intra_bc, EbBool is_encode_pass) {
     (void)candidate_buffer;
+#if !ENCDEC_16BIT
     (void)is_encode_pass;
+#endif
     (void)coeff_stride;
 #if TXS_DEPTH_2
     (void)is_intra_bc;
@@ -1821,7 +1823,11 @@ int32_t av1_quantize_inv_quantize(
 #else
     if (perform_rdoq && md_context->rdoq_quantize_fp && !is_inter) {
 #endif
+#if ENCDEC_16BIT
+        if (bit_increment || (is_encode_pass && scs_ptr->static_config.is_16bitPipeline)) {
+#else
         if (bit_increment) {
+#endif
             eb_av1_highbd_quantize_fp_facade((TranLow *)coeff,
                                              n_coeffs,
                                              &candidate_plane,
@@ -1841,7 +1847,11 @@ int32_t av1_quantize_inv_quantize(
                                       &qparam);
         }
     } else {
+#if ENCDEC_16BIT
+        if (bit_increment || (is_encode_pass && scs_ptr->static_config.is_16bitPipeline)) {
+#else
         if (bit_increment) {
+#endif
             eb_av1_highbd_quantize_b_facade((TranLow *)coeff,
                                             n_coeffs,
                                             &candidate_plane,
@@ -2414,7 +2424,7 @@ void encode_pass_tx_search_hbd(
             NOT_USED_VALUE,
             context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr],
             &context_ptr->three_quad_energy,
-            BIT_INCREMENT_10BIT,
+            context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
             tx_type,
             PLANE_TYPE_Y,
             DEFAULT_SHAPE);
@@ -2438,7 +2448,7 @@ void encode_pass_tx_search_hbd(
             &eob[0],
             &y_count_non_zero_coeffs_temp,
             COMPONENT_LUMA,
-            BIT_INCREMENT_10BIT,
+            context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
             tx_type,
             &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
             0,
