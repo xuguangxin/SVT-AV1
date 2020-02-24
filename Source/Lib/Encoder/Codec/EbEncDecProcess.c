@@ -3125,14 +3125,15 @@ void *enc_dec_kernel(void *input_ptr) {
 #else
 #if ENCDEC_16BIT
                     //TODO: set this varaible according to static config
-                    scs_ptr->static_config.is_16bitPipeline = 1;
+                    scs_ptr->static_config.is_16bitPipeline = 0;
                     // Encode Pass
                     av1_encode_pass_16bit(
                         scs_ptr, pcs_ptr, sb_ptr, sb_index, sb_origin_x, sb_origin_y, context_ptr);
-#endif
+#else
                     // Encode Pass
                     av1_encode_pass(
                         scs_ptr, pcs_ptr, sb_ptr, sb_index, sb_origin_x, sb_origin_y, context_ptr);
+#endif
 #endif
 
 #if TILES_PARALLEL
