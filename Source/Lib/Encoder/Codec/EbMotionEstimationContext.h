@@ -451,6 +451,11 @@ typedef struct MeContext {
     uint16_t max_me_search_width;
     uint16_t max_me_search_height;
 #endif
+#if OPT_REC_ME || OPT_REC_SUBP
+    uint8_t inherit_rec_mv_from_sq_block;
+    uint8_t best_list_idx;
+    uint8_t best_ref_idx;
+#endif
     // HME
     uint16_t number_hme_search_region_in_width;
     uint16_t number_hme_search_region_in_height;

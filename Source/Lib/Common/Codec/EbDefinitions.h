@@ -34,6 +34,9 @@
 extern "C" {
 #endif
 
+#define OPT_REC_ME              0
+#define OPT_REC_SUBP            0
+
 #define REVERT_TF_SEETINGS     0 // TF settings. WIP
 #define PLANE_WISE_TF 0 // PLANE_WISE_TF. WIP
 // Added the ability to use 32x32 MVs, and the ability to switch between using 16x16 MVs or 32x32 MVs
