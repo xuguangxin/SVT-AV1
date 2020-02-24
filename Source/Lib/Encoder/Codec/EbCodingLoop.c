@@ -899,8 +899,10 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 context_ptr->md_context->tx_search_level == TX_SEARCH_ENC_DEC
                     ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size, MAX_MODE_COST, 0, 1)
                     : 1;
+#if ENCDEC_16BIT
             SequenceControlSet *scs_ptr =
                 (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+#endif
 
             if (!tx_search_skip_flag) {
 #if ENCDEC_16BIT
