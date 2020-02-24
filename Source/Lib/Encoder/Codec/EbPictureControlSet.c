@@ -133,7 +133,7 @@ void picture_control_set_dctor(EbPtr p) {
     uint8_t            depth;
     av1_hash_table_destroy(&obj->hash_table);
     EB_FREE_ALIGNED_ARRAY(obj->tpl_mvs);
-    EB_DELETE_PTR_ARRAY(obj->enc_dec_segment_ctrl, tile_row_cnt);
+    EB_DELETE_PTR_ARRAY(obj->enc_dec_segment_ctrl, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->ep_intra_luma_mode_neighbor_array, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->ep_intra_chroma_mode_neighbor_array, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->ep_mv_neighbor_array, tile_cnt);
