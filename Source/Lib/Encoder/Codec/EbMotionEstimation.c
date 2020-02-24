@@ -32,7 +32,14 @@
 #define MAX_INTRA_IN_MD 9
 #define REFERENCE_PIC_LIST_0 0
 #define REFERENCE_PIC_LIST_1 1
+#if SC_HME_PRUNING
+#define SC_HME_TH_STILL 1000
+#define SC_HME_TH_EASY  100
 
+#define SC_SR_DENOM_STILL 16
+#define SC_SR_DENOM_EASY 8
+
+#endif
 /*******************************************
  * Compute8x4SAD_Default
  *   Unoptimized 8x4 SAD
@@ -10850,6 +10857,25 @@ void prune_references(
     }
 }
 #endif
+
+#if SC_HME_PRUNING
+void prune_references_sc(
+    MeContext *context_ptr)
+{
+    for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+        for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++){
+            if (context_ptr->hme_results[li][ri].hme_sc_x == 0 &&
+                context_ptr->hme_results[li][ri].hme_sc_y == 0 &&
+                context_ptr->hme_results[li][ri].hme_sad < SC_HME_TH_EASY)
+
+                context_ptr->reduce_me_sr_flag[li][ri] = SC_HME_TH_STILL;
+
+            else if (context_ptr->hme_results[li][ri].hme_sad < SC_HME_TH_EASY)
+                context_ptr->reduce_me_sr_flag[li][ri] = SC_HME_TH_EASY;
+        }
+    }
+}
+#endif
 /*******************************************
  * motion_estimate_sb
  *   performs ME (SB)
@@ -11033,6 +11059,11 @@ EbErrorType motion_estimate_sb(
     if (pcs_ptr->prune_ref_based_me && prune_ref)
         prune_references(
             context_ptr);
+#if SC_HME_PRUNING
+    else if (pcs_ptr->sc_content_detected)
+        prune_references_sc(
+            context_ptr);
+#endif
 #if MUS_ME_FP
     // Full pel: Perform the Integer Motion Estimation on the allowed refrence frames.
     integer_search_sb(
