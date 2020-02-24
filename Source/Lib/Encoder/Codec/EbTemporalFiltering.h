@@ -37,6 +37,15 @@
 #define BW 64
 #define BH 64
 #define BLK_PELS 4096 // Pixels in the block
+#if PLANE_WISE_TF
+#define TF_ENABLE_PLANEWISE_STRATEGY 1
+// Window size for plane-wise temporal filtering.
+// This is particually used for function `av1_apply_temporal_filter_planewise()`
+#define TF_PLANEWISE_FILTER_WINDOW_LENGTH 5
+// A scale factor used in plane-wise temporal filtering to raise the filter
+// weight from `double` with range [0, 1] to `int` with range [0, 1000].
+#define TF_PLANEWISE_FILTER_WEIGHT_SCALE 1000
+#endif
 #define N_16X16_BLOCKS 16
 #define N_32X32_BLOCKS 4
 
@@ -53,8 +62,11 @@
 #define THRES_DIFF_HIGH 12000
 
 #define OD_DIVU_DMAX (1024)
+#if REVERT_TF_SEETINGS
+#define AHD_TH_WEIGHT 33
+#else
 #define AHD_TH_WEIGHT 20
-
+#endif
 #ifdef __cplusplus
 extern "C" {
 #endif

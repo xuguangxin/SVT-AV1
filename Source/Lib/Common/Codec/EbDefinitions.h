@@ -34,6 +34,9 @@
 extern "C" {
 #endif
 
+#define REVERT_TF_SEETINGS     0 // TF settings. WIP
+#define PLANE_WISE_TF          0 // PLANE_WISE_TF. WIP
+
 #define CHROMA_SEARCH_OPT        1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
 #if CHROMA_SEARCH_OPT
 #define INFR_OPT                 1 // Lossless: Infrastructure work to allow the protability of the chroma search

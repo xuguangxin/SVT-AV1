@@ -4197,6 +4197,10 @@ void* picture_decision_kernel(void *input_ptr)
                                         break;
                                 }
                                 pcs_ptr->past_altref_nframes = actual_past_pics = index_center - pic_itr;
+#if REVERT_TF_SEETINGS
+                                if (pcs_ptr->temporal_layer_index == 1)
+                                    pcs_ptr->past_altref_nframes = actual_past_pics = 1;
+#endif
 
                                 // Accumulative histogram absolute differences between the central and past frame
                                 for (pic_itr = (index_center + actual_future_pics); pic_itr > index_center; pic_itr--) {
@@ -4205,6 +4209,10 @@ void* picture_decision_kernel(void *input_ptr)
                                         break;
                                 }
                                 pcs_ptr->future_altref_nframes = pic_itr - index_center;
+#if REVERT_TF_SEETINGS
+                                if (pcs_ptr->temporal_layer_index == 1)
+                                    pcs_ptr->future_altref_nframes = 1;
+#endif
                                 //SVT_LOG("\nPOC %d\t PAST %d\t FUTURE %d\n", pcs_ptr->picture_number, pcs_ptr->past_altref_nframes, pcs_ptr->future_altref_nframes);
 
                                 // adjust the temporal filtering pcs buffer to remove unused past pictures
