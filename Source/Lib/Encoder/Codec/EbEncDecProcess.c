@@ -2161,6 +2161,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         else
             context_ptr->nic_level = 3;
 #endif
+#if SKIP_DEPTH
+    if (context_ptr->pd_pass == PD_PASS_0)
+       context_ptr->skip_depth= 0;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+       context_ptr->skip_depth = 0;
+    else
+        context_ptr->skip_depth = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
+#endif
+#if INTRA_INTER_BALANCE
+    context_ptr->me_based_nic_scaling  = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
+#endif
     return return_error;
 }
 void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,

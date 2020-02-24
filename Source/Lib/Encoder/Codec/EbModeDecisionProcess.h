@@ -292,6 +292,9 @@ typedef struct ModeDecisionContext {
     uint8_t              inject_inter_candidates;
     uint8_t              intra_similar_mode;
 #endif
+#if SKIP_DEPTH
+    uint8_t              skip_depth;
+#endif
     uint8_t *            cfl_temp_luma_recon;
     uint16_t *           cfl_temp_luma_recon16bit;
     EbBool               spatial_sse_full_loop;
@@ -394,6 +397,11 @@ typedef struct ModeDecisionContext {
 
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;
+#if INTRA_INTER_BALANCE
+    uint8_t      md_intra_level;
+    uint8_t      md_inter_level;
+    uint8_t      me_based_nic_scaling;
+#endif
 
 } ModeDecisionContext;
 

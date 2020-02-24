@@ -807,6 +807,9 @@ void init_sq_nsq_block(SequenceControlSet *scs_ptr, ModeDecisionContext *context
             context_ptr->md_blk_arr_nsq[blk_idx].part               = PARTITION_SPLIT;
             context_ptr->md_local_blk_unit[blk_idx].tested_blk_flag = EB_FALSE;
         }
+#if SKIP_DEPTH
+        context_ptr->md_blk_arr_nsq[blk_idx].do_not_process_block = 0;
+#endif
         ++blk_idx;
     } while (blk_idx < scs_ptr->max_block_cnt);
 }
@@ -1555,6 +1558,35 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             (round((scale_num* ((float)context_ptr->md_stage_3_count[cand_it])) / scale_denum)),
             1);
         }
+#if INTRA_INTER_BALANCE
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+            if (context_ptr->md_inter_level >= 1) {
+                uint8_t division_factor_num = context_ptr->md_inter_level >= 1 ? 3 : 1;
+                uint8_t division_factor_denum = context_ptr->md_inter_level >= 1 ? 4 : 1;
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    if (i == CAND_CLASS_1 || i == CAND_CLASS_2) {
+                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                }
+            }
+            if (context_ptr->md_intra_level) {
+                uint8_t division_factor_num = context_ptr->md_intra_level == 1 ? 3 : context_ptr->md_intra_level == 2 ? 1 : 1;
+                uint8_t division_factor_denum = context_ptr->md_intra_level == 1 ? 4 : context_ptr->md_intra_level == 2 ? 2 : 1;
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    if (i == CAND_CLASS_0 || i == CAND_CLASS_6) {
+                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                }
+
+            }
+        }
+#endif
 #else
         // Step 2: set md_stage count
         context_ptr->md_stage_1_count[CAND_CLASS_0] =
@@ -7086,7 +7118,39 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
         context_ptr->md_stage_3_total_count += context_ptr->md_stage_3_count[cand_class_it];
     }
 }
+ #if INTRA_INTER_BALANCE
+ void set_intra_inter_level_based_on_me(
+     PictureControlSet            *pcs_ptr,
+     ModeDecisionContext          *context_ptr) {
+     context_ptr->md_intra_level = 0;
+     context_ptr->md_inter_level = 0;
+     if (context_ptr->me_based_nic_scaling) {
+         if (pcs_ptr->slice_type != I_SLICE) {
+             if (context_ptr->blk_geom->bheight > 4 && context_ptr->blk_geom->bwidth > 4 &&
+                 context_ptr->blk_geom->bheight < 128 && context_ptr->blk_geom->bwidth < 128) {
+                 const MeSbResults *me_results = pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
+                 //uint8_t total_me_cnt = me_results->total_me_candidate_index[me_block_offset];
+                 const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
+                 uint8_t me_candidate_index = 0;
+                 const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
+                 const uint8_t inter_direction = me_block_results_ptr->direction;
+                 const uint8_t list0_ref_index = me_block_results_ptr->ref_idx_l0;
+                 const uint8_t list1_ref_index = me_block_results_ptr->ref_idx_l1;
+                 const uint32_t distortion = me_block_results_ptr->distortion;
+                 const uint32_t very_low_err_th = 110; // allowed error multiplied by 100
+                 const uint32_t very_high_err_th = 400; // allowed error multiplied by 100
+                 const uint32_t very_low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
+                 const uint32_t very_high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_high_err_th) / 100;
+                 if (distortion < very_low_th)
+                     context_ptr->md_intra_level = 1;
+                 else if (distortion > very_high_th)
+                     context_ptr->md_inter_level = 0;
 
+             }
+         }
+     }
+ }
+#endif
 void md_encode_block(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                      ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
                      uint32_t sb_addr,
@@ -7252,7 +7316,11 @@ void md_encode_block(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
         } else {
             mvp_bypass_init(pcs_ptr, context_ptr);
         }
-
+#if INTRA_INTER_BALANCE
+        set_intra_inter_level_based_on_me(
+            pcs_ptr,
+            context_ptr);
+#endif
 #if ENHANCED_ME_MV
         // Read and (if needed) perform 1/8 Pel ME MVs refinement
         read_refine_me_mvs(
@@ -7850,7 +7918,91 @@ void update_skip_next_nsq_for_a_b_shapes(ModeDecisionContext *context_ptr, uint6
     }
 }
 #endif
-
+#if SKIP_DEPTH
+static void set_child_to_be_skipped(
+    ModeDecisionContext   *context_ptr,
+    uint32_t    blk_index,
+    int32_t     sb_size,
+    int8_t      depth_step) {
+    uint32_t child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
+    uint32_t tot_d1_blocks, block_1d_idx;
+    const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+    tot_d1_blocks =
+        blk_geom->sq_size == 128 ? 17 :
+        blk_geom->sq_size > 8 ? 25 :
+        blk_geom->sq_size == 8 ? 5 : 1;
+#if EARLY_EXIT_ABS_TH 
+    if (context_ptr->md_blk_arr_nsq[blk_index].split_flag && blk_geom->sq_size > 4) {
+#else
+    if (blk_geom->sq_size > 4) {
+#endif
+        //Set first child to be considered
+        child_block_idx_1 = blk_index + d1_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth];
+        const BlockGeom * child1_blk_geom = get_blk_geom_mds(child_block_idx_1);
+        uint32_t child1_tot_d1_blocks =
+            child1_blk_geom->sq_size == 128 ? 17 :
+            child1_blk_geom->sq_size > 8 ? 25 :
+            child1_blk_geom->sq_size == 8 ? 5 : 1;
+        for (block_1d_idx = 0; block_1d_idx < child1_tot_d1_blocks; block_1d_idx++) {
+            context_ptr->md_blk_arr_nsq[child_block_idx_1 + block_1d_idx].do_not_process_block = 1;
+        }
+        if (depth_step > 1)
+            set_child_to_be_skipped(
+                context_ptr,
+                child_block_idx_1,
+                sb_size,
+                depth_step - 1);
+        //Set second child to be considered
+        child_block_idx_2 = child_block_idx_1 + ns_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth + 1];
+        const BlockGeom * child2_blk_geom = get_blk_geom_mds(child_block_idx_2);
+        uint32_t child2_tot_d1_blocks =
+            child2_blk_geom->sq_size == 128 ? 17 :
+            child2_blk_geom->sq_size > 8 ? 25 :
+            child2_blk_geom->sq_size == 8 ? 5 : 1;
+        for (block_1d_idx = 0; block_1d_idx < child2_tot_d1_blocks; block_1d_idx++) {
+            context_ptr->md_blk_arr_nsq[child_block_idx_2 + block_1d_idx].do_not_process_block = 1;
+        }
+        if (depth_step > 1)
+            set_child_to_be_skipped(
+                context_ptr,
+                child_block_idx_2,
+                sb_size,
+                depth_step - 1);
+        //Set third child to be considered
+        child_block_idx_3 = child_block_idx_2 + ns_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth + 1];
+        const BlockGeom * child3_blk_geom = get_blk_geom_mds(child_block_idx_3);
+        uint32_t child3_tot_d1_blocks =
+            child3_blk_geom->sq_size == 128 ? 17 :
+            child3_blk_geom->sq_size > 8 ? 25 :
+            child3_blk_geom->sq_size == 8 ? 5 : 1;
+        for (block_1d_idx = 0; block_1d_idx < child3_tot_d1_blocks; block_1d_idx++) {
+            context_ptr->md_blk_arr_nsq[child_block_idx_3 + block_1d_idx].do_not_process_block = 1;
+        }
+        if (depth_step > 1)
+            set_child_to_be_skipped(
+                context_ptr,
+                child_block_idx_3,
+                sb_size,
+                depth_step - 1);
+        //Set forth child to be considered
+        child_block_idx_4 = child_block_idx_3 + ns_depth_offset[sb_size == BLOCK_128X128][blk_geom->depth + 1];
+        const BlockGeom * child4_blk_geom = get_blk_geom_mds(child_block_idx_4);
+        uint32_t child4_tot_d1_blocks =
+            child4_blk_geom->sq_size == 128 ? 17 :
+            child4_blk_geom->sq_size > 8 ? 25 :
+            child4_blk_geom->sq_size == 8 ? 5 : 1;
+        for (block_1d_idx = 0; block_1d_idx < child4_tot_d1_blocks; block_1d_idx++) {
+            context_ptr->md_blk_arr_nsq[child_block_idx_4 + block_1d_idx].do_not_process_block = 1;
+        }
+        if (depth_step > 1)
+            set_child_to_be_skipped(
+                context_ptr,
+                child_block_idx_4,
+                sb_size,
+                depth_step - 1);
+    }
+}
+#endif
 EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
                                        uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
@@ -8057,6 +8209,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                                            MAX_CU_COST};
     Part     nsq_shape_table[NUMBER_OF_SHAPES] = {
         PART_N, PART_H, PART_V, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4, PART_S};
+#if SKIP_DEPTH
+    uint8_t skip_next_depth = 0;
+#endif
     do {
         blk_idx_mds = leaf_data_array[blk_index].mds_idx;
 
@@ -8228,13 +8383,28 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if ENHANCED_SQ_WEIGHT
             uint8_t sq_weight_based_nsq_skip = update_skip_nsq_shapes(scs_ptr, pcs_ptr, context_ptr);
 #endif
-#if ENHANCED_SQ_WEIGHT
+#if SKIP_DEPTH
+            skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
+#endif
+#if ENHANCED_SQ_WEIGHT || SKIP_DEPTH
+#if SKIP_DEPTH
+            if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
+                !skip_next_nsq && !skip_next_sq &&
+                !sq_weight_based_nsq_skip &&
+                !skip_next_depth) {
+#else
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq &&
                 !sq_weight_based_nsq_skip) {
+#endif
+#else
+#if SKIP_DEPTH
+            if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
+                !skip_next_nsq && !skip_next_sq && !auto_max_partition_block_skip !skip_next_depth) {
 #else
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq && !auto_max_partition_block_skip) {
+#endif
 #endif
                 md_encode_block(scs_ptr,
                                 pcs_ptr,
@@ -8244,7 +8414,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                                 bestcandidate_buffers);
             }
 #if ENHANCED_SQ_WEIGHT
+#if SKIP_DEPTH
+            else if (sq_weight_based_nsq_skip || skip_next_depth) {
+#else
             else if (sq_weight_based_nsq_skip) {
+#endif
 #else
             else if (auto_max_partition_block_skip) {
 #endif
@@ -8337,6 +8511,30 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 depth_cost[scs_ptr->static_config.super_block_size == 128
                                ? context_ptr->blk_geom->depth
                                : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
+#if SKIP_DEPTH
+                if (scs_ptr->sb_geom[sb_addr].is_complete_sb) {
+                    if (context_ptr->pd_pass > PD_PASS_1) {
+                        uint64_t sq_cost = nsq_cost[0]; // sq cost
+                        uint64_t best_nsq_cost = MAX_CU_COST;
+                        skip_next_depth = 0;
+                        // Derive best nsq cost
+                        for (i = 1; i < NUMBER_OF_SHAPES; ++i)
+                            if (nsq_cost[i] < best_nsq_cost)
+                                best_nsq_cost = nsq_cost[i];
+                        // Compare sq vs best nsq
+                        uint64_t th = 30;
+                        if (sq_cost < best_nsq_cost) {
+                            if ((best_nsq_cost - sq_cost) * 100 > (sq_cost * th)) {
+                                set_child_to_be_skipped(
+                                    context_ptr,
+                                    context_ptr->blk_geom->sqi_mds,
+                                    scs_ptr->seq_header.sb_size,
+                                    1);
+                            }
+                        }
+                    }
+                }
+#endif
             }
 
             uint32_t last_blk_index_mds =

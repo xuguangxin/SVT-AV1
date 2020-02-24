@@ -34,8 +34,10 @@
 extern "C" {
 #endif
 
-#define OPT_REC_ME              0
-#define OPT_REC_SUBP            0
+#define OPT_REC_ME              0 // Rect_block inherit Full-pel MVs from sq_sq_blocks in ME
+#define OPT_REC_SUBP            0 // Rect_block inherit Sub-pel MVs from sq_sq_blocks in ME
+#define SKIP_DEPTH              0 // Skip the child blocks whenthe SQ block is better than the NSQ
+#define INTRA_INTER_BALANCE     0 // ME-based NICs scaling
 
 #define REVERT_TF_SEETINGS     0 // TF settings. WIP
 #define PLANE_WISE_TF 0 // PLANE_WISE_TF. WIP
