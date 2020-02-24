@@ -437,6 +437,9 @@ EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr
     context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->tf_enable_hme_level1_flag;
     context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->tf_enable_hme_level2_flag;
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
+#if IMPROVED_TF_ME_INPUT
+        context_ptr->me_context_ptr->use_subpel_flag = 0;
+#else
         // Set the default settings of subpel
         if (sc_content_detected)
             if (enc_mode <= ENC_M1)
@@ -445,6 +448,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr
                 context_ptr->me_context_ptr->use_subpel_flag = 0;
         else
             context_ptr->me_context_ptr->use_subpel_flag = 1;
+#endif
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
