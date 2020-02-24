@@ -23,7 +23,8 @@
 #include "EbSvtAv1ErrorCodes.h"
 #include "EbUtility.h"
 #include "grainSynthesis.h"
-
+//To fix warning C4013: 'convert_16bit_to_8bit' undefined; assuming extern returning int
+#include "common_dsp_rtcd.h"
 #define FC_SKIP_TX_SR_TH025 125 // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010 110 // Fast cost skip tx search threshold.
 void eb_av1_cdef_search(EncDecContext *context_ptr, SequenceControlSet *scs_ptr,
@@ -103,6 +104,14 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
         init_data.color_format       = color_format;
 
         context_ptr->input_sample16bit_buffer = (EbPictureBufferDesc *)EB_NULL;
+#if ENCDEC_16BIT
+            init_data.bit_depth = EB_16BIT;
+
+            EB_NEW(context_ptr->input_sample16bit_buffer,
+                eb_picture_buffer_desc_ctor,
+                (EbPtr)&init_data);
+            init_data.bit_depth = static_config->encoder_bit_depth;
+#else
         if (is_16bit) {
             init_data.bit_depth = EB_16BIT;
 
@@ -110,6 +119,7 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
                    eb_picture_buffer_desc_ctor,
                    (EbPtr)&init_data);
         }
+#endif
     }
 
     // Scratch Coeff Buffer
@@ -1223,6 +1233,65 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
                   (ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1)) >> 1,
                   (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
     }
+#if ENCDEC_16BIT
+    if ((scs_ptr->static_config.is_16bitPipeline) && (!is_16bit)) {
+        // Y samples
+        generate_padding16_bit(ref_pic_16bit_ptr->buffer_y,
+                               ref_pic_16bit_ptr->stride_y << 1,
+                               ref_pic_16bit_ptr->width << 1,
+                               ref_pic_16bit_ptr->height,
+                               ref_pic_16bit_ptr->origin_x << 1,
+                               ref_pic_16bit_ptr->origin_y);
+
+        // Cb samples
+        generate_padding16_bit(ref_pic_16bit_ptr->buffer_cb,
+                               ref_pic_16bit_ptr->stride_cb << 1,
+                               ref_pic_16bit_ptr->width,
+                               ref_pic_16bit_ptr->height >> 1,
+                               ref_pic_16bit_ptr->origin_x,
+                               ref_pic_16bit_ptr->origin_y >> 1);
+
+        // Cr samples
+        generate_padding16_bit(ref_pic_16bit_ptr->buffer_cr,
+                               ref_pic_16bit_ptr->stride_cr << 1,
+                               ref_pic_16bit_ptr->width,
+                               ref_pic_16bit_ptr->height >> 1,
+                               ref_pic_16bit_ptr->origin_x,
+                               ref_pic_16bit_ptr->origin_y >> 1);
+
+        // Hsan: unpack ref samples (to be used @ MD)
+
+        //Y
+        uint16_t *buf_16bit = (uint16_t *)(ref_pic_16bit_ptr->buffer_y);
+        uint8_t * buf_8bit  = ref_pic_ptr->buffer_y;
+        convert_16bit_to_8bit(buf_16bit,
+                              ref_pic_16bit_ptr->stride_y,
+                              buf_8bit,
+                              ref_pic_ptr->stride_y,
+                              ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1),
+                              ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1));
+
+        //CB
+        buf_16bit = (uint16_t *)(ref_pic_16bit_ptr->buffer_cb);
+        buf_8bit  = ref_pic_ptr->buffer_cb;
+        convert_16bit_to_8bit(buf_16bit,
+                              ref_pic_16bit_ptr->stride_cb,
+                              buf_8bit,
+                              ref_pic_ptr->stride_cb,
+                              (ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1)) >> 1,
+                              (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
+
+        //CR
+        buf_16bit = (uint16_t *)(ref_pic_16bit_ptr->buffer_cr);
+        buf_8bit  = ref_pic_ptr->buffer_cr;
+        convert_16bit_to_8bit(buf_16bit,
+                              ref_pic_16bit_ptr->stride_cr,
+                              buf_8bit,
+                              ref_pic_ptr->stride_cr,
+                              (ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1)) >> 1,
+                              (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
+    }
+#endif
     // set up the ref POC
     reference_object->ref_poc = pcs_ptr->parent_pcs_ptr->picture_number;
 
@@ -3056,7 +3125,10 @@ void *enc_dec_kernel(void *input_ptr) {
 #else
 #if ENCDEC_16BIT
                     //TODO: set this varaible according to static config
-                    scs_ptr->static_config.is_16bitPipeline = 0;
+                    scs_ptr->static_config.is_16bitPipeline = 1;
+                    // Encode Pass
+                    av1_encode_pass_16bit(
+                        scs_ptr, pcs_ptr, sb_ptr, sb_index, sb_origin_x, sb_origin_y, context_ptr);
 #endif
                     // Encode Pass
                     av1_encode_pass(

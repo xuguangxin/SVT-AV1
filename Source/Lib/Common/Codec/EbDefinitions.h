@@ -73,7 +73,7 @@ extern "C" {
 #define MRP_31B_SUPPORT 1
 #define TILES_PARALLEL 1
 #define LOW_DELAY_TUNE 1 // Tuning the 0B, 1B and 3B settings
-#define ENCDEC_16BIT 0 // 16Bit pipeline support for encdec
+#define ENCDEC_16BIT 0 // 16Bit pipeline support for encdec ( do not enable )
 #if ENCDEC_16BIT
 #define SHUT_FILTERING 0 //1
 #endif
@@ -248,6 +248,7 @@ enum {
 #define SB_STRIDE_UV (MAX_SB_SIZE >> 1)
 
 // Min superblock size
+#define MIN_SB_SIZE 64
 #define MIN_SB_SIZE_LOG2 6
 
 // Pixels per Mode Info (MI) unit
