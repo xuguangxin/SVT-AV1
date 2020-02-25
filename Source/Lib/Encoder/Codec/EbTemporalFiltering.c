@@ -31,6 +31,9 @@
 #include "EbMcp.h"
 #include "av1me.h"
 #include "EbTemporalFiltering_sse4.h"
+#if PLANE_WISE_TF_OPT
+#include "EbTemporalFiltering_AVX2.h"
+#endif
 #include "EbObject.h"
 #include "EbEncInterPrediction.h"
 #include "EbComputeVariance_C.h"
@@ -1447,7 +1450,7 @@ static void apply_filtering_block_plane_wise(
         pred_ptr[C_U] = pred[C_U] + offset_block_buffer_U;
         pred_ptr[C_V] = pred[C_V] + offset_block_buffer_V;
 
-        svt_av1_apply_temporal_filter_planewise_c(src_ptr[C_Y],
+        svt_av1_apply_temporal_filter_planewise(src_ptr[C_Y],
                                                   stride[C_Y],
                                                   pred_ptr[C_Y],
                                                   stride_pred[C_Y],
