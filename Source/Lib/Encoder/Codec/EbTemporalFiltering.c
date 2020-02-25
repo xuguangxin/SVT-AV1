@@ -1300,7 +1300,6 @@ void svt_av1_apply_temporal_filter_planewise_c(
     // Get window size for pixel-wise filtering.
     assert(TF_PLANEWISE_FILTER_WINDOW_LENGTH % 2 == 1);
     const int half_window = TF_PLANEWISE_FILTER_WINDOW_LENGTH >> 1;
-    int       plane       = 0;
     for (i = 0; i < block_height; i++) {
         for (j = 0; j < block_width; j++) {
             const int pixel_value = y_pre[i * y_pre_stride + j];
@@ -1425,9 +1424,11 @@ static void apply_filtering_block_plane_wise(
     uint8_t * pred_ptr[COLOR_CHANNELS];
     uint32_t *accum_ptr[COLOR_CHANNELS];
     uint16_t *count_ptr[COLOR_CHANNELS];
+    UNUSED(src_16bit);
+    UNUSED(pred_16bit);
 
-    uint16_t *src_ptr_16bit[COLOR_CHANNELS];
-    uint16_t *pred_ptr_16bit[COLOR_CHANNELS];
+ //   uint16_t *src_ptr_16bit[COLOR_CHANNELS];
+ //   uint16_t *pred_ptr_16bit[COLOR_CHANNELS];
 
     accum_ptr[C_Y] = accum[C_Y] + offset_block_buffer_Y;
     accum_ptr[C_U] = accum[C_U] + offset_block_buffer_U;
@@ -1469,13 +1470,13 @@ static void apply_filtering_block_plane_wise(
                                                   accum_ptr[C_V],
                                                   count_ptr[C_V]);
     } else {
-        src_ptr_16bit[C_Y] = src_16bit[C_Y] + offset_src_buffer_Y;
+       /* src_ptr_16bit[C_Y] = src_16bit[C_Y] + offset_src_buffer_Y;
         src_ptr_16bit[C_U] = src_16bit[C_U] + offset_src_buffer_U;
         src_ptr_16bit[C_V] = src_16bit[C_V] + offset_src_buffer_V;
 
         pred_ptr_16bit[C_Y] = pred_16bit[C_Y] + offset_block_buffer_Y;
         pred_ptr_16bit[C_U] = pred_16bit[C_U] + offset_block_buffer_U;
-        pred_ptr_16bit[C_V] = pred_16bit[C_V] + offset_block_buffer_V;
+        pred_ptr_16bit[C_V] = pred_16bit[C_V] + offset_block_buffer_V;*/
 
         //// Apply the temporal filtering strategy
         //svt_av1_apply_filtering_highbd(src_ptr_16bit[C_Y],
