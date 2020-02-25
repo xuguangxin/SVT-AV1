@@ -50,6 +50,11 @@ extern EbErrorType bitstream_ctor(Bitstream *bitstream_ptr, uint32_t buffer_size
 
 void bitstream_reset(Bitstream* bitstream_ptr);
 
+int bitstream_get_bytes_count(const Bitstream* bitstream_ptr);
+
+//copy size bytes from bistream_ptr to dst
+void bitstream_copy(const Bitstream* bitstream_ptr, void* dest, int size);
+
 extern EbErrorType entropy_coder_ctor(EntropyCoder *entropy_coder_ptr, uint32_t buffer_size);
 
 extern OutputBitstreamUnit* entropy_coder_get_bitstream_ptr(EntropyCoder *entropy_coder_ptr);

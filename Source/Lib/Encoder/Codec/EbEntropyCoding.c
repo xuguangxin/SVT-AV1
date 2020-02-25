@@ -1614,24 +1614,6 @@ EbErrorType reset_entropy_coder(EncodeContext *encode_context_ptr, EntropyCoder 
     return return_error;
 }
 
-EbErrorType copy_payload(Bitstream *bitstream_ptr, EbByte output_buffer,
-                         uint32_t *output_buffer_index, uint32_t *output_buffer_size,
-                         EncodeContext *encode_context_ptr) {
-    EbErrorType          return_error = EB_ErrorNone;
-    OutputBitstreamUnit *output_bitstream_ptr =
-        (OutputBitstreamUnit *)bitstream_ptr->output_bitstream_ptr;
-
-    CHECK_REPORT_ERROR(((output_bitstream_ptr->written_bits_count >> 3) + (*output_buffer_index) <
-                        (*output_buffer_size)),
-                       encode_context_ptr->app_callback_ptr,
-                       EB_ENC_EC_ERROR2);
-
-    output_bitstream_rbsp_to_payload(
-        output_bitstream_ptr, output_buffer, output_buffer_index, output_buffer_size, 0);
-
-    return return_error;
-}
-
 #if TILES_PARALLEL
 static void entropy_tile_info_dctor(EbPtr p) {
     EntropyTileInfo *obj = (EntropyTileInfo *)p;
@@ -1670,6 +1652,16 @@ EbErrorType bitstream_ctor(Bitstream *bitstream_ptr, uint32_t buffer_size) {
 
 void bitstream_reset(Bitstream* bitstream_ptr) {
     output_bitstream_reset(bitstream_ptr->output_bitstream_ptr);
+}
+
+int bitstream_get_bytes_count(const Bitstream* bitstream_ptr) {
+    const OutputBitstreamUnit* unit = bitstream_ptr->output_bitstream_ptr;
+    return (int)(unit->buffer_av1 - unit->buffer_begin_av1);
+}
+
+void bitstream_copy(const Bitstream* bitstream_ptr, void* dest, int size) {
+    const OutputBitstreamUnit* unit = bitstream_ptr->output_bitstream_ptr;
+    memcpy(dest, unit->buffer_begin_av1, size);
 }
 
 static void entropy_coder_dctor(EbPtr p) {
