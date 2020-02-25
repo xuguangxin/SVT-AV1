@@ -4438,13 +4438,10 @@ void derive_tf_window_params(
                 pcs_ptr->temp_filt_pcs_list[pic_i] = pcs_ptr->temp_filt_pcs_list[pic_i + num_past_pics - actual_past_pics];
                 pic_i++;
             }
-
         }
     }
 }
 #endif
-
-
 /* Picture Decision Kernel */
 
 /***************************************************************************************************

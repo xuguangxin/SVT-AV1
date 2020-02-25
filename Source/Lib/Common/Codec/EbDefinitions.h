@@ -63,9 +63,9 @@ extern "C" {
 #define SKIP_DEPTH              0 // Skip the child blocks whenthe SQ block is better than the NSQ
 #define INTRA_INTER_BALANCE     0 // ME-based NICs scaling
 
-#define REVERT_TF_SEETINGS 0 // TF settings. WIP
-#define PLANE_WISE_TF 0 // PLANE_WISE_TF. WIP
-#define PLANE_WISE_TF_OPT 0
+#define REVERT_TF_SEETINGS 0 // TF settings.
+#define PLANE_WISE_TF 0 // plane wise temporal filtering.
+#define PLANE_WISE_TF_OPT 0 // Added intrinsic code for planewise filtering
 // Added the ability to use 32x32 MVs, and the ability to switch between using 16x16 MVs or 32x32 MVs
 // Decoupled search / compensation @ ALTREF core, REGULAR @ search and SHARP @ compensation, and 1 / 2 Pel Ref and 1 / 4 Pel Ref @ only ALTREF core(15x15 search ~the ME Full - Pel MV).
 #define IMPROVED_TF_ME_INPUT 0
