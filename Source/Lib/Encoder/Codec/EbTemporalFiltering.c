@@ -2690,7 +2690,7 @@ static EbErrorType produce_temporally_filtered_pic(
             memset(counter, 0, BLK_PELS * COLOR_CHANNELS * sizeof(counter[0]));
 
             int blk_fw[N_16X16_BLOCKS];
-#if !IMPROVED_TF_ME_INPUT            
+#if !IMPROVED_TF_ME_INPUT
             int use_16x16_subblocks[N_32X32_BLOCKS] = {0};
             int me_16x16_subblock_vf[N_16X16_BLOCKS];
             int me_32x32_subblock_vf[N_32X32_BLOCKS];

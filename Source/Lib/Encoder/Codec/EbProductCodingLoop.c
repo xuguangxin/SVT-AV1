@@ -7939,7 +7939,7 @@ static void set_child_to_be_skipped(
         blk_geom->sq_size == 128 ? 17 :
         blk_geom->sq_size > 8 ? 25 :
         blk_geom->sq_size == 8 ? 5 : 1;
-#if EARLY_EXIT_ABS_TH 
+#if EARLY_EXIT_ABS_TH
     if (context_ptr->md_blk_arr_nsq[blk_index].split_flag && blk_geom->sq_size > 4) {
 #else
     if (blk_geom->sq_size > 4) {
