@@ -5186,7 +5186,7 @@ static int cqp_qindex_calc(
             bit_depth);
 #if QPS_CHANGE_II
         active_best_quality = (int32_t)(qindex + delta_qindex);
-#else		
+#else
         active_best_quality = MAX((int32_t)(qindex + delta_qindex), (pcs_ptr->ref_pic_qp_array[0][0] << 2) + 2);
 #endif
     }
