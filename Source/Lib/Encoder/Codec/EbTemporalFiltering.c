@@ -61,10 +61,10 @@ static int64_t index_mult_highbd[14] = {0U,
                                         1171354718U,
                                         0U,
                                         991146300U};
-
+#if !IMPROVED_TF_ME_INPUT
 // relationship between pu_index and row and col of the 32x32 sub-blocks
 static const uint32_t subblock_xy_32x32[4][2] = {{0, 0}, {0, 1}, {1, 0}, {1, 1}};
-
+#endif
 static const uint32_t subblock_xy_16x16[N_16X16_BLOCKS][2] = {{0, 0},
                                                               {0, 1},
                                                               {0, 2},
@@ -1911,7 +1911,7 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
 
 static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
                                 EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
-                                uint16_t **pred_16bit, uint32_t *stride_pred, uint32_t sb_origin_x,
+                                uint16_t **pred_16bit, uint32_t sb_origin_x,
                                 uint32_t sb_origin_y, uint32_t ss_x, uint32_t ss_y,
                                 int encoder_bit_depth) {
 #else
@@ -2602,8 +2602,8 @@ static EbErrorType produce_temporally_filtered_pic(
                                         list_input_picture_ptr[frame_index],
                                         pred,
                                         pred_16bit,
-                                        stride_pred,
 #if !IMPROVED_TF_ME_INPUT
+                                        stride_pred,
                                         src_center_ptr,
                                         altref_buffer_highbd_ptr,
                                         stride,
