@@ -1047,6 +1047,104 @@ void derive_sb_md_mode(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
 Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
+#if JAN6_PRESETS
+EbErrorType signal_derivation_mode_decision_config_kernel_oq(
+    SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+    ModeDecisionConfigurationContext *context_ptr) {
+
+    EbErrorType return_error = EB_ErrorNone;
+
+    // ADP
+    context_ptr->adp_level = pcs_ptr->parent_pcs_ptr->enc_mode;
+
+    // CDF
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M6)
+            pcs_ptr->update_cdf = 1;
+        else
+            pcs_ptr->update_cdf = 0;
+    else
+        pcs_ptr->update_cdf =
+            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+    if (pcs_ptr->update_cdf)
+        assert(scs_ptr->cdf_mode == 0 && "use cdf_mode 0");
+
+    // Filter INTRA
+    if (scs_ptr->seq_header.enable_filter_intra)
+        pcs_ptr->pic_filter_intra_mode = 1;
+    else
+        pcs_ptr->pic_filter_intra_mode = 0;
+
+    // High Precision
+    FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+    frm_hdr->allow_high_precision_mv =
+        pcs_ptr->enc_mode <= ENC_M7 &&
+                frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
+                (scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
+            ? 1
+            : 0;
+
+    // Warped
+    EbBool enable_wm;
+    enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
+                 (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5 &&
+                  pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
+                    ? EB_TRUE
+                    : EB_FALSE;
+
+    frm_hdr->allow_warped_motion =
+        enable_wm &&
+        !(frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME) &&
+        !frm_hdr->error_resilient_mode;
+    frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
+
+    // OBMC Level                                   Settings
+    // 0                                            OFF
+    // 1                                            OBMC @(MVP, PME and ME) + 16
+    // 2                                            OBMC @(MVP, PME and ME) + ?
+    // Opt NICs 3                                   OBMC @(MVP, PME ) + ?
+    // Opt NICs 4                                   OBMC @(MVP, PME ) + ?
+    // Opt2 NICs
+#if 0
+    if (scs_ptr->static_config.enable_obmc) {
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+        else
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
+    } else
+        pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
+#else
+    if (scs_ptr->static_config.enable_obmc) {
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
+            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2 &&
+             pcs_ptr->parent_pcs_ptr->sc_content_detected))
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
+                pcs_ptr->slice_type != I_SLICE
+                    ? 2
+                    : pcs_ptr->parent_pcs_ptr->sc_content_detected ? 2 : 0;
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
+                pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE
+                    ? 2
+                    : 0;
+        else
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
+
+    } else
+        pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
+#endif
+    // Switchable Motion Mode
+    frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable ||
+                                         pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
+
+    // HBD Mode
+    pcs_ptr->hbd_mode_decision =
+        scs_ptr->static_config.enable_hbd_mode_decision;
+
+    return return_error;
+}
+
+#else
 EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     ModeDecisionConfigurationContext *context_ptr) {
@@ -1126,7 +1224,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 
     return return_error;
 }
-
+#endif
 void forward_sq_non4_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
     uint32_t sb_index;
     EbBool   split_flag;

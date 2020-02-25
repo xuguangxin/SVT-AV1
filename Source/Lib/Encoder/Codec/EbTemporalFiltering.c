@@ -38,7 +38,9 @@
 #include "EbEncInterPrediction.h"
 #include "EbComputeVariance_C.h"
 #include "EbLog.h"
-
+#if IMPROVED_TF_ME_INPUT
+#include "limits.h"
+#endif
 #undef _MM_HINT_T2
 #define _MM_HINT_T2 1
 
@@ -449,7 +451,6 @@ static void get_blk_fw_using_dist(int const *me_32x32_subblock_vf, int const *me
         }
     }
 }
-#endif
 // compute variance for the MC block residuals
 static void get_me_distortion(int *me_32x32_subblock_vf, int *me_16x16_subblock_vf, uint8_t *pred_y,
                               int stride_pred_y, uint8_t *src_y, int stride_src_y) {
@@ -516,7 +517,7 @@ static void get_me_distortion_highbd(int *me_32x32_subblock_vf, int *me_16x16_su
             variance_highbd_c(pred_y_ptr, stride_pred_y, src_y_ptr, stride_src_y, 16, 16, &sse);
     }
 }
-
+#endif
 // Create and initialize all necessary ME context structures
 static void create_me_context_and_picture_control(
     MotionEstimationContext_t *context_ptr, PictureParentControlSet *picture_control_set_ptr_frame,
@@ -1910,8 +1911,7 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
 
 static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
                                 EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
-                                uint16_t **pred_16bit, uint32_t *stride_pred, EbByte *src,
-                                uint16_t **src_16bit, uint32_t *stride_src, uint32_t sb_origin_x,
+                                uint16_t **pred_16bit, uint32_t *stride_pred, uint32_t sb_origin_x,
                                 uint32_t sb_origin_y, uint32_t ss_x, uint32_t ss_y,
                                 int encoder_bit_depth) {
 #else
@@ -2603,9 +2603,11 @@ static EbErrorType produce_temporally_filtered_pic(
                                         pred,
                                         pred_16bit,
                                         stride_pred,
+#if !IMPROVED_TF_ME_INPUT
                                         src_center_ptr,
                                         altref_buffer_highbd_ptr,
                                         stride,
+#endif
                                         (uint32_t)blk_col * BW,
                                         (uint32_t)blk_row * BH,
                                         ss_x,

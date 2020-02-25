@@ -33,6 +33,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define JAN6_PRESETS                        0
 #if 1
 #define M0_FEB23_ADOPTIONS                  1
 #define M2_FEB22_ADOPTION                   1
