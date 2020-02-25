@@ -1276,38 +1276,18 @@ static void apply_filtering_central_highbd(uint16_t **pred_16bit, uint32_t **acc
 // Returns:
 //   Nothing will be returned. But the content to which `accum` and `pred`
 //   point will be modified.
-// AMIR: matching function in aom is av1_apply_temporal_filter_planewise_c
-void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
-    int y_src_stride,
-    const uint8_t *y_pre,
-    int y_pre_stride,
-    const uint8_t *u_src,
-    const uint8_t *v_src,
-    int uv_src_stride,
-    const uint8_t *u_pre,
-    const uint8_t *v_pre,
-    int uv_pre_stride,
-    unsigned int block_width,
-    unsigned int block_height,
-    int ss_x,
-    int ss_y,
-    int strength, //rempve
-    const int *blk_fw, //remove
-    int use_whole_blk, // remove
-#if PLANE_WISE_TF
-    const double *noise_levels,
-#endif
-    uint32_t *y_accum,
-    uint16_t *y_count,
-    uint32_t *u_accum,
-    uint16_t *u_count,
-    uint32_t *v_accum,
-    uint16_t *v_count) { // sub-block filter weights
+void svt_av1_apply_temporal_filter_planewise_c(
+    const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
+    const uint8_t *u_src, const uint8_t *v_src, int uv_src_stride, const uint8_t *u_pre,
+    const uint8_t *v_pre, int uv_pre_stride, unsigned int block_width, unsigned int block_height,
+    int ss_x, int ss_y,
+    const double *noise_levels, const int decay_control,
+    uint32_t *y_accum, uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum,
+    uint16_t *v_count) {
 
     unsigned int i, j, k, m;
     int idx, idy;
     uint64_t sum_square_diff;
-    const int rounding = (1 << strength) >> 1;
     const unsigned int uv_block_width = block_width >> ss_x;
     const unsigned int uv_block_height = block_height >> ss_y;
     DECLARE_ALIGNED(16, uint16_t, y_diff_se[BLK_PELS]);
@@ -1317,9 +1297,6 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
     memset(y_diff_se, 0, BLK_PELS * sizeof(uint16_t));
     memset(u_diff_se, 0, BLK_PELS * sizeof(uint16_t));
     memset(v_diff_se, 0, BLK_PELS * sizeof(uint16_t));
-
-    assert(use_whole_blk == 0);
-    UNUSED(use_whole_blk);
 
     // Calculate squared differences for each pixel of the block (pred-orig)
     calculate_squared_errors(y_src, y_src_stride, y_pre, y_pre_stride, y_diff_se,
@@ -1332,13 +1309,6 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
     // Get window size for pixel-wise filtering.
     assert(TF_PLANEWISE_FILTER_WINDOW_LENGTH % 2 == 1);
     const int half_window = TF_PLANEWISE_FILTER_WINDOW_LENGTH >> 1;
-
-    // Hyper-parameter for filter weight adjustment.
-    //const int frame_height = frame_to_filter->heights[0]
-    //    << mbd->plane[0].subsampling_y;
-    // the default decay_control from aom is 4, i found 3 for 720 and above and 2 for below to give the best results
-    const int decay_control = 1/*frame_height >= 480*/ ? 3 : 3; //4
-
     int plane = 0;
     for (i = 0; i < block_height; i++) {
         for (j = 0; j < block_width; j++) {
@@ -1349,34 +1319,12 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
             const int uv_r = i >> ss_y;
             const int uv_c = j >> ss_x;
             sum_square_diff = 0;
-
-
-#if TF_ADD_OLD_WEIGHT
-            int filter_weight;
-
-            if (block_width == (BW >> 1)) {
-                filter_weight = get_subblock_filter_weight_4subblocks(i, j, block_height, block_width, blk_fw);
-            }
-            else {
-                filter_weight = get_subblock_filter_weight_16subblocks(i, j, block_height, block_width, blk_fw);
-            }
-#endif
-
             for (idy = -half_window; idy <= half_window; ++idy) {
                 for (idx = -half_window; idx <= half_window; ++idx) {
                     const int row = CLIP((int)i + idy, 0, (int)block_height - 1);
                     const int col = CLIP((int)j + idx, 0, (int)block_width - 1);
-                    // AMIR: since me is 16x16, making the averaging to be inside 16x16 blocks
-                  //  const int row = (int)i + idy;
-                  //  const int col = (int)j + idx;
-                  //  const int row = CLIP((int)i + idy, (int)i/16*16, (int)(i / 16 * 16)+16 - 1);
-                  //  const int col = CLIP((int)j + idx, (int)j/16*16, (int)(j / 16 * 16)+16 - 1);
-                  //  if (row >= (int)(i/16*16) && row < (int)(i / 16 * 16)+16 && col >= (int)j/16*16 &&
-                  //      col < (int)(j / 16 * 16)+16)
-                    {
-                        sum_square_diff += y_diff_se[row * (int)block_width + col];
-                        ++num_ref_pixels;
-                    }
+                    sum_square_diff += y_diff_se[row * (int)block_width + col];
+                    ++num_ref_pixels;
                 }
             }
             // Control factor for non-local mean approach.
@@ -1393,16 +1341,9 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                 (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
 
             k = i * y_pre_stride + j;
-#if TF_ADD_OLD_WEIGHT
-            if (filter_weight) {
-                y_count[k] += adjusted_weight;
-                y_accum[k] += adjusted_weight * pixel_value;
-            }
-#else
-
             y_count[k] += adjusted_weight;
             y_accum[k] += adjusted_weight * pixel_value;
-#endif
+
             // Process chroma component
             if (!(i & ss_y) && !(j & ss_x)) {
                 const int u_pixel_value = u_pre[uv_r * uv_pre_stride + uv_c];
@@ -1411,20 +1352,16 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                 int num_ref_pixels = 0;
                 uint64_t u_sum_square_diff = 0, v_sum_square_diff = 0;
 #if 1
-                // AMIR: This is a new commit added for filtering Chroma and considering luma
                 sum_square_diff = 0;
-
-                for (idy = -1; idy <= 1; ++idy) {
-                    for (idx = -1; idx <= 1; ++idx) {
-                        const int row = CLIP((int)i + idy, 0, (int)block_height - 1);
-                        const int col = CLIP((int)j + idx, 0, (int)block_width - 1);
-                        //const int y = CLIP(i + wi, 0, h - 1);  // Y-coord on current plane.
-                        //const int x = CLIP(j + wj, 0, w - 1);  // X-coord on current plane.
-                        //if (row >= 0 && row < (int)block_height && col >= 0 &&
-                        //    col < (int)block_width) {
+                // Filter U-plane and V-plane using Y-plane. This is because motion
+                // search is only done on Y-plane, so the information from Y-plane will
+                // be more accurate.
+                for (idy = 0; idy < (1 << ss_y); ++idy) {
+                    for (idx = 0; idx < (1 << ss_x); ++idx) {
+                        const int row = (int)i + idy;
+                        const int col =(int)j + idx;
                         sum_square_diff += y_diff_se[row * (int)block_width + col];
                         ++num_ref_pixels;
-                        // }
                     }
                 }
                 u_sum_square_diff = sum_square_diff;
@@ -1433,21 +1370,11 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
 
                 for (idy = -half_window; idy <= half_window; ++idy) {
                     for (idx = -half_window; idx <= half_window; ++idx) {
-
                         const int row = CLIP((int)uv_r + idy, 0, (int)uv_block_height - 1);
                         const int col = CLIP((int)uv_c + idx, 0, (int)uv_block_width - 1);
-                        // AMIR: since me is 16x16, making the averaging to be inside 16x16 blocks
-                           // const int row = uv_r + idy;
-                          //  const int col = uv_c + idx;
-                          //  const int row = CLIP((int)uv_r + idy, (int)uv_r / 8 * 8, (int)(uv_r / 8 * 8) + 8 - 1);
-                          //  const int col = CLIP((int)uv_c + idx, (int)uv_c / 8 * 8, (int)(uv_c / 8 * 8) + 8 - 1);
-                         //   if (row >= ((int)uv_r / 8 * 8) && row < (int)(uv_r / 8 * 8) + 8 && col >= (int)uv_c / 8 * 8 &&
-                         //       col < (int)(uv_c / 8 * 8) + 8)
-                        {
-                            u_sum_square_diff += u_diff_se[row * uv_block_width + col];
-                            v_sum_square_diff += v_diff_se[row * uv_block_width + col];
-                            ++num_ref_pixels;
-                        }
+                        u_sum_square_diff += u_diff_se[row * uv_block_width + col];
+                        v_sum_square_diff += v_diff_se[row * uv_block_width + col];
+                        ++num_ref_pixels;
                     }
                 }
 
@@ -1457,182 +1384,46 @@ void svt_av1_apply_temporal_filter_planewise_c(const uint8_t *y_src,
                     -(double)(u_sum_square_diff / num_ref_pixels) / (2 * r * r), -15.0);
                 adjusted_weight =
                     (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
-
-#if TF_ADD_OLD_WEIGHT
-                if (filter_weight) {
-                    u_count[m] += adjusted_weight;
-                    u_accum[m] += adjusted_weight * u_pixel_value;
-                }
-#else
                 u_count[m] += adjusted_weight;
                 u_accum[m] += adjusted_weight * u_pixel_value;
-#endif
                 r = (double)decay_control * (0.7 + log(noise_levels[2] + 1.0));
 
                 scaled_diff = AOMMAX(
                     -(double)(v_sum_square_diff / num_ref_pixels) / (2 * r * r), -15.0);
                 adjusted_weight =
                     (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
-#if TF_ADD_OLD_WEIGHT
-                if (filter_weight) {
-                    v_count[m] += adjusted_weight;
-                    v_accum[m] += adjusted_weight * v_pixel_value;
-                }
-#else
                 v_count[m] += adjusted_weight;
                 v_accum[m] += adjusted_weight * v_pixel_value;
-#endif
             }
         }
     }
 }
-#if 0
-void av1_apply_temporal_filter_planewise_c(
-    const YV12_BUFFER_CONFIG *frame_to_filter, const MACROBLOCKD *mbd,
-    const BLOCK_SIZE block_size, const int mb_row, const int mb_col,
-    const int num_planes, const double *noise_levels, const uint8_t *pred,
-    uint32_t *accum, uint16_t *count) {
-    assert(num_planes >= 1 && num_planes <= MAX_MB_PLANE);
-
-    // Block information.
-    const int mb_height = block_size_high[block_size];
-    const int mb_width = block_size_wide[block_size];
-    const int mb_pels = mb_height * mb_width;
-    const int is_high_bitdepth = is_frame_high_bitdepth(frame_to_filter);
-    const uint16_t *pred16 = CONVERT_TO_SHORTPTR(pred);
-
-    // Allocate memory for pixel-wise squared differences for all planes. They,
-    // regardless of the subsampling, are assigned with memory of size `mb_pels`.
-    uint32_t *square_diff =
-        aom_memalign(16, num_planes * mb_pels * sizeof(uint32_t));
-    memset(square_diff, 0, num_planes * mb_pels * sizeof(square_diff[0]));
-
-    int plane_offset = 0;
-    for (int plane = 0; plane < num_planes; ++plane) {
-        // Locate pixel on reference frame.
-        const int plane_h = mb_height >> mbd->plane[plane].subsampling_y;
-        const int plane_w = mb_width >> mbd->plane[plane].subsampling_x;
-        const int frame_stride = frame_to_filter->strides[plane == 0 ? 0 : 1];
-        const int frame_offset = mb_row * plane_h * frame_stride + mb_col * plane_w;
-        const uint8_t *ref = frame_to_filter->buffers[plane];
-        compute_square_diff(ref, frame_offset, frame_stride, pred, plane_offset,
-            plane_w, plane_h, plane_w, is_high_bitdepth,
-            square_diff + plane_offset);
-        plane_offset += mb_pels;
-    }
-
-    // Get window size for pixel-wise filtering.
-    assert(TF_PLANEWISE_FILTER_WINDOW_LENGTH % 2 == 1);
-    const int half_window = TF_PLANEWISE_FILTER_WINDOW_LENGTH >> 1;
-
-    // Hyper-parameter for filter weight adjustment.
-    const int frame_height = frame_to_filter->heights[0]
-        << mbd->plane[0].subsampling_y;
-    const int decay_control = frame_height >= 480 ? 4 : 3;
-
-    // Handle planes in sequence.
-    plane_offset = 0;
-    for (int plane = 0; plane < num_planes; ++plane) {
-        const int subsampling_y = mbd->plane[plane].subsampling_y;
-        const int subsampling_x = mbd->plane[plane].subsampling_x;
-        const int h = mb_height >> subsampling_y;  // Plane height.
-        const int w = mb_width >> subsampling_x;   // Plane width.
-
-        // Perform filtering.
-        int pred_idx = 0;
-        for (int i = 0; i < h; ++i) {
-            for (int j = 0; j < w; ++j) {
-                // non-local mean approach
-                uint64_t sum_square_diff = 0;
-                int num_ref_pixels = 0;
-
-                for (int wi = -half_window; wi <= half_window; ++wi) {
-                    for (int wj = -half_window; wj <= half_window; ++wj) {
-                        const int y = CLIP(i + wi, 0, h - 1);  // Y-coord on current plane.
-                        const int x = CLIP(j + wj, 0, w - 1);  // X-coord on current plane.
-                        sum_square_diff += square_diff[plane_offset + y * w + x];
-                        ++num_ref_pixels;
-                    }
-                }
-
-                // Control factor for non-local mean approach.
-                const double r =
-                    (double)decay_control * (0.7 + log(noise_levels[plane] + 1.0));
-
-                const int idx = plane_offset + pred_idx;  // Index with plane shift.
-                const int pred_value = is_high_bitdepth ? pred16[idx] : pred[idx];
-                // Scale down the difference for high bit depth input.
-                if (mbd->bd > 8) sum_square_diff >>= (mbd->bd - 8) * (mbd->bd - 8);
-                const double scaled_diff = AOMMAX(
-                    -(double)(sum_square_diff / num_ref_pixels) / (2 * r * r), -15.0);
-                const int adjusted_weight =
-                    (int)(exp(scaled_diff) * TF_PLANEWISE_FILTER_WEIGHT_SCALE);
-                accum[idx] += adjusted_weight * pred_value;
-                count[idx] += adjusted_weight;
-
-                ++pred_idx;
-            }
-        }
-        plane_offset += mb_pels;
-    }
-
-    aom_free(square_diff);
-}
-#endif
-static void apply_filtering_block_plane_wise(int block_row,
-    int block_col,
-    EbByte *src,
-    uint16_t **src_16bit,
-    EbByte *pred,
-    uint16_t **pred_16bit,
-    uint32_t **accum,
-    uint16_t **count,
-    uint32_t *stride,
-    uint32_t *stride_pred,
-    int block_width,
-    int block_height,
-    uint32_t ss_x, // chroma sub-sampling in x
-    uint32_t ss_y, // chroma sub-sampling in y
-    int altref_strength,
-    const int *blk_fw,
-#if PLANE_WISE_TF
-    const double *noise_levels,
-#endif
-    EbBool is_highbd) {
-
-    //  int blk_h =  block_height; int blk_w =  block_width; // fixed 32x32 blocks for now
-
-    int blk_h = BW >> 1;/* block_height*/; int blk_w = BH >> 1;/* block_width;*/ // fixed 32x32 blocks for now
-   /* if (block_height != (blk_h) || block_width != (blk_w))
-        printf("%d\t%d\n",
-            block_height,
-            block_width);*/
-
+static void apply_filtering_block_plane_wise(
+    int block_row, int block_col, EbByte *src, uint16_t **src_16bit, EbByte *pred,
+    uint16_t **pred_16bit, uint32_t **accum, uint16_t **count, uint32_t *stride,
+    uint32_t *stride_pred, int block_width, int block_height, uint32_t ss_x, uint32_t ss_y,
+    const double *noise_levels, const int decay_control, EbBool is_highbd) {
+    int blk_h               = block_height;
+    int blk_w               = block_width;
     int offset_src_buffer_Y = block_row * blk_h * stride[C_Y] + block_col * blk_w;
-    int offset_src_buffer_U = block_row * (blk_h >> ss_y) * stride[C_U] + block_col * (blk_w >> ss_x);
-    int offset_src_buffer_V = block_row * (blk_h >> ss_y) * stride[C_V] + block_col * (blk_w >> ss_x);
+    int offset_src_buffer_U =
+        block_row * (blk_h >> ss_y) * stride[C_U] + block_col * (blk_w >> ss_x);
+    int offset_src_buffer_V =
+        block_row * (blk_h >> ss_y) * stride[C_V] + block_col * (blk_w >> ss_x);
 
     int offset_block_buffer_Y = block_row * blk_h * stride_pred[C_Y] + block_col * blk_w;
-    int offset_block_buffer_U = block_row * (blk_h >> ss_y) * stride_pred[C_U] + block_col * (blk_w >> ss_x);
-    int offset_block_buffer_V = block_row * (blk_h >> ss_y) * stride_pred[C_V] + block_col * (blk_w >> ss_x);
+    int offset_block_buffer_U =
+        block_row * (blk_h >> ss_y) * stride_pred[C_U] + block_col * (blk_w >> ss_x);
+    int offset_block_buffer_V =
+        block_row * (blk_h >> ss_y) * stride_pred[C_V] + block_col * (blk_w >> ss_x);
 
-    int blk_fw_32x32[4];
-
-    int idx_32x32 = block_row * 2 + block_col;
-
-    uint8_t *src_ptr[COLOR_CHANNELS];
-    uint8_t *pred_ptr[COLOR_CHANNELS];
+    uint8_t * src_ptr[COLOR_CHANNELS];
+    uint8_t * pred_ptr[COLOR_CHANNELS];
     uint32_t *accum_ptr[COLOR_CHANNELS];
     uint16_t *count_ptr[COLOR_CHANNELS];
 
     uint16_t *src_ptr_16bit[COLOR_CHANNELS];
     uint16_t *pred_ptr_16bit[COLOR_CHANNELS];
-
-    for (int ifw = 0; ifw < 4; ifw++) {
-        int ifw_index = index_16x16_from_subindexes[idx_32x32][ifw];
-
-        blk_fw_32x32[ifw] = blk_fw[ifw_index];
-    }
 
     accum_ptr[C_Y] = accum[C_Y] + offset_block_buffer_Y;
     accum_ptr[C_U] = accum[C_U] + offset_block_buffer_U;
@@ -1651,67 +1442,29 @@ static void apply_filtering_block_plane_wise(int block_row,
         pred_ptr[C_U] = pred[C_U] + offset_block_buffer_U;
         pred_ptr[C_V] = pred[C_V] + offset_block_buffer_V;
 
-        // Apply the temporal filtering strategy
-        //const uint16_t *y_src, int y_src_stride, const uint16_t *y_pre,
-        //    int y_pre_stride, const uint16_t *u_src, const uint16_t *v_src,
-        //    int uv_src_stride, const uint16_t *u_pre, const uint16_t *v_pre,
-        //    int uv_pre_stride, unsigned int block_width, unsigned int block_height,
-        //    int ss_x, int ss_y, int strength, const int *blk_fw, int use_whole_blk,
-        //    uint32_t *y_accum, uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count,
-        //    uint32_t *v_accum, uint16_t *v_count);
         svt_av1_apply_temporal_filter_planewise_c(src_ptr[C_Y],
-            stride[C_Y],
-            pred_ptr[C_Y],
-            stride_pred[C_Y],
-            src_ptr[C_U],
-            src_ptr[C_V],
-            stride[C_U],
-            pred_ptr[C_U],
-            pred_ptr[C_V],
-            stride_pred[C_U],
-            (unsigned int)block_width,
-            (unsigned int)block_height,
-            ss_x,
-            ss_y,
-            altref_strength,
-            blk_fw_32x32,
-            0, // use_32x32
-#if PLANE_WISE_TF
-            noise_levels,
-#endif
-            accum_ptr[C_Y],
-            count_ptr[C_Y],
-            accum_ptr[C_U],
-            count_ptr[C_U],
-            accum_ptr[C_V],
-            count_ptr[C_V]);
-
-        // Apply the temporal filtering strategy
-        //svt_av1_apply_filtering_c(src_ptr[C_Y],
-        //    stride[C_Y],
-        //    pred_ptr[C_Y],
-        //    stride_pred[C_Y],
-        //    src_ptr[C_U],
-        //    src_ptr[C_V],
-        //    stride[C_U],
-        //    pred_ptr[C_U],
-        //    pred_ptr[C_V],
-        //    stride_pred[C_U],
-        //    (unsigned int)block_width,
-        //    (unsigned int)block_height,
-        //    ss_x,
-        //    ss_y,
-        //    altref_strength,
-        //    blk_fw_32x32,
-        //    0, // use_32x32
-        //    accum_ptr[C_Y],
-        //    count_ptr[C_Y],
-        //    accum_ptr[C_U],
-        //    count_ptr[C_U],
-        //    accum_ptr[C_V],
-        //    count_ptr[C_V]);
-    }
-    else {
+                                                stride[C_Y],
+                                                pred_ptr[C_Y],
+                                                stride_pred[C_Y],
+                                                src_ptr[C_U],
+                                                src_ptr[C_V],
+                                                stride[C_U],
+                                                pred_ptr[C_U],
+                                                pred_ptr[C_V],
+                                                stride_pred[C_U],
+                                                (unsigned int)block_width,
+                                                (unsigned int)block_height,
+                                                ss_x,
+                                                ss_y,
+                                                noise_levels,
+                                                decay_control,
+                                                accum_ptr[C_Y],
+                                                count_ptr[C_Y],
+                                                accum_ptr[C_U],
+                                                count_ptr[C_U],
+                                                accum_ptr[C_V],
+                                                count_ptr[C_V]);
+    } else {
         src_ptr_16bit[C_Y] = src_16bit[C_Y] + offset_src_buffer_Y;
         src_ptr_16bit[C_U] = src_16bit[C_U] + offset_src_buffer_U;
         src_ptr_16bit[C_V] = src_16bit[C_V] + offset_src_buffer_V;
@@ -1720,30 +1473,30 @@ static void apply_filtering_block_plane_wise(int block_row,
         pred_ptr_16bit[C_U] = pred_16bit[C_U] + offset_block_buffer_U;
         pred_ptr_16bit[C_V] = pred_16bit[C_V] + offset_block_buffer_V;
 
-        // Apply the temporal filtering strategy
-        svt_av1_apply_filtering_highbd(src_ptr_16bit[C_Y],
-            stride[C_Y],
-            pred_ptr_16bit[C_Y],
-            stride_pred[C_Y],
-            src_ptr_16bit[C_U],
-            src_ptr_16bit[C_V],
-            stride[C_U],
-            pred_ptr_16bit[C_U],
-            pred_ptr_16bit[C_V],
-            stride_pred[C_U],
-            (unsigned int)block_width,
-            (unsigned int)block_height,
-            ss_x,
-            ss_y,
-            altref_strength,
-            blk_fw_32x32,
-            0, // use_32x32
-            accum_ptr[C_Y],
-            count_ptr[C_Y],
-            accum_ptr[C_U],
-            count_ptr[C_U],
-            accum_ptr[C_V],
-            count_ptr[C_V]);
+        //// Apply the temporal filtering strategy
+        //svt_av1_apply_filtering_highbd(src_ptr_16bit[C_Y],
+        //                               stride[C_Y],
+        //                               pred_ptr_16bit[C_Y],
+        //                               stride_pred[C_Y],
+        //                               src_ptr_16bit[C_U],
+        //                               src_ptr_16bit[C_V],
+        //                               stride[C_U],
+        //                               pred_ptr_16bit[C_U],
+        //                               pred_ptr_16bit[C_V],
+        //                               stride_pred[C_U],
+        //                               (unsigned int)block_width,
+        //                               (unsigned int)block_height,
+        //                               ss_x,
+        //                               ss_y,
+        //                               altref_strength,
+        //                               blk_fw_32x32,
+        //                               0, // use_32x32
+        //                               accum_ptr[C_Y],
+        //                               count_ptr[C_Y],
+        //                               accum_ptr[C_U],
+        //                               count_ptr[C_U],
+        //                               accum_ptr[C_V],
+        //                               count_ptr[C_V]);
     }
 }
 #endif
@@ -2885,14 +2638,21 @@ static EbErrorType produce_temporally_filtered_pic(
                 // Step 2: temporal filtering using the motion compensated blocks
                 // ------------
 #if PLANE_WISE_TF
-                int use_planewise_strategy = 1;
+                // plane wise filtering not supported for highbd
+                int use_planewise_strategy = is_highbd ? 0 : 1;
+                // Hyper-parameter for filter weight adjustment.
+                const int decay_control =
+                    (picture_control_set_ptr_central->scs_ptr->input_resolution ==
+                     INPUT_SIZE_576p_RANGE_OR_LOWER)
+                        ? 2
+                        : 3;
 #endif
                 // if frame to process is the center frame
                 if (frame_index == index_center) {
                     if (!is_highbd)
 #if PLANE_WISE_TF
-                        apply_filtering_central(pred, accum, count, BW, BH, ss_x, ss_y
-                            , use_planewise_strategy);
+                        apply_filtering_central(
+                            pred, accum, count, BW, BH, ss_x, ss_y, use_planewise_strategy);
 #else
                         apply_filtering_central(pred, accum, count, BW, BH, ss_x, ss_y);
 #endif
@@ -2907,43 +2667,40 @@ static EbErrorType produce_temporally_filtered_pic(
                         for (int block_col = 0; block_col < 2; block_col++) {
                             if (use_planewise_strategy)
                                 apply_filtering_block_plane_wise(block_row,
-                                    block_col,
-                                    src_center_ptr,
-                                    altref_buffer_highbd_ptr,
-                                    pred,
-                                    pred_16bit,
-                                    accum,
-                                    count,
-                                    stride,
-                                    stride_pred,
-                                    BW >> 1,
-                                    BH >> 1,
-                                    ss_x,
-                                    ss_y,
-                                    altref_strength,
-                                    blk_fw,
-#if PLANE_WISE_TF
-                                    noise_levels,
-#endif
-                                    is_highbd);
+                                                                 block_col,
+                                                                 src_center_ptr,
+                                                                 altref_buffer_highbd_ptr,
+                                                                 pred,
+                                                                 pred_16bit,
+                                                                 accum,
+                                                                 count,
+                                                                 stride,
+                                                                 stride_pred,
+                                                                 BW >> 1,
+                                                                 BH >> 1,
+                                                                 ss_x,
+                                                                 ss_y,
+                                                                 noise_levels,
+                                                                 decay_control,
+                                                                 is_highbd);
                             else
                                 apply_filtering_block(block_row,
-                                    block_col,
-                                    src_center_ptr,
-                                    altref_buffer_highbd_ptr,
-                                    pred,
-                                    pred_16bit,
-                                    accum,
-                                    count,
-                                    stride,
-                                    stride_pred,
-                                    BW >> 1, // fixed 32x32
-                                    BH >> 1, // fixed 32x32
-                                    ss_x, // chroma sub-sampling in x
-                                    ss_y, // chroma sub-sampling in y
-                                    altref_strength,
-                                    blk_fw,
-                                    is_highbd);
+                                                      block_col,
+                                                      src_center_ptr,
+                                                      altref_buffer_highbd_ptr,
+                                                      pred,
+                                                      pred_16bit,
+                                                      accum,
+                                                      count,
+                                                      stride,
+                                                      stride_pred,
+                                                      BW >> 1, // fixed 32x32
+                                                      BH >> 1, // fixed 32x32
+                                                      ss_x, // chroma sub-sampling in x
+                                                      ss_y, // chroma sub-sampling in y
+                                                      altref_strength,
+                                                      blk_fw,
+                                                      is_highbd);
                         }
                     }
 #else
@@ -3360,31 +3117,34 @@ EbErrorType svt_av1_init_temporal_filtering(
                 (central_picture_ptr->height >> 1),
                 central_picture_ptr->stride_cb,
                 encoder_bit_depth);
-        }
-        else {
+
+        } else {
             EbByte buffer_y = central_picture_ptr->buffer_y +
-                central_picture_ptr->origin_y*central_picture_ptr->stride_y
-                + central_picture_ptr->origin_x;
-            EbByte buffer_u = central_picture_ptr->buffer_cb +
-                (central_picture_ptr->origin_y >> ss_y)*central_picture_ptr->stride_cb
-                + (central_picture_ptr->origin_x >> ss_x);
-            EbByte buffer_v = central_picture_ptr->buffer_cr +
-                (central_picture_ptr->origin_y >> ss_x)*central_picture_ptr->stride_cr
-                + (central_picture_ptr->origin_x >> ss_x);
+                              central_picture_ptr->origin_y * central_picture_ptr->stride_y +
+                              central_picture_ptr->origin_x;
+            EbByte buffer_u =
+                central_picture_ptr->buffer_cb +
+                (central_picture_ptr->origin_y >> ss_y) * central_picture_ptr->stride_cb +
+                (central_picture_ptr->origin_x >> ss_x);
+            EbByte buffer_v =
+                central_picture_ptr->buffer_cr +
+                (central_picture_ptr->origin_y >> ss_x) * central_picture_ptr->stride_cr +
+                (central_picture_ptr->origin_x >> ss_x);
+
             noise_levels[0] = estimate_noise(buffer_y, // Y
-                central_picture_ptr->width,
-                central_picture_ptr->height,
-                central_picture_ptr->stride_y);
+                                             central_picture_ptr->width,
+                                             central_picture_ptr->height,
+                                             central_picture_ptr->stride_y);
 
             noise_levels[1] = estimate_noise(buffer_u, // U
-                (central_picture_ptr->width >> ss_x),
-                (central_picture_ptr->height >> ss_y),
-                central_picture_ptr->stride_cb);
+                                             (central_picture_ptr->width >> ss_x),
+                                             (central_picture_ptr->height >> ss_y),
+                                             central_picture_ptr->stride_cb);
 
             noise_levels[2] = estimate_noise(buffer_v, // V
-                (central_picture_ptr->width >> ss_x),
-                (central_picture_ptr->height >> ss_y),
-                central_picture_ptr->stride_cr);
+                                             (central_picture_ptr->width >> ss_x),
+                                             (central_picture_ptr->height >> ss_y),
+                                             central_picture_ptr->stride_cr);
         }
 #else
         double noise_level;

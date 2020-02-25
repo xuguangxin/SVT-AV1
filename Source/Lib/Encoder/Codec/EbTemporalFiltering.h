@@ -92,6 +92,14 @@ void svt_av1_apply_filtering_highbd_c(
     int ss_x, int ss_y, int strength, const int *blk_fw, int use_whole_blk, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count);
 
+#if PLANE_WISE_TF_OPT
+void svt_av1_apply_temporal_filter_planewise_c(
+    const uint8_t *y_src, int y_src_stride, const uint8_t *y_pre, int y_pre_stride,
+    const uint8_t *u_src, const uint8_t *v_src, int uv_src_stride, const uint8_t *u_pre,
+    const uint8_t *v_pre, int uv_pre_stride, unsigned int block_width, unsigned int block_height,
+    int ss_x, int ss_y, const double *noise_levels, const int decay_control, uint32_t *y_accum,
+    uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count);
+#endif
 #ifdef __cplusplus
 }
 #endif

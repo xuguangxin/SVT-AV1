@@ -850,7 +850,7 @@ typedef struct PictureParentControlSet {
     struct PictureParentControlSet *alt_ref_ppcs_ptr;
     uint8_t                         altref_strength;
 #if PLANE_WISE_TF
-    double                          noise_levels[MAX_MB_PLANE];
+    double noise_levels[MAX_MB_PLANE];
 #endif
     int32_t                         pic_decision_reorder_queue_idx;
     struct PictureParentControlSet *temp_filt_pcs_list[ALTREF_MAX_NFRAMES];
