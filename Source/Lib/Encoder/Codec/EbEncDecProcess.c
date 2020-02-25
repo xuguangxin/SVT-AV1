@@ -201,7 +201,11 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs_ptr, uint16
     // TODO(Joel): 8-bit ep_luma_recon_neighbor_array (Cb,Cr) when is_16bit==0?
     EbBool is_16bit =
         (EbBool)(pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
+#if ENCDEC_16BIT
+    if (is_16bit || pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline) {
+#else
     if (is_16bit) {
+#endif
         neighbor_array_unit_reset(pcs_ptr->ep_luma_recon_neighbor_array16bit[tile_idx]);
         neighbor_array_unit_reset(pcs_ptr->ep_cb_recon_neighbor_array16bit[tile_idx]);
         neighbor_array_unit_reset(pcs_ptr->ep_cr_recon_neighbor_array16bit[tile_idx]);
@@ -226,7 +230,11 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs_ptr) {
     // TODO(Joel): 8-bit ep_luma_recon_neighbor_array (Cb,Cr) when is_16bit==0?
     EbBool is_16bit =
         (EbBool)(pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
+#if ENCDEC_16BIT
+    if (is_16bit || pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline) {
+#else
     if (is_16bit) {
+#endif
         neighbor_array_unit_reset(pcs_ptr->ep_luma_recon_neighbor_array16bit);
         neighbor_array_unit_reset(pcs_ptr->ep_cb_recon_neighbor_array16bit);
         neighbor_array_unit_reset(pcs_ptr->ep_cr_recon_neighbor_array16bit);
@@ -1234,7 +1242,7 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
                   (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
     }
 #if ENCDEC_16BIT
-    if ((scs_ptr->static_config.is_16bitPipeline) && (!is_16bit)) {
+    if ((scs_ptr->static_config.encoder_16bit_pipeline) && (!is_16bit)) {
         // Y samples
         generate_padding16_bit(ref_pic_16bit_ptr->buffer_y,
                                ref_pic_16bit_ptr->stride_y << 1,

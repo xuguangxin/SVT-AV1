@@ -906,7 +906,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
 
             if (!tx_search_skip_flag) {
 #if ENCDEC_16BIT
-                if (context_ptr->is_16bit || scs_ptr->static_config.is_16bitPipeline) {
+                if (context_ptr->is_16bit || scs_ptr->static_config.encoder_16bit_pipeline) {
 #else
                 if (context_ptr->is_16bit) {
 #endif
@@ -1478,7 +1478,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                                EncDecContext *context_ptr) {
     SequenceControlSet * scs_ptr  = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     EbBool               is_16bit = context_ptr->is_16bit;
-    EbBool               is_16bit_pipeline = scs_ptr->static_config.is_16bitPipeline;
+    EbBool               is_16bit_pipeline = scs_ptr->static_config.encoder_16bit_pipeline;
     uint8_t              is_inter          = 0; // set to 0 b/c this is the intra path
     EbPictureBufferDesc *recon_buffer      = (is_16bit || is_16bit_pipeline)
                                             ? pcs_ptr->recon_picture16bit_ptr
@@ -5175,7 +5175,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
     SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
     uint32_t sb_origin_y, EncDecContext *context_ptr) {
     EbBool               is_16bit = context_ptr->is_16bit;
-    EbBool               is_16bit_pipeline = scs_ptr->static_config.is_16bitPipeline;
+    EbBool               is_16bit_pipeline = scs_ptr->static_config.encoder_16bit_pipeline;
     EbPictureBufferDesc *recon_buffer = (is_16bit || is_16bit_pipeline)
         ? pcs_ptr->recon_picture16bit_ptr
         : pcs_ptr->recon_picture_ptr;
@@ -5397,7 +5397,6 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
             (((sb_origin_y + input_picture->origin_y) >> 1) * input_picture->stride_cr) +
             ((sb_origin_x + input_picture->origin_x) >> 1);
 
-        // TTK Should be removed after enabling generate padding for ref
         sb_width =
             ((sb_width < MIN_SB_SIZE) || ((sb_width > MIN_SB_SIZE) && (sb_width < MAX_SB_SIZE)))
             ? MIN(scs_ptr->sb_size_pix,

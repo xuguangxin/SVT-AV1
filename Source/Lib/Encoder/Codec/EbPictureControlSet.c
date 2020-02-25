@@ -461,9 +461,13 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
                eb_recon_picture_buffer_desc_ctor,
                (EbPtr)&input_pic_buf_desc_init_data);
     }
-    EB_NEW(object_ptr->recon_picture16bit_ptr,
-           eb_recon_picture_buffer_desc_ctor,
-           (EbPtr)&coeff_buffer_desc_init_data);
+#if ENCDEC_16BIT
+    if (init_data_ptr->is_16bit_pipeline) {
+        EB_NEW(object_ptr->recon_picture16bit_ptr,
+            eb_recon_picture_buffer_desc_ctor,
+            (EbPtr)&coeff_buffer_desc_init_data);
+    }
+#endif
     // Film Grain Picture Buffer
     if (init_data_ptr->film_grain_noise_level) {
         if (is_16bit) {
@@ -477,7 +481,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         }
     }
 
-    {
+#if ENCDEC_16BIT
+    if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
+#else
+    if (is_16bit) {
+#endif
         EB_NEW(object_ptr->input_frame16bit,
                eb_picture_buffer_desc_ctor,
                (EbPtr)&coeff_buffer_desc_init_data);
@@ -1135,7 +1143,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     EB_ALLOC_PTR_ARRAY(object_ptr->txfm_context_array, total_tile_cnt);
     EB_ALLOC_PTR_ARRAY(object_ptr->segmentation_id_pred_array, total_tile_cnt);
 #if ENCDEC_16BIT
-    if (1) {
+    if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
 #else
     if (is_16bit) {
 #endif
@@ -1386,7 +1394,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         return_error = create_neighbor_array_units(data, DIM(data));
         if (return_error == EB_ErrorInsufficientResources) return EB_ErrorInsufficientResources;
 #if ENCDEC_16BIT
-        if (1) {
+        if ((is_16bit) || (init_data_ptr->is_16bit_pipeline)) {
 #else
         if (is_16bit) {
 #endif
