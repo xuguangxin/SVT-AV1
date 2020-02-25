@@ -29,7 +29,6 @@ extern "C" {
 typedef struct OutputBitstreamUnit {
     EbDctor  dctor;
     uint32_t size; // allocated buffer size
-    uint32_t written_bits_count; // count of written bits
     uint8_t *buffer_begin_av1; // the byte buffer
     uint8_t *buffer_av1; // the byte buffer
 } OutputBitstreamUnit;

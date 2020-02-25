@@ -43,7 +43,6 @@ EbErrorType output_bitstream_unit_ctor(OutputBitstreamUnit *bitstream_ptr, uint3
         bitstream_ptr->buffer_begin_av1 = 0;
         bitstream_ptr->buffer_av1       = 0;
     }
-    bitstream_ptr->written_bits_count = 0;
 
     return EB_ErrorNone;
 }
@@ -54,7 +53,6 @@ EbErrorType output_bitstream_unit_ctor(OutputBitstreamUnit *bitstream_ptr, uint3
 EbErrorType output_bitstream_reset(OutputBitstreamUnit *bitstream_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
-    bitstream_ptr->written_bits_count = 0;
     // Reset the write ptr to the beginning of the buffer
     bitstream_ptr->buffer_av1 = bitstream_ptr->buffer_begin_av1;
 
