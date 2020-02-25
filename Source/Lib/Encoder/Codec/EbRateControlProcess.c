@@ -5184,9 +5184,7 @@ static int cqp_qindex_calc(
             q_val * delta_rate_new[pcs_ptr->parent_pcs_ptr->hierarchical_levels]
             [pcs_ptr->parent_pcs_ptr->temporal_layer_index],
             bit_depth);
-#if QPS_CHANGE_II
-        active_best_quality = MAX((int32_t)(qindex + delta_qindex), (pcs_ptr->ref_pic_qp_array[0][0] << 2));
-#else
+#if !QPS_CHANGE_II
         active_best_quality = MAX((int32_t)(qindex + delta_qindex), (pcs_ptr->ref_pic_qp_array[0][0] << 2) + 2);
 #endif
     }
