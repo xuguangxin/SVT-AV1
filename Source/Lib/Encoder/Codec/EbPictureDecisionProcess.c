@@ -825,8 +825,17 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
         else if (MR_MODE)
+#if MR_MODE_CLEAN_UP
+            pcs_ptr->pic_depth_mode = (pcs_ptr->slice_type == I_SLICE) ?
+            PIC_ALL_DEPTH_MODE : PIC_MULTI_PASS_PD_MODE_0;
+#else
             pcs_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+#endif
+#if M2_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
         else if (pcs_ptr->enc_mode == ENC_M0)
+#endif
             // Use a single-stage PD if I_SLICE
 #if LOW_DELAY_TUNE
             pcs_ptr->pic_depth_mode = (pcs_ptr->slice_type == I_SLICE) ? PIC_ALL_DEPTH_MODE :
@@ -834,12 +843,17 @@ EbErrorType signal_derivation_multi_processes_oq(
 #else
             pcs_ptr->pic_depth_mode = (pcs_ptr->slice_type == I_SLICE) ? PIC_ALL_DEPTH_MODE : PIC_MULTI_PASS_PD_MODE_1;
 #endif
+#if M2_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
             // Use a single-stage PD if I_SLICE
             pcs_ptr->pic_depth_mode = (pcs_ptr->slice_type == I_SLICE) ? PIC_ALL_DEPTH_MODE : PIC_MULTI_PASS_PD_MODE_2;
-
+#if !M2_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M6)
             pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#endif
         else
             if (pcs_ptr->slice_type == I_SLICE)
                 pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
@@ -869,6 +883,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 
             pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
         }
+#if !SC_FEB4_ADOPTION
         else if (sc_content_detected)
 
             if (MR_MODE)
@@ -883,12 +898,24 @@ EbErrorType signal_derivation_multi_processes_oq(
                     pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL2;
             else
                 pcs_ptr->nsq_search_level = NSQ_SEARCH_OFF;
-
-        else if (pcs_ptr->enc_mode <= ENC_M0)
-            pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+#endif
+#if M1_FEB4_ADOPTION
         else if (pcs_ptr->enc_mode <= ENC_M1)
-            pcs_ptr->nsq_search_level = (pcs_ptr->is_used_as_reference_flag) ? NSQ_SEARCH_LEVEL6 : NSQ_SEARCH_LEVEL3;
+#else
+        else if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
+            pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+#if JAN31_M2
         else if (pcs_ptr->enc_mode <= ENC_M2)
+#else
+        else if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
+            pcs_ptr->nsq_search_level = (pcs_ptr->is_used_as_reference_flag) ? NSQ_SEARCH_LEVEL6 : NSQ_SEARCH_LEVEL3;
+#if JAN31_M2
+        else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
+        else if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
             if (pcs_ptr->is_used_as_reference_flag)
                 pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL3;
             else
@@ -971,7 +998,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     */
     if (frm_hdr->allow_screen_content_tools)
         if (scs_ptr->static_config.enable_palette == -1)//auto mode; if not set by cfg
+#if JAN31_M2
+            pcs_ptr->palette_mode = pcs_ptr->enc_mode <= ENC_M2 ? 6 : 0;
+#else
             pcs_ptr->palette_mode = pcs_ptr->enc_mode == ENC_M0 ? 6 : 0;
+#endif
         else
             pcs_ptr->palette_mode = scs_ptr->static_config.enable_palette;
     else
@@ -980,6 +1011,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     assert(pcs_ptr->palette_mode<7);
 
     if (!pcs_ptr->scs_ptr->static_config.disable_dlf_flag && frm_hdr->allow_intrabc == 0) {
+#if !SC_REDUCE_DIFF
     if (sc_content_detected)
         if (MR_MODE)
             pcs_ptr->loop_filter_mode = 3;
@@ -988,6 +1020,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->loop_filter_mode = 0;
     else
+#endif
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->loop_filter_mode = 3;
         else
@@ -1003,12 +1036,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
+#if !SC_REDUCE_DIFF
         if (sc_content_detected)
             if (pcs_ptr->enc_mode <= ENC_M5)
                 pcs_ptr->cdef_filter_mode = 4;
             else
                 pcs_ptr->cdef_filter_mode = 0;
         else
+#endif
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->cdef_filter_mode = 5;
         else
@@ -1078,6 +1113,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 4;
     else {
     if (sc_content_detected)
+#if M1_FEB4_ADOPTION
+        if (pcs_ptr->enc_mode <= ENC_M3)
+            pcs_ptr->intra_pred_mode = 0;
+
+#else
         if (MR_MODE)
             pcs_ptr->intra_pred_mode = 0;
         else if (pcs_ptr->enc_mode <= ENC_M2)
@@ -1085,6 +1125,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->intra_pred_mode = 1;
             else
                 pcs_ptr->intra_pred_mode = 2;
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M6)
             if (pcs_ptr->temporal_layer_index == 0)
                 pcs_ptr->intra_pred_mode = 2;
@@ -1093,8 +1134,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->intra_pred_mode = 4;
     else
+#if M2_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M3)
+            pcs_ptr->intra_pred_mode = 0;
+#else
         if ((pcs_ptr->enc_mode <= ENC_M1) || (pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->temporal_layer_index == 0))
             pcs_ptr->intra_pred_mode = 0;
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M7)
             if (pcs_ptr->temporal_layer_index == 0)
                 pcs_ptr->intra_pred_mode = 1;
@@ -1104,9 +1150,10 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 4;
     }
 
+#if !MR_FEB4_ADOPTION
         if (MR_MODE)
             pcs_ptr->intra_pred_mode = 0;
-
+#endif
         // Set tx size search mode      Settings
         // 0                 OFF: no transform partitioning
         // 1                 ON for INTRA blocks
@@ -1141,10 +1188,16 @@ EbErrorType signal_derivation_multi_processes_oq(
         // 2                 ON: AVG/DIST/DIFF/WEDGE
         if (scs_ptr->static_config.compound_level == DEFAULT) {
             if (scs_ptr->compound_mode)
+#if !SC_ADOPTION_FEB_19
                 if (pcs_ptr->sc_content_detected)
                     pcs_ptr->compound_mode = (pcs_ptr->enc_mode <= ENC_M0) ? 2 : 0;
                 else
+#endif
+#if M2_FEB14_ADOPTION
+                    pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 1;
+#else
                     pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 2 : 1;
+#endif
             else
                 pcs_ptr->compound_mode = 0;
         }
@@ -1163,7 +1216,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->frame_end_cdf_update_mode = scs_ptr->static_config.frame_end_cdf_update;
 
         if (scs_ptr->static_config.prune_unipred_me == DEFAULT)
+#if SC_REDUCE_DIFF
+            if (pcs_ptr->enc_mode >= ENC_M4)
+#else
             if (MR_MODE || pcs_ptr->sc_content_detected || pcs_ptr->enc_mode >= ENC_M4)
+#endif
                 pcs_ptr->prune_unipred_at_me = 0;
             else
                 pcs_ptr->prune_unipred_at_me = 1;
