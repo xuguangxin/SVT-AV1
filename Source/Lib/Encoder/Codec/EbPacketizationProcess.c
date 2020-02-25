@@ -726,7 +726,7 @@ void *packetization_kernel(void *input_ptr) {
             (void)picture_manager_results_wrapper_ptr;
         }
         // Reset the Bitstream before writing to it
-        reset_bitstream(pcs_ptr->bitstream_ptr->output_bitstream_ptr);
+        bitstream_reset(pcs_ptr->bitstream_ptr);
 
         // Code the SPS
         if (frm_hdr->frame_type == KEY_FRAME) { encode_sps_av1(pcs_ptr->bitstream_ptr, scs_ptr); }
@@ -741,7 +741,7 @@ void *packetization_kernel(void *input_ptr) {
                      encode_context_ptr);
         if (pcs_ptr->parent_pcs_ptr->has_show_existing) {
             // Reset the Bitstream before writing to it
-            reset_bitstream(queue_entry_ptr->bitstream_ptr->output_bitstream_ptr);
+            bitstream_reset(queue_entry_ptr->bitstream_ptr);
             write_frame_header_av1(queue_entry_ptr->bitstream_ptr, scs_ptr, pcs_ptr, 1);
         }
 

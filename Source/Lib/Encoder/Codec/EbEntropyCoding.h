@@ -58,8 +58,6 @@ extern int get_wedge_params_bits(BlockSize sb_type);
 
 extern EbErrorType encode_slice_finish(EntropyCoder *entropy_coder_ptr);
 
-extern EbErrorType reset_bitstream(EbPtr bitstream_ptr);
-
 extern EbErrorType reset_entropy_coder(EncodeContext *encode_context_ptr,
                                        EntropyCoder *entropy_coder_ptr, uint32_t qp,
                                        EB_SLICE slice_type);

@@ -1602,15 +1602,6 @@ EbErrorType encode_slice_finish(EntropyCoder *entropy_coder_ptr) {
     return return_error;
 }
 
-EbErrorType reset_bitstream(EbPtr bitstream_ptr) {
-    EbErrorType          return_error         = EB_ErrorNone;
-    OutputBitstreamUnit *output_bitstream_ptr = (OutputBitstreamUnit *)bitstream_ptr;
-
-    output_bitstream_reset(output_bitstream_ptr);
-
-    return return_error;
-}
-
 EbErrorType reset_entropy_coder(EncodeContext *encode_context_ptr, EntropyCoder *entropy_coder_ptr,
                                 uint32_t qp, EB_SLICE slice_type) {
     EbErrorType return_error = EB_ErrorNone;
@@ -1668,19 +1659,17 @@ EbErrorType entropy_tile_info_ctor(EntropyTileInfo *eti, uint32_t buf_size) {
 
 static void bitstream_dctor(EbPtr p) {
     Bitstream *          obj                  = (Bitstream *)p;
-    OutputBitstreamUnit *output_bitstream_ptr = (OutputBitstreamUnit *)obj->output_bitstream_ptr;
-    EB_DELETE(output_bitstream_ptr);
+    EB_DELETE(obj->output_bitstream_ptr);
 }
 
 EbErrorType bitstream_ctor(Bitstream *bitstream_ptr, uint32_t buffer_size) {
-    OutputBitstreamUnit *output_bitstream_ptr;
-
     bitstream_ptr->dctor = bitstream_dctor;
-
-    EB_NEW(output_bitstream_ptr, output_bitstream_unit_ctor, buffer_size);
-    bitstream_ptr->output_bitstream_ptr = output_bitstream_ptr;
-
+    EB_NEW(bitstream_ptr->output_bitstream_ptr, output_bitstream_unit_ctor, buffer_size);
     return EB_ErrorNone;
+}
+
+void bitstream_reset(Bitstream* bitstream_ptr) {
+    output_bitstream_reset(bitstream_ptr->output_bitstream_ptr);
 }
 
 static void entropy_coder_dctor(EbPtr p) {
@@ -1716,12 +1705,10 @@ EbErrorType entropy_coder_ctor(EntropyCoder *entropy_coder_ptr, uint32_t buffer_
     return EB_ErrorNone;
 }
 
-EbPtr entropy_coder_get_bitstream_ptr(EntropyCoder *entropy_coder_ptr) {
+OutputBitstreamUnit* entropy_coder_get_bitstream_ptr(EntropyCoder *entropy_coder_ptr) {
     CabacEncodeContext *cabac_enc_ctx_ptr =
         (CabacEncodeContext *)entropy_coder_ptr->cabac_encode_context_ptr;
-    EbPtr bitstream_ptr = cabac_enc_ctx_ptr->bac_enc_context.m_pc_t_com_bit_if;
-
-    return bitstream_ptr;
+    return cabac_enc_ctx_ptr->bac_enc_context.m_pc_t_com_bit_if;
 }
 
 //*******************************************************************************************//
