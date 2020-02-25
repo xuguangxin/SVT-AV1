@@ -125,9 +125,9 @@ static const vector<uint32_t> invalid_intra_refresh_type = {
 static const vector<uint32_t> default_hierarchical_levels = {
     4,
 };
-static const vector<uint32_t> valid_hierarchical_levels = {3, 4};
+static const vector<uint32_t> valid_hierarchical_levels = {0, 1, 2, 3, 4, 5};
 static const vector<uint32_t> invalid_hierarchical_levels = {
-    0, 1, 2, 5,  // ...
+    6, 7, 8 // ...
 };
 
 /* Prediction structure used to construct GOP. There are two main structures
@@ -1031,7 +1031,7 @@ static const vector<int32_t> invalid_tile_rows = {
 /* Flag to signal the content being a screen sharing content type
  *
  * Default is 2. */
-static const vector<uint32_t> default_screen_content_mode = {2};
+static const vector<uint32_t> default_screen_content_mode = {0};
 static const vector<uint32_t> valid_screen_content_mode = {0, 1, 2};
 static const vector<uint32_t> invalid_screen_content_mode = {3};
 
