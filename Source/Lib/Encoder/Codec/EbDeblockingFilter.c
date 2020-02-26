@@ -563,9 +563,7 @@ void loop_filter_sb(EbPictureBufferDesc *frame_buffer, //reconpicture,
     pd[2].subsampling_y = 1;
     pd[2].plane_type    = PLANE_TYPE_UV;
     pd[2].is_16bit      = frame_buffer->bit_depth > 8;
-    // TODO
-    // when loop_filter_mode = 1, dblk is processed in encdec
-    // 16 bit dblk for loop_filter_mode = 1 needs to enabled after 16bit encdec is done
+
     if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline)
         pd[0].is_16bit = pd[1].is_16bit = pd[2].is_16bit = EB_TRUE;
 

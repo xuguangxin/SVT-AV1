@@ -23,6 +23,7 @@
 #include "EbDefinitions.h"
 #include "EbSequenceControlSet.h"
 #include "EbPictureControlSet.h"
+#include "aom_dsp_rtcd.h"
 
 void eb_av1_loop_restoration_save_boundary_lines(const Yv12BufferConfig *frame, Av1Common *cm,
                                                  int32_t after_cdef);
@@ -115,7 +116,7 @@ void *dlf_kernel(void *input_ptr) {
 
         EbBool is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
 
-        // TODO: remove the copy when entire 16bit pipeline is ready
+#if ENCDEC_16BIT
         if (scs_ptr->static_config.encoder_16bit_pipeline &&
             scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
 
@@ -136,12 +137,14 @@ void *dlf_kernel(void *input_ptr) {
                 + input_buffer_8bit->origin_x
                 + input_buffer_8bit->origin_y * input_buffer_8bit->stride_y;
             input_stride_8bit = input_buffer_8bit->stride_y;
-            for (int j = 0; j < input_buffer->height; j++) {
-                for (int i = 0; i < input_buffer->width; i++) {
-                    input_16bit[i + j * input_stride_16bit] =
-                        (uint16_t)input_8bit[i + j * input_stride_8bit];
-                }
-            }
+
+            convert_8bit_to_16bit(input_8bit,
+                input_stride_8bit,
+                input_16bit,
+                input_stride_16bit,
+                input_buffer->width,
+                input_buffer->height);
+
             // Cb
             input_16bit = (uint16_t*)(input_buffer->buffer_cb)
                 + input_buffer->origin_x / 2
@@ -151,12 +154,14 @@ void *dlf_kernel(void *input_ptr) {
                 + input_buffer_8bit->origin_x / 2
                 + input_buffer_8bit->origin_y / 2 * input_buffer_8bit->stride_cb;
             input_stride_8bit = input_buffer_8bit->stride_cb;
-            for (int j = 0; j < input_buffer->height / 2; j++) {
-                for (int i = 0; i < input_buffer->width / 2; i++) {
-                    input_16bit[i + j * input_stride_16bit] =
-                        (uint16_t)input_8bit[i + j * input_stride_8bit];
-                }
-            }
+
+            convert_8bit_to_16bit(input_8bit,
+                input_stride_8bit,
+                input_16bit,
+                input_stride_16bit,
+                input_buffer->width >> 1 ,
+                input_buffer->height >> 1);
+
             // Cr
             input_16bit = (uint16_t*)(input_buffer->buffer_cr)
                 + input_buffer->origin_x / 2
@@ -166,13 +171,15 @@ void *dlf_kernel(void *input_ptr) {
                 + input_buffer_8bit->origin_x / 2
                 + input_buffer_8bit->origin_y / 2 * input_buffer_8bit->stride_cr;
             input_stride_8bit = input_buffer_8bit->stride_cr;
-            for (int j = 0; j < input_buffer->height / 2; j++) {
-                for (int i = 0; i < input_buffer->width / 2; i++) {
-                    input_16bit[i + j * input_stride_16bit] =
-                        (uint16_t)input_8bit[i + j * input_stride_8bit];
-                }
-            }
+
+            convert_8bit_to_16bit(input_8bit,
+                input_stride_8bit,
+                input_16bit,
+                input_stride_16bit,
+                input_buffer->width >> 1,
+                input_buffer->height >> 1);
         }
+#endif
 
 
         EbBool dlf_enable_flag = (EbBool)pcs_ptr->parent_pcs_ptr->loop_filter_mode;

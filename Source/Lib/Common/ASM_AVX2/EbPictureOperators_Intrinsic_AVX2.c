@@ -1902,10 +1902,10 @@ void convert_8bit_to_16bit_avx2(uint8_t* src, uint32_t src_stride, uint16_t* dst
     default:
         for (uint32_t j = 0; j < height; j++) {
             for (k = 0; k <= (int32_t)width - 32; k += 32) {
-                tmp1 = _mm256_loadu_si256((__m256i *)_src);
+                tmp1 = _mm256_loadu_si256((__m256i *)(_src + k));
                 tmp2 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(tmp1));
                 tmp3 = _mm256_cvtepu8_epi16(_mm256_extracti128_si256(tmp1, 1));
-                _mm256_storeu_si256((__m256i *)_dst + k, tmp2);
+                _mm256_storeu_si256((__m256i *)(_dst + k), tmp2);
                 _mm256_storeu_si256((__m256i *)(_dst +k + 16), tmp3);
             }
             for (; k < width; k++) {
