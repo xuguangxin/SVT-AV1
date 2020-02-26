@@ -1323,7 +1323,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         context_ptr->intra_luma_left_mode,
         context_ptr->intra_luma_top_mode);
 }
-#if NICS_CLEANUP
+#if NICS_CLEANUP && !JAN6_PRESETS
 static const int32_t pd0_nic[MD_STAGE_TOTAL-1][MAX_FRAME_TYPE][CAND_CLASS_TOTAL] = {
 {
 //MD_STAGE_1
