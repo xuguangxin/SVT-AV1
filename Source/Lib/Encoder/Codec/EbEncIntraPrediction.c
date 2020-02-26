@@ -372,7 +372,7 @@ static void build_intra_predictors_high(
     }
     if (use_filter_intra) {
         highbd_filter_intra_predictor(dst, dst_stride, tx_size, above_row, left_col,
-                                      filter_intra_mode,10);
+                                      filter_intra_mode,bd);
         return;
     }
     if (is_dr_mode) {
