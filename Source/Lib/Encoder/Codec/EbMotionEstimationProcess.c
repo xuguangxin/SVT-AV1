@@ -104,7 +104,11 @@ void *set_me_hme_params_oq(MeContext *me_context_ptr, PictureParentControlSet *p
     UNUSED(scs_ptr);
     uint8_t hme_me_level =
         scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
+#if M2_ADOPTIONS
+    if (hme_me_level <= ENC_M2) hme_me_level = ENC_M0;
+#else
     if (hme_me_level <= ENC_M1) hme_me_level = ENC_M0;
+#endif
     // HME/ME default settings
     me_context_ptr->number_hme_search_region_in_width  = 2;
     me_context_ptr->number_hme_search_region_in_height = 2;
@@ -228,8 +232,13 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
         max_me_search_height[sc_content_detected][input_resolution][hme_me_level];
 #endif
     if (sc_content_detected)
+#if M1_FEB4_ADOPTION
+        context_ptr->me_context_ptr->fractional_search_method =
+            (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
+#else
         context_ptr->me_context_ptr->fractional_search_method =
             (enc_mode == ENC_M0) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
+#endif
     else if (enc_mode <= ENC_M6)
         context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
     else
@@ -244,21 +253,29 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (sc_content_detected)
+#if !SC_ADOPTION_FEB_19
             if (enc_mode <= ENC_M5)
                 context_ptr->me_context_ptr->use_subpel_flag = 1;
             else
+#endif
                 context_ptr->me_context_ptr->use_subpel_flag = 0;
         else
             context_ptr->me_context_ptr->use_subpel_flag = 1;
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
+#if M1_FEB4_ADOPTION
+    if (enc_mode <= ENC_M0) {
+        context_ptr->me_context_ptr->half_pel_mode =
+            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#else
     if (MR_MODE) {
         context_ptr->me_context_ptr->half_pel_mode    = EX_HP_MODE;
     } else if (enc_mode <= ENC_M0) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#endif
 #if SWITCHED_HALF_PEL_MODE
-    }else if (enc_mode <= ENC_M2) {
+    }else if (enc_mode <= ENC_M1) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
 #endif
@@ -279,6 +296,9 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
         context_ptr->me_context_ptr->fractional_search_model = 2;
 
     // HME Search Method
+#if SC_PRESETS_OPT || ENHANCED_M0_SETTINGS
+        context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#else
     if (sc_content_detected)
         if (enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
@@ -286,7 +306,11 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
             context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
     else
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#endif
     // ME Search Method
+#if SC_PRESETS_OPT || ENHANCED_M0_SETTINGS
+        context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#else
     if (sc_content_detected)
         if (enc_mode <= ENC_M5)
             context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
@@ -295,8 +319,13 @@ EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
     else
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 
+#endif
     if (scs_ptr->static_config.enable_global_motion == EB_TRUE) {
+#if FEB14_ADOPTIONS
+        if (enc_mode <= ENC_M3)
+#else
         if (enc_mode <= ENC_M1)
+#endif
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
@@ -449,22 +478,30 @@ EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (sc_content_detected)
+#if !SC_ADOPTION_FEB_19
             if (enc_mode <= ENC_M1)
                 context_ptr->me_context_ptr->use_subpel_flag = 1;
             else
+#endif
                 context_ptr->me_context_ptr->use_subpel_flag = 0;
         else
             context_ptr->me_context_ptr->use_subpel_flag = 1;
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
+#if M1_FEB4_ADOPTION
+    if (enc_mode <= ENC_M0) {
+        context_ptr->me_context_ptr->half_pel_mode =
+            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#else
     if (MR_MODE) {
         context_ptr->me_context_ptr->half_pel_mode    = EX_HP_MODE;
     } else if (enc_mode <= ENC_M0) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
+#endif
 #if SWITCHED_HALF_PEL_MODE
-    }else if (enc_mode <= ENC_M2) {
+    }else if (enc_mode <= ENC_M1) {
         context_ptr->me_context_ptr->half_pel_mode =
             (sc_content_detected) ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
 #endif

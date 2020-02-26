@@ -1839,74 +1839,6 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     }
                 }
             }
-
-#if INTRA_INTER_BALANCE
-            /*
-                CAND_CLASS_0, // Intra
-                CAND_CLASS_1, // NewMV
-                CAND_CLASS_2, // Pred
-                CAND_CLASS_3, // InterInter
-            #if II_COMP_FLAG
-                CAND_CLASS_4, // IntraInter
-            #endif
-            #if OBMC_FLAG
-                CAND_CLASS_5, //OBMC
-            #endif
-            #if FILTER_INTRA_FLAG
-                CAND_CLASS_6, //Filter Intra
-            #endif
-            #if PAL_CLASS
-                CAND_CLASS_7, // Palette
-            #endif
-                CAND_CLASS_8, // Global
-            */
-#if M0_FEB23_ADOPTIONS
-            if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-#endif
-                if (context_ptr->md_inter_level >= 1) {
-                    uint8_t division_factor_num   = context_ptr->md_inter_level >= 1 ? 3 : 1;
-                    uint8_t division_factor_denum = context_ptr->md_inter_level >= 1 ? 4 : 1;
-                    for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                        if (i == CAND_CLASS_1 || CAND_CLASS_2) {
-                            context_ptr->md_stage_1_count[i] = round(
-                                (division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
-                                division_factor_denum);
-                            context_ptr->md_stage_1_count[i] =
-                                MAX(context_ptr->md_stage_1_count[i], 1);
-                            context_ptr->md_stage_2_count[i] = round(
-                                (division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
-                                division_factor_denum);
-                            context_ptr->md_stage_2_count[i] =
-                                MAX(context_ptr->md_stage_2_count[i], 1);
-                        }
-                    }
-                }
-                if (context_ptr->md_intra_level) {
-                    uint8_t division_factor_num = context_ptr->md_intra_level == 1
-                                                      ? 3
-                                                      : context_ptr->md_intra_level == 2 ? 1 : 1;
-                    uint8_t division_factor_denum = context_ptr->md_intra_level == 1
-                                                        ? 4
-                                                        : context_ptr->md_intra_level == 2 ? 2 : 1;
-                    for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                        if (i == CAND_CLASS_0 || CAND_CLASS_6) {
-                            context_ptr->md_stage_1_count[i] = round(
-                                (division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
-                                division_factor_denum);
-                            context_ptr->md_stage_1_count[i] =
-                                MAX(context_ptr->md_stage_1_count[i], 1);
-                            context_ptr->md_stage_2_count[i] = round(
-                                (division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
-                                division_factor_denum);
-                            context_ptr->md_stage_2_count[i] =
-                                MAX(context_ptr->md_stage_2_count[i], 1);
-                        }
-                    }
-                }
-#if M0_FEB23_ADOPTIONS
-            }
-#endif
-#endif
         }
 
         else if (nics_level == NIC_S8) { // S8
@@ -2119,61 +2051,6 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
                 }
             }
-#if INTRA_INTER_BALANCE
-            /*
-                CAND_CLASS_0, // Intra
-                CAND_CLASS_1, // NewMV
-                CAND_CLASS_2, // Pred
-                CAND_CLASS_3, // InterInter
-            #if II_COMP_FLAG
-                CAND_CLASS_4, // IntraInter
-            #endif
-            #if OBMC_FLAG
-                CAND_CLASS_5, //OBMC
-            #endif
-            #if FILTER_INTRA_FLAG
-                CAND_CLASS_6, //Filter Intra
-            #endif
-            #if PAL_CLASS
-                CAND_CLASS_7, // Palette
-            #endif
-                CAND_CLASS_8, // Global
-            */
-            if (context_ptr->md_inter_level >= 1) {
-                uint8_t division_factor_num   = context_ptr->md_inter_level >= 1 ? 3 : 1;
-                uint8_t division_factor_denum = context_ptr->md_inter_level >= 1 ? 4 : 1;
-                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i == CAND_CLASS_1 || CAND_CLASS_2) {
-                        context_ptr->md_stage_1_count[i] = round(
-                            (division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
-                            division_factor_denum);
-                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round(
-                            (division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
-                            division_factor_denum);
-                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
-                    }
-                }
-            }
-            if (context_ptr->md_intra_level) {
-                uint8_t division_factor_num =
-                    context_ptr->md_intra_level == 1 ? 3 : context_ptr->md_intra_level == 2 ? 1 : 1;
-                uint8_t division_factor_denum =
-                    context_ptr->md_intra_level == 1 ? 4 : context_ptr->md_intra_level == 2 ? 2 : 1;
-                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i == CAND_CLASS_0 || CAND_CLASS_6) {
-                        context_ptr->md_stage_1_count[i] = round(
-                            (division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
-                            division_factor_denum);
-                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round(
-                            (division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
-                            division_factor_denum);
-                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
-                    }
-                }
-            }
-#endif
         } else if (nics_level == NIC_S9) { // s9
             // Step 2: set md_stage count
 
@@ -3110,35 +2987,6 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             (round((scale_num* ((float)context_ptr->md_stage_3_count[cand_it])) / scale_denum)),
             1);
         }
-#if INTRA_INTER_BALANCE
-        if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            if (context_ptr->md_inter_level >= 1) {
-                uint8_t division_factor_num = context_ptr->md_inter_level >= 1 ? 3 : 1;
-                uint8_t division_factor_denum = context_ptr->md_inter_level >= 1 ? 4 : 1;
-                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i == CAND_CLASS_1 || i == CAND_CLASS_2) {
-                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
-                    }
-                }
-            }
-            if (context_ptr->md_intra_level) {
-                uint8_t division_factor_num = context_ptr->md_intra_level == 1 ? 3 : context_ptr->md_intra_level == 2 ? 1 : 1;
-                uint8_t division_factor_denum = context_ptr->md_intra_level == 1 ? 4 : context_ptr->md_intra_level == 2 ? 2 : 1;
-                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i == CAND_CLASS_0 || i == CAND_CLASS_6) {
-                        context_ptr->md_stage_1_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_1_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round((division_factor_num* ((float)context_ptr->md_stage_2_count[i])) / division_factor_denum);
-                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
-                    }
-                }
-
-            }
-        }
-#endif
 #else
         // Step 2: set md_stage count
         context_ptr->md_stage_1_count[CAND_CLASS_0] =
@@ -4323,6 +4171,11 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
     input_picture_ptr = hbd_mode_decision ? pcs_ptr->input_frame16bit
         : pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
 
+    //Update input origin
+    input_origin_index =
+        (context_ptr->blk_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y +
+        (context_ptr->blk_origin_x + input_picture_ptr->origin_x);
+
     for (uint32_t ref_it = 0; ref_it < pcs_ptr->parent_pcs_ptr->tot_ref_frame_types; ++ref_it) {
         MvReferenceFrame ref_pair = pcs_ptr->parent_pcs_ptr->ref_frame_type_arr[ref_it];
 
@@ -4404,21 +4257,26 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                              EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
                              uint32_t blk_origin_index) {
-#if !ENHANCED_ME_MV
+#if !ENHANCED_ME_MV || M0_FEB22_ADOPTIONS
     const SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
 #endif
     EbBool                    use_ssd           = EB_TRUE;
+#if M0_FEB22_ADOPTIONS
+#if !MR_MODE
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        use_ssd = EB_FALSE;
+#endif
+#endif
     uint8_t                   hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                     ? EB_8_BIT_MD
                                     : context_ptr->hbd_mode_decision;
     input_picture_ptr = hbd_mode_decision ? pcs_ptr->input_frame16bit
                                           : pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
-#if !ENHANCED_ME_MV
     //Update input origin
     input_origin_index =
         (context_ptr->blk_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y +
         (context_ptr->blk_origin_x + input_picture_ptr->origin_x);
-#endif
+
     // Reset valid_refined_mv
     memset(context_ptr->valid_refined_mv, 0, 8); // [2][4]
 
@@ -8634,6 +8492,13 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 
                 // intra class pruning
                 uint32_t cand_count = 1;
+#if FEB24_ADOPTIONS
+                uint64_t md_full_cost_cand_prune_th = context_ptr->md_full_cost_cand_prune_th;
+                md_full_cost_cand_prune_th = (cand_class_it == CAND_CLASS_0 ||
+                    cand_class_it == CAND_CLASS_6 ||
+                    cand_class_it == CAND_CLASS_7) ?
+                    (uint64_t)~0 : md_full_cost_cand_prune_th;
+#endif
                 if (class_best_cost)
                     while (
                         cand_count < context_ptr->md_stage_2_count[cand_class_it] &&
@@ -8641,7 +8506,11 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                                   ->full_cost_ptr) -
                             class_best_cost) *
                            100) /
+#if FEB24_ADOPTIONS
+                          class_best_cost) < md_full_cost_cand_prune_th)) {
+#else
                           class_best_cost) < context_ptr->md_full_cost_cand_prune_th)) {
+#endif
                         cand_count++;
                     }
                 context_ptr->md_stage_2_count[cand_class_it] = cand_count;
@@ -8687,39 +8556,6 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
         context_ptr->md_stage_3_total_count += context_ptr->md_stage_3_count[cand_class_it];
     }
 }
- #if INTRA_INTER_BALANCE
- void set_intra_inter_level_based_on_me(
-     PictureControlSet            *pcs_ptr,
-     ModeDecisionContext          *context_ptr) {
-     context_ptr->md_intra_level = 0;
-     context_ptr->md_inter_level = 0;
-     if (context_ptr->me_based_nic_scaling) {
-         if (pcs_ptr->slice_type != I_SLICE) {
-             if (context_ptr->blk_geom->bheight > 4 && context_ptr->blk_geom->bwidth > 4 &&
-                 context_ptr->blk_geom->bheight < 128 && context_ptr->blk_geom->bwidth < 128) {
-                 const MeSbResults *me_results = pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
-                 //uint8_t total_me_cnt = me_results->total_me_candidate_index[me_block_offset];
-                 const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
-                 uint8_t me_candidate_index = 0;
-                 const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
-                 const uint8_t inter_direction = me_block_results_ptr->direction;
-                 const uint8_t list0_ref_index = me_block_results_ptr->ref_idx_l0;
-                 const uint8_t list1_ref_index = me_block_results_ptr->ref_idx_l1;
-                 const uint32_t distortion = me_block_results_ptr->distortion;
-                 const uint32_t very_low_err_th = 110; // allowed error multiplied by 100
-                 const uint32_t very_high_err_th = 400; // allowed error multiplied by 100
-                 const uint32_t very_low_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_low_err_th) / 100;
-                 const uint32_t very_high_th = (context_ptr->blk_geom->bheight * context_ptr->blk_geom->bwidth * very_high_err_th) / 100;
-                 if (distortion < very_low_th)
-                     context_ptr->md_intra_level = 1;
-                 else if (distortion > very_high_th)
-                     context_ptr->md_inter_level = 0;
-
-             }
-         }
-     }
- }
-#endif
 void md_encode_block(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                      ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
                      uint32_t sb_addr,
@@ -8885,11 +8721,6 @@ void md_encode_block(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
         } else {
             mvp_bypass_init(pcs_ptr, context_ptr);
         }
-#if INTRA_INTER_BALANCE
-        set_intra_inter_level_based_on_me(
-            pcs_ptr,
-            context_ptr);
-#endif
 #if ENHANCED_ME_MV
         // Read and (if needed) perform 1/8 Pel ME MVs refinement
         read_refine_me_mvs(
@@ -9358,6 +9189,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
     if (context_ptr->blk_geom->shape == PART_H4 || context_ptr->blk_geom->shape == PART_V4)
         sq_weight += CONSERVATIVE_OFFSET_0;
 
+
+
+#if NSQ_HV
+    uint32_t sqi = context_ptr->blk_geom->sqi_mds;
+    MdBlkStruct *local_cu_unit = context_ptr->md_local_blk_unit;
+#endif
+
     if (context_ptr->blk_geom->shape == PART_HA || context_ptr->blk_geom->shape == PART_HB || context_ptr->blk_geom->shape == PART_H4) {
         if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag &&
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 1].avail_blk_flag &&
@@ -9394,6 +9232,24 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and H blocks
             skip_nsq = (h_cost > ((sq_cost * sq_weight) / 100));
+
+
+#if NSQ_HV
+            if (!skip_nsq && context_ptr->nsq_hv_level > 0) {
+                if (local_cu_unit[sqi + 3].avail_blk_flag && local_cu_unit[sqi + 4].avail_blk_flag) {
+                    uint64_t v_cost = local_cu_unit[sqi + 3].default_cost + local_cu_unit[sqi + 4].default_cost;
+                    uint32_t offset = 10;
+                    if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_H4)
+                        offset = 5;
+                    if (offset >= 5 && scs_ptr->static_config.qp <= 20)
+                        offset -= 5;
+                    uint32_t v_weight = 100 + offset;
+                    skip_nsq = (h_cost > ((v_cost * v_weight) / 100));
+                }
+            }
+#endif
+
+
         }
     }
     if (context_ptr->blk_geom->shape == PART_VA || context_ptr->blk_geom->shape == PART_VB || context_ptr->blk_geom->shape == PART_V4) {
@@ -9432,6 +9288,24 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
             // Determine if nsq shapes can be skipped based on the relative cost of SQ and V blocks
             skip_nsq = (v_cost > ((sq_cost * sq_weight) / 100));
+#if NSQ_HV
+            if (!skip_nsq  && context_ptr->nsq_hv_level > 0) {
+                if (local_cu_unit[sqi + 1].avail_blk_flag && local_cu_unit[sqi + 2].avail_blk_flag) {
+                    uint64_t h_cost = local_cu_unit[sqi + 1].default_cost + local_cu_unit[sqi + 2].default_cost;
+                    uint32_t offset = 10;
+
+                    if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
+                        offset = 5;
+                    if (offset >= 5 && scs_ptr->static_config.qp <= 20)
+                        offset -= 5;
+
+                    uint32_t h_weight = 100 + offset;
+                    skip_nsq = (v_cost > ((h_cost * h_weight) / 100));
+                }
+            }
+#endif
+
+
         }
     }
 

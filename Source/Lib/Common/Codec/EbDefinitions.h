@@ -33,8 +33,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#define NSQ_HV                          1 // skip NSQ partitions based on H vs V costs
+
 #define JAN6_PRESETS                        1
 #if 1
+#define FEB24_ADOPTIONS                     1
 #define M0_FEB23_ADOPTIONS                  1
 #define M2_FEB22_ADOPTION                   1
 #define M0_FEB21_ADOPTIONS                  1
@@ -59,10 +64,9 @@ extern "C" {
 #define SC_REDUCE_DIFF                      1 // Reduce feature diff to normal encoder
 #define JAN31_M2                            1 // adopt new M2
 #endif
-#define OPT_REC_ME              0 // Rect_block inherit Full-pel MVs from sq_sq_blocks in ME
-#define OPT_REC_SUBP            0 // Rect_block inherit Sub-pel MVs from sq_sq_blocks in ME
-#define SKIP_DEPTH              0 // Skip the child blocks whenthe SQ block is better than the NSQ
-#define INTRA_INTER_BALANCE     0 // ME-based NICs scaling
+#define OPT_REC_ME              1 // Rect_block inherit Full-pel MVs from sq_sq_blocks in ME
+#define OPT_REC_SUBP            1 // Rect_block inherit Sub-pel MVs from sq_sq_blocks in ME
+#define SKIP_DEPTH              1 // Skip the child blocks whenthe SQ block is better than the NSQ
 
 #define REVERT_TF_SEETINGS 0 // TF settings.
 #define PLANE_WISE_TF 0 // plane wise temporal filtering.
@@ -145,8 +149,11 @@ extern "C" {
 #define AOM_LEFT_TOP_MARGIN_SCALED(subsampling) \
     (AOM_LEFT_TOP_MARGIN_PX(subsampling) << SCALE_SUBPEL_BITS)
 
+#if M0_FEB23_ADOPTIONS
+#define H_PEL_SEARCH_WIND 2 // 1/2-pel search window
+#else
 #define H_PEL_SEARCH_WIND 3 // 1/2-pel search window
-#define Q_PEL_SEARCH_WIND 2 // 1/4-pel search window
+#endif
 #define HP_REF_OPT 1 // Remove redundant positions.
 
 #define ENABLE_PME_SAD 0
@@ -609,7 +616,11 @@ typedef enum MdStagingMode {
 #define INTER_NEW_NFL 16
 #define INTER_PRED_NFL 16
 #endif
+#if MR_MODE
+#define BEST_CANDIDATE_COUNT 23
+#else
 #define BEST_CANDIDATE_COUNT 4
+#endif
 #define MAX_REF_TYPE_CAND 30
 #define PRUNE_REC_TH 5
 #define PRUNE_REF_ME_TH 2
@@ -3567,10 +3578,17 @@ static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
 static const uint16_t max_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
+#if M0_FEB22_ADOPTIONS
+        { 64,    64,    64,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 80,    80,    80,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
+        { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
+#else
         { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
         { 40,    40,    40,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
         { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
+#endif
     } , {
     // SC
         { 60,    60,   60,     60,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
@@ -3582,10 +3600,17 @@ static const uint16_t max_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 static const uint16_t max_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     //NSC
+#if M0_FEB22_ADOPTIONS
+        { 64,    64,    64,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 80,    80,    80,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
+        { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
+#else
         { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
         { 40,    40,    40,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
         { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
+#endif
     } , {
     // SC
         { 60,    60,    60,    60,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
@@ -3598,10 +3623,17 @@ static const uint16_t max_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX
 static const uint16_t min_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
+#if M0_FEB22_ADOPTIONS
+        { 16,    16,    16,    8,     8,     8,     8,     8,     8,     8,     8,     8,     8  },
+        { 24,    24,    24,    12,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
+        { 32,    32,    32,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
+        { 32,    32,    32,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 }
+#else
         { 8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8  },
         { 12,    12,    12,    12,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
         { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
         { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 }
+#endif
     } , {
     // SC
         { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
@@ -3613,10 +3645,17 @@ static const uint16_t min_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 static const uint16_t min_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
+#if M0_FEB22_ADOPTIONS
+        {  8,    8,     8,     4,     4,     4,     4,     4,     4,     4,    4,     4,     4 },
+        {  12,   12,    12,    6,     6,     6,     6,     6,     6,     6,    6,     6,     6 },
+        {  16,   16,    16,    8,     8,     8,     8,     8,     8,     8,    8,     8,     8 },
+        {  16,   16,    16,    8,     8,     8,     8,     8,     8,     8,    8,     8,     8 }
+#else
         {  4,    4,     4,     4,     4,     4,     4,     4,     4,     4,    4,     4,     4 },
         {  6,    6,     6,     6,     6,     6,     6,     6,     6,     6,    6,     6,     6 },
         {  8,    8,     8,     8,     8,     8,     8,     8,     8,     8,    8,     8,     8 },
         {  8,    8,     8,     8,     8,     8,     8,     8,     8,     8,    8,     8,     8 }
+#endif
     } , {
     // SC
         { 8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8  },

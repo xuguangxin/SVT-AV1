@@ -379,7 +379,9 @@ typedef struct ModeDecisionContext {
     uint8_t *    left_txfm_context;
     // square cost weighting for deciding if a/b shapes could be skipped
     uint32_t sq_weight;
-
+#if NSQ_HV
+    uint32_t nsq_hv_level;
+#endif
     // signal for enabling shortcut to skip search depths
     MD_COMP_TYPE compound_types_to_try;
     uint8_t      best_me_cand_only_flag;
@@ -403,12 +405,6 @@ typedef struct ModeDecisionContext {
 
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;
-#if INTRA_INTER_BALANCE
-    uint8_t      md_intra_level;
-    uint8_t      md_inter_level;
-    uint8_t      me_based_nic_scaling;
-#endif
-
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

@@ -1523,7 +1523,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     // Level                Settings
     // 0                    post first md_stage
     // 1                    post last md_stage
+#if M0_FEB21_ADOPTIONS
+    context_ptr->chroma_at_last_md_stage = MR_MODE ? 0 :
+        (context_ptr->chroma_level == CHROMA_MODE_0)? 1 : 0;
+#else
     context_ptr->chroma_at_last_md_stage = (context_ptr->chroma_level == CHROMA_MODE_0) /*&& (pcs_ptr->enc_mode == ENC_M1)*/ ? 1 : 0;
+#endif
 #endif
     // Set the full loop escape level
     // Level                Settings
@@ -2054,7 +2059,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 #if MD_STAGE_2_CAND_PRUNNING_TH
         context_ptr->md_full_cost_cand_prune_th = 5;
     else if (pcs_ptr->enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if FEB24_ADOPTIONS
+        context_ptr->md_full_cost_cand_prune_th = 15;
+#else
         context_ptr->md_full_cost_cand_prune_th = (uint64_t)~0;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M3)
         context_ptr->md_full_cost_cand_prune_th = 15;
     else
@@ -2125,6 +2134,26 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->sq_weight = scs_ptr->static_config.sq_weight;
 #endif
 #endif
+
+
+#if NSQ_HV
+    //nsq_hv_level  needs sq_weight to be ON
+    //0: OFF
+    //1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
+    //2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+    if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
+        context_ptr->nsq_hv_level = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M3) {
+        context_ptr->nsq_hv_level = 1;
+        assert(context_ptr->sq_weight != (uint32_t)~0);
+    }
+    else {
+        context_ptr->nsq_hv_level = 2;
+        assert(context_ptr->sq_weight != (uint32_t)~0);
+    }
+#endif
+
+
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
 #if M0_FEB22_ADOPTIONS
@@ -2346,9 +2375,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
        context_ptr->skip_depth = 0;
     else
         context_ptr->skip_depth = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
-#endif
-#if INTRA_INTER_BALANCE
-    context_ptr->me_based_nic_scaling  = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
 #endif
     return return_error;
 }

@@ -11265,7 +11265,7 @@ EbErrorType motion_estimate_sb(
         prune_references(
             context_ptr);
 #if SC_HME_PRUNING
-    else if (pcs_ptr->sc_content_detected)
+    else if (pcs_ptr->sc_content_detected && prune_ref)
         prune_references_sc(
             context_ptr);
 #endif
