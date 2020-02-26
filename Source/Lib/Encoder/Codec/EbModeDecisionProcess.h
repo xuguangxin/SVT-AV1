@@ -294,6 +294,9 @@ typedef struct ModeDecisionContext {
     uint16_t             similar_blk_mds;
     uint8_t              comp_similar_mode;
 #endif
+#if MRP1D_COMPOUND
+    uint8_t              comp_mrp_dist_mode;
+#endif
 #if INTRA_SIMILAR
     uint8_t              inject_inter_candidates;
     uint8_t              intra_similar_mode;

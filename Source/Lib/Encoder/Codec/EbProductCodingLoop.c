@@ -8497,7 +8497,8 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                 md_stage_2_3_cand_prune_th = (cand_class_it == CAND_CLASS_0 ||
                     cand_class_it == CAND_CLASS_6 ||
                     cand_class_it == CAND_CLASS_7) ?
-                    (uint64_t)~0 : md_stage_2_3_cand_prune_th;
+                    (uint64_t)~0 : (context_ptr->blk_geom->shape == PART_N) ? (uint64_t)~0 :
+                    md_stage_2_3_cand_prune_th;
 #endif
                 if (class_best_cost)
                     while (

@@ -2206,6 +2206,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
                 : FULL_PEL_REF_WINDOW_HEIGHT;
 #endif
     }
+#if MRP1D_COMPOUND
+    //  comp_mrp_dist_mode
+    //0: OFF
+    //1: Reduce compound modes when reference frame  Distance > 1
+        context_ptr->comp_mrp_dist_mode = 1;
+#endif
 #if COMP_SIMILAR
     //comp_similar_mode
     //0: OFF
