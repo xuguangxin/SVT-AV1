@@ -8437,8 +8437,8 @@ unsigned int                 eb_av1_get_sby_perpixel_variance(const AomVarianceF
 void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_md_stage_cost) {
     for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL;
          cand_class_it++) {
-        if (context_ptr->md_fast_cost_cand_prune_th != (uint64_t)~0 ||
-            context_ptr->md_fast_cost_class_prune_th != (uint64_t)~0)
+        if (context_ptr->md_stage_1_cand_prune_th != (uint64_t)~0 ||
+            context_ptr->md_stage_1_class_prune_th != (uint64_t)~0)
             if (context_ptr->md_stage_0_count[cand_class_it] > 0 &&
                 context_ptr->md_stage_1_count[cand_class_it] > 0) {
                 uint32_t *cand_buff_indices = context_ptr->cand_buff_indices[cand_class_it];
@@ -8448,7 +8448,7 @@ void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_
                 // inter class pruning
                 if (best_md_stage_cost && class_best_cost &&
                     ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) >
-                     context_ptr->md_fast_cost_class_prune_th)) {
+                     context_ptr->md_stage_1_class_prune_th)) {
                     context_ptr->md_stage_1_count[cand_class_it] = 0;
                     continue;
                 }
@@ -8461,7 +8461,7 @@ void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_
                                   ->fast_cost_ptr) -
                             class_best_cost) *
                            100) /
-                          class_best_cost) < context_ptr->md_fast_cost_cand_prune_th)) {
+                          class_best_cost) < context_ptr->md_stage_1_cand_prune_th)) {
                         cand_count++;
                     }
                 context_ptr->md_stage_1_count[cand_class_it] = cand_count;
@@ -8473,8 +8473,8 @@ void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_
 void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_md_stage_cost) {
     for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL;
          cand_class_it++) {
-        if (context_ptr->md_full_cost_cand_prune_th != (uint64_t)~0 ||
-            context_ptr->md_full_cost_class_prune_th != (uint64_t)~0)
+        if (context_ptr->md_stage_2_3_cand_prune_th != (uint64_t)~0 ||
+            context_ptr->md_stage_2_3_class_prune_th != (uint64_t)~0)
             if (context_ptr->md_stage_1_count[cand_class_it] > 0 &&
                 context_ptr->md_stage_2_count[cand_class_it] > 0 &&
                 context_ptr->bypass_md_stage_1[cand_class_it] == EB_FALSE) {
@@ -8485,7 +8485,7 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                 // inter class pruning
                 if (best_md_stage_cost && class_best_cost &&
                     ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) >
-                     context_ptr->md_full_cost_class_prune_th)) {
+                     context_ptr->md_stage_2_3_class_prune_th)) {
                     context_ptr->md_stage_2_count[cand_class_it] = 0;
                     continue;
                 }
@@ -8493,11 +8493,11 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                 // intra class pruning
                 uint32_t cand_count = 1;
 #if FEB24_ADOPTIONS
-                uint64_t md_full_cost_cand_prune_th = context_ptr->md_full_cost_cand_prune_th;
-                md_full_cost_cand_prune_th = (cand_class_it == CAND_CLASS_0 ||
+                uint64_t md_stage_2_3_cand_prune_th = context_ptr->md_stage_2_3_cand_prune_th;
+                md_stage_2_3_cand_prune_th = (cand_class_it == CAND_CLASS_0 ||
                     cand_class_it == CAND_CLASS_6 ||
                     cand_class_it == CAND_CLASS_7) ?
-                    (uint64_t)~0 : md_full_cost_cand_prune_th;
+                    (uint64_t)~0 : md_stage_2_3_cand_prune_th;
 #endif
                 if (class_best_cost)
                     while (
@@ -8507,9 +8507,9 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                             class_best_cost) *
                            100) /
 #if FEB24_ADOPTIONS
-                          class_best_cost) < md_full_cost_cand_prune_th)) {
+                          class_best_cost) < md_stage_2_3_cand_prune_th)) {
 #else
-                          class_best_cost) < context_ptr->md_full_cost_cand_prune_th)) {
+                          class_best_cost) < context_ptr->md_stage_2_3_cand_prune_th)) {
 #endif
                         cand_count++;
                     }
@@ -8522,8 +8522,8 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
 void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_md_stage_cost) {
     for (CandClass cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL;
          cand_class_it++) {
-        if (context_ptr->md_full_cost_cand_prune_th != (uint64_t)~0 ||
-            context_ptr->md_full_cost_class_prune_th != (uint64_t)~0)
+        if (context_ptr->md_stage_2_3_cand_prune_th != (uint64_t)~0 ||
+            context_ptr->md_stage_2_3_class_prune_th != (uint64_t)~0)
             if (context_ptr->md_stage_2_count[cand_class_it] > 0 &&
                 context_ptr->md_stage_3_count[cand_class_it] > 0 &&
                 context_ptr->bypass_md_stage_2[cand_class_it] == EB_FALSE) {
@@ -8534,7 +8534,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
                 // inter class pruning
                 if (best_md_stage_cost && class_best_cost &&
                     ((((class_best_cost - best_md_stage_cost) * 100) / best_md_stage_cost) >
-                     context_ptr->md_full_cost_class_prune_th)) {
+                     context_ptr->md_stage_2_3_class_prune_th)) {
                     context_ptr->md_stage_3_count[cand_class_it] = 0;
                     continue;
                 }
@@ -8548,7 +8548,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
                                   ->full_cost_ptr) -
                             class_best_cost) *
                            100) /
-                          class_best_cost) < context_ptr->md_full_cost_cand_prune_th)) {
+                          class_best_cost) < context_ptr->md_stage_2_3_cand_prune_th)) {
                         cand_count++;
                     }
                 context_ptr->md_stage_3_count[cand_class_it] = cand_count;

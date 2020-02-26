@@ -453,10 +453,10 @@ typedef struct EbConfig {
     uint32_t sq_weight;
 
     // inter/intra class pruning costs before MD stage 1/2
-    uint64_t md_fast_cost_class_prune_th;
-    uint64_t md_fast_cost_cand_prune_th;
-    uint64_t md_full_cost_class_prune_th;
-    uint64_t md_full_cost_cand_prune_th;
+    uint64_t md_stage_1_class_prune_th;
+    uint64_t md_stage_1_cand_prune_th;
+    uint64_t md_stage_2_3_class_prune_th;
+    uint64_t md_stage_2_3_cand_prune_th;
 
     // prediction structure
     PredictionStructureConfigEntry pred_struct[1 << (MAX_HIERARCHICAL_LEVEL - 1)];
