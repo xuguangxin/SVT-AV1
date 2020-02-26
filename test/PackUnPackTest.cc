@@ -752,4 +752,109 @@ TEST_P(UnPackAvgTest, UnPackSubAvgTest) {
 INSTANTIATE_TEST_CASE_P(UNPACKAVG, UnPackAvgTest,
                         ::testing::ValuesIn(TEST_AVG_SIZES));
 
+#if ENCDEC_16BIT
+uint32_t CONVERT_SIZES[] = {2, 4, 8, 16, 32, 64, 128, 31, 33, 40};
+
+TEST(CONVERT, 8bit_to_16bit) {
+    uint8_t *in_8bit_buffer;
+    uint16_t *out_16bit_buffer_ref, *out_16bit_buffer_tst;
+    uint32_t area_width_;
+    uint32_t stride = 128;
+    uint32_t area_height_ = 128;
+    SVTRandom rnd(0, 255);
+    uint32_t size = stride * area_height_;
+
+    in_8bit_buffer = reinterpret_cast<uint8_t *>(
+        eb_aom_memalign(32, size * sizeof(uint8_t)));
+    out_16bit_buffer_ref = reinterpret_cast<uint16_t *>(
+        eb_aom_memalign(32, size * sizeof(uint16_t)));
+    out_16bit_buffer_tst = reinterpret_cast<uint16_t *>(
+        eb_aom_memalign(32, size * sizeof(uint16_t)));
+
+    int test_size= sizeof(CONVERT_SIZES) / sizeof(CONVERT_SIZES[0]);
+    for (int test = 0; test<test_size; test++) {
+        area_width_ = CONVERT_SIZES[test];
+        memset(out_16bit_buffer_ref, 0, size * sizeof(out_16bit_buffer_ref[0]));
+        memset(out_16bit_buffer_tst, 0, size * sizeof(out_16bit_buffer_tst[0]));
+        for (uint32_t i = 0; i < size; i++)
+            in_8bit_buffer[i] = rnd.random();
+
+        convert_8bit_to_16bit_c(in_8bit_buffer,
+                                stride,
+                                out_16bit_buffer_ref,
+                                stride,
+                                area_width_,
+                                area_height_);
+
+        convert_8bit_to_16bit_avx2(in_8bit_buffer,
+                                   stride,
+                                   out_16bit_buffer_tst,
+                                   stride,
+                                   area_width_,
+                                   area_height_);
+
+         EXPECT_EQ(0,
+                  memcmp(out_16bit_buffer_ref,
+                         out_16bit_buffer_tst,
+                         size * sizeof(out_16bit_buffer_tst[0]))
+                      )<< "width=" << area_width_;
+    }
+
+    eb_aom_free(out_16bit_buffer_ref);
+    eb_aom_free(out_16bit_buffer_tst);
+    eb_aom_free(in_8bit_buffer);
+
+}
+
+TEST(CONVERT, 16bit_to_8bit) {
+    uint16_t *in_16bit_buffer;
+    uint8_t *out_8bit_buffer_ref, *out_8bit_buffer_tst;
+    uint32_t area_width_;
+    uint32_t stride = 128;
+    uint32_t area_height_ = 128;
+    SVTRandom rnd(0, 255);
+    uint32_t size = stride * area_height_;
+
+    in_16bit_buffer = reinterpret_cast<uint16_t *>(
+        eb_aom_memalign(32, size * sizeof(uint16_t)));
+    out_8bit_buffer_ref = reinterpret_cast<uint8_t *>(
+        eb_aom_memalign(32, size * sizeof(uint8_t)));
+    out_8bit_buffer_tst = reinterpret_cast<uint8_t *>(
+        eb_aom_memalign(32, size * sizeof(uint8_t)));
+
+    int test_size = sizeof(CONVERT_SIZES) / sizeof(CONVERT_SIZES[0]);
+    for (int test = 0; test < test_size; test++) {
+        area_width_ = CONVERT_SIZES[test];
+        memset(out_8bit_buffer_ref, 0, size * sizeof(out_8bit_buffer_ref[0]));
+        memset(out_8bit_buffer_tst, 0, size * sizeof(out_8bit_buffer_tst[0]));
+        for (uint32_t i = 0; i < size; i++)
+            in_16bit_buffer[i] = rnd.random();
+
+        convert_16bit_to_8bit_c(in_16bit_buffer,
+                                stride,
+                                out_8bit_buffer_ref,
+                                stride,
+                                area_width_,
+                                area_height_);
+
+        convert_16bit_to_8bit_avx2(in_16bit_buffer,
+                                   stride,
+                                   out_8bit_buffer_tst,
+                                   stride,
+                                   area_width_,
+                                   area_height_);
+
+        EXPECT_EQ(0,
+                  memcmp(out_8bit_buffer_ref,
+                         out_8bit_buffer_tst,
+                         size * sizeof(out_8bit_buffer_tst[0])))
+            << "width=" << area_width_;
+    }
+
+    eb_aom_free(out_8bit_buffer_ref);
+    eb_aom_free(out_8bit_buffer_tst);
+    eb_aom_free(in_16bit_buffer);
+}
+#endif
+
 }  // namespace

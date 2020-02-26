@@ -1811,6 +1811,7 @@ void convert_8bit_to_16bit_avx2(uint8_t* src, uint32_t src_stride, uint16_t* dst
 
     uint8_t *_src = src;
     uint16_t *_dst = dst;
+    int32_t  k;
 
     switch (width) {
     case 2:
@@ -1829,7 +1830,7 @@ void convert_8bit_to_16bit_avx2(uint8_t* src, uint32_t src_stride, uint16_t* dst
         break;
     case 8:
         for (uint32_t j = 0; j < height; j++) {
-            tmp128 = _mm_loadl_epi64((__m128i *)src);
+            tmp128 = _mm_loadl_epi64((__m128i *)_src);
             tmp128_2 = _mm_cvtepu8_epi16(tmp128);
             _mm_storeu_si128((__m128i *)_dst, tmp128_2);
             _src += src_stride;
@@ -1898,20 +1899,35 @@ void convert_8bit_to_16bit_avx2(uint8_t* src, uint32_t src_stride, uint16_t* dst
             _dst += dst_stride;
         }
         break;
-    default: assert(0); break;
+    default:
+        for (uint32_t j = 0; j < height; j++) {
+            for (k = 0; k <= (int32_t)width - 32; k += 32) {
+                tmp1 = _mm256_loadu_si256((__m256i *)_src);
+                tmp2 = _mm256_cvtepu8_epi16(_mm256_castsi256_si128(tmp1));
+                tmp3 = _mm256_cvtepu8_epi16(_mm256_extracti128_si256(tmp1, 1));
+                _mm256_storeu_si256((__m256i *)_dst + k, tmp2);
+                _mm256_storeu_si256((__m256i *)(_dst +k + 16), tmp3);
+            }
+            for (; k < width; k++) {
+                _dst[k] = (_src[k]);
+            }
+            _dst += dst_stride;
+            _src += src_stride;
+        }
+     break;
     }
 }
 
 //Function is created with assumption that src buffer store values in range [0..255]
 void convert_16bit_to_8bit_avx2(uint16_t *src, uint32_t src_stride, uint8_t *dst, uint32_t dst_stride,
     uint32_t width, uint32_t height) {
-    uint32_t k;
+    int32_t k;
     __m256i   tmp1, tmp2, tmp3;
     uint8_t * _dst = dst;
     uint16_t *_src = src;
 
     for (uint32_t j = 0; j < height; j++) {
-        for (k = 0; k <= width - 32; k += 32) {
+        for (k = 0; k <= (int32_t)width - 32; k += 32) {
             tmp1 = _mm256_loadu_si256((__m256i *)(_src + k));
             tmp2 = _mm256_loadu_si256((__m256i *)(_src + k + 16));
             tmp3 = _mm256_packus_epi16(tmp1, tmp2);
