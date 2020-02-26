@@ -759,9 +759,9 @@ class BuildCompDiffwtdMaskTest
         DECLARE_ALIGNED(16, uint8_t, src1[MAX_SB_SQUARE]);
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
-            for (int i = 0; i < width * height; i++) {
-                src0[i] = rnd_.random();
-                src1[i] = rnd_.random();
+            for (int j = 0; j < width * height; j++) {
+                src0[j] = rnd_.random();
+                src1[j] = rnd_.random();
             }
 
             av1_build_compound_diffwtd_mask_c(
@@ -823,9 +823,9 @@ class BuildCompDiffwtdMaskHighbdTest
         DECLARE_ALIGNED(16, uint16_t, src1[MAX_SB_SQUARE]);
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
-            for (int i = 0; i < width * height; i++) {
-                src0[i] = rnd_.random();
-                src1[i] = rnd_.random();
+            for (int j = 0; j < width * height; j++) {
+                src0[j] = rnd_.random();
+                src1[j] = rnd_.random();
             }
 
             av1_build_compound_diffwtd_mask_highbd_c(mask_ref,
@@ -995,9 +995,11 @@ class AomSseTest : public ::testing::TestWithParam<AomSseParam> {
         DECLARE_ALIGNED(16, uint8_t, b_[MAX_SB_SQUARE]);
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
-            for (int i = 0; i < width * height; i++) {
-                a_[i] = rnd_.random();
-                b_[i] = rnd_.random();
+            memset(a_, 0, sizeof(a_));
+            memset(b_, 0, sizeof(b_));
+            for (int j = 0; j < width * height; j++) {
+                a_[j] = rnd_.random();
+                b_[j] = rnd_.random();
             }
 
             int64_t res_ref = aom_sse_c(a_, width, b_, width, height, width);
@@ -1040,9 +1042,11 @@ class AomSseHighbdTest : public ::testing::TestWithParam<AomSseParam> {
         DECLARE_ALIGNED(16, uint16_t, b_[MAX_SB_SQUARE]);
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
-            for (int i = 0; i < width * height; i++) {
-                a_[i] = rnd_.random();
-                b_[i] = rnd_.random();
+            memset(a_, 0, sizeof(a_));
+            memset(b_, 0, sizeof(b_));
+            for (int j = 0; j < width * height; j++) {
+                a_[j] = rnd_.random();
+                b_[j] = rnd_.random();
             }
 
             int64_t res_ref = aom_highbd_sse_c(
@@ -1095,9 +1099,11 @@ class AomSubstractBlockTest
         DECLARE_ALIGNED(16, uint8_t, pred_[MAX_SB_SQUARE]);
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
-            for (int i = 0; i < width * height; i++) {
-                src_[i] = rnd_.random();
-                pred_[i] = rnd_.random();
+            memset(src_, 0, sizeof(src_));
+            memset(pred_, 0, sizeof(pred_));
+            for (int j = 0; j < width * height; j++) {
+                src_[j] = rnd_.random();
+                pred_[j] = rnd_.random();
             }
             memset(diff_ref_, 0, sizeof(diff_ref_));
             memset(diff_tst_, 0, sizeof(diff_tst_));
@@ -1153,9 +1159,11 @@ class AomHighbdSubstractBlockTest
         DECLARE_ALIGNED(16, uint16_t, pred_[MAX_SB_SQUARE]);
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
-            for (int i = 0; i < width * height; i++) {
-                src_[i] = rnd_.random();
-                pred_[i] = rnd_.random();
+            memset(src_, 0, sizeof(src_));
+            memset(pred_, 0, sizeof(pred_));
+            for (int j = 0; j < width * height; j++) {
+                src_[j] = rnd_.random();
+                pred_[j] = rnd_.random();
             }
             memset(diff_ref_, 0, sizeof(diff_ref_));
             memset(diff_tst_, 0, sizeof(diff_tst_));
