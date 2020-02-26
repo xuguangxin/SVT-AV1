@@ -100,6 +100,13 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     eb_av1_compute_stats_highbd = eb_av1_compute_stats_highbd_c;
     if (flags & HAS_AVX2) eb_av1_compute_stats_highbd = eb_av1_compute_stats_highbd_avx2;
 
+    #ifndef NON_AVX512_SUPPORT
+    if (flags & HAS_AVX512F) {
+        eb_av1_compute_stats        = eb_av1_compute_stats_avx512;
+        eb_av1_compute_stats_highbd = eb_av1_compute_stats_highbd_avx512;
+    }
+#endif
+
     eb_av1_lowbd_pixel_proj_error  = eb_av1_lowbd_pixel_proj_error_c;
     eb_av1_highbd_pixel_proj_error = eb_av1_highbd_pixel_proj_error_c;
     if (flags & HAS_AVX2) eb_av1_highbd_pixel_proj_error = eb_av1_highbd_pixel_proj_error_avx2;
@@ -664,11 +671,19 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
              ext_eight_sad_calculation_32x32_64x64_c,
              ext_eight_sad_calculation_32x32_64x64_avx2);
     SET_AVX2(eb_sad_kernel4x4, fast_loop_nxm_sad_kernel, eb_compute4x_m_sad_avx2_intrin);
-    SET_SSE41_AVX2_AVX512(get_eight_horizontal_search_point_results_8x8_16x16_pu,
-                          get_eight_horizontal_search_point_results_8x8_16x16_pu_c,
-                          get_eight_horizontal_search_point_results_8x8_16x16_pu_sse41_intrin,
-                          get_eight_horizontal_search_point_results_8x8_16x16_pu_avx2_intrin,
-                          get_eight_horizontal_search_point_results_8x8_16x16_pu_avx512_intrin);
+
+    //AVX512 return incorrect results, temporarily disabled
+    //SET_SSE41_AVX2_AVX512(get_eight_horizontal_search_point_results_8x8_16x16_pu,
+    //                      get_eight_horizontal_search_point_results_8x8_16x16_pu_c,
+    //                      get_eight_horizontal_search_point_results_8x8_16x16_pu_sse41_intrin,
+    //                      get_eight_horizontal_search_point_results_8x8_16x16_pu_avx2_intrin,
+    //                      get_eight_horizontal_search_point_results_8x8_16x16_pu_avx512_intrin);
+
+    SET_SSE41_AVX2(get_eight_horizontal_search_point_results_8x8_16x16_pu,
+                   get_eight_horizontal_search_point_results_8x8_16x16_pu_c,
+                   get_eight_horizontal_search_point_results_8x8_16x16_pu_sse41_intrin,
+                   get_eight_horizontal_search_point_results_8x8_16x16_pu_avx2_intrin);
+
     SET_SSE41_AVX2(get_eight_horizontal_search_point_results_32x32_64x64_pu,
                    get_eight_horizontal_search_point_results_32x32_64x64_pu_c,
                    get_eight_horizontal_search_point_results_32x32_64x64_pu_sse41_intrin,
