@@ -1047,7 +1047,7 @@ void derive_sb_md_mode(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
 Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
-#if JAN6_PRESETS
+#if JAN6_PRESETS // mdc signals
 EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     ModeDecisionConfigurationContext *context_ptr) {
