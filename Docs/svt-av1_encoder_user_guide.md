@@ -241,10 +241,10 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **SquareWeight** | -sqw | 0 for off and any whole number percentage | 100 | Weighting applied to square/h/v shape costs when deciding if a and b shapes could be skipped. Set to 100 for neutral weighting, lesser than 100 for faster encode and BD-Rate loss, and greater than 100 for slower encode and BD-Rate gain|
 | **ChannelNumber** | -nch | [1 - 6] | 1 | Number of encode instances |
 | **StatReport** | -stat-report | [0 - 1] | 0 | When set to 1, calculate and display PSNR values |
-| **MDFastPruneClassThreshold** | -mds1p-class-th | 0 for off and any whole number percentage | 100 | Deviation threshold (expressed as a percentage) of an inter-class class pruning mechanism before MD Stage 1 |
-| **MDFastPruneCandThreshold** | -mds1p-cand-th | 0 for off and any whole number percentage | 75 | Deviation threshold (expressed as a percentage) of an intra-class candidate pruning mechanism before MD Stage 1 |
-| **MDFullPruneClassThreshold** | -mds2p-class-th | 0 for off and any whole number percentage | 25 | Deviation threshold (expressed as a percentage) of an inter-class class pruning mechanism before MD Stage 2 |
-| **MDFullPruneCandThreshold** | -mds2p-cand-th | 0 for off and any whole number percentage | 15 | Deviation threshold (expressed as a percentage) of an intra-class candidate pruning mechanism before MD Stage 2 |
+| **MDS1PruneClassThreshold** | -mds-1-class-th | 0 for off and any whole number percentage | 100 | Deviation threshold (expressed as a percentage) of an inter-class class pruning mechanism before MD Stage 1 |
+| **MDS1PruneCandThreshold** | -mds-1-cand-th | 0 for off and any whole number percentage | 75 | Deviation threshold (expressed as a percentage) of an intra-class candidate pruning mechanism before MD Stage 1 |
+| **MDS23PruneClassThreshold** | -mds-2-3-class-th | 0 for off and any whole number percentage | 25 | Deviation threshold (expressed as a percentage) of an inter-class class pruning mechanism before MD Stage 2/3 |
+| **MDS23PruneCandThreshold** | -mds-2-3-cand-th | 0 for off and any whole number percentage | 15 | Deviation threshold (expressed as a percentage) of an intra-class candidate pruning mechanism before MD Stage 2/3 |
 
 ## Appendix A Encoder Parameters
 
