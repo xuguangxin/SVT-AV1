@@ -118,7 +118,7 @@ void *dlf_kernel(void *input_ptr) {
         // TODO: remove the copy when entire 16bit pipeline is ready
         if (scs_ptr->static_config.encoder_16bit_pipeline &&
             scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
-       
+
             // //copy input from 8bit to 16bit
             uint8_t*  input_8bit;
             int32_t   input_stride_8bit;
