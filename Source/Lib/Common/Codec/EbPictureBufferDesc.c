@@ -229,9 +229,17 @@ void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc,
     }
 }
 
-void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc) {
+void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc
+#if ENCDEC_16BIT
+    , EbBool is_16bit
+#endif
+) {
     //NOTe:  Not all fileds are connected. add more connections as needed.
+#if ENCDEC_16BIT
+    if (!is_16bit) {
+#else
     if (picBuffDsc->bit_depth == EB_8BIT) {
+#endif
         aomBuffDsc->y_buffer = picBuffDsc->buffer_y + picBuffDsc->origin_x +
                                (picBuffDsc->origin_y * picBuffDsc->stride_y);
         aomBuffDsc->u_buffer = picBuffDsc->buffer_cb + picBuffDsc->origin_x / 2 +

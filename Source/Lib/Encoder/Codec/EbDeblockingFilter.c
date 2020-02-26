@@ -325,8 +325,7 @@ void eb_av1_filter_block_plane_vert(const PictureControlSet *const pcs_ptr,
     // TODO
     // when loop_filter_mode = 1, dblk is processed in encdec
     // 16 bit dblk for loop_filter_mode = 1 needs to enabled after 16bit encdec is done
-    if (scs_ptr->static_config.encoder_16bit_pipeline &&
-        pcs_ptr->parent_pcs_ptr->loop_filter_mode >= 2)
+    if (scs_ptr->static_config.encoder_16bit_pipeline)
         is_16bit = EB_TRUE;
     const int32_t  row_step   = MI_SIZE >> MI_SIZE_LOG2;
     const uint32_t scale_horz = plane_ptr->subsampling_x;
@@ -437,8 +436,7 @@ void eb_av1_filter_block_plane_horz(const PictureControlSet *const pcs_ptr,
     EbBool         is_16bit   = scs_ptr->static_config.encoder_bit_depth > 8;
     // when loop_filter_mode = 1, dblk is processed in encdec
     // 16 bit dblk for loop_filter_mode = 1 needs to enabled after 16bit encdec is done
-    if (scs_ptr->static_config.encoder_16bit_pipeline &&
-        pcs_ptr->parent_pcs_ptr->loop_filter_mode >= 2)
+    if (scs_ptr->static_config.encoder_16bit_pipeline)
         is_16bit = EB_TRUE;
     const int32_t  col_step   = MI_SIZE >> MI_SIZE_LOG2;
     const uint32_t scale_horz = plane_ptr->subsampling_x;
@@ -568,8 +566,7 @@ void loop_filter_sb(EbPictureBufferDesc *frame_buffer, //reconpicture,
     // TODO
     // when loop_filter_mode = 1, dblk is processed in encdec
     // 16 bit dblk for loop_filter_mode = 1 needs to enabled after 16bit encdec is done
-    if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline &&
-        pcs_ptr->parent_pcs_ptr->loop_filter_mode >= 2)
+    if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.encoder_16bit_pipeline)
         pd[0].is_16bit = pd[1].is_16bit = pd[2].is_16bit = EB_TRUE;
 
     for (plane = plane_start; plane < plane_end; plane++) {

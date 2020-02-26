@@ -74,6 +74,8 @@ EbErrorType dlf_context_ctor(EbThreadContext *thread_context_ptr, const EbEncHan
         EB_NEW(context_ptr->temp_lf_recon_picture16bit_ptr,
                eb_recon_picture_buffer_desc_ctor,
                (EbPtr)&temp_lf_recon_desc_init_data);
+        if(!is_16bit)
+            context_ptr->temp_lf_recon_picture16bit_ptr->bit_depth = EB_8BIT;
     } else {
         temp_lf_recon_desc_init_data.bit_depth = EB_8BIT;
         EB_NEW(context_ptr->temp_lf_recon_picture_ptr,
@@ -113,6 +115,64 @@ void *dlf_kernel(void *input_ptr) {
 
         EbBool is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
 
+        // TODO: remove the copy when entire 16bit pipeline is ready
+        if (scs_ptr->static_config.encoder_16bit_pipeline &&
+            scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
+       
+            // //copy input from 8bit to 16bit
+            uint8_t*  input_8bit;
+            int32_t   input_stride_8bit;
+            uint16_t* input_16bit;
+            int32_t   input_stride_16bit;
+            EbPictureBufferDesc* input_buffer_8bit = (EbPictureBufferDesc *)
+                pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
+            EbPictureBufferDesc* input_buffer = (EbPictureBufferDesc*)pcs_ptr->input_frame16bit;
+            // Y
+            input_16bit = (uint16_t*)(input_buffer->buffer_y)
+                + input_buffer->origin_x
+                + input_buffer->origin_y * input_buffer->stride_y;
+            input_stride_16bit = input_buffer->stride_y;
+            input_8bit = input_buffer_8bit->buffer_y
+                + input_buffer_8bit->origin_x
+                + input_buffer_8bit->origin_y * input_buffer_8bit->stride_y;
+            input_stride_8bit = input_buffer_8bit->stride_y;
+            for (int j = 0; j < input_buffer->height; j++) {
+                for (int i = 0; i < input_buffer->width; i++) {
+                    input_16bit[i + j * input_stride_16bit] =
+                        (uint16_t)input_8bit[i + j * input_stride_8bit];
+                }
+            }
+            // Cb
+            input_16bit = (uint16_t*)(input_buffer->buffer_cb)
+                + input_buffer->origin_x / 2
+                + input_buffer->origin_y / 2 * input_buffer->stride_cb;
+            input_stride_16bit = input_buffer->stride_cb;
+            input_8bit = input_buffer_8bit->buffer_cb
+                + input_buffer_8bit->origin_x / 2
+                + input_buffer_8bit->origin_y / 2 * input_buffer_8bit->stride_cb;
+            input_stride_8bit = input_buffer_8bit->stride_cb;
+            for (int j = 0; j < input_buffer->height / 2; j++) {
+                for (int i = 0; i < input_buffer->width / 2; i++) {
+                    input_16bit[i + j * input_stride_16bit] =
+                        (uint16_t)input_8bit[i + j * input_stride_8bit];
+                }
+            }
+            // Cr
+            input_16bit = (uint16_t*)(input_buffer->buffer_cr)
+                + input_buffer->origin_x / 2
+                + input_buffer->origin_y / 2 * input_buffer->stride_cr;
+            input_stride_16bit = input_buffer->stride_cr;
+            input_8bit = input_buffer_8bit->buffer_cr
+                + input_buffer_8bit->origin_x / 2
+                + input_buffer_8bit->origin_y / 2 * input_buffer_8bit->stride_cr;
+            input_stride_8bit = input_buffer_8bit->stride_cr;
+            for (int j = 0; j < input_buffer->height / 2; j++) {
+                for (int i = 0; i < input_buffer->width / 2; i++) {
+                    input_16bit[i + j * input_stride_16bit] =
+                        (uint16_t)input_8bit[i + j * input_stride_8bit];
+                }
+            }
+        }
 
 
         EbBool dlf_enable_flag = (EbBool)pcs_ptr->parent_pcs_ptr->loop_filter_mode;
@@ -201,7 +261,11 @@ void *dlf_kernel(void *input_ptr) {
                 }
                 cm->use_highbitdepth = 1;
             }
+#if ENCDEC_16BIT
+            link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show, is_16bit || scs_ptr->static_config.encoder_16bit_pipeline);
+#else
             link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show);
+#endif
             if (scs_ptr->seq_header.enable_restoration)
                 eb_av1_loop_restoration_save_boundary_lines(cm->frame_to_show, cm, 0);
             if (scs_ptr->seq_header.enable_cdef && pcs_ptr->parent_pcs_ptr->cdef_filter_mode) {
