@@ -249,10 +249,6 @@ typedef struct EbConfig {
     ****************************************/
     int enable_redundant_blk;
     /****************************************
-      * trellis quant coeff optimization
-     ****************************************/
-    int enable_trellis;
-    /****************************************
       * spatial sse in full loop
      ****************************************/
     int spatial_sse_fl;
@@ -268,10 +264,6 @@ typedef struct EbConfig {
       * new nearest comb injection
      ****************************************/
     int new_nearest_comb_inject;
-    /****************************************
-      * nx4 4xn parent motion vector injection
-     ****************************************/
-    int nx4_4xn_parent_mv_inject;
     /****************************************
       * prune unipred at me
      ****************************************/

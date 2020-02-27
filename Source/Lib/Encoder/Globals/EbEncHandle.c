@@ -2104,8 +2104,6 @@ void copy_api_from_app(
     scs_ptr->static_config.enable_mfmv                  = ((EbSvtAv1EncConfiguration*)config_struct)->enable_mfmv;
     // redundant block
     scs_ptr->static_config.enable_redundant_blk         = ((EbSvtAv1EncConfiguration*)config_struct)->enable_redundant_blk;
-    //trellis
-    scs_ptr->static_config.enable_trellis               = ((EbSvtAv1EncConfiguration*)config_struct)->enable_trellis;
     // spatial sse in full loop
     scs_ptr->static_config.spatial_sse_fl               = ((EbSvtAv1EncConfiguration*)config_struct)->spatial_sse_fl;
     // subpel
@@ -2114,8 +2112,6 @@ void copy_api_from_app(
     scs_ptr->static_config.over_bndry_blk               = ((EbSvtAv1EncConfiguration*)config_struct)->over_bndry_blk;
     // new nearest comb injection
     scs_ptr->static_config.new_nearest_comb_inject      = ((EbSvtAv1EncConfiguration*)config_struct)->new_nearest_comb_inject;
-    // nx4 4xn parent mv injection
-    scs_ptr->static_config.nx4_4xn_parent_mv_inject     = ((EbSvtAv1EncConfiguration*)config_struct)->nx4_4xn_parent_mv_inject;
     // prune unipred at me
     scs_ptr->static_config.prune_unipred_me             = ((EbSvtAv1EncConfiguration*)config_struct)->prune_unipred_me;
     //prune ref frame for rec partitions
@@ -2740,11 +2736,6 @@ static EbErrorType verify_settings(
       return_error = EB_ErrorBadParameter;
     }
 
-    if (config->enable_trellis != 0 && config->enable_trellis != 1 && config->enable_trellis != -1) {
-      SVT_LOG("Error instance %u: Invalid enable_trellis flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->enable_trellis);
-      return_error = EB_ErrorBadParameter;
-    }
-
     if (config->spatial_sse_fl != 0 && config->spatial_sse_fl != 1 && config->spatial_sse_fl != -1) {
       SVT_LOG("Error instance %u: Invalid spatial_sse_fl flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->spatial_sse_fl);
       return_error = EB_ErrorBadParameter;
@@ -2762,11 +2753,6 @@ static EbErrorType verify_settings(
 
     if (config->new_nearest_comb_inject != 0 && config->new_nearest_comb_inject != 1 && config->new_nearest_comb_inject != -1) {
       SVT_LOG("Error instance %u: Invalid new_nearest_comb_inject flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->new_nearest_comb_inject);
-      return_error = EB_ErrorBadParameter;
-    }
-
-    if (config->nx4_4xn_parent_mv_inject != 0 && config->nx4_4xn_parent_mv_inject != 1 && config->nx4_4xn_parent_mv_inject != -1) {
-      SVT_LOG("Error instance %u: Invalid nx4_4xn_parent_mv_inject flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->nx4_4xn_parent_mv_inject);
       return_error = EB_ErrorBadParameter;
     }
 
@@ -2919,12 +2905,10 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->inter_intra_compound = DEFAULT;
     config_ptr->enable_mfmv = DEFAULT;
     config_ptr->enable_redundant_blk = DEFAULT;
-    config_ptr->enable_trellis = DEFAULT;
     config_ptr->spatial_sse_fl = DEFAULT;
     config_ptr->enable_subpel = DEFAULT;
     config_ptr->over_bndry_blk = DEFAULT;
     config_ptr->new_nearest_comb_inject = DEFAULT;
-    config_ptr->nx4_4xn_parent_mv_inject = DEFAULT;
     config_ptr->prune_unipred_me = DEFAULT;
     config_ptr->prune_ref_rec_part = DEFAULT;
     config_ptr->nsq_table = DEFAULT;

@@ -186,12 +186,10 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **RestorationFilter** | -restoration-filtering | [0/1, -1 for default] | -1 | Enable restoration filtering , 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **Mfmv** | -mfmv | [0/1, -1 for default] | -1 | Enable motion field motion vector, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **RedundantBlock** | -redundant-blk | [0/1, -1 for default] | -1 | Enable redundant block, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **Trellis** | -trellis | [0/1, -1 for default] | -1 | Enable trellis quant coefficient optimization, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **SpatialSSEfl** | -spatial-sse-fl | [0/1, -1 for default] | -1 | Enable spatial sse full loop, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **Subpel** | -subpel | [0/1, -1 for default] | -1 | Enable subpel, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **OverBoundryBlock** | -over-bndry-blk | [0/1, -1 for default] | -1 | Enable over boundary block mode, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **NewNearestCombInjection** | -new-nrst-near-comb | [0/1, -1 for default] | -1 | Enable new nearest near comb injection, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **nx4ParentMvInjection** | -nx4-4xn-mv-inject | [0/1, -1 for default] | -1 | Enable nx4 4xn parent mv injection, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **PruneUnipredMe** | -prune-unipred-me | [0/1, -1 for default] | -1 | Enable prune unipred at me, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **PruneRefRecPart** | -prune-ref-rec-part | [0/1, -1 for default] | -1 | Enable prune prune ref frame for rec partitions, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **NsqTable** | --nsq-table-use | [0/1, -1 for default] | -1 | Enable nsq table, 0 = OFF, 1 = ON, -1 = DEFAULT|

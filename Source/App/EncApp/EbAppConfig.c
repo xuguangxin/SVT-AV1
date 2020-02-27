@@ -68,12 +68,10 @@
 #define INTER_INTRA_COMPOUND_TOKEN "-interintra-comp"
 #define MFMV_ENABLE_TOKEN "-mfmv"
 #define REDUNDANT_BLK_TOKEN "-redundant-blk"
-#define TRELLIS_ENABLE_TOKEN "-trellis"
 #define SPATIAL_SSE_FL_TOKEN "-spatial-sse-fl"
 #define SUBPEL_TOKEN "-subpel"
 #define OVR_BNDRY_BLK_TOKEN "-over-bndry-blk"
 #define NEW_NEAREST_COMB_INJECT_TOKEN "-new-nrst-near-comb"
-#define NX4_4XN_MV_INJECT_TOKEN "-nx4-4xn-mv-inject"
 #define PRUNE_UNIPRED_ME_TOKEN "-prune-unipred-me"
 #define PRUNE_REF_REC_PART_TOKEN "-prune-ref-rec-part"
 #define NSQ_TABLE_TOKEN "-nsq-table-use"
@@ -322,9 +320,6 @@ static void set_enable_mfmv_flag(const char *value, EbConfig *cfg) {
 static void set_enable_redundant_blk_flag(const char *value, EbConfig *cfg) {
     cfg->enable_redundant_blk = strtol(value, NULL, 0);
 };
-static void set_enable_trellis_flag(const char *value, EbConfig *cfg) {
-    cfg->enable_trellis = strtol(value, NULL, 0);
-};
 static void set_spatial_sse_fl_flag(const char *value, EbConfig *cfg) {
     cfg->spatial_sse_fl = strtol(value, NULL, 0);
 };
@@ -336,9 +331,6 @@ static void set_over_bndry_blk_flag(const char *value, EbConfig *cfg) {
 };
 static void set_new_nearest_comb_inject_flag(const char *value, EbConfig *cfg) {
     cfg->new_nearest_comb_inject = strtol(value, NULL, 0);
-};
-static void set_nx4_4xn_parent_mv_inject_flag(const char *value, EbConfig *cfg) {
-    cfg->nx4_4xn_parent_mv_inject = strtol(value, NULL, 0);
 };
 static void set_prune_unipred_me_flag(const char *value, EbConfig *cfg) {
     cfg->prune_unipred_me = strtol(value, NULL, 0);
@@ -770,11 +762,6 @@ ConfigEntry config_entry_specific[] = {
      "block(0: OFF, 1: ON, -1: DEFAULT)",
      set_enable_redundant_blk_flag},
     {SINGLE_INPUT,
-     TRELLIS_ENABLE_TOKEN,
-     "Disable trellis optimization of quantized coefficients (0: OFF 1: ON  2: ON for rd "
-     "search 3: ON for estimate yrd serch (default))",
-     set_enable_trellis_flag},
-    {SINGLE_INPUT,
      SPATIAL_SSE_FL_TOKEN,
      "Enable spatial sse full loop(0: OFF, 1: ON, -1: DEFAULT)",
      set_spatial_sse_fl_flag},
@@ -790,10 +777,6 @@ ConfigEntry config_entry_specific[] = {
      NEW_NEAREST_COMB_INJECT_TOKEN,
      "Enable new nearest near comb injection (0: OFF, 1: ON, -1: DEFAULT)",
      set_new_nearest_comb_inject_flag},
-    {SINGLE_INPUT,
-     NX4_4XN_MV_INJECT_TOKEN,
-     "Enable nx4 4xn parent mv injection (0: OFF, 1: ON, -1: DEFAULT)",
-     set_nx4_4xn_parent_mv_inject_flag},
     {SINGLE_INPUT,
      PRUNE_UNIPRED_ME_TOKEN,
      "Enable prune unipred at me (0: OFF, 1: ON, -1: DEFAULT)",
@@ -843,7 +826,6 @@ ConfigEntry config_entry_specific[] = {
     {SINGLE_INPUT, OBMC_TOKEN, "Enable OBMC(0: OFF, 1: ON[default]) ", set_enable_obmc_flag},
     // RDOQ
     {SINGLE_INPUT, RDOQ_TOKEN, "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)", set_enable_rdoq_flag},
-
     // Filter Intra
     {SINGLE_INPUT,
      FILTER_INTRA_TOKEN,
@@ -1068,7 +1050,6 @@ ConfigEntry config_entry[] = {
 
     {SINGLE_INPUT, MFMV_ENABLE_TOKEN, "Mfmv", set_enable_mfmv_flag},
     {SINGLE_INPUT, REDUNDANT_BLK_TOKEN, "RedundantBlock", set_enable_redundant_blk_flag},
-    {SINGLE_INPUT, TRELLIS_ENABLE_TOKEN, "Trellis", set_enable_trellis_flag},
     {SINGLE_INPUT, SPATIAL_SSE_FL_TOKEN, "SpatialSSEfl", set_spatial_sse_fl_flag},
     {SINGLE_INPUT, SUBPEL_TOKEN, "Subpel", set_enable_sub_pel_flag},
     {SINGLE_INPUT, OVR_BNDRY_BLK_TOKEN, "OverBoundryBlock", set_over_bndry_blk_flag},
@@ -1076,10 +1057,6 @@ ConfigEntry config_entry[] = {
      NEW_NEAREST_COMB_INJECT_TOKEN,
      "NewNearestCombInjection",
      set_new_nearest_comb_inject_flag},
-    {SINGLE_INPUT,
-     NX4_4XN_MV_INJECT_TOKEN,
-     "nx4ParentMvInjection",
-     set_nx4_4xn_parent_mv_inject_flag},
     {SINGLE_INPUT, PRUNE_UNIPRED_ME_TOKEN, "PruneUnipredMe", set_prune_unipred_me_flag},
     {SINGLE_INPUT, PRUNE_REF_REC_PART_TOKEN, "PruneRefRecPart", set_prune_ref_rec_part_flag},
     {SINGLE_INPUT, NSQ_TABLE_TOKEN, "NsqTable", set_nsq_table_flag},
@@ -1109,10 +1086,8 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, OBMC_TOKEN, "Obmc", set_enable_obmc_flag},
     // RDOQ
     {SINGLE_INPUT, RDOQ_TOKEN, "RDOQ", set_enable_rdoq_flag},
-
     // Filter Intra
     {SINGLE_INPUT, FILTER_INTRA_TOKEN, "FilterIntra", set_enable_filter_intra_flag},
-
     // PREDICTIVE ME
     {SINGLE_INPUT, PRED_ME_TOKEN, "PredMe", set_predictive_me_flag},
     // BIPRED 3x3 INJECTION
@@ -1255,12 +1230,10 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->inter_intra_compound                      = DEFAULT;
     config_ptr->enable_mfmv                               = DEFAULT;
     config_ptr->enable_redundant_blk                      = DEFAULT;
-    config_ptr->enable_trellis                            = DEFAULT;
     config_ptr->spatial_sse_fl                            = DEFAULT;
     config_ptr->enable_subpel                             = DEFAULT;
     config_ptr->over_bndry_blk                            = DEFAULT;
     config_ptr->new_nearest_comb_inject                   = DEFAULT;
-    config_ptr->nx4_4xn_parent_mv_inject                  = DEFAULT;
     config_ptr->prune_unipred_me                          = DEFAULT;
     config_ptr->prune_ref_rec_part                        = DEFAULT;
     config_ptr->nsq_table                                 = DEFAULT;

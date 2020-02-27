@@ -2751,24 +2751,24 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else
         context_ptr->blk_skip_decision = EB_FALSE;
 
-    // Derive Trellis Quant Coeff Optimization Flag
+    // Derive enable_rdoqFlag
     if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+        context_ptr->enable_rdoq = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
-    else if (scs_ptr->static_config.enable_trellis == DEFAULT)
+        context_ptr->enable_rdoq = EB_FALSE;
+    else if (scs_ptr->static_config.enable_rdoq == DEFAULT)
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
             if (pcs_ptr->enc_mode <= ENC_M2)
-                context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
+                context_ptr->enable_rdoq = EB_TRUE;
             else
-                context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+                context_ptr->enable_rdoq = EB_FALSE;
         else if (pcs_ptr->enc_mode <= ENC_M2)
-            context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
+            context_ptr->enable_rdoq = EB_TRUE;
         else
-            context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+            context_ptr->enable_rdoq = EB_FALSE;
 
     else
-        context_ptr->trellis_quant_coeff_optimization = scs_ptr->static_config.enable_trellis;
+        context_ptr->enable_rdoq = scs_ptr->static_config.enable_rdoq;
 
     // Derive redundant block
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -3015,6 +3015,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
+        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH;
+        context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
 #if M0_FEB22_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
             context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_7;
@@ -3029,6 +3031,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
 #endif
     } else if (context_ptr->pd_pass == PD_PASS_1) {
+        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH;
+        context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
 #if M0_FEB22_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
             context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_7;
@@ -3043,6 +3047,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
 #endif
     } else {
+        context_ptr->full_pel_ref_window_width_th =
 #if M0_FEB22_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
             context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_7;
@@ -3115,14 +3120,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 #endif
     else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
-
-    // Set rdoq_quantize_fp @ MD
-    if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->rdoq_quantize_fp = EB_FALSE;
-    else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->rdoq_quantize_fp = EB_FALSE;
-    else
-        context_ptr->rdoq_quantize_fp = (pcs_ptr->enc_mode <= ENC_M7) ? EB_TRUE : EB_FALSE;
 
     // Set pic_obmc_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
