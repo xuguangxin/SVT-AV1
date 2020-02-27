@@ -1824,23 +1824,23 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     // Derive Trellis Quant Coeff Optimization Flag
     if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+        context_ptr->enable_rdoq = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+        context_ptr->enable_rdoq = EB_FALSE;
     else
-        if (sequence_control_set_ptr->static_config.enable_trellis == DEFAULT)
+        if (sequence_control_set_ptr->static_config.enable_rdoq == DEFAULT)
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
                 if (pcs_ptr->enc_mode <= ENC_M3)
-                    context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
+                    context_ptr->enable_rdoq = EB_TRUE;
                 else
-                    context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+                    context_ptr->enable_rdoq = EB_FALSE;
             else if (pcs_ptr->enc_mode <= ENC_M3)
-                context_ptr->trellis_quant_coeff_optimization = EB_TRUE;
+                context_ptr->enable_rdoq = EB_TRUE;
             else
-                context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
+                context_ptr->enable_rdoq = EB_FALSE;
         else
-            context_ptr->trellis_quant_coeff_optimization =
-            sequence_control_set_ptr->static_config.enable_trellis;
+            context_ptr->enable_rdoq =
+            sequence_control_set_ptr->static_config.enable_rdoq;
 
     // Derive redundant block
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -2019,46 +2019,39 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nsq_hv_level = 2;
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
+
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
         }
         else {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_15;
-            context_ptr->full_pel_ref_window_height_th =
-                FULL_PEL_REF_WINDOW_HEIGHT_15;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_15;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT_15;
         }
     }
     else if (context_ptr->pd_pass == PD_PASS_1) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
         }
         else {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_15;
-            context_ptr->full_pel_ref_window_height_th =
-                FULL_PEL_REF_WINDOW_HEIGHT_15;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_15;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT_15;
         }
     }
     else {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
         }
         else {
-            context_ptr->full_pel_ref_window_width_th =
-                pcs_ptr->enc_mode <= ENC_M1
-                ? FULL_PEL_REF_WINDOW_WIDTH_15
-                : FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->full_pel_ref_window_height_th =
-                pcs_ptr->enc_mode <= ENC_M1
-                ? FULL_PEL_REF_WINDOW_HEIGHT_15
-                : FULL_PEL_REF_WINDOW_HEIGHT_5;
+            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
         }
     }
-
+    
     // comp_similar_mode
     // 0: OFF
     // 1: If previous similar block is not compound, do not inject compound
@@ -2081,15 +2074,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 
-    // Set rdoq_quantize_fp @ MD
-    if (context_ptr->pd_pass == PD_PASS_0)
-        context_ptr->rdoq_quantize_fp = EB_FALSE;
-    else if (context_ptr->pd_pass == PD_PASS_1)
-        context_ptr->rdoq_quantize_fp = EB_FALSE;
-    else
-        context_ptr->rdoq_quantize_fp =
-        (pcs_ptr->enc_mode <= ENC_M7) ? EB_TRUE : EB_FALSE;
-
     // Set pic_obmc_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_pic_obmc_mode = 0;
@@ -2108,7 +2092,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_enable_inter_intra =
         pcs_ptr->parent_pcs_ptr->enable_inter_intra;
 
-    // Set md_atb_mode @ MD
+    // Set md_tx_size_search_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_tx_size_search_mode = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
@@ -3015,56 +2999,56 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
 
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
-        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH;
-        context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
+        context_ptr->pred_me_full_pel_search_width  = FULL_PEL_REF_WINDOW_WIDTH;
+        context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT;
 #if M0_FEB22_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_7;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_7;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_7;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_7;
         }
         else {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_15;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_15;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_15;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_15;
         }
 #else
-        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH;
-        context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
+        context_ptr->pred_me_full_pel_search_width  = FULL_PEL_REF_WINDOW_WIDTH;
+        context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT;
 #endif
     } else if (context_ptr->pd_pass == PD_PASS_1) {
-        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH;
-        context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
+        context_ptr->pred_me_full_pel_search_width  = FULL_PEL_REF_WINDOW_WIDTH;
+        context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT;
 #if M0_FEB22_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_7;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_7;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_7;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_7;
         }
         else {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_15;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_15;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_15;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_15;
         }
 #else
-        context_ptr->full_pel_ref_window_width_th  = FULL_PEL_REF_WINDOW_WIDTH;
-        context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_HEIGHT;
+        context_ptr->pred_me_full_pel_search_width  = FULL_PEL_REF_WINDOW_WIDTH;
+        context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT;
 #endif
     } else {
-        context_ptr->full_pel_ref_window_width_th =
+        context_ptr->pred_me_full_pel_search_width =
 #if M0_FEB22_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_7;
-            context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_7;
+            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_7;
+            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_7;
         }
         else {
-            context_ptr->full_pel_ref_window_width_th = pcs_ptr->enc_mode <= ENC_M1 ?
+            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M1 ?
                 FULL_PEL_REF_WINDOW_15 : FULL_PEL_REF_WINDOW_7;
-            context_ptr->full_pel_ref_window_height_th = pcs_ptr->enc_mode <= ENC_M1 ?
+            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M1 ?
                 FULL_PEL_REF_WINDOW_15 : FULL_PEL_REF_WINDOW_5;
         }
 #else
-        context_ptr->full_pel_ref_window_width_th =
+        context_ptr->pred_me_full_pel_search_width =
             (pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->enc_mode == ENC_M0)
                 ? FULL_PEL_REF_WINDOW_WIDTH_EXTENDED
                 : FULL_PEL_REF_WINDOW_WIDTH;
-        context_ptr->full_pel_ref_window_height_th =
+        context_ptr->pred_me_full_pel_search_height =
             (pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->enc_mode == ENC_M0)
                 ? FULL_PEL_REF_WINDOW_HEIGHT_EXTENDED
                 : FULL_PEL_REF_WINDOW_HEIGHT;
@@ -3137,7 +3121,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
     else
         context_ptr->md_enable_inter_intra = pcs_ptr->parent_pcs_ptr->enable_inter_intra;
 
-    // Set md_atb_mode @ MD
+    // Set md_tx_size_search_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_tx_size_search_mode = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)

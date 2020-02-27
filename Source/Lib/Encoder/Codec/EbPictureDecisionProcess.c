@@ -1132,7 +1132,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 4;
     }
 
-    // Set atb mode      Settings
+    // Set Tx Search     Settings
     // 0                 OFF
     // 1                 ON
     if (pcs_ptr->enc_mode <= ENC_M3)

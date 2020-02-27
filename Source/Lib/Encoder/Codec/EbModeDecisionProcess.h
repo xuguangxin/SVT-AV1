@@ -34,25 +34,24 @@ extern "C" {
 #define DEPTH_ONE_STEP 21
 #define DEPTH_TWO_STEP 5
 #define DEPTH_THREE_STEP 1
-#define PREDICTIVE_ME_MAX_MVP_CANIDATES 4
-#define PREDICTIVE_ME_DEVIATION_TH 50
+#define PRED_ME_MAX_MVP_CANIDATES 4
+#define PRED_ME_DEVIATION_TH 50
 #if M1_FEB4_ADOPTION   || M0_FEB4_ADOPTION || MR_FEB4_ADOPTION
-#define FULL_PEL_REF_WINDOW_15      15
-#define FULL_PEL_REF_WINDOW_7       7
-#define FULL_PEL_REF_WINDOW_5       5
+#define FULL_PEL_REF_WINDOW_15 15
+#define FULL_PEL_REF_WINDOW_7 7
+#define FULL_PEL_REF_WINDOW_5 5
 #else
 #define FULL_PEL_REF_WINDOW_WIDTH 7
 #define FULL_PEL_REF_WINDOW_HEIGHT 5
 #endif
-#define HALF_PEL_REF_WINDOW 3
-#define QUARTER_PEL_REF_WINDOW 3
-#define FULL_PEL_REF_WINDOW_WIDTH_EXTENDED 15
-#define FULL_PEL_REF_WINDOW_HEIGHT_EXTENDED 15
-#define EIGHT_PEL_REF_WINDOW 3
+#define PRED_ME_HALF_PEL_REF_WINDOW 3
+#define PRED_ME_QUARTER_PEL_REF_WINDOW 3
+#define PRED_ME_EIGHT_PEL_REF_WINDOW 3
+#define REFINE_ME_MV_EIGHT_PEL_REF_WINDOW 3
 
 /**************************************
       * Macros
-      **************************************/
+**************************************/
 
 #define GROUP_OF_4_8x8_BLOCKS(origin_x, origin_y) \
     (((origin_x >> 3) & 0x1) && ((origin_y >> 3) & 0x1) ? EB_TRUE : EB_FALSE)
