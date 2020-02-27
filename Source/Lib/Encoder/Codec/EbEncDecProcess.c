@@ -1651,14 +1651,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     // Level                Settings
     // 0                    Level 0: OFF
-    // 1                    Level 1: 7x5 full-pel search + sub-pel refinement off
-    // 2                    Level 2: 7x5 full-pel search +  (H + V) sub-pel refinement only = 4 half-pel + 4 quarter-pel = 8 positions + pred_me_distortion to pa_me_distortion deviation on
-    // 3                    Level 3: 7x5 full-pel search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on
-    // 4                    Level 4: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on
-    // 5                    Level 5: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
-    // 6                    Level 6: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+    // 1                    Level 1: sub-pel refinement off
+    // 2                    Level 2: (H + V) 1/2 & 1/4 refinement only = 4 half-pel + 4 quarter-pel = 8 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 3                    Level 3: (H + V + D only ~ the best) 1/2 & 1/4 refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 4                    Level 4: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 5                    Level 5: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+    // 6                    Level 6: (H + V + D) 1/2 & 1/4 refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
 
-    // NB: if PME_UP_TO_4_REF is ON, levels 1-5 are restricted to using max 4 ref frames
+    // NB: if PME_UP_TO_4_REF is ON, levels 1-5 are restricted to using max 4 ref frames, and 1/8 Pel refinement is always performed for the 8 positions for levels 1-6
     if (pcs_ptr->slice_type != I_SLICE) {
 
         if (context_ptr->pd_pass == PD_PASS_0)
@@ -2063,15 +2063,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         }
         else {
 #if FEB27_ADOPTIONS
-            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M0 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M0 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
 #else
             context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
 #endif
         }
     }
-    
+
     // comp_similar_mode
     // 0: OFF
     // 1: If previous similar block is not compound, do not inject compound
