@@ -794,6 +794,448 @@ EbErrorType generate_mini_gop_rps(
 Input   : encoder mode and tune
 Output  : Multi-Processes signal(s)
 ******************************************************/
+#if JAN6_PRESETS
+EbErrorType signal_derivation_multi_processes_oq(
+    SequenceControlSet        *scs_ptr,
+    PictureParentControlSet   *pcs_ptr) {
+    EbErrorType return_error = EB_ErrorNone;
+    FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
+
+    uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
+
+    // Set HME Settings (1st time)
+    uint8_t enc_mode_hme = scs_ptr->use_output_stat_file
+        ? pcs_ptr->snd_pass_enc_mode
+        : pcs_ptr->enc_mode;
+    pcs_ptr->enable_hme_flag =
+        enable_hme_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution][enc_mode_hme];
+
+    pcs_ptr->enable_hme_level0_flag =
+        enable_hme_level0_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+    pcs_ptr->enable_hme_level1_flag =
+        enable_hme_level1_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+    pcs_ptr->enable_hme_level2_flag =
+        enable_hme_level2_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+
+    pcs_ptr->tf_enable_hme_flag =
+        tf_enable_hme_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+    pcs_ptr->tf_enable_hme_level0_flag =
+        tf_enable_hme_level0_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+    pcs_ptr->tf_enable_hme_level1_flag =
+        tf_enable_hme_level1_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+    pcs_ptr->tf_enable_hme_level2_flag =
+        tf_enable_hme_level2_flag[pcs_ptr->sc_content_detected]
+        [scs_ptr->input_resolution]
+    [enc_mode_hme];
+
+    // Set pic_depth_mode
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M2)
+            pcs_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+        else if (pcs_ptr->enc_mode <= ENC_M5)
+            if (pcs_ptr->slice_type == I_SLICE)
+                pcs_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+            else
+                pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+        else
+            pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+    else if (MR_MODE)
+        pcs_ptr->pic_depth_mode =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? PIC_ALL_DEPTH_MODE
+        : PIC_MULTI_PASS_PD_MODE_0;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->pic_depth_mode =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? PIC_ALL_DEPTH_MODE
+        : pcs_ptr->hierarchical_levels < 3
+        ? PIC_MULTI_PASS_PD_MODE_0
+        : PIC_MULTI_PASS_PD_MODE_1;
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->pic_depth_mode =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? PIC_ALL_DEPTH_MODE
+        : PIC_MULTI_PASS_PD_MODE_2;
+    else if (pcs_ptr->slice_type == I_SLICE)
+        pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+    else
+        pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
+
+    if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
+        assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
+
+    pcs_ptr->max_number_of_pus_per_sb =
+        (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)
+        ? MAX_ME_PU_COUNT
+        : SQUARE_PU_COUNT;
+
+    // NSQ search Level                               Settings
+    // NSQ_SEARCH_OFF                                 OFF
+    // NSQ_SEARCH_LEVEL1                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 1 NSQ SHAPE
+    // NSQ_SEARCH_LEVEL2                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 2 NSQ SHAPE
+    // NSQ_SEARCH_LEVEL3                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 3 NSQ SHAPE
+    // NSQ_SEARCH_LEVEL4                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 4 NSQ SHAPE
+    // NSQ_SEARCH_LEVEL5                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 5 NSQ SHAPE
+    // NSQ_SEARCH_LEVEL6                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 6 NSQ SHAPE
+    // NSQ_SEARCH_FULL                                Allow NSQ Intra-FULL and Inter-FULL
+    if (pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
+        pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
+        pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
+        pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3) {
+
+        pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+    }
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+
+    else if (pcs_ptr->enc_mode <= ENC_M2)
+
+        pcs_ptr->nsq_search_level =
+        (pcs_ptr->is_used_as_reference_flag)
+        ? NSQ_SEARCH_LEVEL6
+        : NSQ_SEARCH_LEVEL3;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+
+        if (pcs_ptr->is_used_as_reference_flag)
+            pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL3;
+        else
+            pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL1;
+    else
+        pcs_ptr->nsq_search_level = NSQ_SEARCH_OFF;
+
+    if (pcs_ptr->nsq_search_level > NSQ_SEARCH_OFF)
+        assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
+
+    switch (pcs_ptr->nsq_search_level) {
+    case NSQ_SEARCH_OFF:
+        pcs_ptr->nsq_max_shapes_md = 0;
+        break;
+    case NSQ_SEARCH_LEVEL1:
+        pcs_ptr->nsq_max_shapes_md = 1;
+        break;
+    case NSQ_SEARCH_LEVEL2:
+        pcs_ptr->nsq_max_shapes_md = 2;
+        break;
+    case NSQ_SEARCH_LEVEL3:
+        pcs_ptr->nsq_max_shapes_md = 3;
+        break;
+    case NSQ_SEARCH_LEVEL4:
+        pcs_ptr->nsq_max_shapes_md = 4;
+        break;
+    case NSQ_SEARCH_LEVEL5:
+        pcs_ptr->nsq_max_shapes_md = 5;
+        break;
+    case NSQ_SEARCH_LEVEL6:
+        pcs_ptr->nsq_max_shapes_md = 6;
+        break;
+    case NSQ_SEARCH_FULL:
+        pcs_ptr->nsq_max_shapes_md = 6;
+        break;
+    default:
+        printf("nsq_search_level is not supported\n");
+        break;
+    }
+
+    if (pcs_ptr->nsq_search_level == NSQ_SEARCH_OFF)
+        if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)
+            pcs_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
+    if (pcs_ptr->pic_depth_mode > PIC_SQ_DEPTH_MODE)
+        assert(pcs_ptr->nsq_search_level == NSQ_SEARCH_OFF);
+
+    // Loop filter Level                            Settings
+    // 0                                            OFF
+    // 1                                            CU-BASED
+    // 2                                            LIGHT FRAME-BASED
+    // 3                                            FULL FRAME-BASED
+
+    // for now only I frames are allowed to use sc tools.
+    // TODO: we can force all frames in GOP with the same detection status of
+    // leading I frame.
+    if (pcs_ptr->slice_type == I_SLICE) {
+        frm_hdr->allow_screen_content_tools =
+            pcs_ptr->sc_content_detected;
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            frm_hdr->allow_intrabc = pcs_ptr->sc_content_detected;
+        else
+            frm_hdr->allow_intrabc = 0;
+
+        // IBC Modes:   0:Slow   1:Fast   2:Faster
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            pcs_ptr->ibc_mode = 0;
+        else
+            pcs_ptr->ibc_mode = 1;
+    }
+    else {
+        // this will enable sc tools for P frames. hence change bitstream even if
+        // palette mode is OFF
+        frm_hdr->allow_screen_content_tools =
+            pcs_ptr->sc_content_detected;
+
+        frm_hdr->allow_intrabc = 0;
+    }
+
+    // Palette Modes:
+    //    0:OFF
+    //    1:Slow    NIC=7/4/4
+    //    2:        NIC=7/2/2
+    //    3:        NIC=7/2/2 + No K means for non ref
+    //    4:        NIC=4/2/1
+    //    5:        NIC=4/2/1 + No K means for Inter frame
+    //    6:        Fastest NIC=4/2/1 + No K means for non base + step for non base for most dominent
+
+    if (frm_hdr->allow_screen_content_tools)
+        if (scs_ptr->static_config.enable_palette == -1) // auto mode; if not set by cfg
+            pcs_ptr->palette_mode =
+            (scs_ptr->static_config.encoder_bit_depth ==
+                EB_8BIT ||
+                (scs_ptr->static_config.encoder_bit_depth >
+                    EB_8BIT &&
+                    scs_ptr->static_config.enable_hbd_mode_decision ==
+                    0)) &&
+            pcs_ptr->enc_mode <= ENC_M2
+            ? 6
+            : 0;
+        else
+            pcs_ptr->palette_mode =
+            scs_ptr->static_config.enable_palette;
+    else
+        pcs_ptr->palette_mode = 0;
+
+    assert(pcs_ptr->palette_mode < 7);
+
+    if (!pcs_ptr->scs_ptr->static_config
+        .disable_dlf_flag &&
+        frm_hdr->allow_intrabc == 0) {
+
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->loop_filter_mode = 3;
+
+        else
+            pcs_ptr->loop_filter_mode =
+            pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+    }
+    else
+        pcs_ptr->loop_filter_mode = 0;
+
+    // CDEF Level                                   Settings
+    // 0                                            OFF
+    // 1                                            1 step refinement
+    // 2                                            4 step refinement
+    // 3                                            8 step refinement
+    // 4                                            16 step refinement
+    // 5                                            64 step refinement
+    if (scs_ptr->seq_header.enable_cdef &&
+        frm_hdr->allow_intrabc == 0) {
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->cdef_filter_mode = 5;
+        else
+            pcs_ptr->cdef_filter_mode = 2;
+    }
+    else
+        pcs_ptr->cdef_filter_mode = 0;
+
+    // SG Level                                    Settings
+    // 0                                            OFF
+    // 1                                            0 step refinement
+    // 2                                            1 step refinement
+    // 3                                            4 step refinement
+    // 4                                            16 step refinement
+    Av1Common *cm = pcs_ptr->av1_cm;
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            cm->sg_filter_mode = 4;
+        else
+            cm->sg_filter_mode = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+        cm->sg_filter_mode = 4;
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+        cm->sg_filter_mode = 3;
+    else
+        cm->sg_filter_mode = 1;
+
+    // WN Level                                     Settings
+    // 0                                            OFF
+    // 1                                            3-Tap luma/ 3-Tap chroma
+    // 2                                            5-Tap luma/ 5-Tap chroma
+    // 3                                            7-Tap luma/ 5-Tap chroma
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            cm->wn_filter_mode = 3;
+        else
+            cm->wn_filter_mode = 0;
+    else
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            cm->wn_filter_mode = 3;
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+            cm->wn_filter_mode = 2;
+        else
+            cm->wn_filter_mode = 0;
+
+    // Intra prediction modes                       Settings
+    // 0                                            FULL
+    // 1                                            LIGHT per block : disable_z2_prediction && disable_angle_refinement  for 64/32/4
+    // 2                                            OFF per block : disable_angle_prediction for 64/32/4
+    // 3                                            OFF : disable_angle_prediction
+    // 4                                            OIS based Intra
+    // 5                                            Light OIS based Intra
+    if (pcs_ptr->slice_type == I_SLICE)
+        if (sc_content_detected)
+            if (pcs_ptr->enc_mode <= ENC_M6)
+                pcs_ptr->intra_pred_mode = 0;
+            else
+                pcs_ptr->intra_pred_mode = 4;
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->intra_pred_mode = 0;
+        else
+            pcs_ptr->intra_pred_mode = 4;
+    else {
+        if (sc_content_detected)
+            if (pcs_ptr->enc_mode <= ENC_M3)
+                pcs_ptr->intra_pred_mode = 0;
+            else if (pcs_ptr->enc_mode <= ENC_M2)
+                if (pcs_ptr->temporal_layer_index == 0)
+                    pcs_ptr->intra_pred_mode = 1;
+                else
+                    pcs_ptr->intra_pred_mode = 2;
+            else if (pcs_ptr->enc_mode <= ENC_M6)
+                if (pcs_ptr->temporal_layer_index == 0)
+                    pcs_ptr->intra_pred_mode = 2;
+                else
+                    pcs_ptr->intra_pred_mode = 3;
+            else
+                pcs_ptr->intra_pred_mode = 4;
+        else if (pcs_ptr->enc_mode <= ENC_M3)
+            pcs_ptr->intra_pred_mode = 0;
+
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+
+            if (pcs_ptr->temporal_layer_index == 0)
+                pcs_ptr->intra_pred_mode = 1;
+            else
+                pcs_ptr->intra_pred_mode = 3;
+        else
+            pcs_ptr->intra_pred_mode = 4;
+    }
+
+    // Set atb mode      Settings
+    // 0                 OFF
+    // 1                 ON
+    if (pcs_ptr->enc_mode <= ENC_M3)
+        pcs_ptr->tx_size_search_mode =
+        (pcs_ptr->sc_content_detected &&
+            pcs_ptr->slice_type != I_SLICE)
+        ? 0
+        : 1;
+    else
+        pcs_ptr->tx_size_search_mode = 0;
+
+    // Set Wedge mode      Settings
+    // 0                 FULL: Full search
+    // 1                 Fast: If two predictors are very similar, skip wedge compound mode search
+    // 2                 Fast: estimate Wedge sign
+    // 3                 Fast: Mode 1 & Mode 2
+    if (pcs_ptr->enc_mode <= ENC_M2)
+        pcs_ptr->wedge_mode = 0;
+    else
+        pcs_ptr->wedge_mode = 1;
+
+    // inter intra pred                      Settings
+    // 0                                     OFF
+    // 1                                     ON
+
+    if (scs_ptr->static_config.inter_intra_compound == DEFAULT)
+        pcs_ptr->enable_inter_intra =
+        pcs_ptr->slice_type != I_SLICE
+        ? scs_ptr->seq_header.enable_interintra_compound
+        : 0;
+    else
+        pcs_ptr->enable_inter_intra =
+        scs_ptr->static_config.inter_intra_compound;
+
+    // Set compound mode      Settings
+    // 0                      OFF: No compond mode search : AVG only
+    // 1                      ON: compond mode search: AVG/DIST/DIFF
+    // 2                      ON: AVG/DIST/DIFF/WEDGE
+    if (scs_ptr->static_config.compound_level == DEFAULT) {
+        if (scs_ptr->compound_mode)
+
+            pcs_ptr->compound_mode =
+            pcs_ptr->enc_mode <= ENC_M2 ? 2 : 1;
+        else
+            pcs_ptr->compound_mode = 0;
+    }
+    else
+        pcs_ptr->compound_mode =
+        scs_ptr->static_config.compound_level;
+
+    // Set frame end cdf update mode      Settings
+    // 0                                  OFF
+    // 1                                  ON
+    if (scs_ptr->static_config.frame_end_cdf_update == DEFAULT)
+        pcs_ptr->frame_end_cdf_update_mode = 1;
+    else
+        pcs_ptr->frame_end_cdf_update_mode =
+        scs_ptr->static_config.frame_end_cdf_update;
+
+    if (scs_ptr->static_config.prune_unipred_me == DEFAULT)
+        if (pcs_ptr->enc_mode >= ENC_M4)
+            pcs_ptr->prune_unipred_at_me = 0;
+        else
+            pcs_ptr->prune_unipred_at_me = 1;
+    else
+        pcs_ptr->prune_unipred_at_me =
+        scs_ptr->static_config.prune_unipred_me;
+
+    // CHKN: Temporal MVP should be disabled for pictures beloning to 4L MiniGop
+    // preceeded by 5L miniGOP. in this case the RPS is wrong(known issue). check
+    // RPS construction for more info.
+    if (pcs_ptr->slice_type == I_SLICE)
+        pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
+    else
+        pcs_ptr->frm_hdr.use_ref_frame_mvs =
+        scs_ptr->mfmv_enabled;
+
+    // Global motion level                        Settings
+    // GM_FULL                                    Exhaustive search mode.
+    // GM_DOWN                                    Downsampled resolution with a
+    // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
+    // using ME MV.
+    if (pcs_ptr->enc_mode <= ENC_M2)
+        pcs_ptr->gm_level = GM_FULL;
+    else
+        pcs_ptr->gm_level = GM_DOWN;
+
+    // Exit TX size search when all coefficients are zero
+    // 0: OFF
+    // 1: ON
+    pcs_ptr->tx_size_early_exit = 1;
+
+    // Prune reference and reduce ME SR based on HME/ME distortion
+    // 0: OFF
+    // 1: ON
+    if (pcs_ptr->sc_content_detected)
+        pcs_ptr->prune_ref_based_me = 0;
+    else
+        pcs_ptr->prune_ref_based_me = 1;
+
+    return return_error;
+}
+#else
 EbErrorType signal_derivation_multi_processes_oq(
     SequenceControlSet        *scs_ptr,
     PictureParentControlSet   *pcs_ptr) {
@@ -1092,13 +1534,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         cm->wn_filter_mode = 2;
     else
         cm->wn_filter_mode = 0;
-    // Intra prediction modes                       Settings
-    // 0                                            FULL
-    // 1                                            LIGHT per block : disable_z2_prediction && disable_angle_refinement  for 64/32/4
-    // 2                                            OFF per block : disable_angle_prediction for 64/32/4
-    // 3                                            OFF : disable_angle_prediction
-    // 4                                            OIS based Intra
-    // 5                                            Light OIS based Intra
+    // Intra prediction modes Settings
+    // 0                      FULL
+    // 1                      LIGHT per block : disable_z2_prediction && disable_angle_refinement  for 64/32/4
+    // 2                      OFF per block : disable_angle_prediction for 64/32/4
+    // 3                      OFF : disable_angle_prediction
+    // 4                      OIS based Intra
+    // 5                      Light OIS based Intra
 
     if (pcs_ptr->slice_type == I_SLICE)
     if (sc_content_detected)
@@ -1255,7 +1697,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     return return_error;
 }
-
+#endif
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
 //set the ref frame types used for this picture,
 static void set_all_ref_frame_type(SequenceControlSet *scs_ptr, PictureParentControlSet  *parent_pcs_ptr, MvReferenceFrame ref_frame_arr[], uint8_t* tot_ref_frames)

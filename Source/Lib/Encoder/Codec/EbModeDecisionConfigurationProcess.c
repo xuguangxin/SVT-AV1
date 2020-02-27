@@ -1105,7 +1105,6 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Opt NICs 3                                   OBMC @(MVP, PME ) + ?
     // Opt NICs 4                                   OBMC @(MVP, PME ) + ?
     // Opt2 NICs
-#if 0
     if (scs_ptr->static_config.enable_obmc) {
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
@@ -1113,26 +1112,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
     } else
         pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
-#else
-    if (scs_ptr->static_config.enable_obmc) {
-        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
-            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2 &&
-             pcs_ptr->parent_pcs_ptr->sc_content_detected))
-            pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
-                pcs_ptr->slice_type != I_SLICE
-                    ? 2
-                    : pcs_ptr->parent_pcs_ptr->sc_content_detected ? 2 : 0;
-        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
-            pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
-                pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE
-                    ? 2
-                    : 0;
-        else
-            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
 
-    } else
-        pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
-#endif
     // Switchable Motion Mode
     frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable ||
                                          pcs_ptr->parent_pcs_ptr->pic_obmc_mode;

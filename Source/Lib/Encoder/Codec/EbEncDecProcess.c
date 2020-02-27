@@ -1533,13 +1533,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->full_loop_escape = 2;
 
+
     // Set global MV injection
     // Level                Settings
-    // 0                    Injection off (Hsan: but not derivation as used by MV
-    // ref derivation) 1                    On
-
+    // 0                    Injection off
+    // 1                    On
     if (sequence_control_set_ptr->static_config.enable_global_motion == EB_TRUE) {
-
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->global_mv_injection = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
@@ -1595,7 +1594,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->warped_motion_injection = 1;
     }
     else
-
         context_ptr->warped_motion_injection = 1;
 
     // Set unipred3x3 injection
@@ -1649,17 +1647,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Level                Settings
     // 0                    Level 0: OFF
     // 1                    Level 1: 7x5 full-pel search + sub-pel refinement off
-    // 2                    Level 2: 7x5 full-pel search +  (H + V) sub-pel
-    // refinement only = 4 half-pel + 4 quarter-pel = 8 positions +
-    // pred_me_distortion to pa_me_distortion deviation on 3 Level 3: 7x5 full-pel
-    // search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel
-    // + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to
-    // pa_me_distortion deviation on 4                    Level 4: 7x5 full-pel
-    // search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16
-    // positions + pred_me_distortion to pa_me_distortion deviation on 5 Level 5:
-    // 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8
-    // quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion
-    // deviation off
+    // 2                    Level 2: 7x5 full-pel search +  (H + V) sub-pel refinement only = 4 half-pel + 4 quarter-pel = 8 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 3                    Level 3: 7x5 full-pel search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 4                    Level 4: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on
+    // 5                    Level 5: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
     if (pcs_ptr->slice_type != I_SLICE) {
 
         if (context_ptr->pd_pass == PD_PASS_0)
@@ -1700,28 +1691,44 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->predictive_me_level = 0;
 
     // Derive md_staging_mode
-    // MD_STAGING_MODE_0
-    // Default Parameters
     //
     // MD_STAGING_MODE_1
-    //  __________________________________________________________________________________________________________________
-    // |        | md_stage_0                  | md_stage_1                     |
-    // md_stage_2                              |
-    // |________|_____________________________|________________________________|_________________________________________|
-    // |CLASS_0 |Prediction for Luma & Chroma |T, Q, Q-1, T-1 for Luma Only    |T,
-    // Q, Q-1, T-1 or Luma & Chroma          | |CLASS_6 | |No RDOQ |RDOQ | | | |No
-    // Tx Type Search               |Tx Type Search                           | |
-    // |                             |No Tx Size Search               |Tx Size
-    // Search                           | |        |                             |
-    // |CFL vs. Independent                      |
-    // |________|_____________________________|________________________________|_________________________________________|
-    // |CLASS_1 |Prediction for Luma Only     |T, Q, Q-1, T-1 for Luma Only    |T,
-    // Q, Q-1, T-1 for Luma & Chroma         | |CLASS_2 |No Interpolation Search
-    // |No RDOQ                         |RDOQ | |CLASS_3 |Bilinear Interpolation
-    // |No Tx Type Search               |Tx Type Search | |CLASS_4 | |No Tx Size
-    // Search               |Tx Size Search                           | |CLASS_5 |
-    // |Interpolation Search            | |
-    // |________|_____________________________|________________________________|_________________________________________|
+    //  ____________________________________________________________________________________________________________________________________________________________
+    // |        | md_stage_0                  | md_stage_1                     | md_stage_2                              | md_stage_3                              |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_0 |Prediction for Luma & Chroma |Res, T, Q, Q-1 for Luma Only    |Bypassed                                 |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_6 |SAD                          |No RDOQ                         |                                         |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_7 |                             |No Tx Type Search               |                                         |Tx Type Search (f(Tx Type Search Level)) |
+    // |        |                             |No Tx Size Search               |                                         |Tx Size Search (f(Tx Size Search Level))|
+    // |        |                             |SSD @ Frequency Domain          |                                         |CFL vs. Independent                      |
+    // |        |                             |                                |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_1 |Prediction for Luma Only     |IFS (f(IFS))                    |Bypassed                                 |Prediction for Luma & Chroma  (Best IF)  |
+    // |CLASS_2 |Bilinear Only (IFS OFF)      |Res, T, Q, Q-1 for Luma Only    |                                         |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_3 |SAD                          |No RDOQ                         |                                         |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_4 |                             |No Tx Type Search               |                                         |Tx Type Search (f(Tx Type Search Level)) |
+    // |CLASS_5 |                             |No Tx Size Search               |                                         |Tx Size Search  (f(Tx Size Search Level))|
+    // |CLASS_8 |                             |SSD @ Frequency Domain          |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    //
+    // MD_STAGING_MODE_2
+    //  ____________________________________________________________________________________________________________________________________________________________
+    // |        | md_stage_0                  | md_stage_1                     | md_stage_2                              | md_stage_3                              |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_0 |Prediction for Luma & Chroma |Res, T, Q, Q-1 for Luma Only    |Res, T, Q, Q-1 for Luma Only             |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_6 |SAD                          |No RDOQ                         |RDOQ (f(RDOQ Level))                     |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_7 |                             |No Tx Type Search               |Tx Type Search (f(Tx Type Search Level)) |Tx Type Search (f(Tx Type Search Level)) |
+    // |        |                             |No Tx Size Search               |No Tx Size Search                        |Tx Size Search (f(Tx Size Search Level))|
+    // |        |                             |SSD @ Frequency Domain          |SSD @ Frequency Domain                   |CFL vs. Independent                      |
+    // |        |                             |                                |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
+    // |CLASS_1 |Prediction for Luma Only     |IFS (f(IFS))                    |Res, T, Q, Q-1  for Luma Only            |Prediction for Luma & Chroma  (Best IF)  |
+    // |CLASS_2 |Bilinear Only (IFS OFF)      |Res, T, Q, Q-1 for Luma Only    |RDOQ (f(RDOQ Level))                     |Res, T, Q, Q-1, T-1 or Luma & Chroma     |
+    // |CLASS_3 |SAD                          |No RDOQ                         |Tx Type Search (f(Tx Type Search Level)) |RDOQ (f(RDOQ Level))                     |
+    // |CLASS_4 |                             |No Tx Type Search               |No Tx Size Search                        |Tx Type Search (f(Tx Type Search Level)) |
+    // |CLASS_5 |                             |No Tx Size Search               |SSD @ Frequency Domain                   |Tx Size Search  (f(Tx Size Search Level))|
+    // |CLASS_8 |                             |SSD @ Frequency Domain          |                                         |SSD @ Spatial Domain                     |
+    // |________|_____________________________|________________________________|_________________________________________|_________________________________________|
 
     if (context_ptr->pd_pass == PD_PASS_0) {
         context_ptr->md_staging_mode = MD_STAGING_MODE_0;
@@ -1742,9 +1749,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     // Set md staging count level
     // Level 0              minimum count = 1
-    // Level 1              set towards the best possible partitioning (to further
-    // optimize) Level 2              HG: breack down or look up-table(s) are
-    // required !
+    // Level 1              set towards the best possible partitioning (to further optimize)
+    // Level 2              HG: breack down or look up-table(s) are required !
     if (context_ptr->pd_pass == PD_PASS_0) {
         context_ptr->md_staging_count_level = 0;
     }
@@ -1758,30 +1764,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Combine MD Class1&2
     // 0                    OFF
     // 1                    ON
-
     if (context_ptr->pd_pass == PD_PASS_0) {
         context_ptr->combine_class12 = 0;
-    }
-    else if (context_ptr->pd_pass == PD_PASS_1) {
+    } else if (context_ptr->pd_pass == PD_PASS_1) {
         context_ptr->combine_class12 = 0;
-    }
-    else
-
+    } else
         if (sequence_control_set_ptr->static_config.combine_class_12 == DEFAULT)
-
-            context_ptr->combine_class12 =
-            (pcs_ptr->enc_mode <= ENC_M4) ? 0 : 1;
-
-        else
-            context_ptr->combine_class12 =
-            sequence_control_set_ptr->static_config.combine_class_12;
+        context_ptr->combine_class12 = (pcs_ptr->enc_mode <= ENC_M4) ? 0 : 1;
+    else
+        context_ptr->combine_class12 = sequence_control_set_ptr->static_config.combine_class_12;
 
     // Set interpolation filter search blk size
     // Level                Settings
     // 0                    ON for 8x8 and above
     // 1                    ON for 16x16 and above
     // 2                    ON for 32x32 and above
-
     if (context_ptr->pd_pass == PD_PASS_0) {
         context_ptr->interpolation_filter_search_blk_size = 0;
     }
@@ -1797,6 +1794,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     // Set PF MD
     context_ptr->pf_md_mode = PF_OFF;
+
     // Derive Spatial SSE Flag
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->spatial_sse_full_loop = EB_FALSE;
@@ -1822,13 +1820,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->blk_skip_decision = EB_FALSE;
 
     // Derive Trellis Quant Coeff Optimization Flag
-
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->trellis_quant_coeff_optimization = EB_FALSE;
     else
-
         if (sequence_control_set_ptr->static_config.enable_trellis == DEFAULT)
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
                 if (pcs_ptr->enc_mode <= ENC_M3)
@@ -1849,7 +1845,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->redundant_blk = EB_TRUE;
     else
-
         if (sequence_control_set_ptr->static_config.enable_redundant_blk ==
             DEFAULT)
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -1865,6 +1860,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->redundant_blk =
             sequence_control_set_ptr->static_config.enable_redundant_blk;
 
+    // Set edge_skp_angle_intra
     if (sequence_control_set_ptr->static_config.encoder_bit_depth == EB_8BIT)
         if (context_ptr->pd_pass == PD_PASS_0)
             context_ptr->edge_based_skip_angle_intra = 0;
@@ -1877,12 +1873,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->edge_based_skip_angle_intra = 0;
                 else
                     context_ptr->edge_based_skip_angle_intra = 1;
-
             else if (pcs_ptr->enc_mode <= ENC_M7)
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
                 context_ptr->edge_based_skip_angle_intra = 1;
-
         }
         else
             context_ptr->edge_based_skip_angle_intra =
@@ -1890,19 +1884,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->edge_based_skip_angle_intra = 0;
 
+    // Set prune_ref_frame_for_rec_partitions
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->prune_ref_frame_for_rec_partitions = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->prune_ref_frame_for_rec_partitions = 1;
     else
-
         if (sequence_control_set_ptr->static_config.prune_ref_rec_part == DEFAULT)
-
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected ||
                 pcs_ptr->enc_mode <= ENC_M1)
-
                 context_ptr->prune_ref_frame_for_rec_partitions = 0;
-
             else
                 context_ptr->prune_ref_frame_for_rec_partitions = 1;
         else
@@ -1922,7 +1913,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_exit_th = 18;
     else
-
         if (MR_MODE)
             context_ptr->md_exit_th = 0;
         else if (pcs_ptr->enc_mode <= ENC_M0 &&
@@ -1931,42 +1921,29 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_exit_th = 0;
         else
             context_ptr->md_exit_th = 18;
-
     // md_stage_1_cand_prune_th (for single candidate removal per class)
-    // Remove candidate if deviation to the best is higher than
-    // md_stage_1_cand_prune_th
-
+    // Remove candidate if deviation to the best is higher than md_stage_1_cand_prune_th
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_cand_prune_th = 75;
-
     else
-
-        if (pcs_ptr->enc_mode <= ENC_M1 ||
-            pcs_ptr->parent_pcs_ptr->sc_content_detected)
-
-            context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
-
-        else
-            context_ptr->md_stage_1_cand_prune_th =
-            sequence_control_set_ptr->static_config.md_stage_1_cand_prune_th;
+        if (pcs_ptr->enc_mode <= ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+    else
+        context_ptr->md_stage_1_cand_prune_th =
+        sequence_control_set_ptr->static_config.md_stage_1_cand_prune_th;
 
     // md_stage_1_class_prune_th (for class removal)
     // Remove class if deviation to the best higher than TH_C
-
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_class_prune_th = 100;
-
     else
-
         if (pcs_ptr->enc_mode <= ENC_M3 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
-
             context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
-
         else
             context_ptr->md_stage_1_class_prune_th =
             sequence_control_set_ptr->static_config.md_stage_1_class_prune_th;
@@ -1974,20 +1951,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // md_stage_2_3_cand_prune_th (for single candidate removal per class)
     // Remove candidate if deviation to the best is higher than
     // md_stage_2_3_cand_prune_th
-
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
-
         context_ptr->md_stage_2_3_cand_prune_th = 5;
-
     else
-
         if (pcs_ptr->enc_mode <= ENC_M0 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
-
             context_ptr->md_stage_2_3_cand_prune_th = 15;
-
         else if (pcs_ptr->enc_mode <= ENC_M3)
             context_ptr->md_stage_2_3_cand_prune_th = 15;
         else
@@ -1996,19 +1967,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // md_stage_2_3_class_prune_th (for class removal)
     // Remove class if deviation to the best is higher than
     // md_stage_2_3_class_prune_th
-
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_class_prune_th = 25;
-
     else
-
         if ((pcs_ptr->enc_mode <= ENC_M3 &&
             pcs_ptr->parent_pcs_ptr->sc_content_detected))
 
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
-
         else
             context_ptr->md_stage_2_3_class_prune_th =
             sequence_control_set_ptr->static_config.md_stage_2_3_class_prune_th;
@@ -2018,26 +1985,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // shapes should be skipped. Namely:
     // skip HA, HB, and H4 if h_cost > (weighted sq_cost)
     // skip VA, VB, and V4 if v_cost > (weighted sq_cost)
-
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->sq_weight = (uint32_t)~0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->sq_weight = 100;
 
     else
-
         if (MR_MODE)
-
             context_ptr->sq_weight =
             sequence_control_set_ptr->static_config.sq_weight + 15;
-
         else
-
             if (pcs_ptr->enc_mode <= ENC_M1)
-
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 5;
-
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
@@ -2047,10 +2007,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
-
         context_ptr->nsq_hv_level = 0;
     else if (pcs_ptr->enc_mode <= ENC_M3) {
-
         context_ptr->nsq_hv_level = 1;
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
@@ -2060,7 +2018,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
-
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
             context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
@@ -2070,7 +2027,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->full_pel_ref_window_height_th =
                 FULL_PEL_REF_WINDOW_HEIGHT_15;
         }
-
     }
     else if (context_ptr->pd_pass == PD_PASS_1) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
@@ -2083,9 +2039,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 FULL_PEL_REF_WINDOW_HEIGHT_15;
         }
     }
-
     else {
-
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
             context_ptr->full_pel_ref_window_width_th = FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->full_pel_ref_window_height_th = FULL_PEL_REF_WINDOW_WIDTH_7;
@@ -2107,7 +2061,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1: If previous similar block is not compound, do not inject compound
     // 2: If previous similar block is not compound, do not inject compound else
     // consider the compound modes up the similar’s one
-
     if (pcs_ptr->enc_mode <= ENC_M3)
         context_ptr->comp_similar_mode = 1;
     else
@@ -2118,7 +2071,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
-
     else if (MR_MODE &&
         pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
@@ -2223,7 +2175,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->best_me_cand_only_flag = EB_FALSE;
 
-
+    // Set skip_depth
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->skip_depth = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
@@ -2242,6 +2194,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         (pcs_ptr->parent_pcs_ptr->frm_hdr
             .allow_high_precision_mv);
 
+    // Hsan: potential adoption(s)
 #if 0 
     // Cfl level
     // 0: CFL OFF
