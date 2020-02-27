@@ -1660,6 +1660,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 3                    Level 3: 7x5 full-pel search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on
     // 4                    Level 4: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on
     // 5                    Level 5: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+    // 6                    Level 6: 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off
+
+    // NB: if PME_UP_TO_4_REF is ON, levels 1-5 are restricted to using max 4 ref frames
     if (pcs_ptr->slice_type != I_SLICE) {
 
         if (context_ptr->pd_pass == PD_PASS_0)
@@ -1681,8 +1684,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     else
                         context_ptr->predictive_me_level = 0;
                 else
-
+#if PME_UP_TO_4_REF
+                    if (pcs_ptr->enc_mode <= ENC_M0)
+                        context_ptr->predictive_me_level = 6;
                     if (pcs_ptr->enc_mode <= ENC_M3)
+#else
+                    if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 
                         context_ptr->predictive_me_level = 5;
 

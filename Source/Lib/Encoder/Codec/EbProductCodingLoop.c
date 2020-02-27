@@ -4359,6 +4359,9 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             MvReferenceFrame frame_type = rf[0];
             uint8_t          list_idx   = get_list_idx(rf[0]);
             uint8_t          ref_idx    = get_ref_frame_idx(rf[0]);
+#if PME_UP_TO_4_REF
+            if (ref_idx > 1 && context_ptr->predictive_me_level <= 5) continue;
+#endif
             if (ref_idx > context_ptr->md_max_ref_count - 1) continue;
             // Get the ME MV
             const MeSbResults *me_results =
