@@ -1761,10 +1761,10 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                         }
                     }
                     context_ptr->md_stage_1_count[i] =
-                        round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                        (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                               mult_factor_denum);
                     context_ptr->md_stage_2_count[i] =
-                        round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                        (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                               mult_factor_denum);
                 }
             }
@@ -1775,10 +1775,10 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i != CAND_CLASS_0 || i != CAND_CLASS_6 || i != CAND_CLASS_7) {
                         context_ptr->md_stage_1_count[i] =
-                            round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                            (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                                   mult_factor_denum);
                         context_ptr->md_stage_2_count[i] =
-                            round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                            (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                                   mult_factor_denum);
                     }
                 }
@@ -1801,11 +1801,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i != CAND_CLASS_0 && i != CAND_CLASS_6 && i != CAND_CLASS_7) {
-                        context_ptr->md_stage_1_count[i] = round(
+                        context_ptr->md_stage_1_count[i] = (uint32_t) round(
                             (division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                             division_factor_denum);
                         context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round(
+                        context_ptr->md_stage_2_count[i] = (uint32_t) round(
                             (division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                             division_factor_denum);
                         context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
@@ -1828,11 +1828,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     if (i != CAND_CLASS_0 && i != CAND_CLASS_6 && i != CAND_CLASS_7) {
-                        context_ptr->md_stage_1_count[i] = round(
+                        context_ptr->md_stage_1_count[i] = (uint32_t) round(
                             (division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                             division_factor_denum);
                         context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
-                        context_ptr->md_stage_2_count[i] = round(
+                        context_ptr->md_stage_2_count[i] = (uint32_t) round(
                             (division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                             division_factor_denum);
                         context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
@@ -1999,7 +1999,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             uint8_t mult_factor_denum = 3;
             for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                 context_ptr->md_stage_2_count[i] =
-                    round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                    (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                           mult_factor_denum);
             }
 
@@ -2017,11 +2017,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     context_ptr->md_stage_1_count[i] =
-                        round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                        (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                               division_factor_denum);
                     context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
                     context_ptr->md_stage_2_count[i] =
-                        round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                        (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                               division_factor_denum);
                     context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
                 }
@@ -2042,11 +2042,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     context_ptr->md_stage_1_count[i] =
-                        round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                        (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                               division_factor_denum);
                     context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
                     context_ptr->md_stage_2_count[i] =
-                        round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                        (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                               division_factor_denum);
                     context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
                 }
@@ -9380,12 +9380,9 @@ static void set_child_to_be_skipped(
     int32_t     sb_size,
     int8_t      depth_step) {
     uint32_t child_block_idx_1, child_block_idx_2, child_block_idx_3, child_block_idx_4;
-    uint32_t tot_d1_blocks, block_1d_idx;
+    uint32_t block_1d_idx;
     const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
-    tot_d1_blocks =
-        blk_geom->sq_size == 128 ? 17 :
-        blk_geom->sq_size > 8 ? 25 :
-        blk_geom->sq_size == 8 ? 5 : 1;
+
 #if EARLY_EXIT_ABS_TH
     if (context_ptr->md_blk_arr_nsq[blk_index].split_flag && blk_geom->sq_size > 4) {
 #else
