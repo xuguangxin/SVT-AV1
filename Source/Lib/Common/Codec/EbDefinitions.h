@@ -35,7 +35,9 @@ extern "C" {
 #endif
 
 
-#define NSQ_HV                          1 // skip NSQ partitions based on H vs V costs
+#define TH_BASED_CFL                        1 // disbale cfl based on relative inter/intra costs
+#define TH_BASED_CHROMA_SEARCH              1 // skip chroma search based on relative inter/intra costs
+#define NSQ_HV                              1 // skip NSQ partitions based on H vs V costs
 
 #define FEB19_PD0_TH                        1
 #define TUNE_SUBPEL_SEARCH                  1

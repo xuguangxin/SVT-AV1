@@ -339,6 +339,10 @@ typedef struct ModeDecisionContext {
 #if COMP_OPT
     uint32_t md_stage_3_total_intra_count;
 #endif
+#if TH_BASED_CHROMA_SEARCH || TH_BASED_CFL
+    uint64_t best_intra_cost;
+    uint64_t best_inter_cost;
+#endif
     uint8_t combine_class12; // 1:class1 and 2 are combined.
 
     CandClass target_class;

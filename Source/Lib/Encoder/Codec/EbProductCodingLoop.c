@@ -3593,7 +3593,28 @@ void construct_best_sorted_arrays_md_stage_3(struct ModeDecisionContext *  conte
         }
 #endif
     }
-
+#if TH_BASED_CHROMA_SEARCH || TH_BASED_CFL
+    context_ptr->best_intra_cost = MAX_MODE_COST;
+    context_ptr->best_inter_cost = MAX_MODE_COST;
+    for (i = 0; i < fullReconCandidateCount; ++i) {
+        id               = sorted_candidate_index_array[i];
+        int32_t is_inter = (buffer_ptr_array[id]->candidate_ptr->type == INTER_MODE ||
+                            buffer_ptr_array[id]->candidate_ptr->use_intrabc)
+                               ? EB_TRUE
+                               : EB_FALSE;
+        if (!is_inter)
+            if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_intra_cost)
+                context_ptr->best_intra_cost = *buffer_ptr_array[id]->full_cost_ptr;
+        if (is_inter)
+            if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_inter_cost)
+                context_ptr->best_inter_cost = *buffer_ptr_array[id]->full_cost_ptr;
+    }
+#if TH_BASED_CHROMA_SEARCH
+    uint64_t intra_th = 30;
+    if ((context_ptr->best_inter_cost * (100 + intra_th)) < (context_ptr->best_intra_cost * 100))
+        context_ptr->md_stage_3_total_intra_count = 0;
+#endif
+#endif
     sort_array_index_fast_cost_ptr(
         buffer_ptr_array, sorted_candidate_index_array, fullReconCandidateCount);
 }
@@ -7476,6 +7497,54 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
             if (context_ptr->blk_geom->sq_size < 128) {
                 if (context_ptr->blk_geom->has_uv) {
                     if (candidate_ptr->type == INTRA_MODE) {
+#if TH_BASED_CFL
+                        uint64_t cfl_th = 30;
+                        uint32_t intra_chroma_mode;
+                        int32_t  angle_delta;
+                        uint8_t  is_directional_chroma_mode_flag;
+                        if (((context_ptr->best_inter_cost * (100 + cfl_th)) <
+                             (context_ptr->best_intra_cost * 100)) &&
+                            !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) {
+                            intra_chroma_mode =
+                                context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode]
+                                                         [MAX_ANGLE_DELTA +
+                                                          candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                            angle_delta =
+                                context_ptr
+                                    ->best_uv_angle[candidate_ptr->intra_luma_mode]
+                                                   [MAX_ANGLE_DELTA +
+                                                    candidate_ptr->angle_delta[PLANE_TYPE_Y]];
+                            is_directional_chroma_mode_flag =
+                                (uint8_t)av1_is_directional_mode((PredictionMode)(
+                                    context_ptr
+                                        ->best_uv_mode[candidate_ptr->intra_luma_mode]
+                                                      [MAX_ANGLE_DELTA +
+                                                       candidate_ptr->angle_delta[PLANE_TYPE_Y]]));
+                        } else {
+                            intra_chroma_mode =
+                                candidate_ptr->intra_chroma_mode != UV_CFL_PRED
+                                    ? context_ptr
+                                          ->best_uv_mode[candidate_ptr->intra_luma_mode]
+                                                        [MAX_ANGLE_DELTA +
+                                                         candidate_ptr->angle_delta[PLANE_TYPE_Y]]
+                                    : UV_CFL_PRED;
+                            angle_delta =
+                                candidate_ptr->intra_chroma_mode != UV_CFL_PRED
+                                    ? context_ptr
+                                          ->best_uv_angle[candidate_ptr->intra_luma_mode]
+                                                         [MAX_ANGLE_DELTA +
+                                                          candidate_ptr->angle_delta[PLANE_TYPE_Y]]
+                                    : 0;
+                            is_directional_chroma_mode_flag =
+                                candidate_ptr->intra_chroma_mode != UV_CFL_PRED
+                                    ? (uint8_t)av1_is_directional_mode((PredictionMode)(
+                                          context_ptr->best_uv_mode
+                                              [candidate_ptr->intra_luma_mode]
+                                              [MAX_ANGLE_DELTA +
+                                               candidate_ptr->angle_delta[PLANE_TYPE_Y]]))
+                                    : 0;
+                        }
+#else
                         uint32_t intra_chroma_mode = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
                             context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] :
                             UV_CFL_PRED;
@@ -7483,6 +7552,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                             context_ptr->best_uv_angle[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]] : 0;
                         uint8_t is_directional_chroma_mode_flag = candidate_ptr->intra_chroma_mode != UV_CFL_PRED ?
                             (uint8_t)av1_is_directional_mode((PredictionMode)(context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode][MAX_ANGLE_DELTA + candidate_ptr->angle_delta[PLANE_TYPE_Y]])) : 0;
+#endif
                         candidate_ptr->intra_chroma_mode = intra_chroma_mode;
                         candidate_ptr->angle_delta[PLANE_TYPE_UV] = angle_delta;
                         candidate_ptr->is_directional_chroma_mode_flag = is_directional_chroma_mode_flag;
