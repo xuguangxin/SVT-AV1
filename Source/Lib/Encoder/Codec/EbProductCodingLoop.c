@@ -1861,11 +1861,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
                     context_ptr->md_stage_1_count[i] =
-                        round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                        (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                               division_factor_denum);
                     context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
                     context_ptr->md_stage_2_count[i] =
-                        round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                        (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                               division_factor_denum);
                     context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
                 }
@@ -6917,6 +6917,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
             temp_tx_weight = FC_SKIP_TX_SR_TH010;
         else
             temp_tx_weight = 0; // always skip
+        tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;
         tx_search_skip_flag = (candidate_buffer->candidate_ptr->cand_class == CAND_CLASS_0 ||
                                candidate_buffer->candidate_ptr->cand_class == CAND_CLASS_6 ||
                                candidate_buffer->candidate_ptr->cand_class == CAND_CLASS_7)
