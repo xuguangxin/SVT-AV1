@@ -2080,16 +2080,20 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
     prediction_ptr.stride_cr = (uint16_t)BW >> ss_x;
 
     if (!is_highbd) {
-        //  assert(src[C_Y] != NULL);
-        //  assert(src[C_U] != NULL);
-        //  assert(src[C_V] != NULL);
+#if !IMPROVED_TF_ME_INPUT
+        assert(src[C_Y] != NULL);
+        assert(src[C_U] != NULL);
+        assert(src[C_V] != NULL);
+#endif
         prediction_ptr.buffer_y  = pred[C_Y];
         prediction_ptr.buffer_cb = pred[C_U];
         prediction_ptr.buffer_cr = pred[C_V];
     } else {
-        //  assert(src_16bit[C_Y] != NULL);
-        //  assert(src_16bit[C_U] != NULL);
-        //  assert(src_16bit[C_V] != NULL);
+#if !IMPROVED_TF_ME_INPUT
+        assert(src_16bit[C_Y] != NULL);
+        assert(src_16bit[C_U] != NULL);
+        assert(src_16bit[C_V] != NULL);
+#endif
         prediction_ptr.buffer_y  = (uint8_t *)pred_16bit[C_Y];
         prediction_ptr.buffer_cb = (uint8_t *)pred_16bit[C_U];
         prediction_ptr.buffer_cr = (uint8_t *)pred_16bit[C_V];
