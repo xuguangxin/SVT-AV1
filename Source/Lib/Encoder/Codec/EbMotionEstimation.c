@@ -2900,7 +2900,7 @@ void generate_nsq_mv(MeContext *context_ptr) {
     p_best_mv16x8[5] =p_sad8x8[10] < p_sad8x8[11] ? p_best_mv8x8[10] : p_best_mv8x8[11];
     p_best_mv16x8[6] =p_sad8x8[12] < p_sad8x8[13] ? p_best_mv8x8[12] : p_best_mv8x8[13];
     p_best_mv16x8[7] =p_sad8x8[14] < p_sad8x8[15] ? p_best_mv8x8[14] : p_best_mv8x8[15];
-    p_best_mv16x8[8] =p_sad8x8[16] < p_sad8x8[16] ? p_best_mv8x8[16] : p_best_mv8x8[16];
+    p_best_mv16x8[8] =p_sad8x8[16] < p_sad8x8[17] ? p_best_mv8x8[16] : p_best_mv8x8[17];
     p_best_mv16x8[9] =p_sad8x8[18] < p_sad8x8[19] ? p_best_mv8x8[18] : p_best_mv8x8[19];
     p_best_mv16x8[10] =p_sad8x8[20] < p_sad8x8[21] ? p_best_mv8x8[20] : p_best_mv8x8[21];
     p_best_mv16x8[11] =p_sad8x8[22] < p_sad8x8[23] ? p_best_mv8x8[22] : p_best_mv8x8[23];

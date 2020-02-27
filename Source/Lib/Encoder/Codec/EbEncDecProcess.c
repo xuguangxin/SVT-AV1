@@ -1360,10 +1360,6 @@ Input   : encoder mode and pd pass
 Output  : EncDec Kernel signal(s)
 ******************************************************/
 #if JAN6_PRESETS
-#define FULL_PEL_REF_WINDOW_WIDTH_15        15
-#define FULL_PEL_REF_WINDOW_HEIGHT_15       15
-#define FULL_PEL_REF_WINDOW_WIDTH_7          7
-#define FULL_PEL_REF_WINDOW_HEIGHT_5         5
 EbErrorType signal_derivation_enc_dec_kernel_oq(
     SequenceControlSet *sequence_control_set_ptr,
     PictureControlSet *pcs_ptr,
@@ -2042,28 +2038,28 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Set pred ME full search area
     if (context_ptr->pd_pass == PD_PASS_0) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_7;
         }
         else {
-            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_15;
-            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT_15;
+            context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
+            context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
         }
     }
     else if (context_ptr->pd_pass == PD_PASS_1) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_7;
         }
         else {
-            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_15;
-            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_HEIGHT_15;
+            context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
+            context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
         }
     }
     else {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
-            context_ptr->pred_me_full_pel_search_width = FULL_PEL_REF_WINDOW_WIDTH_7;
-            context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_7;
         }
         else {
 #if FEB27_ADOPTIONS
@@ -3564,20 +3560,11 @@ static uint64_t generate_best_part_cost(
     PictureControlSet   *pcs_ptr,
     ModeDecisionContext *context_ptr,
     uint32_t             sb_index) {
-
-    MdcSbData *resultsPtr = &pcs_ptr->mdc_sb_array[sb_index];
     uint32_t  blk_index = 0;
-
-    SuperBlock  *sb_ptr = pcs_ptr->sb_ptr_array[sb_index];
-    uint32_t tot_d1_blocks;
     uint64_t best_part_cost = 0;
     EbBool split_flag;
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
-        tot_d1_blocks =
-            blk_geom->sq_size == 128 ? 17 :
-            blk_geom->sq_size > 8 ? 25 :
-            blk_geom->sq_size == 8 ? 5 : 1;
         // if the parent square is inside inject this block
         uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
             (blk_geom->sq_size < 128) ? 1 : 0;
