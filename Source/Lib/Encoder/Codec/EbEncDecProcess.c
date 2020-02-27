@@ -28,8 +28,10 @@
 #if FEB19_PD0_TH
 #include "EbRateDistortionCost.h"
 #endif
+#if !FEB27_ADOPTIONS
 #define FC_SKIP_TX_SR_TH025 125 // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010 110 // Fast cost skip tx search threshold.
+#endif
 void eb_av1_cdef_search(EncDecContext *context_ptr, SequenceControlSet *scs_ptr,
                         PictureControlSet *pcs_ptr);
 
@@ -1405,6 +1407,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else {
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             context_ptr->tx_weight = MAX_MODE_COST;
+#if FEB27_ADOPTIONS
+        else if (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0)
+            context_ptr->tx_weight = BLK_BASED_SKIP_TX_SR_TH;
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->tx_weight = MAX_MODE_COST;
         else if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1869,8 +1875,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->edge_based_skip_angle_intra = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
-        else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra ==
-            DEFAULT) {
+        else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
+#if FEB27_ADOPTIONS
+            if (MR_MODE)
+                context_ptr->edge_based_skip_angle_intra = 0;
+            else
+                context_ptr->edge_based_skip_angle_intra = 1;
+#else
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
                 if (pcs_ptr->enc_mode <= ENC_M1)
                     context_ptr->edge_based_skip_angle_intra = 0;
@@ -1880,8 +1891,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
                 context_ptr->edge_based_skip_angle_intra = 1;
-        }
-        else
+#endif
+        } else
             context_ptr->edge_based_skip_angle_intra =
             sequence_control_set_ptr->static_config.edge_skp_angle_intra;
     else
@@ -2047,8 +2058,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->pred_me_full_pel_search_height = FULL_PEL_REF_WINDOW_WIDTH_7;
         }
         else {
+#if FEB27_ADOPTIONS
+            context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M0 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M0 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
             context_ptr->pred_me_full_pel_search_width = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_WIDTH_15 : FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->pred_me_full_pel_search_height = pcs_ptr->enc_mode <= ENC_M1 ? FULL_PEL_REF_WINDOW_HEIGHT_15 : FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
         }
     }
     

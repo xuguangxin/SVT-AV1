@@ -1839,6 +1839,38 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     }
                 }
             }
+#if FEB27_ADOPTIONS
+            if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                uint8_t division_factor_num   = 1;
+                uint8_t division_factor_denum = 1;
+                if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8) {
+                    division_factor_num   = 2;
+                    division_factor_denum = 3;
+                } else if (context_ptr->blk_geom->bheight <= 16 &&
+                           context_ptr->blk_geom->bwidth <= 16) {
+                    division_factor_num   = 3;
+                    division_factor_denum = 4;
+                } else if (context_ptr->blk_geom->bheight <= 32 &&
+                           context_ptr->blk_geom->bwidth <= 32) {
+                    division_factor_num   = 7;
+                    division_factor_denum = 8;
+                } else {
+                    division_factor_num   = 1;
+                    division_factor_denum = 1;
+                }
+
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    context_ptr->md_stage_1_count[i] =
+                        round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                              division_factor_denum);
+                    context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                    context_ptr->md_stage_2_count[i] =
+                        round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                              division_factor_denum);
+                    context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                }
+            }
+#endif
         }
 
         else if (nics_level == NIC_S8) { // S8
@@ -6871,6 +6903,27 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
     uint8_t tx_search_skip_flag;
     if (context_ptr->md_staging_tx_search == 0)
         tx_search_skip_flag = EB_TRUE;
+#if FEB27_ADOPTIONS
+    else if (context_ptr->tx_weight == BLK_BASED_SKIP_TX_SR_TH) { // set tx_weight based on block size
+        uint64_t temp_tx_weight;
+        if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8)
+            temp_tx_weight = FC_SKIP_TX_SR_TH150;
+        else if (context_ptr->blk_geom->bheight <= 16 && context_ptr->blk_geom->bwidth <= 16)
+            temp_tx_weight = FC_SKIP_TX_SR_TH025;
+        else if (context_ptr->blk_geom->bheight <= 32 && context_ptr->blk_geom->bwidth <= 32)
+            temp_tx_weight = FC_SKIP_TX_SR_TH010;
+        else
+            temp_tx_weight = 0; // always skip
+        tx_search_skip_flag = (candidate_buffer->candidate_ptr->cand_class == CAND_CLASS_0 ||
+                               candidate_buffer->candidate_ptr->cand_class == CAND_CLASS_6 ||
+                               candidate_buffer->candidate_ptr->cand_class == CAND_CLASS_7)
+                                  ? tx_search_skip_flag
+                                  : get_skip_tx_search_flag(context_ptr->blk_geom->sq_size,
+                                                            ref_fast_cost,
+                                                            *candidate_buffer->fast_cost_ptr,
+                                                            temp_tx_weight);
+    }
+#endif
     else if (context_ptr->md_staging_tx_search == 1)
         tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP
                                   ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size,

@@ -46,6 +46,7 @@ extern "C" {
 #if 1
 #define MRP1D_COMPOUND                      1
 #define PALETTE_TL                          1   // remove temporal layer check for palette SC
+#define FEB27_ADOPTIONS                     1
 #define FEB24_ADOPTIONS                     1
 #define M0_FEB23_ADOPTIONS                  1
 #define M2_FEB22_ADOPTION                   1
@@ -222,6 +223,12 @@ typedef struct {
     uint8_t bx;
     uint8_t skip;
 } CdefList;
+#if FEB27_ADOPTIONS
+#define BLK_BASED_SKIP_TX_SR_TH -1      // Set tx_weight based on block size
+#define FC_SKIP_TX_SR_TH150     250     // Fast cost skip tx search threshold.
+#define FC_SKIP_TX_SR_TH025     125     // Fast cost skip tx search threshold.
+#define FC_SKIP_TX_SR_TH010     110     // Fast cost skip tx search threshold.
+#endif
 
 /*!\brief force enum to be unsigned 1 byte*/
 #define UENUM1BYTE(enumvar) \
