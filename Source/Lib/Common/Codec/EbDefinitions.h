@@ -73,12 +73,12 @@ extern "C" {
 #define OPT_REC_SUBP            1 // Rect_block inherit Sub-pel MVs from sq_sq_blocks in ME
 #define SKIP_DEPTH              1 // Skip the child blocks whenthe SQ block is better than the NSQ
 
-#define REVERT_TF_SEETINGS 0 // TF settings.
-#define PLANE_WISE_TF 0 // plane wise temporal filtering.
-#define PLANE_WISE_TF_OPT 0 // Added intrinsic code for planewise filtering
+#define REVERT_TF_SEETINGS 1 // TF settings.
+#define PLANE_WISE_TF 1 // plane wise temporal filtering.
+#define PLANE_WISE_TF_OPT 1 // Added intrinsic code for planewise filtering
 // Added the ability to use 32x32 MVs, and the ability to switch between using 16x16 MVs or 32x32 MVs
 // Decoupled search / compensation @ ALTREF core, REGULAR @ search and SHARP @ compensation, and 1 / 2 Pel Ref and 1 / 4 Pel Ref @ only ALTREF core(15x15 search ~the ME Full - Pel MV).
-#define IMPROVED_TF_ME_INPUT 0
+#define IMPROVED_TF_ME_INPUT 1
 
 #define CHROMA_SEARCH_OPT        1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
 #if CHROMA_SEARCH_OPT
