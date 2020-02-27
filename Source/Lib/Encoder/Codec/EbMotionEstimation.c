@@ -4111,8 +4111,15 @@ static void half_pel_refinement_block(
     (void)ineteger_mv;
     // copute distance between best mv and the integer mv candidate
     int16_t offset_x, offset_y;
+#if TUNE_SUBPEL_SEARCH
+    int8_t h_pel_search_wind = context_ptr->h_pel_search_wind;
+
+    for (offset_x = -h_pel_search_wind; offset_x <= h_pel_search_wind; offset_x++) {
+        for (offset_y = -h_pel_search_wind; offset_y <= h_pel_search_wind; offset_y++) {
+#else
     for (offset_x = -H_PEL_SEARCH_WIND; offset_x <= H_PEL_SEARCH_WIND; offset_x++) {
         for (offset_y = -H_PEL_SEARCH_WIND; offset_y <= H_PEL_SEARCH_WIND; offset_y++) {
+#endif
             x_best_mv            = _MVXT(*best_pervious_stage_mv);
             y_best_mv            = _MVYT(*best_pervious_stage_mv);
             x_mv                 = x_best_mv + (offset_x * 4);

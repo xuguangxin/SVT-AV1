@@ -25,6 +25,9 @@
 #include "grainSynthesis.h"
 //To fix warning C4013: 'convert_16bit_to_8bit' undefined; assuming extern returning int
 #include "common_dsp_rtcd.h"
+#if FEB19_PD0_TH
+#include "EbRateDistortionCost.h"
+#endif
 #define FC_SKIP_TX_SR_TH025 125 // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010 110 // Fast cost skip tx search threshold.
 void eb_av1_cdef_search(EncDecContext *context_ptr, SequenceControlSet *scs_ptr,
@@ -2195,7 +2198,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             .allow_high_precision_mv);
 
     // Hsan: potential adoption(s)
-#if 0 
+#if 0
     // Cfl level
     // 0: CFL OFF
     // 1: CFL is allowed
@@ -3391,6 +3394,35 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
     }
 }
 
+#if FEB19_PD0_TH
+uint64_t  pd_level_tab[2][9][2][3] =
+{
+    {
+        // Thresholds to use if block is screen content or an I-slice
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}}
+    } ,
+    {
+        // Thresholds to use if block is not screen content or an I-slice
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}},
+        {{5,0,0},{5,0,0}}
+    }
+};
+#else
 uint64_t pd_level_tab[2][9][2][3] = {
     {
         // Thresholds to use if block is screen content or an I-slice
@@ -3416,7 +3448,7 @@ uint64_t pd_level_tab[2][9][2][3] = {
         {{100, 10, 10}, {100, 10, 10}},
         {{100, 10, 10}, {100, 10, 10}},
     }};
-
+#endif
 void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint32_t sb_size,
                             int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
@@ -3521,6 +3553,45 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
         *e_depth = 0;
 }
 
+#if FEB19_PD0_TH
+static uint64_t generate_best_part_cost(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+
+    MdcSbData *resultsPtr = &pcs_ptr->mdc_sb_array[sb_index];
+    uint32_t  blk_index = 0;
+
+    SuperBlock  *sb_ptr = pcs_ptr->sb_ptr_array[sb_index];
+    uint32_t tot_d1_blocks;
+    uint64_t best_part_cost = 0;
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        tot_d1_blocks =
+            blk_geom->sq_size == 128 ? 17 :
+            blk_geom->sq_size > 8 ? 25 :
+            blk_geom->sq_size == 8 ? 5 : 1;
+        // if the parent square is inside inject this block
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        // derive split_flag
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE)
+                    best_part_cost += context_ptr->md_local_blk_unit[blk_index].cost;
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+    return best_part_cost;
+}
+#endif
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
     MdcSbData *results_ptr = &pcs_ptr->mdc_sb_array[sb_index];
@@ -3565,12 +3636,42 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     int8_t e_depth = 0;
 
                     if (context_ptr->pd_pass == PD_PASS_0) {
+#if FEB19_PD0_TH
+                        // full_lambda to be udpated for 10bit
+                        uint32_t full_lambda =  context_ptr->full_lambda;
+                        //uint32_t full_lambda = context_ptr->hbd_mode_decision ?
+                        //context_ptr->full_lambda_md[EB_10_BIT_MD] :
+                        //context_ptr->full_lambda_md[EB_8_BIT_MD];
+
+                        uint32_t sb_width = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
+                            128 : 64;
+                        uint32_t sb_height = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
+                            128 : 64;
+                        uint64_t dist_sum = (sb_width * sb_height * 100);
+
+                        uint64_t early_exit_th = RDCOST(full_lambda, 16, dist_sum);
+                        uint64_t best_part_cost = generate_best_part_cost(
+                            scs_ptr,
+                            pcs_ptr,
+                            context_ptr,
+                            sb_index);
+
+                        if (best_part_cost < early_exit_th) {
+                            s_depth = 0;
+                            e_depth = 0;
+                        }
+                        else {
+#endif
                         derive_start_end_depth(pcs_ptr,
                                                sb_ptr,
                                                scs_ptr->seq_header.sb_size,
                                                &s_depth,
                                                &e_depth,
                                                blk_geom);
+
+#if FEB19_PD0_TH
+                        }
+#endif
                     } else if (context_ptr->pd_pass == PD_PASS_1) {
                         EbBool zero_coeff_present_flag = EB_FALSE;
 

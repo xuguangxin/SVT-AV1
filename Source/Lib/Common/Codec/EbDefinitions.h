@@ -37,6 +37,9 @@ extern "C" {
 
 #define NSQ_HV                          1 // skip NSQ partitions based on H vs V costs
 
+#define FEB19_PD0_TH                        1
+#define TUNE_SUBPEL_SEARCH                  1
+
 #define JAN6_PRESETS                        1
 #if 1
 #define MRP1D_COMPOUND                      1
@@ -151,8 +154,9 @@ extern "C" {
 #define AOM_LEFT_TOP_MARGIN_SCALED(subsampling) \
     (AOM_LEFT_TOP_MARGIN_PX(subsampling) << SCALE_SUBPEL_BITS)
 
-#if M0_FEB23_ADOPTIONS
-#define H_PEL_SEARCH_WIND 2 // 1/2-pel search window
+#if M0_FEB23_ADOPTIONS &&  TUNE_SUBPEL_SEARCH
+#define H_PEL_SEARCH_WIND_3 3  // 1/2-pel serach window 3
+#define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2
 #else
 #define H_PEL_SEARCH_WIND 3 // 1/2-pel search window
 #endif
