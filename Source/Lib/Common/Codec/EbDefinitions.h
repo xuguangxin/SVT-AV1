@@ -224,7 +224,7 @@ typedef struct {
     uint8_t skip;
 } CdefList;
 #if FEB27_ADOPTIONS
-#define BLK_BASED_SKIP_TX_SR_TH -1      // Set tx_weight based on block size
+#define BLK_BASED_SKIP_TX_SR_TH 0      // Set tx_weight based on block size
 #define FC_SKIP_TX_SR_TH150     250     // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH025     125     // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010     110     // Fast cost skip tx search threshold.
