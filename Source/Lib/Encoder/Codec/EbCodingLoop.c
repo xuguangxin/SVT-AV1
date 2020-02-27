@@ -996,20 +996,23 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
             txb_ptr->nz_coef_count[0] = (uint16_t)count_non_zero_coeffs[0];
         }
 
-        if (blk_ptr->prediction_mode_flag == INTRA_MODE &&
-            blk_ptr->prediction_unit_array->intra_chroma_mode == UV_CFL_PRED) {
-            EbPictureBufferDesc *recon_samples = pred_samples16bit;
+        if (component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
+            component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK) {
 
-            uint32_t recon_luma_offset =
-                (recon_samples->origin_y + round_origin_y) * recon_samples->stride_y +
-                (recon_samples->origin_x + round_origin_x);
+            if (blk_ptr->prediction_mode_flag == INTRA_MODE &&
+                blk_ptr->prediction_unit_array->intra_chroma_mode == UV_CFL_PRED) {
+                EbPictureBufferDesc *recon_samples = pred_samples16bit;
 
-            // Down sample Luma
-            cfl_luma_subsampling_420_hbd_c(
-                ((uint16_t *)recon_samples->buffer_y) + recon_luma_offset,
-                recon_samples->stride_y,
-                context_ptr->md_context->pred_buf_q3,
-                context_ptr->blk_geom->bwidth_uv == context_ptr->blk_geom->bwidth
+                uint32_t recon_luma_offset =
+                    (recon_samples->origin_y + round_origin_y) * recon_samples->stride_y +
+                    (recon_samples->origin_x + round_origin_x);
+
+                // Down sample Luma
+                cfl_luma_subsampling_420_hbd_c(
+                    ((uint16_t *)recon_samples->buffer_y) + recon_luma_offset,
+                    recon_samples->stride_y,
+                    context_ptr->md_context->pred_buf_q3,
+                    context_ptr->blk_geom->bwidth_uv == context_ptr->blk_geom->bwidth
                     ? (context_ptr->blk_geom->bwidth_uv << 1)
                     : context_ptr->blk_geom->bwidth,
                 context_ptr->blk_geom->bheight_uv == context_ptr->blk_geom->bheight
@@ -1062,10 +1065,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 context_ptr->is_16bit ? 10 : 8,
                 context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr]);
-        }
-
-        if (component_mask == PICTURE_BUFFER_DESC_FULL_MASK ||
-            component_mask == PICTURE_BUFFER_DESC_CHROMA_MASK) {
+            }
             //**********************************
             // Cb
             //**********************************
