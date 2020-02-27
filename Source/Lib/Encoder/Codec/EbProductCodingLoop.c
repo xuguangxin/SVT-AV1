@@ -9964,7 +9964,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                                ? context_ptr->blk_geom->depth
                                : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
 #if SKIP_DEPTH
-                if (scs_ptr->sb_geom[sb_addr].is_complete_sb) {
+                if (context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
                     if (context_ptr->pd_pass > PD_PASS_1) {
                         uint64_t sq_cost = nsq_cost[0]; // sq cost
                         uint64_t best_nsq_cost = MAX_CU_COST;
