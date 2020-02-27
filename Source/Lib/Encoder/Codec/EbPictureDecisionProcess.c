@@ -5738,14 +5738,23 @@ void* picture_decision_kernel(void *input_ptr)
 #if ALTREF_IMPROVEMENT
                             uint8_t perform_filtering =
                                 (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS &&
+#if SC_FEB4_ADOPTION
+                                 pcs_ptr->sc_content_detected == 0 &&
+#endif
 #if LOW_DELAY_TUNE
                                  scs_ptr->static_config.hierarchical_levels >= 1) &&
 #else
                                  scs_ptr->static_config.hierarchical_levels >= 2) &&
 #endif
+#if SC_FEB4_ADOPTION
+                                ( pcs_ptr->slice_type == I_SLICE ||
+                                  (pcs_ptr->slice_type != I_SLICE && pcs_ptr->temporal_layer_index == 0)||
+                                  (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
+#else
                                 ( (pcs_ptr->slice_type == I_SLICE && pcs_ptr->sc_content_detected == 0) ||
                                   (pcs_ptr->slice_type != I_SLICE && pcs_ptr->temporal_layer_index == 0) ||
                                   (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3 && pcs_ptr->sc_content_detected == 0))
+#endif
                                 ? 1 : 0;
 
                             if (perform_filtering){
