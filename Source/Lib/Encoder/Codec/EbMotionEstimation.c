@@ -10032,15 +10032,15 @@ void integer_search_sb(
 #if SC_HME_PRUNING
             if (context_ptr->reduce_me_sr_flag[list_index][ref_pic_index] == SC_HME_TH_STILL) {
                 search_area_width = ((search_area_width / SC_SR_DENOM_STILL) + 7) & ~0x07;
-                search_area_height = (search_area_height / SC_SR_DENOM_STILL);
+                search_area_height = MAX(1,(search_area_height / SC_SR_DENOM_STILL));
             }
             else if (context_ptr->reduce_me_sr_flag[list_index][ref_pic_index] == SC_HME_TH_EASY) {
                 search_area_width = ((search_area_width / SC_SR_DENOM_EASY) + 7) & ~0x07;
-                search_area_height = (search_area_height / SC_SR_DENOM_EASY);
+                search_area_height = MAX(1, (search_area_height / SC_SR_DENOM_EASY));
             }
             else if (context_ptr->reduce_me_sr_flag[list_index][ref_pic_index]) {
                 search_area_width = ((search_area_width / 8) + 7) & ~0x07;
-                search_area_height = (search_area_height / 8);
+                search_area_height = MAX(1,(search_area_height / 8));
             }
             else {
                 search_area_width = (search_area_width + 7) & ~0x07;
