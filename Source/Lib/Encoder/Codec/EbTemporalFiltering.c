@@ -2047,6 +2047,9 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
 }
 
 static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
+#if ALTREF_PACK
+                                PictureParentControlSet *pcs_ref,
+#endif
                                 EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
                                 uint16_t **pred_16bit, uint32_t sb_origin_x, uint32_t sb_origin_y,
                                 uint32_t ss_x, uint32_t ss_y, int encoder_bit_depth) {
@@ -2097,11 +2100,15 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
         prediction_ptr.buffer_y  = (uint8_t *)pred_16bit[C_Y];
         prediction_ptr.buffer_cb = (uint8_t *)pred_16bit[C_U];
         prediction_ptr.buffer_cr = (uint8_t *)pred_16bit[C_V];
-
+#if ALTREF_PACK
+        reference_ptr.buffer_y = (uint8_t*)pcs_ref->altref_buffer_highbd[C_Y];
+        reference_ptr.buffer_cb = (uint8_t*)pcs_ref->altref_buffer_highbd[C_U];
+        reference_ptr.buffer_cr = (uint8_t*)pcs_ref->altref_buffer_highbd[C_V];
+#else
         reference_ptr.buffer_y  = (uint8_t *)malloc(pic_ptr_ref->luma_size * sizeof(uint16_t));
         reference_ptr.buffer_cb = (uint8_t *)malloc(pic_ptr_ref->chroma_size * sizeof(uint16_t));
         reference_ptr.buffer_cr = (uint8_t *)malloc(pic_ptr_ref->chroma_size * sizeof(uint16_t));
-
+#endif
         reference_ptr.origin_x  = pic_ptr_ref->origin_x;
         reference_ptr.origin_y  = pic_ptr_ref->origin_y;
         reference_ptr.stride_y  = pic_ptr_ref->stride_y;
@@ -2109,7 +2116,7 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
         reference_ptr.stride_cr = pic_ptr_ref->stride_cr;
         reference_ptr.width     = pic_ptr_ref->width;
         reference_ptr.height    = pic_ptr_ref->height;
-
+#if !ALTREF_PACK
         uint32_t height_y = (uint32_t)(2 * reference_ptr.origin_y + reference_ptr.height);
 
         pack2d_src(pic_ptr_ref->buffer_y,
@@ -2138,6 +2145,7 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
                    reference_ptr.stride_cr,
                    reference_ptr.stride_cr,
                    height_y >> ss_y);
+#endif
     }
 
     for (uint32_t idx_32x32 = 0; idx_32x32 < 4; idx_32x32++) {
@@ -2365,12 +2373,13 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
         }
 #endif
     }
-
+#if !ALTREF_PACK
     if (is_highbd) {
         free(reference_ptr.buffer_y);
         free(reference_ptr.buffer_cb);
         free(reference_ptr.buffer_cr);
     }
+#endif
 }
 
 static void get_final_filtered_pixels(EbByte *   src_center_ptr_start,
@@ -2739,6 +2748,9 @@ static EbErrorType produce_temporally_filtered_pic(
                     // Perform MC using the information acquired using the ME step
                     tf_inter_prediction(picture_control_set_ptr_central,
                                         context_ptr,
+#if ALTREF_PACK
+                                        list_picture_control_set_ptr[frame_index],
+#endif
                                         list_input_picture_ptr[frame_index],
                                         pred,
                                         pred_16bit,
@@ -3350,6 +3362,16 @@ EbErrorType svt_av1_init_temporal_filtering(
             EbPictureBufferDesc *pic_ptr_ref =
                 list_picture_control_set_ptr[i]->enhanced_picture_ptr;
             generate_padding_pic(pic_ptr_ref, ss_x, ss_y, is_highbd);
+#if  ALTREF_PACK
+            //10bit: for all the reference pictures do the packing once at the beggining.
+            if (is_highbd && i != picture_control_set_ptr_central->past_altref_nframes) {
+                EB_MALLOC_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_Y], central_picture_ptr->luma_size);
+                EB_MALLOC_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_U], central_picture_ptr->chroma_size);
+                EB_MALLOC_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_V], central_picture_ptr->chroma_size);
+                // pack byte buffers to 16 bit buffer
+                pack_highbd_pic(pic_ptr_ref, list_picture_control_set_ptr[i]->altref_buffer_highbd, ss_x, ss_y, EB_TRUE);
+            }
+#endif
         }
 
         picture_control_set_ptr_central->temporal_filtering_on =
@@ -3439,6 +3461,16 @@ EbErrorType svt_av1_init_temporal_filtering(
             EB_FREE_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_Y]);
             EB_FREE_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_U]);
             EB_FREE_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_V]);
+#if  ALTREF_PACK
+            for (int i = 0; i < (picture_control_set_ptr_central->past_altref_nframes + picture_control_set_ptr_central->future_altref_nframes + 1); i++) {
+                if (i != picture_control_set_ptr_central->past_altref_nframes) {
+                    EB_FREE_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_Y]);
+                    EB_FREE_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_U]);
+                    EB_FREE_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_V]);
+                }
+            }
+#endif
+
         }
 
         // padding + decimation: even if highbd src, this is only performed on the 8 bit buffer (excluding the LSBs)

@@ -89,6 +89,8 @@ extern "C" {
 
 #define NSQ_ME_OPT 1
 
+#define ALTREF_PACK               1// pack the whole picture once for temporal filtering
+
 #define NICS_CLEANUP        1
 #define COMP_SIMILAR        1 //use previously coded similar blocks to prune compound modes
 #define INTRA_SIMILAR       1 //If previous similar block is intra, do not inject any inter
