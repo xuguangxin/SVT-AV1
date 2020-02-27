@@ -422,8 +422,13 @@ typedef struct MeContext {
     uint8_t * p_best_nsq64x64;
     uint16_t *p_eight_pos_sad16x16;
     EB_ALIGN(64) uint32_t p_eight_sad32x32[4][8];
+#if NSQ_ME_OPT
+    EB_ALIGN(64) uint16_t p_eight_sad16x16[16][8];
+    EB_ALIGN(64) uint16_t p_eight_sad8x8[64][8];
+#else
     EB_ALIGN(64) uint32_t p_eight_sad16x16[16][8];
     EB_ALIGN(64) uint32_t p_eight_sad8x8[64][8];
+#endif
     EbBitFraction *mvd_bits_array;
     uint64_t       lambda;
     uint8_t        hme_search_type;

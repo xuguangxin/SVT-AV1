@@ -1645,7 +1645,12 @@ Calculate SAD for Rect H, V and H4, V4 partitions
 and update its Motion info if the result SAD is better
 ****************************************************/
 void ext_eigth_sad_calculation_nsq_c(
-    uint32_t p_sad8x8[64][8], uint32_t p_sad16x16[16][8], uint32_t p_sad32x32[4][8],
+#if NSQ_ME_OPT
+    uint16_t p_sad8x8[64][8], uint16_t p_sad16x16[16][8],
+#else
+    uint32_t p_sad8x8[64][8], uint32_t p_sad16x16[16][8],
+#endif
+    uint32_t p_sad32x32[4][8],
     uint32_t *p_best_sad_64x32, uint32_t *p_best_mv64x32, uint32_t *p_best_sad_32x16,
     uint32_t *p_best_mv32x16, uint32_t *p_best_sad_16x8, uint32_t *p_best_mv16x8,
     uint32_t *p_best_sad_32x64, uint32_t *p_best_mv32x64, uint32_t *p_best_sad_16x32,
@@ -2668,11 +2673,19 @@ static void ext_eight_sad_calculation_8x8_16x16(uint8_t *src, uint32_t src_strid
                                                 uint32_t start_16x16_pos, uint32_t *p_best_sad_8x8,
                                                 uint32_t *p_best_sad_16x16, uint32_t *p_best_mv8x8,
                                                 uint32_t *p_best_mv16x16,
+#if NSQ_ME_OPT
+                                                uint16_t p_eight_sad16x16[16][8],
+                                                uint16_t p_eight_sad8x8[64][8]) {
+    const uint32_t start_8x8_pos = 4 * start_16x16_pos;
+    uint16_t       sad8x8_0, sad8x8_1, sad8x8_2, sad8x8_3;
+    uint16_t       sad16x16;
+#else
                                                 uint32_t  p_eight_sad16x16[16][8],
                                                 uint32_t  p_eight_sad8x8[64][8]) {
     const uint32_t start_8x8_pos = 4 * start_16x16_pos;
     uint32_t       sad8x8_0, sad8x8_1, sad8x8_2, sad8x8_3;
     uint32_t       sad16x16;
+#endif
     uint32_t       search_index;
     int16_t        x_mv, y_mv;
     uint32_t       src_stride_sub = (src_stride << 1);
@@ -2744,10 +2757,15 @@ static void ext_eight_sad_calculation_8x8_16x16(uint8_t *src, uint32_t src_strid
 void ext_all_sad_calculation_8x8_16x16_c(uint8_t *src, uint32_t src_stride, uint8_t *ref,
                                          uint32_t ref_stride, uint32_t mv, uint32_t *p_best_sad_8x8,
                                          uint32_t *p_best_sad_16x16, uint32_t *p_best_mv8x8,
-                                         uint32_t *p_best_mv16x16, uint32_t p_eight_sad16x16[16][8],
+                                         uint32_t *p_best_mv16x16,
+#if NSQ_ME_OPT
+                                         uint16_t p_eight_sad16x16[16][8],
+                                         uint16_t p_eight_sad8x8[64][8]) {
+#else
+                                         uint32_t p_eight_sad16x16[16][8],
                                          uint32_t p_eight_sad8x8[64][8]) {
+#endif
     static const char offsets[16] = {0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15};
-
     //---- 16x16 : 0, 1, 4, 5, 2, 3, 6, 7, 8, 9, 12, 13, 10, 11, 14, 15
     for (int y = 0; y < 4; y++) {
         for (int x = 0; x < 4; x++) {
@@ -2774,7 +2792,12 @@ Calculate SAD for 32x32,64x64 from 16x16
 and check if there is improvment, if yes keep
 the best SAD+MV
 *******************************************/
-void ext_eight_sad_calculation_32x32_64x64_c(uint32_t p_sad16x16[16][8], uint32_t *p_best_sad_32x32,
+void ext_eight_sad_calculation_32x32_64x64_c(
+#if NSQ_ME_OPT
+    uint16_t p_sad16x16[16][8], uint32_t *p_best_sad_32x32,
+#else
+    uint32_t p_sad16x16[16][8], uint32_t *p_best_sad_32x32,
+#endif
                                              uint32_t *p_best_sad_64x64, uint32_t *p_best_mv32x32,
                                              uint32_t *p_best_mv64x64, uint32_t mv,
                                              uint32_t p_sad32x32[4][8]) {

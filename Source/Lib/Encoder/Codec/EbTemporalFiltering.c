@@ -1944,7 +1944,7 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
     prediction_ptr.stride_cr = (uint16_t)BW >> ss_x;
 
     if (!is_highbd) {
-#ifndef IMPROVED_TF_ME_INPUT
+#if !IMPROVED_TF_ME_INPUT
         assert(src[C_Y] != NULL);
         assert(src[C_U] != NULL);
         assert(src[C_V] != NULL);
@@ -1953,7 +1953,7 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
         prediction_ptr.buffer_cb = pred[C_U];
         prediction_ptr.buffer_cr = pred[C_V];
     } else {
-#ifndef IMPROVED_TF_ME_INPUT
+#if !IMPROVED_TF_ME_INPUT
         assert(src_16bit[C_Y] != NULL);
         assert(src_16bit[C_U] != NULL);
         assert(src_16bit[C_V] != NULL);
