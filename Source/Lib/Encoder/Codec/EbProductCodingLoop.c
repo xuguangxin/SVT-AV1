@@ -8111,6 +8111,12 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
 #else
     uint8_t                uv_mode_total_count = 0;
 #endif
+#if MOVE_OPT
+    EbBool tem_md_staging_skip_rdoq = context_ptr->md_staging_skip_rdoq;
+    if (context_ptr->chroma_at_last_md_stage) {
+        context_ptr->md_staging_skip_rdoq = 0;
+    }
+#endif
     for (uv_mode = UV_DC_PRED; uv_mode <= UV_PAETH_PRED; uv_mode++) {
         uint8_t uv_angle_delta_candidate_count =
             (use_angle_delta && av1_is_directional_mode((PredictionMode)uv_mode)) ? 7 : 1;
@@ -8427,6 +8433,11 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
         }
     }
 
+#if MOVE_OPT
+    if (context_ptr->chroma_at_last_md_stage) {
+        context_ptr->md_staging_skip_rdoq = tem_md_staging_skip_rdoq;
+    }
+#endif
     // End uv search path
     context_ptr->uv_search_path = EB_FALSE;
 }
