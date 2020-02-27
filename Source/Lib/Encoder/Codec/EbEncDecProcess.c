@@ -1683,7 +1683,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PME_UP_TO_4_REF
                     if (pcs_ptr->enc_mode <= ENC_M0)
                         context_ptr->predictive_me_level = 6;
-                    if (pcs_ptr->enc_mode <= ENC_M3)
+                    else if (pcs_ptr->enc_mode <= ENC_M3)
 #else
                     if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
