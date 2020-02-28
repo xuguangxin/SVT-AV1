@@ -1749,7 +1749,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 
             ////MULT
+#if FEB28_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && context_ptr->blk_geom->shape == PART_N)) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M0) {
+#endif
                 uint8_t mult_factor_num   = 5;
                 uint8_t mult_factor_denum = 4;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -1852,7 +1856,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
             }
 #if FEB27_ADOPTIONS
+#if FEB28_ADOPTIONS
+            if ((pcs_ptr->enc_mode > ENC_M0 && context_ptr->blk_geom->shape != PART_N) || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
             if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
                 uint8_t division_factor_num   = 1;
                 uint8_t division_factor_denum = 1;
                 if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8) {
@@ -7023,6 +7031,20 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                                                             temp_tx_weight);
     }
 #endif
+#if FEB28_ADOPTIONS
+    else if (context_ptr->md_staging_tx_search == 1) {
+        if (context_ptr->blk_geom->shape == PART_N)
+            tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;
+        else {
+            tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP
+                ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size,
+                    ref_fast_cost,
+                    *candidate_buffer->fast_cost_ptr,
+                    context_ptr->tx_weight)
+                : EB_TRUE;
+        }
+    }
+#else
     else if (context_ptr->md_staging_tx_search == 1)
         tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP
                                   ? get_skip_tx_search_flag(context_ptr->blk_geom->sq_size,
@@ -7030,6 +7052,7 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                                                             *candidate_buffer->fast_cost_ptr,
                                                             context_ptr->tx_weight)
                                   : EB_TRUE;
+#endif
     else
         tx_search_skip_flag =
             context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;

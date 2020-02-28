@@ -71,6 +71,7 @@ extern "C" {
 #if 1
 #define MRP1D_COMPOUND                      1
 #define PALETTE_TL                          1   // remove temporal layer check for palette SC
+#define FEB28_ADOPTIONS                     1
 #define FEB27_ADOPTIONS                     1
 #define FEB24_ADOPTIONS                     1
 #define M0_FEB23_ADOPTIONS                  1

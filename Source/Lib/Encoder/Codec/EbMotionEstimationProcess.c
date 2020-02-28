@@ -342,14 +342,20 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
+#if FEB28_ADOPTIONS
+    if (enc_mode <= ENC_M1) {
+#else
     if (enc_mode <= ENC_M0) {
+#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
+#if !FEB28_ADOPTIONS
     else if (enc_mode <= ENC_M1) {
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
     }
+#endif
     else {
         context_ptr->me_context_ptr->half_pel_mode =
             REFINEMENT_HP_MODE;
@@ -766,14 +772,20 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
         // adopt M2 setting in M1
+#if FEB28_ADOPTIONS
+    if (enc_mode <= ENC_M1) {
+#else
     if (enc_mode <= ENC_M0) {
+#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
+#if !FEB28_ADOPTIONS
     else if (enc_mode <= ENC_M1) {
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
     }
+#endif
     else {
         context_ptr->me_context_ptr->half_pel_mode =
             REFINEMENT_HP_MODE;
