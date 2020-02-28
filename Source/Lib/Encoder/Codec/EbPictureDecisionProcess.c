@@ -4719,8 +4719,6 @@ void initialize_overlay_frame(PictureParentControlSet     *pcs_ptr) {
     pcs_ptr->idr_flag = EB_FALSE;
     pcs_ptr->target_bit_rate = pcs_ptr->alt_ref_ppcs_ptr->target_bit_rate;
     pcs_ptr->last_idr_picture = pcs_ptr->alt_ref_ppcs_ptr->last_idr_picture;
-    pcs_ptr->use_rps_in_sps = EB_FALSE;
-    pcs_ptr->open_gop_cra_flag = EB_FALSE;
     pcs_ptr->pred_structure = pcs_ptr->alt_ref_ppcs_ptr->pred_structure;
     pcs_ptr->pred_struct_ptr = pcs_ptr->alt_ref_ppcs_ptr->pred_struct_ptr;
     pcs_ptr->hierarchical_levels = pcs_ptr->alt_ref_ppcs_ptr->hierarchical_levels;
@@ -5312,11 +5310,6 @@ void* picture_decision_kernel(void *input_ptr)
                                     EB_PRED_LOW_DELAY_P,
                                     scs_ptr->reference_count,
                                     pcs_ptr->hierarchical_levels);
-
-                                // Set the RPS Override Flag - this current only will convert a Random Access structure to a Low Delay structure
-                                pcs_ptr->use_rps_in_sps = EB_FALSE;
-                                pcs_ptr->open_gop_cra_flag = EB_FALSE;
-
                                 picture_type = P_SLICE;
 #if LOW_DELAY_TUNE
                                 if (scs_ptr->static_config.hierarchical_levels == 1 &&
@@ -5335,15 +5328,9 @@ void* picture_decision_kernel(void *input_ptr)
                                 pcs_ptr->idr_flag == EB_FALSE &&
                                 pcs_ptr->cra_flag == EB_TRUE)
                             {
-                                pcs_ptr->use_rps_in_sps = EB_FALSE;
-                                pcs_ptr->open_gop_cra_flag = EB_TRUE;
-
                                 picture_type = I_SLICE;
                             }
                             else {
-                                pcs_ptr->use_rps_in_sps = EB_FALSE;
-                                pcs_ptr->open_gop_cra_flag = EB_FALSE;
-
                                 // Set the Picture Type
                                 picture_type =
                                     (pcs_ptr->idr_flag) ? I_SLICE :
@@ -5619,8 +5606,6 @@ void* picture_decision_kernel(void *input_ptr)
                                 TX_MODE_SELECT :
                                 TX_MODE_LARGEST;
 
-                                pcs_ptr->use_src_ref = EB_FALSE;
-                                pcs_ptr->limit_ois_to_dc_mode_flag = EB_FALSE;
 
                                 // Update the Dependant List Count - If there was an I-frame or Scene Change, then cleanup the Picture Decision PA Reference Queue Dependent Counts
                                 if (pcs_ptr->slice_type == I_SLICE)
@@ -6109,7 +6094,6 @@ void* picture_decision_kernel(void *input_ptr)
                             //SVT_LOG("POC:%i  skip_mode_allowed:%i  REF_SKIP_0: %i   REF_SKIP_1: %i \n",pcs_ptr->picture_number, pcs_ptr->skip_mode_info.skip_mode_allowed, pcs_ptr->skip_mode_info.ref_frame_idx_0, pcs_ptr->skip_mode_info.ref_frame_idx_1);
 
                             {
-                                pcs_ptr->intensity_transition_flag = EB_FALSE;
                                 if (pcs_ptr->ref_list0_count)
                                     pcs_ptr->scene_transition_flag[REF_LIST_0] = EB_FALSE;
                                 if (pcs_ptr->ref_list1_count)

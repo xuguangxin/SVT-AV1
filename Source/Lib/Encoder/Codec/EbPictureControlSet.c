@@ -219,7 +219,6 @@ void picture_control_set_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->rate_est_array);
     if (obj->tile_tok[0][0]) EB_FREE_ARRAY(obj->tile_tok[0][0]);
     EB_FREE_ARRAY(obj->mdc_sb_array);
-    EB_FREE_ARRAY(obj->qp_array);
     EB_DESTROY_MUTEX(obj->entropy_coding_pic_mutex);
     EB_DESTROY_MUTEX(obj->intra_mutex);
     EB_DESTROY_MUTEX(obj->cdef_search_mutex);
@@ -506,7 +505,6 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     object_ptr->temporal_layer_index = 0;
 
     // SB Array
-    object_ptr->sb_max_depth   = (uint8_t)init_data_ptr->max_depth;
     object_ptr->sb_total_count = picture_sb_width * picture_sb_height;
     object_ptr->sb_total_count_unscaled = object_ptr->sb_total_count;
     EB_ALLOC_PTR_ARRAY(object_ptr->sb_ptr_array, object_ptr->sb_total_count);
@@ -553,14 +551,6 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         object_ptr->tile_tok[0][0] = NULL;
     // Mode Decision Control config
     EB_MALLOC_ARRAY(object_ptr->mdc_sb_array, object_ptr->sb_total_count);
-    object_ptr->qp_array_stride =
-        (uint16_t)((init_data_ptr->picture_width + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE);
-    object_ptr->qp_array_size =
-        ((init_data_ptr->picture_width + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE) *
-        ((init_data_ptr->picture_height + MIN_BLOCK_SIZE - 1) / MIN_BLOCK_SIZE);
-
-    // Allocate memory for qp array (used by DLF)
-    EB_MALLOC_ARRAY(object_ptr->qp_array, object_ptr->qp_array_size);
 
     object_ptr->hbd_mode_decision = init_data_ptr->hbd_mode_decision;
     // Mode Decision Neighbor Arrays
@@ -1738,14 +1728,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
            init_data_ptr->picture_height);
 
 #endif
-    // Note - non-zero offsets are not supported (to be fixed later in DLF chroma filtering)
-    object_ptr->cb_qp_offset = 0;
-    object_ptr->cr_qp_offset = 0;
 
-    object_ptr->slice_level_chroma_qp_flag = EB_TRUE;
-    // slice level chroma QP offsets
-    object_ptr->slice_cb_qp_offset = 0;
-    object_ptr->slice_cr_qp_offset = 0;
 
     //object_ptr->total_num_bits = 0;
 
