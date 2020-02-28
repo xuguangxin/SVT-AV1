@@ -1000,7 +1000,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 blk_ptr->av1xd->use_intrabc,
 #if OMARK_HBD0_RDOQ
 #if NEW_MD_LAMBDA
-                context_ptr->md_context->full_lambda_md[EB_10_BIT_MD],
+                context_ptr->md_context->full_lambda_md[context_ptr->is_16bit ? EB_10_BIT_MD : EB_8_BIT_MD],
 #else
                 context_ptr->md_context->full_lambda,
 #endif
@@ -1158,7 +1158,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 blk_ptr->av1xd->use_intrabc,
 #if OMARK_HBD0_RDOQ
 #if NEW_MD_LAMBDA
-                context_ptr->md_context->full_lambda_md[EB_10_BIT_MD],
+                context_ptr->md_context->full_lambda_md[context_ptr->is_16bit ? EB_10_BIT_MD : EB_8_BIT_MD],
 #else
                 context_ptr->md_context->full_lambda,
 #endif
@@ -1211,7 +1211,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 blk_ptr->av1xd->use_intrabc,
 #if OMARK_HBD0_RDOQ
 #if NEW_MD_LAMBDA
-                context_ptr->md_context->full_lambda_md[EB_10_BIT_MD],
+                context_ptr->md_context->full_lambda_md[context_ptr->is_16bit ? EB_10_BIT_MD : EB_8_BIT_MD],
 #else
                 context_ptr->md_context->full_lambda,
 #endif
