@@ -8761,7 +8761,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
     // Perform ME search around the best MVP
 #if PME_OFF_IF_NSQ
-    if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape == PART_N)
+    if (context_ptr->pd_pass == PD_PASS_0 || context_ptr->pd_pass == PD_PASS_1 || (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape == PART_N))
 #endif
     if (context_ptr->predictive_me_level)
         predictive_me_search(

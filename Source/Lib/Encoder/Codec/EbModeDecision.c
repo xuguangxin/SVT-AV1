@@ -5113,7 +5113,7 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
         }
     }
 #if PME_OFF_IF_NSQ
-    if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape == PART_N)
+    if (context_ptr->pd_pass == PD_PASS_0 || context_ptr->pd_pass == PD_PASS_1 || (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape == PART_N))
 #endif
     if (context_ptr->predictive_me_level)
         inject_predictive_me_candidates(
