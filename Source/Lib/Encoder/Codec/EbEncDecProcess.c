@@ -272,11 +272,17 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
     (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
         &context_ptr->fast_lambda,
         &context_ptr->full_lambda,
+#if !NEW_MD_LAMBDA
         &context_ptr->fast_chroma_lambda,
         &context_ptr->full_chroma_lambda,
+#endif
         (uint8_t)pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth,
         context_ptr->qp_index,
+#if OMARK_HBD0_ED && OMARK_LAMBDA
+        EB_TRUE);
+#else
         context_ptr->md_context->hbd_mode_decision);
+#endif
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
     if (context_ptr->is_md_rate_estimation_ptr_owner) {
         EB_FREE(context_ptr->md_rate_estimation_ptr);
@@ -326,11 +332,17 @@ static void enc_dec_configure_sb(EncDecContext *context_ptr, SuperBlock *sb_ptr,
     (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
         &context_ptr->fast_lambda,
         &context_ptr->full_lambda,
+#if !NEW_MD_LAMBDA
         &context_ptr->fast_chroma_lambda,
         &context_ptr->full_chroma_lambda,
+#endif
         (uint8_t)pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth,
         context_ptr->qp_index,
+#if OMARK_HBD0_ED && OMARK_LAMBDA
+        EB_TRUE);
+#else
         context_ptr->md_context->hbd_mode_decision);
+#endif
 
     return;
 }
@@ -3689,11 +3701,16 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
                     if (context_ptr->pd_pass == PD_PASS_0) {
 #if FEB19_PD0_TH
-                        // full_lambda to be udpated for 10bit
+#if NEW_MD_LAMBDA
+                        uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
+                            context_ptr->full_lambda_md[EB_10_BIT_MD] :
+                            context_ptr->full_lambda_md[EB_8_BIT_MD];
+#else
                         uint32_t full_lambda =  context_ptr->full_lambda;
                         //uint32_t full_lambda = context_ptr->hbd_mode_decision ?
                         //context_ptr->full_lambda_md[EB_10_BIT_MD] :
                         //context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
 
                         uint32_t sb_width = scs_ptr->seq_header.sb_size == BLOCK_128X128 ?
                             128 : 64;

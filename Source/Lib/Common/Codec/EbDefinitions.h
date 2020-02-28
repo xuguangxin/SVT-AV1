@@ -39,6 +39,21 @@ extern "C" {
 #define TH_BASED_CHROMA_SEARCH              1 // skip chroma search based on relative inter/intra costs
 #define NSQ_HV                              1 // skip NSQ partitions based on H vs V costs
 
+#define OMARK_LAMBDA                1 // 2. fix lambda calculation for HBD0
+#define OMARK_HBD1_CDEF             1 // 3. fix CDEF lambda for hbd1/2
+#define OMARK_HBD0_ED               1 // 4. fix ED lambda for hbd0
+#define OMARK_HBD0_IFS              1 // 5. fix IFS lambda for hbd0
+#define OMARK_HBD0_MD               1 // 5. fix MD lambda for hbd0
+#define OMARK_HBD0_RDOQ             1 // 6. fix RDOQ lambda for hbd0
+#define RDQO_ON_HBD0                1 // 6. turn ON RDOQ for hbd0
+#define PICT_SWITCH                 1  // Fix picture switching
+#define QUANT_CLEANUP               1
+#define QUANT_HBD0_FIX              1
+#define NEW_MD_LAMBDA               1
+
+
+
+
 #define FEB19_PD0_TH                        1
 #define TUNE_SUBPEL_SEARCH                  1
 
