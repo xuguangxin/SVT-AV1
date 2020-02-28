@@ -9861,13 +9861,15 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                                 best_nsq_cost = nsq_cost[i];
                         // Compare sq vs best nsq
                         uint64_t th = 30;
-                        if (sq_cost < best_nsq_cost) {
-                            if ((best_nsq_cost - sq_cost) * 100 > (sq_cost * th)) {
-                                set_child_to_be_skipped(
-                                    context_ptr,
-                                    context_ptr->blk_geom->sqi_mds,
-                                    scs_ptr->seq_header.sb_size,
-                                    1);
+                        if (best_nsq_cost != MAX_CU_COST) {
+                            if (sq_cost < best_nsq_cost) {
+                                if ((best_nsq_cost - sq_cost) * 100 > (sq_cost * th)) {
+                                    set_child_to_be_skipped(
+                                        context_ptr,
+                                        context_ptr->blk_geom->sqi_mds,
+                                        scs_ptr->seq_header.sb_size,
+                                        1);
+                                }
                             }
                         }
                     }
