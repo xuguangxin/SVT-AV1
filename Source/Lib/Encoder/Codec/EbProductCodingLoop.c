@@ -8491,9 +8491,8 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
         context_ptr->md_stage_3_total_count += context_ptr->md_stage_3_count[cand_class_it];
     }
 }
-void md_encode_block(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+void md_encode_block(PictureControlSet *pcs_ptr,
                      ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
-                     uint32_t sb_addr,
                      ModeDecisionCandidateBuffer *bestcandidate_buffers[5]) {
     ModeDecisionCandidateBuffer **candidate_buffer_ptr_array_base =
         context_ptr->candidate_buffer_ptr_array;
@@ -9745,11 +9744,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 !skip_next_nsq && !skip_next_sq && !auto_max_partition_block_skip) {
 #endif
 #endif
-                md_encode_block(scs_ptr,
-                                pcs_ptr,
+                md_encode_block(pcs_ptr,
                                 context_ptr,
                                 input_picture_ptr,
-                                sb_addr,
                                 bestcandidate_buffers);
             }
 #if ENHANCED_SQ_WEIGHT
