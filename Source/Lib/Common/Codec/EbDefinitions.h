@@ -33,6 +33,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define DISABLE_QPSM_1PASS                  1 // Disable 1 pass QPS and QPM
 
 #define PME_UP_TO_4_REF                     1 // add a new PME level to restrict PME to use 4 ref frames
 #define TH_BASED_CFL                        1 // disbale cfl based on relative inter/intra costs

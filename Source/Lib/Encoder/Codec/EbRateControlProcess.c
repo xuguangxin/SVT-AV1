@@ -5599,7 +5599,11 @@ void *rate_control_kernel(void *input_ptr) {
                             pcs_ptr->parent_pcs_ptr->referenced_area_has_non_zero)
                             new_qindex = adaptive_qindex_calc_two_pass(pcs_ptr, &rc, qindex);
                         else
+#if DISABLE_QPSM_1PASS
+                            new_qindex = cqp_qindex_calc(pcs_ptr, &rc, qindex);
+#else
                             new_qindex = adaptive_qindex_calc(pcs_ptr, &rc, qindex);
+#endif
                     }
 #if QPS_CHANGE
                     else {
@@ -5721,9 +5725,16 @@ void *rate_control_kernel(void *input_ptr) {
                     }
                 }
             }
+#if DISABLE_QPSM_1PASS
+            if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
+                pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
+                !pcs_ptr->parent_pcs_ptr->sc_content_detected && !scs_ptr->use_output_stat_file &&
+                scs_ptr->use_input_stat_file)
+#else
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
                 !pcs_ptr->parent_pcs_ptr->sc_content_detected && !scs_ptr->use_output_stat_file)
+#endif
                 if (scs_ptr->use_input_stat_file &&
                     pcs_ptr->parent_pcs_ptr->referenced_area_has_non_zero)
                     sb_qp_derivation_two_pass(pcs_ptr);
