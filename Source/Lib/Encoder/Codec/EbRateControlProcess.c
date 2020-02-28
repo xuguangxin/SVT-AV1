@@ -4978,7 +4978,7 @@ static int adaptive_qindex_calc_two_pass(PictureControlSet *pcs_ptr, RATE_CONTRO
 
     return q;
 }
-
+#if !DISABLE_QPSM_1PASS
 static int adaptive_qindex_calc(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, int qindex) {
     SequenceControlSet *   scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
     const Av1Common *const cm      = pcs_ptr->parent_pcs_ptr->av1_cm;
@@ -5113,7 +5113,7 @@ static int adaptive_qindex_calc(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, in
 
     return q;
 }
-
+#endif
 #if QPS_CHANGE
 #if QPS_CHANGE_II
 #define DEFAULT_KF_BOOST 2700
