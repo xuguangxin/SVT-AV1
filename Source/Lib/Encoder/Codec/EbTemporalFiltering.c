@@ -2052,7 +2052,7 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
 #endif
                                 EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
                                 uint16_t **pred_16bit, uint32_t sb_origin_x, uint32_t sb_origin_y,
-                                uint32_t ss_x, uint32_t ss_y, int encoder_bit_depth) {
+                                uint32_t ss_x, int encoder_bit_depth) {
 #else
 static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
                                 EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
@@ -2073,8 +2073,6 @@ static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *con
 
     EbPictureBufferDesc reference_ptr;
     EbPictureBufferDesc prediction_ptr;
-
-    UNUSED(ss_x);
 
     prediction_ptr.origin_x  = 0;
     prediction_ptr.origin_y  = 0;
@@ -2763,7 +2761,6 @@ static EbErrorType produce_temporally_filtered_pic(
                                         (uint32_t)blk_col * BW,
                                         (uint32_t)blk_row * BH,
                                         ss_x,
-                                        ss_y,
 #if !IMPROVED_TF_ME_INPUT
                                         use_16x16_subblocks,
 #endif

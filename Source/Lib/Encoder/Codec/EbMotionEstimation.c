@@ -2863,7 +2863,6 @@ void generate_nsq_mv(MeContext *context_ptr) {
     uint32_t *p_best_mv8x8 = context_ptr->p_best_mv8x8;
     uint32_t *p_best_mv16x16 = context_ptr->p_best_mv16x16;
     uint32_t *p_best_mv32x32 = context_ptr->p_best_mv32x32;
-    uint32_t *p_best_mv64x64 = context_ptr->p_best_mv64x64;
     uint32_t *p_best_mv64x32 = context_ptr->p_best_mv64x32;
     uint32_t *p_best_mv32x16 = context_ptr->p_best_mv32x16;
     uint32_t *p_best_mv16x8 = context_ptr->p_best_mv16x8;
@@ -9956,20 +9955,7 @@ void integer_search_sb(
     EbPictureBufferDesc *ref_pic_ptr;
     num_of_list_to_search =
         (pcs_ptr->slice_type == P_SLICE) ? (uint32_t)REF_LIST_0 : (uint32_t)REF_LIST_1;
-    EbBool is_nsq_table_used = (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE &&
-                                pcs_ptr->nsq_search_level >= NSQ_SEARCH_LEVEL1 &&
-                                pcs_ptr->nsq_search_level < NSQ_SEARCH_FULL)
-                                   ? EB_TRUE
-                                   : EB_FALSE;
-    is_nsq_table_used =
-        (pcs_ptr->enc_mode == ENC_M0 || pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
-            ? EB_FALSE
-            : is_nsq_table_used;
-    if (context_ptr->me_alt_ref == EB_FALSE && is_nsq_table_used)
-        printf("NSQTBLE\n");
+
     if (context_ptr->me_alt_ref == EB_TRUE) num_of_list_to_search = 0;
 
     // Uni-Prediction motion estimation loop
@@ -10595,20 +10581,7 @@ void hme_sb(
     one_quadrant_hme = scs_ptr->input_resolution < INPUT_SIZE_4K_RANGE ? 0 : one_quadrant_hme;
     num_of_list_to_search =
         (pcs_ptr->slice_type == P_SLICE) ? (uint32_t)REF_LIST_0 : (uint32_t)REF_LIST_1;
-    EbBool is_nsq_table_used = (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE &&
-                                pcs_ptr->nsq_search_level >= NSQ_SEARCH_LEVEL1 &&
-                                pcs_ptr->nsq_search_level < NSQ_SEARCH_FULL)
-                                   ? EB_TRUE
-                                   : EB_FALSE;
-    is_nsq_table_used =
-        (pcs_ptr->enc_mode == ENC_M0 || pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
-            ? EB_FALSE
-            : is_nsq_table_used;
-    if (context_ptr->me_alt_ref == EB_FALSE && is_nsq_table_used)
-        printf("NSQTBLE\n");
+
     if (context_ptr->me_alt_ref == EB_TRUE) num_of_list_to_search = 0;
     // Uni-Prediction motion estimation loop
     // List Loop
@@ -11249,18 +11222,6 @@ EbErrorType motion_estimate_sb(
     num_of_list_to_search =
         (pcs_ptr->slice_type == P_SLICE) ? (uint32_t)REF_LIST_0 : (uint32_t)REF_LIST_1;
 
-    EbBool is_nsq_table_used = (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE &&
-                                pcs_ptr->nsq_search_level >= NSQ_SEARCH_LEVEL1 &&
-                                pcs_ptr->nsq_search_level < NSQ_SEARCH_FULL)
-                                   ? EB_TRUE
-                                   : EB_FALSE;
-    is_nsq_table_used =
-        (pcs_ptr->enc_mode == ENC_M0 || pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
-         pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3)
-            ? EB_FALSE
-            : is_nsq_table_used;
 #if MUS_ME
     //pruning of the references is not done for alt-ref / Base-Layer (HME not done for list1 refs) / non-complete-SBs when HMeLevel2 is done
     uint8_t prune_ref = (context_ptr->enable_hme_flag && context_ptr->enable_hme_level2_flag &&
@@ -12433,17 +12394,6 @@ EbErrorType motion_estimate_sb(
                             pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE);
                     }
                 }
-                if (is_nsq_table_used && ref_pic_index == 0) {
-                    context_ptr->p_best_nsq64x64 =
-                        &(context_ptr->p_sb_best_nsq[list_index][0][ME_TIER_ZERO_PU_64x64]);
-                    context_ptr->p_best_nsq32x32 =
-                        &(context_ptr->p_sb_best_nsq[list_index][0][ME_TIER_ZERO_PU_32x32_0]);
-                    context_ptr->p_best_nsq16x16 =
-                        &(context_ptr->p_sb_best_nsq[list_index][0][ME_TIER_ZERO_PU_16x16_0]);
-                    context_ptr->p_best_nsq8x8 =
-                        &(context_ptr->p_sb_best_nsq[list_index][0][ME_TIER_ZERO_PU_8x8_0]);
-                    nsq_get_analysis_results_block(context_ptr);
-                }
             }
         }
     }
@@ -12566,11 +12516,6 @@ EbErrorType motion_estimate_sb(
 
             MeSbResults *me_pu_result                        = pcs_ptr->me_results[sb_index];
             me_pu_result->total_me_candidate_index[pu_index] = total_me_candidate_index;
-
-            uint8_t l0_nsq = is_nsq_table_used ? context_ptr->p_sb_best_nsq[0][0][n_idx] : 0;
-            uint8_t l1_nsq = is_nsq_table_used ? context_ptr->p_sb_best_nsq[1][0][n_idx] : 0;
-            me_pu_result->me_nsq_0[pu_index] = l0_nsq;
-            me_pu_result->me_nsq_1[pu_index] = l1_nsq;
 
             me_pu_result->total_me_candidate_index[pu_index] =
                 MIN(total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);

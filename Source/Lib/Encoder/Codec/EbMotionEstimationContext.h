@@ -415,7 +415,6 @@ typedef struct MeContext {
     uint32_t *p_best_ssd64x16;
     uint32_t *p_best_ssd16x64;
 
-    uint8_t   p_sb_best_nsq[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][MAX_ME_PU_COUNT];
     uint8_t * p_best_nsq8x8;
     uint8_t * p_best_nsq16x16;
     uint8_t * p_best_nsq32x32;
