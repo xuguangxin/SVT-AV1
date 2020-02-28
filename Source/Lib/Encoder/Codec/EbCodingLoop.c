@@ -7528,7 +7528,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             EB_ENC_CL_ERROR2);
                     }
 
-                    if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit_pipeline) {// TTK use intrinsics
+                    if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit_pipeline) {
                         EbPictureBufferDesc *recon_buffer_16bit;
                         EbPictureBufferDesc *recon_buffer_8bit;
                         if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
@@ -7551,7 +7551,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                         uint32_t pred_buf_y_offest = context_ptr->blk_origin_y;
 
                         uint16_t *dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_y) +
-                            pred_buf_x_offest + recon_buffer->origin_x +
+                            pred_buf_x_offest + recon_buffer_16bit->origin_x +
                             (pred_buf_y_offest + recon_buffer_16bit->origin_y) *
                             recon_buffer_16bit->stride_y;
                         int32_t dst_stride_16bit = recon_buffer_16bit->stride_y;
@@ -7563,13 +7563,14 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             (pred_buf_y_offest + recon_buffer_8bit->origin_y) * recon_buffer_8bit->stride_y;
                         dst_stride = recon_buffer_8bit->stride_y;
 
-                        for (int j = 0; j < context_ptr->blk_geom->bheight; j++) {
-                            for (int i = 0; i < context_ptr->blk_geom->bwidth; i++) {
-                                dst[i + j * dst_stride] = dst_16bit[i + j * dst_stride_16bit];
-                            }
-                        }
+                        convert_16bit_to_8bit(dst_16bit,
+                            dst_stride_16bit, 
+                            dst,
+                            dst_stride,
+                            context_ptr->blk_geom->bwidth,
+                            context_ptr->blk_geom->bheight);
 
-                        //copy recon from 8bit to 16bit
+                        //copy recon from 16bit to 8bit
                         pred_buf_x_offest = ((context_ptr->blk_origin_x >> 3) << 3) >> 1;
                         pred_buf_y_offest = ((context_ptr->blk_origin_y >> 3) << 3) >> 1;
 
@@ -7585,11 +7586,13 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             recon_buffer_8bit->stride_cb;
                         dst_stride = recon_buffer_8bit->stride_cb;
 
-                        for (int j = 0; j < context_ptr->blk_geom->bheight_uv; j++) {
-                            for (int i = 0; i < context_ptr->blk_geom->bwidth_uv; i++) {
-                                dst[i + j * dst_stride] = dst_16bit[i + j * dst_stride_16bit];
-                            }
-                        }
+
+                        convert_16bit_to_8bit(dst_16bit,
+                            dst_stride_16bit,
+                            dst,
+                            dst_stride,
+                            context_ptr->blk_geom->bwidth_uv,
+                            context_ptr->blk_geom->bheight_uv);
 
                         dst_16bit = (uint16_t *)(recon_buffer_16bit->buffer_cr) +
                             (pred_buf_x_offest + recon_buffer_16bit->origin_x / 2 +
@@ -7602,11 +7605,13 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             recon_buffer_8bit->stride_cr;
                         dst_stride = recon_buffer_8bit->stride_cr;
 
-                        for (int j = 0; j < context_ptr->blk_geom->bheight_uv; j++) {
-                            for (int i = 0; i < context_ptr->blk_geom->bwidth_uv; i++) {
-                                dst[i + j * dst_stride] = dst_16bit[i + j * dst_stride_16bit];
-                            }
-                        }
+
+                        convert_16bit_to_8bit(dst_16bit,
+                            dst_stride_16bit,
+                            dst,
+                            dst_stride,
+                            context_ptr->blk_geom->bwidth_uv,
+                            context_ptr->blk_geom->bheight_uv);
                     }
                     update_av1_mi_map(blk_ptr,
                         context_ptr->blk_origin_x,
