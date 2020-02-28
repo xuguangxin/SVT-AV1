@@ -7487,8 +7487,8 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                     }
 
                     if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit_pipeline) {// TTK use intrinsics
-                        EbPictureBufferDesc *recon_buffer_16bit = pcs_ptr->recon_picture16bit_ptr;
-
+                        EbPictureBufferDesc *recon_buffer_16bit;
+                        EbPictureBufferDesc *recon_buffer_8bit;
                         if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
                             //get the 16bit form of the input SB
                             recon_buffer_16bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
@@ -7499,11 +7499,11 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 
                         if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
                             //get the 16bit form of the input SB
-                            recon_buffer = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
+                            recon_buffer_8bit = ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
                                 ->reference_picture_wrapper_ptr->object_ptr)
                             ->reference_picture;
                         else // non ref pictures
-                            recon_buffer = pcs_ptr->recon_picture_ptr;
+                            recon_buffer_8bit = pcs_ptr->recon_picture_ptr;
 
                         uint32_t pred_buf_x_offest = context_ptr->blk_origin_x;
                         uint32_t pred_buf_y_offest = context_ptr->blk_origin_y;
@@ -7517,9 +7517,9 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                         uint8_t *dst;
                         int32_t  dst_stride;
 
-                        dst = recon_buffer->buffer_y + pred_buf_x_offest + recon_buffer->origin_x +
-                            (pred_buf_y_offest + recon_buffer->origin_y) * recon_buffer->stride_y;
-                        dst_stride = recon_buffer->stride_y;
+                        dst = recon_buffer_8bit->buffer_y + pred_buf_x_offest + recon_buffer_8bit->origin_x +
+                            (pred_buf_y_offest + recon_buffer_8bit->origin_y) * recon_buffer_8bit->stride_y;
+                        dst_stride = recon_buffer_8bit->stride_y;
 
                         for (int j = 0; j < context_ptr->blk_geom->bheight; j++) {
                             for (int i = 0; i < context_ptr->blk_geom->bwidth; i++) {
@@ -7537,11 +7537,11 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             recon_buffer_16bit->stride_cb;
                         dst_stride_16bit = recon_buffer_16bit->stride_cb;
 
-                        dst = recon_buffer->buffer_cb + pred_buf_x_offest +
-                            recon_buffer->origin_x / 2 +
-                            (pred_buf_y_offest + recon_buffer->origin_y / 2) *
-                            recon_buffer->stride_cb;
-                        dst_stride = recon_buffer->stride_cb;
+                        dst = recon_buffer_8bit->buffer_cb + pred_buf_x_offest +
+                            recon_buffer_8bit->origin_x / 2 +
+                            (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
+                            recon_buffer_8bit->stride_cb;
+                        dst_stride = recon_buffer_8bit->stride_cb;
 
                         for (int j = 0; j < context_ptr->blk_geom->bheight_uv; j++) {
                             for (int i = 0; i < context_ptr->blk_geom->bwidth_uv; i++) {
@@ -7554,11 +7554,11 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             (pred_buf_y_offest + recon_buffer_16bit->origin_y / 2) *
                                 recon_buffer_16bit->stride_cr);
                         dst_stride_16bit = recon_buffer_16bit->stride_cr;
-                        dst = recon_buffer->buffer_cr + pred_buf_x_offest +
-                            recon_buffer->origin_x / 2 +
-                            (pred_buf_y_offest + recon_buffer->origin_y / 2) *
-                            recon_buffer->stride_cr;
-                        dst_stride = recon_buffer->stride_cr;
+                        dst = recon_buffer_8bit->buffer_cr + pred_buf_x_offest +
+                            recon_buffer_8bit->origin_x / 2 +
+                            (pred_buf_y_offest + recon_buffer_8bit->origin_y / 2) *
+                            recon_buffer_8bit->stride_cr;
+                        dst_stride = recon_buffer_8bit->stride_cr;
 
                         for (int j = 0; j < context_ptr->blk_geom->bheight_uv; j++) {
                             for (int i = 0; i < context_ptr->blk_geom->bwidth_uv; i++) {
