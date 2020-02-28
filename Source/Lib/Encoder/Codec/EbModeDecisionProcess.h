@@ -207,7 +207,6 @@ typedef struct ModeDecisionContext {
     uint16_t         pu_origin_y;
     uint16_t         pu_width;
     uint16_t         pu_height;
-    EbPfMode         pf_md_mode;
     uint8_t          hbd_mode_decision;
     uint16_t         qp_index;
     uint64_t         three_quad_energy;

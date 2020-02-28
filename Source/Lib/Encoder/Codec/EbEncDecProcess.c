@@ -1817,9 +1817,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->interpolation_filter_search_blk_size = 1;
 
-    // Set PF MD
-    context_ptr->pf_md_mode = PF_OFF;
-
     // Derive Spatial SSE Flag
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->spatial_sse_full_loop = EB_FALSE;
@@ -2246,19 +2243,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->perform_me_mv_1_8_pel_ref =
         (pcs_ptr->parent_pcs_ptr->frm_hdr
             .allow_high_precision_mv);
-
-    // Hsan: potential adoption(s)
-#if 0
-    // Cfl level
-    // 0: CFL OFF
-    // 1: CFL is allowed
-    context_ptr->cfl_level = 1;
-
-    // NSQ ON/OFF
-    // 0: NSQ OFF
-    // 1: NSQ is allowed
-    context_ptr->md_disable_nsq = 0;
-#endif
 
     return return_error;
 }
