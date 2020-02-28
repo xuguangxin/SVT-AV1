@@ -2076,7 +2076,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: If previous similar block is not compound, do not inject compound
     // 2: If previous similar block is not compound, do not inject compound else
-    // consider the compound modes up the similar’s one
+    // consider the compound modes up the similar s one
     if (pcs_ptr->enc_mode <= ENC_M3)
         context_ptr->comp_similar_mode = 1;
     else
@@ -2111,6 +2111,26 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_enable_inter_intra =
         pcs_ptr->parent_pcs_ptr->enable_inter_intra;
+
+    // Set enable_paeth @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_enable_paeth = 1;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_enable_paeth = 1;
+    else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth == DEFAULT)
+        context_ptr->md_enable_paeth = 1;
+    else
+        context_ptr->md_enable_paeth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth;
+
+    // Set enable_smooth @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_enable_smooth = 1;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_enable_smooth = 1;
+    else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth == DEFAULT)
+        context_ptr->md_enable_smooth = 1;
+    else
+        context_ptr->md_enable_smooth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth;
 
     // Set md_tx_size_search_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -2157,6 +2177,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
     else
         context_ptr->dc_cand_only_flag = EB_FALSE;
+
+    // Set intra_angle_delta @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_intra_angle_delta = 0;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_intra_angle_delta = 0;
+    else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.intra_angle_delta == DEFAULT)
+        context_ptr->md_intra_angle_delta = 1;
+    else
+        context_ptr->md_intra_angle_delta = pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.intra_angle_delta;
 
     // Set disable_angle_z2_prediction_flag
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -3140,6 +3170,36 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(SequenceControlSet * scs_ptr,
         context_ptr->md_enable_inter_intra = 0;
     else
         context_ptr->md_enable_inter_intra = pcs_ptr->parent_pcs_ptr->enable_inter_intra;
+
+    // Set intra_angle_delta @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_intra_angle_delta = 0;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_intra_angle_delta = 0;
+    else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.intra_angle_delta == DEFAULT)
+        context_ptr->md_intra_angle_delta = 1;
+    else
+        context_ptr->md_intra_angle_delta = pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.intra_angle_delta;
+
+    // Set enable_paeth @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_enable_paeth = 1;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_enable_paeth = 1;
+    else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth == DEFAULT)
+            context_ptr->md_enable_paeth = 1;
+    else
+        context_ptr->md_enable_paeth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_paeth;
+
+    // Set enable_smooth @ MD
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->md_enable_smooth = 1;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->md_enable_smooth = 1;
+    else if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth == DEFAULT)
+            context_ptr->md_enable_smooth = 1;
+    else
+        context_ptr->md_enable_smooth = (uint8_t)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_smooth;
 
     // Set md_tx_size_search_mode @ MD
     if (context_ptr->pd_pass == PD_PASS_0)

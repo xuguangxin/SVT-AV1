@@ -5092,6 +5092,11 @@ void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext
         (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE
                                                                                   : EB_FALSE;
 
+    SequenceControlSet *scs_ptr = (SequenceControlSet*)pcs_ptr->scs_wrapper_ptr->object_ptr;
+    if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
+        // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
+        disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
+
     OisSbResults *ois_sb_results_ptr = pcs_ptr->parent_pcs_ptr->ois_sb_results[sb_ptr->index];
     OisCandidate *ois_blk_ptr =
         ois_sb_results_ptr
@@ -5512,7 +5517,7 @@ static void angle_estimation(
     uint8_t *directional_mode_skip_mask)
 {
     // Check if angle_delta is used
-    //if (!av1_use_angle_delta(bsize)) return;
+    //if (!av1_use_angle_delta(bsize, need access to context)) return;
 
     uint64_t hist[DIRECTIONAL_MODES] = { 0 };
     //if (is_hbd)
@@ -5553,11 +5558,13 @@ void  inject_intra_candidates(
     (void)sb_ptr;
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     uint8_t                     intra_mode_start = DC_PRED;
-    uint8_t                     intra_mode_end = dc_cand_only_flag ? DC_PRED : PAETH_PRED;
+    uint8_t                     intra_mode_end = dc_cand_only_flag ? DC_PRED :
+                                                 context_ptr->md_enable_paeth ? PAETH_PRED :
+                                                 context_ptr->md_enable_smooth ? SMOOTH_H_PRED : D67_PRED;
     uint8_t                     open_loop_intra_candidate;
     uint32_t                    cand_total_cnt = 0;
     uint8_t                     angle_delta_counter = 0;
-    EbBool                      use_angle_delta = av1_use_angle_delta(context_ptr->blk_geom->bsize);
+    EbBool                      use_angle_delta = av1_use_angle_delta(context_ptr->blk_geom->bsize, context_ptr->md_intra_angle_delta);
     uint8_t                     angle_delta_candidate_count = use_angle_delta ? 7 : 1;
     ModeDecisionCandidate    *cand_array = context_ptr->fast_candidate_array;
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
@@ -5565,6 +5572,10 @@ void  inject_intra_candidates(
     uint8_t                     disable_angle_refinement;
     uint8_t                     disable_angle_prediction;
     uint8_t directional_mode_skip_mask[INTRA_MODES] = { 0 };
+
+    if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
+        // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
+        disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
 
     if (context_ptr->edge_based_skip_angle_intra && use_angle_delta)
     {
@@ -5584,7 +5595,8 @@ void  inject_intra_candidates(
     else
     if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 4) {
         if (pcs_ptr->slice_type == I_SLICE) {
-            intra_mode_end =  PAETH_PRED;
+            intra_mode_end = context_ptr->md_enable_paeth ? PAETH_PRED :
+                             context_ptr->md_enable_smooth ? SMOOTH_H_PRED : D67_PRED;
             angle_delta_candidate_count = use_angle_delta ? 5 : 1;
             disable_angle_prediction = 0;
             angle_delta_shift = 2;
@@ -5774,15 +5786,24 @@ void  inject_filter_intra_candidates(
 
     FilterIntraMode             intra_mode_start = FILTER_DC_PRED;
     FilterIntraMode             intra_mode_end   = FILTER_INTRA_MODES;
+
     FilterIntraMode             filter_intra_mode;
     uint32_t                    cand_total_cnt = *candidate_total_cnt;
     ModeDecisionCandidate      *cand_array = context_ptr->fast_candidate_array;
 
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
 
+    SequenceControlSet *scs_ptr = (SequenceControlSet*)pcs_ptr->scs_wrapper_ptr->object_ptr;
+    if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
+        // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
+        disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
+
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 
     for (filter_intra_mode = intra_mode_start; filter_intra_mode < intra_mode_end ; ++filter_intra_mode) {
+
+            if (filter_intra_mode == FILTER_PAETH_PRED && !context_ptr->md_enable_paeth)
+                continue;
 
             cand_array[cand_total_cnt].type = INTRA_MODE;
             cand_array[cand_total_cnt].intra_luma_mode = DC_PRED;
@@ -5874,6 +5895,11 @@ void  inject_palette_candidates(
     uint32_t cand_i;
     uint32_t tot_palette_cands = 0;
     PaletteInfo    *palette_cand_array = context_ptr->palette_cand_array;
+
+    SequenceControlSet *scs_ptr = (SequenceControlSet*)pcs_ptr->scs_wrapper_ptr->object_ptr;
+    if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
+        // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli
+        disable_cfl_flag = (EbBool)scs_ptr->static_config.disable_cfl_flag;
 
     search_palette_luma(
         pcs_ptr,
