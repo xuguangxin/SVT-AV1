@@ -1941,8 +1941,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     if (scs_ptr->use_output_stat_file)
         scs_ptr->static_config.super_block_size = 64;
     else
+#if PD_REF_ADP_OTHERWISE || PD_BASE_ADP_OTHERWISE
+        scs_ptr->static_config.super_block_size = 64;
+#else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
-
+#endif
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 1) ? 64 : scs_ptr->static_config.super_block_size;
 #else
     if (scs_ptr->static_config.screen_content_mode == 1 || scs_ptr->use_output_stat_file)

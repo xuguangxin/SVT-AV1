@@ -35,6 +35,8 @@ extern "C" {
 #endif
 
 // Speed up M1 & Beyond!
+#define PD_REF_ADP_OTHERWISE 0
+#define PD_BASE_ADP_OTHERWISE 0
 #define PME_OFF_IF_NSQ 0
 #define COMP_OFF_IF_NSQ 0
 #define OBMC_OFF_IF_NSQ 0

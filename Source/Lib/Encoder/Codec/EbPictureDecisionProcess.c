@@ -876,6 +876,15 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
 
+#if PD_REF_ADP_OTHERWISE
+    if(!pcs_ptr->is_used_as_reference_flag)
+        pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
+#endif
+
+#if PD_BASE_ADP_OTHERWISE
+    if (pcs_ptr->temporal_layer_index)
+        pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
+#endif
     if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 
@@ -918,6 +927,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->nsq_search_level = NSQ_SEARCH_OFF;
 
+#if PD_REF_ADP_OTHERWISE || PD_BASE_ADP_OTHERWISE
+    if (pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_DEPTH_MODE)
+        pcs_ptr->nsq_search_level = NSQ_SEARCH_OFF ;
+#endif
     if (pcs_ptr->nsq_search_level > NSQ_SEARCH_OFF)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 
