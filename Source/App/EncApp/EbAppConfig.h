@@ -39,6 +39,8 @@ typedef void *EbPtr;
 */
 #define EB_NULL ((void *)0)
 
+#define WARNING_LENGTH 150
+
 // memory map to be removed and replaced by malloc / free
 typedef enum EbPtrType {
     EB_N_PTR     = 0, // malloc'd pointer
@@ -103,7 +105,7 @@ extern uint32_t          app_malloc_count;
     fprintf(stderr, "Total App Memory: %.2lf KB\n\n", *total_app_memory / (double)1024);
 
 #define MAX_CHANNEL_NUMBER 6
-#define MAX_NUM_TOKENS 200
+#define MAX_NUM_TOKENS 210
 
 #ifdef _WIN32
 #define FOPEN(f, s, m) fopen_s(&f, s, m)
@@ -501,7 +503,8 @@ extern void eb_config_ctor(EbConfig *config_ptr);
 extern void eb_config_dtor(EbConfig *config_ptr);
 
 extern EbErrorType read_command_line(int32_t argc, char *const argv[], EbConfig **config,
-                                     uint32_t num_channels, EbErrorType *return_errors);
+                                     uint32_t num_channels, EbErrorType *return_errors,
+                                     char warning_str[MAX_NUM_TOKENS][WARNING_LENGTH]);
 extern uint32_t    get_help(int32_t argc, char *const argv[]);
 extern uint32_t    get_number_of_channels(int32_t argc, char *const argv[]);
 
