@@ -4868,7 +4868,7 @@ void derive_tf_window_params(
         pcs_ptr->past_altref_nframes = actual_past_pics = index_center - pic_itr;
 #if REVERT_TF_SEETINGS
         if (pcs_ptr->temporal_layer_index == 1)
-            pcs_ptr->past_altref_nframes = actual_past_pics = 1;
+            pcs_ptr->past_altref_nframes = actual_past_pics = MIN(1, pcs_ptr->past_altref_nframes);
 #endif
 
         // Accumulative histogram absolute differences between the central and past frame
@@ -4880,7 +4880,7 @@ void derive_tf_window_params(
         pcs_ptr->future_altref_nframes = pic_itr - index_center;
 #if REVERT_TF_SEETINGS
         if (pcs_ptr->temporal_layer_index == 1)
-            pcs_ptr->future_altref_nframes = 1;
+            pcs_ptr->future_altref_nframes = MIN(1, pcs_ptr->future_altref_nframes);
 #endif
         //SVT_LOG("\nPOC %d\t PAST %d\t FUTURE %d\n", pcs_ptr->picture_number, pcs_ptr->past_altref_nframes, pcs_ptr->future_altref_nframes);
 
