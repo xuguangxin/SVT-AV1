@@ -4380,6 +4380,9 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             MvReferenceFrame frame_type = rf[0];
             uint8_t          list_idx   = get_list_idx(rf[0]);
             uint8_t          ref_idx    = get_ref_frame_idx(rf[0]);
+#if MRP_OFF_IF_NSQ
+            if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && ref_idx > 0) continue;
+#endif
 #if PME_UP_TO_4_REF
             if (ref_idx > 1 && context_ptr->predictive_me_level <= 5) continue;
 #endif
@@ -8757,6 +8760,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         pcs_ptr, context_ptr, input_picture_ptr, input_origin_index, blk_origin_index);
 #endif
     // Perform ME search around the best MVP
+#if PME_OFF_IF_NSQ
+    if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape == PART_N)
+#endif
     if (context_ptr->predictive_me_level)
         predictive_me_search(
             pcs_ptr, context_ptr, input_picture_ptr, input_origin_index, blk_origin_index);

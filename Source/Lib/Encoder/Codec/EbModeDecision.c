@@ -108,6 +108,10 @@ MotionMode obmc_motion_mode_allowed(const PictureControlSet *   pcs_ptr,
                                     struct ModeDecisionContext *context_ptr, const BlockSize bsize,
                                     MvReferenceFrame rf0, MvReferenceFrame rf1,
                                     PredictionMode mode) {
+
+#if OBMC_OFF_IF_NSQ
+    if (context_ptr->blk_geom->shape != PART_N) return SIMPLE_TRANSLATION;
+#endif
     if (!context_ptr->md_pic_obmc_mode) return SIMPLE_TRANSLATION;
 
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
@@ -881,6 +885,9 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
+#if MRP_OFF_IF_NSQ
+        if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && list0_ref_index > 0) continue;
+#endif
         if (list0_ref_index > context_ptr->md_max_ref_count - 1) continue;
         if (inter_direction == 0) {
             for (bipred_index = 0; bipred_index < BIPRED_3x3_REFINMENT_POSITIONS; ++bipred_index) {
@@ -1051,6 +1058,9 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
         const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
         const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
+#if MRP_OFF_IF_NSQ
+        if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && list1_ref_index > 0) continue;
+#endif
         if (list1_ref_index > context_ptr->md_max_ref_count - 1) continue;
         if (inter_direction == 1) {
             for (bipred_index = 0; bipred_index < BIPRED_3x3_REFINMENT_POSITIONS; ++bipred_index) {
@@ -1260,6 +1270,10 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
     if (context_ptr->source_variance < context_ptr->inter_inter_wedge_variance_th)
         tot_comp_types = MIN(tot_comp_types, MD_COMP_DIFF0);
 
+#if COMP_OFF_IF_NSQ
+    tot_comp_types = (context_ptr->blk_geom->shape != PART_N) ? MD_COMP_AVG : tot_comp_types;
+#endif
+
     if (is_compound_enabled) {
         /**************
        NEW_NEWMV
@@ -1271,6 +1285,9 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
             const uint8_t      inter_direction      = me_block_results_ptr->direction;
             const uint8_t      list0_ref_index      = me_block_results_ptr->ref_idx_l0;
             const uint8_t      list1_ref_index      = me_block_results_ptr->ref_idx_l1;
+#if MRP_OFF_IF_NSQ
+            if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && (list0_ref_index > 0 || list1_ref_index > 0)) continue;
+#endif
             if (list0_ref_index > context_ptr->md_max_ref_count - 1 ||
                 list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
@@ -1777,11 +1794,18 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                                             : context_ptr->compound_types_to_try;
     if (context_ptr->source_variance < context_ptr->inter_inter_wedge_variance_th)
         tot_comp_types = MIN(tot_comp_types, MD_COMP_DIFF0);
+
+#if COMP_OFF_IF_NSQ
+    tot_comp_types = (context_ptr->blk_geom->shape != PART_N) ? MD_COMP_AVG : tot_comp_types;
+#endif
     //single ref/list
     if (rf[1] == NONE_FRAME) {
         MvReferenceFrame frame_type = rf[0];
         uint8_t          list_idx   = get_list_idx(rf[0]);
         uint8_t          ref_idx    = get_ref_frame_idx(rf[0]);
+#if MRP_OFF_IF_NSQ
+        if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && ref_idx > 0) return;
+#endif
         if (ref_idx > context_ptr->md_max_ref_count - 1) return;
         //NEAREST
         int16_t to_inject_mv_x = context_ptr->blk_ptr->ref_mvs[frame_type][0].as_mv.col;
@@ -1991,6 +2015,9 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
     } else if (allow_compound) {
         uint8_t ref_idx_0 = get_ref_frame_idx(rf[0]);
         uint8_t ref_idx_1 = get_ref_frame_idx(rf[1]);
+#if MRP_OFF_IF_NSQ
+        if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && (ref_idx_0 > 0 || ref_idx_1 > 0)) return;
+#endif
         if (ref_idx_0 > context_ptr->md_max_ref_count - 1 ||
             ref_idx_1 > context_ptr->md_max_ref_count - 1)
             return;
@@ -2241,9 +2268,17 @@ void inject_new_nearest_new_comb_candidates(const SequenceControlSet *  scs_ptr,
 
     if (context_ptr->source_variance < context_ptr->inter_inter_wedge_variance_th)
         tot_comp_types = MIN(tot_comp_types, MD_COMP_DIFF0);
+
+#if COMP_OFF_IF_NSQ
+    tot_comp_types = (context_ptr->blk_geom->shape != PART_N) ? MD_COMP_AVG : tot_comp_types;
+#endif
+
     {
         uint8_t ref_idx_0 = get_ref_frame_idx(rf[0]);
         uint8_t ref_idx_1 = get_ref_frame_idx(rf[1]);
+#if MRP_OFF_IF_NSQ
+        if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && (ref_idx_0 > 0 || ref_idx_1 > 0)) return;
+#endif
         if (ref_idx_0 > context_ptr->md_max_ref_count - 1 ||
             ref_idx_1 > context_ptr->md_max_ref_count - 1)
             return;
@@ -2802,6 +2837,9 @@ void inject_warped_motion_candidates(
             MvReferenceFrame frame_type = rf[0];
             uint8_t list_idx = get_list_idx(rf[0]);
             uint8_t ref_idx = get_ref_frame_idx(rf[0]);
+#if MRP_OFF_IF_NSQ
+            if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && ref_idx > 0) continue;
+#endif
             if (ref_idx > context_ptr->md_max_ref_count - 1)
                 continue;
             //NEAREST
@@ -2950,6 +2988,9 @@ void inject_warped_motion_candidates(
             NEWMV L0
         ************* */
         if (inter_direction == 0) {
+#if MRP_OFF_IF_NSQ
+            if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && list0_ref_index > 0) continue;
+#endif
             if (list0_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #if ENHANCED_ME_MV
@@ -3047,6 +3088,9 @@ void inject_warped_motion_candidates(
            NEWMV L1
        ************* */
         if (inter_direction == 1) {
+#if MRP_OFF_IF_NSQ
+            if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && list1_ref_index > 0) continue;
+#endif
             if (list1_ref_index > context_ptr->md_max_ref_count - 1)
                 continue;
 #if ENHANCED_ME_MV
@@ -3634,6 +3678,11 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                                                   : context_ptr->compound_types_to_try;
     if (context_ptr->source_variance < context_ptr->inter_inter_wedge_variance_th)
         tot_comp_types = MIN(tot_comp_types, MD_COMP_DIFF0);
+
+#if COMP_OFF_IF_NSQ
+    tot_comp_types = (context_ptr->blk_geom->shape != PART_N) ? MD_COMP_AVG : tot_comp_types;
+#endif
+
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index) {
         const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
         const uint8_t      inter_direction      = me_block_results_ptr->direction;
@@ -3644,6 +3693,9 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
             NEWMV L0
         ************* */
         if (inter_direction == 0) {
+#if MRP_OFF_IF_NSQ
+            if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && list0_ref_index > 0) continue;
+#endif
             if (list0_ref_index > context_ptr->md_max_ref_count - 1) continue;
 #if ENHANCED_ME_MV
             int16_t to_inject_mv_x =
@@ -3784,6 +3836,9 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                NEWMV L1
            ************* */
             if (inter_direction == 1) {
+#if MRP_OFF_IF_NSQ
+                if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && list1_ref_index > 0) continue;
+#endif
                 if (list1_ref_index > context_ptr->md_max_ref_count - 1) continue;
 #if ENHANCED_ME_MV
                 int16_t to_inject_mv_x = context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds]
@@ -3926,6 +3981,9 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                NEW_NEWMV
             ************* */
             if (allow_bipred) {
+#if MRP_OFF_IF_NSQ
+                if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape != PART_N && (list0_ref_index > 0 || list1_ref_index > 0)) continue;
+#endif
                 if (list0_ref_index > context_ptr->md_max_ref_count - 1 ||
                     list1_ref_index > context_ptr->md_max_ref_count - 1)
                     continue;
@@ -4120,6 +4178,11 @@ void inject_predictive_me_candidates(
                                             : context_ptr->compound_types_to_try;
     if (context_ptr->source_variance < context_ptr->inter_inter_wedge_variance_th)
         tot_comp_types = MIN(tot_comp_types, MD_COMP_DIFF0);
+
+#if COMP_OFF_IF_NSQ
+    tot_comp_types = (context_ptr->blk_geom->shape != PART_N) ? MD_COMP_AVG : tot_comp_types;
+#endif
+
     uint8_t list_index;
     uint8_t ref_pic_index;
     list_index = REF_LIST_0;
@@ -4479,6 +4542,10 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
 
     if (context_ptr->source_variance < context_ptr->inter_inter_wedge_variance_th)
         tot_comp_types = MIN(tot_comp_types, MD_COMP_DIFF0);
+
+#if COMP_OFF_IF_NSQ
+    tot_comp_types = (context_ptr->blk_geom->shape != PART_N) ? MD_COMP_AVG : tot_comp_types;
+#endif
 
     uint32_t mi_row = context_ptr->blk_origin_y >> MI_SIZE_LOG2;
     uint32_t mi_col = context_ptr->blk_origin_x >> MI_SIZE_LOG2;
@@ -5007,6 +5074,9 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
     }
 
     // Warped Motion
+#if WARP_OFF_IF_NSQ
+    if (context_ptr->blk_geom->shape == PART_N)
+#endif
     if (frm_hdr->allow_warped_motion && has_overlappable_candidates(context_ptr->blk_ptr) &&
         context_ptr->blk_geom->bwidth >= 8 && context_ptr->blk_geom->bheight >= 8 &&
         context_ptr->warped_motion_injection) {
@@ -5042,7 +5112,9 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                                      &cand_total_cnt);
         }
     }
-
+#if PME_OFF_IF_NSQ
+    if (context_ptr->pd_pass == PD_PASS_2 && context_ptr->blk_geom->shape == PART_N)
+#endif
     if (context_ptr->predictive_me_level)
         inject_predictive_me_candidates(
             context_ptr, pcs_ptr, is_compound_enabled, allow_bipred, &cand_total_cnt);
@@ -5593,6 +5665,9 @@ void  inject_intra_candidates(
     uint8_t                     angle_delta_candidate_count = use_angle_delta ? 7 : 1;
     ModeDecisionCandidate    *cand_array = context_ptr->fast_candidate_array;
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
+#if CFL_OFF_IF_NSQ
+    disable_cfl_flag = (context_ptr->blk_geom->shape != PART_N) ? 1 : disable_cfl_flag;
+#endif
     uint8_t                     disable_z2_prediction;
     uint8_t                     disable_angle_refinement;
     uint8_t                     disable_angle_prediction;
@@ -5817,7 +5892,9 @@ void  inject_filter_intra_candidates(
     ModeDecisionCandidate      *cand_array = context_ptr->fast_candidate_array;
 
     EbBool                      disable_cfl_flag = (MAX(context_ptr->blk_geom->bheight, context_ptr->blk_geom->bwidth) > 32) ? EB_TRUE : EB_FALSE;
-
+#if CFL_OFF_IF_NSQ
+    disable_cfl_flag = (context_ptr->blk_geom->shape != PART_N) ? 1 : disable_cfl_flag;
+#endif
     SequenceControlSet *scs_ptr = (SequenceControlSet*)pcs_ptr->scs_wrapper_ptr->object_ptr;
     if (scs_ptr->static_config.disable_cfl_flag != DEFAULT && !disable_cfl_flag)
         // if disable_cfl_flag == 1 then it doesn't matter what cli says otherwise change it to cli

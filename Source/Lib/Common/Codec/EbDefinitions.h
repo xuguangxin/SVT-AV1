@@ -33,6 +33,15 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+// Speed up M1 & Beyond!
+#define PME_OFF_IF_NSQ 0
+#define COMP_OFF_IF_NSQ 0
+#define OBMC_OFF_IF_NSQ 0
+#define WARP_OFF_IF_NSQ 0
+#define MRP_OFF_IF_NSQ 0
+#define CFL_OFF_IF_NSQ 0
+
 #define DISABLE_QPSM_1PASS                  1 // Disable 1 pass QPS and QPM
 
 #define PME_UP_TO_4_REF                     1 // add a new PME level to restrict PME to use 4 ref frames
