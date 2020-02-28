@@ -1885,6 +1885,9 @@ int32_t av1_quantize_inv_quantize(
     EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
                            md_context->enable_rdoq && !is_intra_bc);
 #endif
+#if ENCDEC_16BIT
+    SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+#endif
 #if !RDQO_ON_HBD0
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     // Shut rdoq if 10BIT and hbd_mode_decision 0
