@@ -1341,7 +1341,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else if (pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->tx_weight = MAX_MODE_COST;
-        else if (pcs_ptr->enc_mode <= ENC_M1)
+        else if (pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected))
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
@@ -1914,7 +1914,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->sq_weight =
             sequence_control_set_ptr->static_config.sq_weight + 15;
         else
-            if (pcs_ptr->enc_mode <= ENC_M1)
+            if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)))
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 5;
             else

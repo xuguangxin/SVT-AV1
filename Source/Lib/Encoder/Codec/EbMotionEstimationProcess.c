@@ -109,10 +109,6 @@ void* set_me_hme_params_oq(
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
 
-    if (hmeMeLevel <= ENC_M2)
-
-        hmeMeLevel = ENC_M0;
-
     // HME/ME default settings
     me_context_ptr->number_hme_search_region_in_width = 2;
     me_context_ptr->number_hme_search_region_in_height = 2;
@@ -196,9 +192,6 @@ EbErrorType signal_derivation_me_kernel_oq(
     // Set ME/HME search regions
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
-    if (hmeMeLevel <= ENC_M2)
-        hmeMeLevel = ENC_M0;
 
     if (scs_ptr->static_config.use_default_me_hme)
         set_me_hme_params_oq(
