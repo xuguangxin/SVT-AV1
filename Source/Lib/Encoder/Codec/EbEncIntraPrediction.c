@@ -668,9 +668,7 @@ void eb_av1_predict_intra_block(
 }
 
 void eb_av1_predict_intra_block_16bit(
-#if ENCDEC_16BIT
         EbBitDepthEnum bit_depth,
-#endif
         TileInfo * tile,
         STAGE       stage,
         const BlockGeom * blk_geom,
@@ -811,7 +809,6 @@ void eb_av1_predict_intra_block_16bit(
                 chroma_left_available ? &mi_ptr[ss_y * mi_stride - 1].mbmi : NULL;
         xd->chroma_left_mbmi = chroma_left_mi;
     }
-#if ENCDEC_16BIT
     //CHKN  const MbModeInfo *const mbmi = xd->mi[0];
     const int32_t txwpx = tx_size_wide[tx_size];
     const int32_t txhpx = tx_size_high[tx_size];
@@ -830,25 +827,6 @@ void eb_av1_predict_intra_block_16bit(
         }
         return;
     }
-#else
-    //CHKN  const MbModeInfo *const mbmi = xd->mi[0];
-    const int32_t txwpx = tx_size_wide[tx_size];
-    const int32_t txhpx = tx_size_high[tx_size];
-    const int32_t x = col_off << tx_size_wide_log2[0];
-    const int32_t y = row_off << tx_size_high_log2[0];
-    if (use_palette) {
-        int32_t r, c;
-        const uint8_t *const map = palette_info->color_idx_map;
-        const uint16_t *const palette =
-                palette_info->pmi.palette_colors + plane * PALETTE_MAX_SIZE;
-        for (r = 0; r < txhpx; ++r) {
-            for (c = 0; c < txwpx; ++c) {
-                dst[r * dst_stride + c] = palette[map[(r + y) * wpx + c + x]];
-            }
-        }
-        return;
-    }
-#endif
     //CHKN BlockSize bsize = mbmi->sb_type;
 
     struct MacroblockdPlane  pd_s;
@@ -911,11 +889,7 @@ void eb_av1_predict_intra_block_16bit(
             have_top_right ? AOMMIN(txwpx, xr) : 0,
             have_left ? AOMMIN(txhpx, yd + txhpx) : 0,
             have_bottom_left ? AOMMIN(txhpx, yd) : 0, plane,
-#if ENCDEC_16BIT
         bit_depth);
-#else
-        EB_10BIT);
-#endif
 }
 
 /** IntraPrediction()
@@ -1091,9 +1065,7 @@ EbErrorType eb_av1_intra_prediction_cl(
                 mode = candidate_buffer_ptr->candidate_ptr->pred_mode;
 
             eb_av1_predict_intra_block_16bit(
-#if ENCDEC_16BIT
                     EB_10BIT,
-#endif
                     &md_context_ptr->sb_ptr->tile_info,
                     !ED_STAGE,
                     md_context_ptr->blk_geom,
@@ -1213,9 +1185,7 @@ EbErrorType  intra_luma_prediction_for_interintra(
             top_neigh_array[0] = left_neigh_array[0] = ((uint16_t*)(md_context_ptr->luma_recon_neighbor_array16bit->top_left_array) + MAX_PICTURE_HEIGHT_SIZE + md_context_ptr->blk_origin_x - md_context_ptr->blk_origin_y)[0];
 
         eb_av1_predict_intra_block_16bit(
-#if ENCDEC_16BIT
                 EB_10BIT,
-#endif
                 &md_context_ptr->sb_ptr->tile_info,
                 !ED_STAGE,
                 md_context_ptr->blk_geom,

@@ -430,15 +430,9 @@ void search_palette_luma(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         // TODO: Try to avoid duplicate computation in cases
         // where the dominant colors and the k-means results are similar.
 
-#if PALETTE_TL
         int step = (pcs_ptr->parent_pcs_ptr->palette_mode == 6)
                        ? 2
                        : 1;
-#else
-        int step = (pcs_ptr->parent_pcs_ptr->palette_mode == 6 && pcs_ptr->temporal_layer_index > 0)
-                       ? 2
-                       : 1;
-#endif
 
         for (n = AOMMIN(colors, PALETTE_MAX_SIZE); n >= 2; n -= step) {
             for (i = 0; i < n; ++i) centroids[i] = top_colors[i];
@@ -451,14 +445,6 @@ void search_palette_luma(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             assert((*tot_palette_cands) <= 14);
         }
 
-#if !PALETTE_TL
-        if (pcs_ptr->parent_pcs_ptr->palette_mode == 3)
-            if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == 0) return;
-
-        if (pcs_ptr->parent_pcs_ptr->palette_mode == 5 ||
-            pcs_ptr->parent_pcs_ptr->palette_mode == 6)
-            if (pcs_ptr->temporal_layer_index > 0) return;
-#endif
         // K-means clustering.
         for (n = AOMMIN(colors, PALETTE_MAX_SIZE); n >= 2; --n) {
             if (colors == PALETTE_MIN_SIZE) {

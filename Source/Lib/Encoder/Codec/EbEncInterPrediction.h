@@ -82,7 +82,6 @@ EbErrorType warped_motion_prediction(
         EbWarpedMotionParams                 *wm_params_l1,
         uint8_t                               bit_depth,
         EbBool                                perform_chroma);
-#if ENCDEC_16BIT
 EbErrorType warped_motion_prediction_16bit_pipeline(
     PictureControlSet                    *pcs_ptr,
     MvUnit                               *mv_unit,
@@ -133,7 +132,6 @@ EbErrorType av1_inter_prediction_16bit_pipeline(
     uint16_t                        dst_origin_y,
     EbBool                          perform_chroma,
     uint8_t                         bit_depth);
-#endif
 const uint8_t *av1_get_obmc_mask(int length);
 
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);

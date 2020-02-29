@@ -231,9 +231,7 @@ typedef struct Yv12BufferConfig {
 } Yv12BufferConfig;
 
 void link_eb_to_aom_buffer_desc(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc
-#if ENCDEC_16BIT
     ,EbBool is_16bit
-#endif
 );
 
 void link_eb_to_aom_buffer_desc_8bit(EbPictureBufferDesc *picBuffDsc, Yv12BufferConfig *aomBuffDsc);
@@ -288,9 +286,7 @@ typedef struct EbPictureBufferDescInitData {
     EbBool         split_mode; //ON: allocate 8bit data seperately from nbit data
     EbBool         down_sampled_filtered;
     uint8_t        mfmv;
-#if ENCDEC_16BIT
     EbBool         is_16bit_pipeline;
-#endif
 } EbPictureBufferDescInitData;
 
 /**************************************

@@ -752,7 +752,6 @@ TEST_P(UnPackAvgTest, UnPackSubAvgTest) {
 INSTANTIATE_TEST_CASE_P(UNPACKAVG, UnPackAvgTest,
                         ::testing::ValuesIn(TEST_AVG_SIZES));
 
-#if ENCDEC_16BIT
 uint32_t CONVERT_SIZES[] = {2, 4, 8, 16, 32, 64, 128, 31, 33, 40};
 
 TEST(CONVERT, 8bit_to_16bit) {
@@ -855,6 +854,5 @@ TEST(CONVERT, 16bit_to_8bit) {
     eb_aom_free(out_8bit_buffer_tst);
     eb_aom_free(in_16bit_buffer);
 }
-#endif
 
 }  // namespace

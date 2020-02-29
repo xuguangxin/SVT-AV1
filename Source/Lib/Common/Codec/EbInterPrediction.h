@@ -145,14 +145,12 @@ typedef struct WedgeParamsType
         BlockSize sb_type, int h, int w, ConvolveParams *conv_params,
         uint8_t bd);
 #endif
-#if ENCDEC_16BIT
     void build_masked_compound_no_round_hbd(uint8_t *dst, int dst_stride,
         const CONV_BUF_TYPE *src0, int src0_stride,
         const CONV_BUF_TYPE *src1, int src1_stride,
         const InterInterCompoundData *const comp_data, uint8_t *seg_mask,
         BlockSize sb_type, int h, int w, ConvolveParams *conv_params,
         uint8_t bd);
-#endif
     void av1_get_convolve_filter_params(uint32_t interp_filters,
         InterpFilterParams *params_x, InterpFilterParams *params_y,
         int32_t w, int32_t h);

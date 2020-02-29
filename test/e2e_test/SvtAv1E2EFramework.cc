@@ -238,12 +238,8 @@ void SvtAv1E2ETestFramework::init_test(TestVideoVector &test_vector) {
         << "eb_svt_enc_stream_header return null output buffer."
         << return_error;
 
-#if TILES_PARALLEL
     EbBool has_tiles = (EbBool)(av1enc_ctx_.enc_params.tile_columns ||
                                 av1enc_ctx_.enc_params.tile_rows);
-#else
-    EbBool has_tiles = (EbBool)EB_FALSE;
-#endif
     obu_frame_header_size_ =
         has_tiles ? OBU_FRAME_HEADER_SIZE + 1 : OBU_FRAME_HEADER_SIZE;
 

@@ -377,16 +377,6 @@ int32_t set_parent_pcs(EbSvtAv1EncConfiguration*   config, uint32_t core_count, 
 EbErrorType load_default_buffer_configuration_settings(
     SequenceControlSet       *scs_ptr){
     EbErrorType           return_error = EB_ErrorNone;
-#if !MD_RATE_EST_ENH
-    uint32_t enc_dec_seg_h = (scs_ptr->static_config.super_block_size == 128) ?
-        ((scs_ptr->max_input_luma_height + 64) / 128) :
-        ((scs_ptr->max_input_luma_height + 32) / 64);
-    uint32_t enc_dec_seg_w = (scs_ptr->static_config.super_block_size == 128) ?
-        ((scs_ptr->max_input_luma_width + 64) / 128) :
-        ((scs_ptr->max_input_luma_width + 32) / 64);
-    uint32_t me_seg_h     = (((scs_ptr->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 6;
-    uint32_t me_seg_w     = (((scs_ptr->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 10;
-#endif
     unsigned int lp_count   = get_num_processors();
     unsigned int core_count = lp_count;
 #if defined(_WIN32) || defined(__linux__)
@@ -418,7 +408,6 @@ EbErrorType load_default_buffer_configuration_settings(
     scs_ptr->input_buffer_fifo_init_count = input_pic + SCD_LAD + scs_ptr->static_config.look_ahead_distance;
     scs_ptr->output_stream_buffer_fifo_init_count =
         scs_ptr->input_buffer_fifo_init_count + 4;
-#if MD_RATE_EST_ENH
     uint32_t enc_dec_seg_h = (core_count == SINGLE_CORE_COUNT) ? 1 :
         (scs_ptr->static_config.super_block_size == 128) ?
         ((scs_ptr->max_input_luma_height + 64) / 128) :
@@ -431,7 +420,6 @@ EbErrorType load_default_buffer_configuration_settings(
         (((scs_ptr->max_input_luma_height + 32) / BLOCK_SIZE_64) < 6) ? 1 : 6;
     uint32_t me_seg_w = (core_count == SINGLE_CORE_COUNT) ? 1 :
         (((scs_ptr->max_input_luma_width + 32) / BLOCK_SIZE_64) < 10) ? 1 : 10;
-#endif
     // ME segments
     scs_ptr->me_segment_row_count_array[0] = me_seg_h;
     scs_ptr->me_segment_row_count_array[1] = me_seg_h;
@@ -447,7 +435,6 @@ EbErrorType load_default_buffer_configuration_settings(
     scs_ptr->me_segment_column_count_array[4] = me_seg_w;
     scs_ptr->me_segment_column_count_array[5] = me_seg_w;
 
-#if TILES_PARALLEL
     // Jing:
     // A tile group can be consisted by 1 tile or NxM tiles.
     // Segments will be parallelized within a tile group
@@ -469,7 +456,6 @@ EbErrorType load_default_buffer_configuration_settings(
     scs_ptr->tile_group_row_count_array[3] = tile_group_row_count;
     scs_ptr->tile_group_row_count_array[4] = tile_group_row_count;
     scs_ptr->tile_group_row_count_array[5] = tile_group_row_count;
-#endif
     // EncDec segments
     scs_ptr->enc_dec_segment_row_count_array[0] = enc_dec_seg_h;
     scs_ptr->enc_dec_segment_row_count_array[1] = enc_dec_seg_h;
@@ -592,12 +578,8 @@ EbErrorType load_default_buffer_configuration_settings(
     scs_ptr->picture_demux_fifo_init_count               = 300;
     scs_ptr->rate_control_tasks_fifo_init_count          = 300;
     scs_ptr->rate_control_fifo_init_count                = 301;
-#if TILES_PARALLEL
     //Jing: Too many tiles may drain the fifo
     scs_ptr->mode_decision_configuration_fifo_init_count = 300 * (MIN(9, 1<<scs_ptr->static_config.tile_rows));
-#else
-    scs_ptr->mode_decision_configuration_fifo_init_count = 300;
-#endif
     scs_ptr->motion_estimation_fifo_init_count           = 300;
     scs_ptr->entropy_coding_fifo_init_count              = 300;
     scs_ptr->enc_dec_fifo_init_count                     = 300;
@@ -1009,17 +991,11 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         input_data.ext_block_flag = (uint8_t)enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.ext_block_flag;
         input_data.mrp_mode = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->mrp_mode;
         input_data.nsq_present = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->nsq_present;
-#if TILES_PARALLEL
         input_data.log2_tile_rows = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.tile_rows;
         input_data.log2_tile_cols = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.tile_columns;
         input_data.log2_sb_sz = (scs_init.sb_size == 128) ? 5 : 4;
-#endif
-#if OIS_MEM
         input_data.allocate_ois_struct = 0;
-#endif
-#if ENCDEC_16BIT
         input_data.is_16bit_pipeline = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.encoder_16bit_pipeline;
-#endif
         EB_NEW(
             enc_handle_ptr->picture_parent_control_set_pool_ptr_array[instance_index],
             eb_system_resource_ctor,
@@ -1068,15 +1044,11 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         input_data.cdf_mode = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->cdf_mode;
         input_data.mfmv = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->mfmv_enabled;
         input_data.cfg_palette = enc_handle_ptr->scs_instance_array[0]->scs_ptr->static_config.screen_content_mode;
-#if TILES_PARALLEL
         //Jing: Get tile info from parent_pcs
         PictureParentControlSet *parent_pcs = (PictureParentControlSet *)enc_handle_ptr->picture_parent_control_set_pool_ptr_array[instance_index]->wrapper_ptr_pool[0]->object_ptr;
         input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;
         input_data.tile_column_count = parent_pcs->av1_cm->tiles_info.tile_cols;
-#endif
-#if ENCDEC_16BIT
         input_data.is_16bit_pipeline = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.encoder_16bit_pipeline;
-#endif
         EB_NEW(
             enc_handle_ptr->picture_control_set_pool_ptr_array[instance_index],
             eb_system_resource_ctor,
@@ -1125,9 +1097,7 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         ref_pic_buf_desc_init_data.top_padding = PAD_VALUE;
         ref_pic_buf_desc_init_data.bot_padding = PAD_VALUE;
         ref_pic_buf_desc_init_data.mfmv = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->mfmv_enabled;
-#if ENCDEC_16BIT
         ref_pic_buf_desc_init_data.is_16bit_pipeline = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.encoder_16bit_pipeline;
-#endif
         // Hsan: split_mode is set @ eb_reference_object_ctor() as both unpacked reference and packed reference are needed for a 10BIT input; unpacked reference @ MD, and packed reference @ EP
 
         if (is_16bit)
@@ -1937,25 +1907,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
         &scs_ptr->input_resolution,
         scs_ptr->seq_header.max_frame_width*scs_ptr->seq_header.max_frame_height);
     // In two pass encoding, the first pass uses sb size=64
-#if SB_SIZE_ADOPTION
     if (scs_ptr->use_output_stat_file)
         scs_ptr->static_config.super_block_size = 64;
     else
-#if PD_REF_ADP_OTHERWISE || PD_BASE_ADP_OTHERWISE
-        scs_ptr->static_config.super_block_size = 64;
-#else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
-#endif
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 1) ? 64 : scs_ptr->static_config.super_block_size;
-#else
-    if (scs_ptr->static_config.screen_content_mode == 1 || scs_ptr->use_output_stat_file)
-        scs_ptr->static_config.super_block_size = 64;
-    else
-        scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3 && scs_ptr->input_resolution >= INPUT_SIZE_1080i_RANGE) ? 128 : 64;
-
-    scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 0) ? 64 : scs_ptr->static_config.super_block_size;
-
-#endif
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
     // Configure the padding
     scs_ptr->left_padding = BLOCK_SIZE_64 + 4;
@@ -2398,12 +2354,6 @@ static EbErrorType verify_settings(
         SVT_LOG("Error instance %u: QP must be [0 - %d]\n", channel_number + 1, MAX_QP_VALUE);
         return_error = EB_ErrorBadParameter;
     }
-#if !LOW_DELAY_TUNE
-    if (config->hierarchical_levels != 3 && config->hierarchical_levels != 4 && config->hierarchical_levels != 5) {
-        SVT_LOG("Error instance %u: Hierarchical Levels supported [3-5]\n", channel_number + 1);
-        return_error = EB_ErrorBadParameter;
-    }
-#endif
     if (config->intra_period_length < -2 || config->intra_period_length > 255) {
         SVT_LOG("Error Instance %u: The intra period must be [-2 - 255] \n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
@@ -2523,12 +2473,10 @@ static EbErrorType verify_settings(
         SVT_LOG("Error Instance %u: Log2Tile rows/cols must be [0 - 6] \n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-#if TILES_PARALLEL
     if ((1 << config->tile_rows) * (1 << config->tile_columns) > 128 || config->tile_columns > 4) {
         SVT_LOG("Error Instance %u: MaxTiles is 128 and MaxTileCols is 16 (Annex A.3) \n", channel_number + 1);
         return_error = EB_ErrorBadParameter;
     }
-#endif
     if (config->unrestricted_motion_vector > 1) {
         SVT_LOG("Error Instance %u : Invalid Unrestricted Motion Vector flag [0 - 1]\n", channel_number + 1);
         return_error = EB_ErrorBadParameter;

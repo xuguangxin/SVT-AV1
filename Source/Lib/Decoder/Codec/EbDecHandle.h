@@ -28,15 +28,10 @@ extern "C" {
 #include "Av1Common.h"
 #include "EbThreads.h"
 
-#if MC_DYNAMIC_PAD
-
 /* This value is set to 72 to make
    DEC_PAD_VALUE a multiple of 16. */
 #define DYNIMIC_PAD_VALUE  72
 #define DEC_PAD_VALUE    (DYNIMIC_PAD_VALUE + 8)
-#else
-#define DEC_PAD_VALUE    (128+32)
-#endif
 
 #define DEC_16BIT_PIPELINE  1 // 16Bit pipeline support for dec
 

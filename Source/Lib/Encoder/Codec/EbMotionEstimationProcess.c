@@ -95,7 +95,6 @@ void *set_me_hme_params_from_config(SequenceControlSet *scs_ptr, MeContext *me_c
 
     return EB_NULL;
 }
-#if JAN6_PRESETS
 /************************************************
  * Set ME/HME Params
  ************************************************/
@@ -181,112 +180,11 @@ void* set_me_hme_params_oq(
     return EB_NULL;
 };
 
-#else
-/************************************************
- * Set ME/HME Params
- ************************************************/
-void *set_me_hme_params_oq(MeContext *me_context_ptr, PictureParentControlSet *pcs_ptr,
-                           SequenceControlSet *scs_ptr, EbInputResolution input_resolution) {
-    UNUSED(scs_ptr);
-    uint8_t hme_me_level =
-        scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-#if M2_ADOPTIONS
-    if (hme_me_level <= ENC_M2) hme_me_level = ENC_M0;
-#else
-    if (hme_me_level <= ENC_M1) hme_me_level = ENC_M0;
-#endif
-    // HME/ME default settings
-    me_context_ptr->number_hme_search_region_in_width  = 2;
-    me_context_ptr->number_hme_search_region_in_height = 2;
-
-    uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
-
-#if DIST_BASED_ME_SEARCH_AREA
-    // sequence frame rate based mutiplier
-    uint8_t  fr_rate_mult_num   = sc_content_detected ? 1 :
-        (scs_ptr->static_config.frame_rate >> 16) < 50 ? 3 : 1;
-    uint8_t  fr_rate_mult_denum = sc_content_detected ? 1 :
-        (scs_ptr->static_config.frame_rate >> 16) < 50 ? 2 : 1;
-
-#endif
-
-    // HME Level0
-    me_context_ptr->hme_level0_total_search_area_width =
-        hme_level0_total_search_area_width[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->hme_level0_total_search_area_height =
-        hme_level0_total_search_area_height[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_width_array[0] =
-        hme_level0_search_area_in_width_array_right[sc_content_detected][input_resolution]
-                                                   [hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_width_array[1] =
-        hme_level0_search_area_in_width_array_left[sc_content_detected][input_resolution]
-                                                  [hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_height_array[0] =
-        hme_level0_search_area_in_height_array_top[sc_content_detected][input_resolution]
-                                                  [hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_height_array[1] =
-        hme_level0_search_area_in_height_array_bottom[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    // HME Level1
-    me_context_ptr->hme_level1_search_area_in_width_array[0] =
-        hme_level1_search_area_in_width_array_right[sc_content_detected][input_resolution]
-                                                   [hme_me_level];
-    me_context_ptr->hme_level1_search_area_in_width_array[1] =
-        hme_level1_search_area_in_width_array_left[sc_content_detected][input_resolution]
-                                                  [hme_me_level];
-    me_context_ptr->hme_level1_search_area_in_height_array[0] =
-        hme_level1_search_area_in_height_array_top[sc_content_detected][input_resolution]
-                                                  [hme_me_level];
-    me_context_ptr->hme_level1_search_area_in_height_array[1] =
-        hme_level1_search_area_in_height_array_bottom[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    // HME Level2
-    me_context_ptr->hme_level2_search_area_in_width_array[0] =
-        hme_level2_search_area_in_width_array_right[sc_content_detected][input_resolution]
-                                                   [hme_me_level];
-    me_context_ptr->hme_level2_search_area_in_width_array[1] =
-        hme_level2_search_area_in_width_array_left[sc_content_detected][input_resolution]
-                                                  [hme_me_level];
-    me_context_ptr->hme_level2_search_area_in_height_array[0] =
-        hme_level2_search_area_in_height_array_top[sc_content_detected][input_resolution]
-                                                  [hme_me_level];
-    me_context_ptr->hme_level2_search_area_in_height_array[1] =
-        hme_level2_search_area_in_height_array_bottom[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-
-#if DIST_BASED_ME_SEARCH_AREA
-    me_context_ptr->search_area_width  =
-        (min_me_search_width[sc_content_detected][input_resolution][hme_me_level]
-            *fr_rate_mult_num)/fr_rate_mult_denum ;
-    me_context_ptr->search_area_height =
-        (min_me_search_height[sc_content_detected][input_resolution][hme_me_level]
-            *fr_rate_mult_num)/fr_rate_mult_denum ;
-#else
-    // ME
-    me_context_ptr->search_area_width =
-        search_area_width[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->search_area_height =
-        search_area_height[sc_content_detected][input_resolution][hme_me_level];
-#endif
-    assert(me_context_ptr->search_area_width <= MAX_SEARCH_AREA_WIDTH &&
-           "increase MAX_SEARCH_AREA_WIDTH");
-    assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT &&
-           "increase MAX_SEARCH_AREA_HEIGHT");
-
-    me_context_ptr->update_hme_search_center_flag = 1;
-
-    if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
-        me_context_ptr->update_hme_search_center_flag = 0;
-
-    return EB_NULL;
-};
-#endif
 /******************************************************
 * Derive ME Settings for OQ
   Input   : encoder mode and tune
   Output  : ME Kernel signal(s)
 ******************************************************/
-#if JAN6_PRESETS
 EbErrorType signal_derivation_me_kernel_oq(
     SequenceControlSet        *scs_ptr,
     PictureParentControlSet   *pcs_ptr,
@@ -342,20 +240,10 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
-#if FEB28_ADOPTIONS
     if (enc_mode <= ENC_M1) {
-#else
-    if (enc_mode <= ENC_M0) {
-#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
-#if !FEB28_ADOPTIONS
-    else if (enc_mode <= ENC_M1) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
-    }
-#endif
     else {
         context_ptr->me_context_ptr->half_pel_mode =
             REFINEMENT_HP_MODE;
@@ -410,153 +298,6 @@ EbErrorType signal_derivation_me_kernel_oq(
     return return_error;
 };
 
-#else
-EbErrorType signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
-                                           PictureParentControlSet *  pcs_ptr,
-                                           MotionEstimationContext_t *context_ptr) {
-    EbErrorType return_error = EB_ErrorNone;
-
-    uint8_t enc_mode =
-        scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-    EbInputResolution input_resolution = scs_ptr->input_resolution;
-    uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
-#if DIST_BASED_ME_SEARCH_AREA
-    uint8_t  hme_me_level = scs_ptr->use_output_stat_file ?
-        pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
-    if (hme_me_level <= ENC_M2)
-        hme_me_level = ENC_M0;
-#endif
-    // Set ME/HME search regions
-    if (scs_ptr->static_config.use_default_me_hme)
-        set_me_hme_params_oq(
-            context_ptr->me_context_ptr, pcs_ptr, scs_ptr, input_resolution);
-
-    else
-        set_me_hme_params_from_config(scs_ptr, context_ptr->me_context_ptr);
-
-#if DIST_BASED_ME_SEARCH_AREA
-    // ME
-    context_ptr->me_context_ptr->max_me_search_width =
-        max_me_search_width[sc_content_detected][input_resolution][hme_me_level];
-    context_ptr->me_context_ptr->max_me_search_height =
-        max_me_search_height[sc_content_detected][input_resolution][hme_me_level];
-#endif
-    if (sc_content_detected)
-#if M1_FEB4_ADOPTION
-        context_ptr->me_context_ptr->fractional_search_method =
-            (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
-#else
-        context_ptr->me_context_ptr->fractional_search_method =
-            (enc_mode == ENC_M0) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
-#endif
-    else if (enc_mode <= ENC_M6)
-        context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
-    else
-        context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
-
-    // Set HME flags
-    context_ptr->me_context_ptr->enable_hme_flag        = pcs_ptr->enable_hme_flag;
-    context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->enable_hme_level0_flag;
-    context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->enable_hme_level1_flag;
-    context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
-
-    if (scs_ptr->static_config.enable_subpel == DEFAULT)
-        // Set the default settings of subpel
-        if (sc_content_detected)
-#if !SC_ADOPTION_FEB_19
-            if (enc_mode <= ENC_M5)
-                context_ptr->me_context_ptr->use_subpel_flag = 1;
-            else
-#endif
-                context_ptr->me_context_ptr->use_subpel_flag = 0;
-        else
-            context_ptr->me_context_ptr->use_subpel_flag = 1;
-    else
-        context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
-#if M1_FEB4_ADOPTION
-    if (enc_mode <= ENC_M0) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
-#else
-    if (MR_MODE) {
-        context_ptr->me_context_ptr->half_pel_mode    = EX_HP_MODE;
-    } else if (enc_mode <= ENC_M0) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
-#endif
-#if SWITCHED_HALF_PEL_MODE
-    }else if (enc_mode <= ENC_M1) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            (sc_content_detected) ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
-#endif
-    } else {
-        context_ptr->me_context_ptr->half_pel_mode    = REFINEMENT_HP_MODE;
-    }
-
-    // Set fractional search model
-    // 0: search all blocks
-    // 1: selective based on Full-Search SAD & MV.
-    // 2: off
-    if (context_ptr->me_context_ptr->use_subpel_flag == 1) {
-        if (enc_mode <= ENC_M6)
-            context_ptr->me_context_ptr->fractional_search_model = 0;
-        else
-            context_ptr->me_context_ptr->fractional_search_model = 1;
-    } else
-        context_ptr->me_context_ptr->fractional_search_model = 2;
-
-    // HME Search Method
-#if SC_PRESETS_OPT || ENHANCED_M0_SETTINGS
-        context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-#else
-    if (sc_content_detected)
-        if (enc_mode <= ENC_M6)
-            context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
-        else
-            context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-    else
-        context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-#endif
-    // ME Search Method
-#if SC_PRESETS_OPT || ENHANCED_M0_SETTINGS
-        context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-#else
-    if (sc_content_detected)
-        if (enc_mode <= ENC_M5)
-            context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
-        else
-            context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-    else
-        context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-
-#endif
-    if (scs_ptr->static_config.enable_global_motion == EB_TRUE) {
-#if FEB14_ADOPTIONS
-        if (enc_mode <= ENC_M3)
-#else
-        if (enc_mode <= ENC_M1)
-#endif
-            context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
-        else
-            context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
-    } else
-        context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
-#if OPT_REC_ME || OPT_REC_SUBP
-    // Me nsq search levels.
-    // 0: feature off -> perform nsq_search.
-    // 1: perform me nsq_search only for the best refrenece picture.
-    // 2: perform me nsq_search only for the nearest refrenece pictures.
-    // 3: me nsq_search off.
-    if (MR_MODE && sc_content_detected == 0)
-        context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
-    else
-        context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
-#endif
-    return return_error;
-};
-#endif
-#if JAN6_PRESETS
 /************************************************
  * Set ME/HME Params for Altref Temporal Filtering
  ************************************************/
@@ -630,92 +371,6 @@ void* tf_set_me_hme_params_oq(
 
     return EB_NULL;
 };
-#else
-/************************************************
- * Set ME/HME Params for Altref Temporal Filtering
- ************************************************/
-void *tf_set_me_hme_params_oq(MeContext *me_context_ptr, PictureParentControlSet *pcs_ptr,
-                              SequenceControlSet *scs_ptr, EbInputResolution input_resolution) {
-    UNUSED(scs_ptr);
-    uint8_t hme_me_level =
-        scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-    // HME/ME default settings
-    me_context_ptr->number_hme_search_region_in_width  = 2;
-    me_context_ptr->number_hme_search_region_in_height = 2;
-
-    uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
-
-    // HME Level0
-    me_context_ptr->hme_level0_total_search_area_width =
-        tf_hme_level0_total_search_area_width[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->hme_level0_total_search_area_height =
-        tf_hme_level0_total_search_area_height[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_width_array[0] =
-        tf_hme_level0_search_area_in_width_array_right[sc_content_detected][input_resolution]
-                                                      [hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_width_array[1] =
-        tf_hme_level0_search_area_in_width_array_left[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_height_array[0] =
-        tf_hme_level0_search_area_in_height_array_top[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    me_context_ptr->hme_level0_search_area_in_height_array[1] =
-        tf_hme_level0_search_area_in_height_array_bottom[sc_content_detected][input_resolution]
-                                                        [hme_me_level];
-    // HME Level1
-    me_context_ptr->hme_level1_search_area_in_width_array[0] =
-        tf_hme_level1_search_area_in_width_array_right[sc_content_detected][input_resolution]
-                                                      [hme_me_level];
-    me_context_ptr->hme_level1_search_area_in_width_array[1] =
-        tf_hme_level1_search_area_in_width_array_left[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    me_context_ptr->hme_level1_search_area_in_height_array[0] =
-        tf_hme_level1_search_area_in_height_array_top[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    me_context_ptr->hme_level1_search_area_in_height_array[1] =
-        tf_hme_level1_search_area_in_height_array_bottom[sc_content_detected][input_resolution]
-                                                        [hme_me_level];
-    // HME Level2
-    me_context_ptr->hme_level2_search_area_in_width_array[0] =
-        tf_hme_level2_search_area_in_width_array_right[sc_content_detected][input_resolution]
-                                                      [hme_me_level];
-    me_context_ptr->hme_level2_search_area_in_width_array[1] =
-        tf_hme_level2_search_area_in_width_array_left[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    me_context_ptr->hme_level2_search_area_in_height_array[0] =
-        tf_hme_level2_search_area_in_height_array_top[sc_content_detected][input_resolution]
-                                                     [hme_me_level];
-    me_context_ptr->hme_level2_search_area_in_height_array[1] =
-        tf_hme_level2_search_area_in_height_array_bottom[sc_content_detected][input_resolution]
-                                                        [hme_me_level];
-
-    // ME
-#if DIST_BASED_ME_SEARCH_AREA
-    me_context_ptr->search_area_width  =
-        min_metf_search_width[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->search_area_height =
-        min_metf_search_height[sc_content_detected][input_resolution][hme_me_level];
-#else
-    me_context_ptr->search_area_width =
-        tf_search_area_width[sc_content_detected][input_resolution][hme_me_level];
-    me_context_ptr->search_area_height =
-        tf_search_area_height[sc_content_detected][input_resolution][hme_me_level];
-#endif
-    assert(me_context_ptr->search_area_width <= MAX_SEARCH_AREA_WIDTH &&
-           "increase MAX_SEARCH_AREA_WIDTH");
-    assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT &&
-           "increase MAX_SEARCH_AREA_HEIGHT");
-
-    me_context_ptr->update_hme_search_center_flag = 1;
-
-    if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
-        me_context_ptr->update_hme_search_center_flag = 0;
-
-    return EB_NULL;
-};
-
-#endif
-#if JAN6_PRESETS
 
 EbErrorType tf_signal_derivation_me_kernel_oq(
     SequenceControlSet        *scs_ptr,
@@ -772,20 +427,10 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
         // adopt M2 setting in M1
-#if FEB28_ADOPTIONS
     if (enc_mode <= ENC_M1) {
-#else
-    if (enc_mode <= ENC_M0) {
-#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
-#if !FEB28_ADOPTIONS
-    else if (enc_mode <= ENC_M1) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
-    }
-#endif
     else {
         context_ptr->me_context_ptr->half_pel_mode =
             REFINEMENT_HP_MODE;
@@ -834,127 +479,6 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
 
     return return_error;
 };
-#else
-/******************************************************
-* Derive ME Settings for OQ for Altref Temporal Filtering
-  Input   : encoder mode and tune
-  Output  : ME Kernel signal(s)
-******************************************************/
-EbErrorType tf_signal_derivation_me_kernel_oq(SequenceControlSet *       scs_ptr,
-                                              PictureParentControlSet *  pcs_ptr,
-                                              MotionEstimationContext_t *context_ptr) {
-    EbErrorType return_error = EB_ErrorNone;
-    uint8_t     enc_mode =
-        scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-    EbInputResolution input_resolution = scs_ptr->input_resolution;
-    uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
-#if DIST_BASED_ME_SEARCH_AREA
-    uint8_t  hme_me_level = scs_ptr->use_output_stat_file ?
-        pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
-    if (hme_me_level <= ENC_M2)
-        hme_me_level = ENC_M0;
-
-#endif
-    // Set ME/HME search regions
-    tf_set_me_hme_params_oq(
-        context_ptr->me_context_ptr, pcs_ptr, scs_ptr, input_resolution);
-
-#if DIST_BASED_ME_SEARCH_AREA // TF
-    context_ptr->me_context_ptr->max_me_search_width =
-        max_metf_search_width[sc_content_detected][input_resolution][hme_me_level];
-    context_ptr->me_context_ptr->max_me_search_height =
-        max_metf_search_height[sc_content_detected][input_resolution][hme_me_level];
-#endif
-    if (sc_content_detected)
-        if (enc_mode <= ENC_M1)
-            context_ptr->me_context_ptr->fractional_search_method =
-                (enc_mode == ENC_M0) ? FULL_SAD_SEARCH : SSD_SEARCH;
-        else
-            context_ptr->me_context_ptr->fractional_search_method = SUB_SAD_SEARCH;
-    else if (enc_mode <= ENC_M6)
-        context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
-    else
-        context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
-
-    // Set HME flags
-    context_ptr->me_context_ptr->enable_hme_flag        = pcs_ptr->tf_enable_hme_flag;
-    context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->tf_enable_hme_level0_flag;
-    context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->tf_enable_hme_level1_flag;
-    context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->tf_enable_hme_level2_flag;
-    if (scs_ptr->static_config.enable_subpel == DEFAULT)
-        // Set the default settings of subpel
-        if (sc_content_detected)
-#if !SC_ADOPTION_FEB_19
-            if (enc_mode <= ENC_M1)
-                context_ptr->me_context_ptr->use_subpel_flag = 1;
-            else
-#endif
-                context_ptr->me_context_ptr->use_subpel_flag = 0;
-        else
-            context_ptr->me_context_ptr->use_subpel_flag = 1;
-    else
-        context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
-
-#if M1_FEB4_ADOPTION
-    if (enc_mode <= ENC_M0) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
-#else
-    if (MR_MODE) {
-        context_ptr->me_context_ptr->half_pel_mode    = EX_HP_MODE;
-    } else if (enc_mode <= ENC_M0) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            (sc_content_detected) ? REFINEMENT_HP_MODE : EX_HP_MODE;
-#endif
-#if SWITCHED_HALF_PEL_MODE
-    }else if (enc_mode <= ENC_M1) {
-        context_ptr->me_context_ptr->half_pel_mode =
-            (sc_content_detected) ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
-#endif
-    } else {
-        context_ptr->me_context_ptr->half_pel_mode    = REFINEMENT_HP_MODE;
-    }
-    // Set fractional search model
-    // 0: search all blocks
-    // 1: selective based on Full-Search SAD & MV.
-    // 2: off
-    if (context_ptr->me_context_ptr->use_subpel_flag == 1) {
-        if (enc_mode <= ENC_M6)
-            context_ptr->me_context_ptr->fractional_search_model = 0;
-        else
-            context_ptr->me_context_ptr->fractional_search_model = 1;
-    } else
-        context_ptr->me_context_ptr->fractional_search_model = 2;
-
-    // HME Search Method
-    if (sc_content_detected)
-        if (enc_mode <= ENC_M6)
-            context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
-        else
-            context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
-    else
-        context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
-    // ME Search Method
-    if (sc_content_detected)
-        if (enc_mode <= ENC_M3)
-            context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
-        else
-            context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
-    else
-        context_ptr->me_context_ptr->me_search_method =
-            (enc_mode <= ENC_M4) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
-#if OPT_REC_ME || OPT_REC_SUBP
-    // Me nsq search levels.
-    // 0: feature off -> perform nsq_search.
-    // 1: perform me nsq_search for the best refrenece picture.
-    // 2: perform me nsq_search for the nearest refrenece pictures.
-    // 3: me nsq_search off.
-    context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
-#endif
-    return return_error;
-};
-#endif
 static void motion_estimation_context_dctor(EbPtr p) {
     EbThreadContext *          thread_context_ptr = (EbThreadContext *)p;
     MotionEstimationContext_t *obj = (MotionEstimationContext_t *)thread_context_ptr->priv;
@@ -1191,21 +715,15 @@ void *motion_estimation_kernel(void *input_ptr) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
 
-#if GLOBAL_WARPED_MOTION
             // Global motion estimation
             // Compute only for the first fragment.
             // TODO: create an other kernel ?
-#if GLOBAL_WARPED_MOTION
             if (pcs_ptr->gm_level == GM_FULL || pcs_ptr->gm_level == GM_DOWN) {
-#endif
                 if (context_ptr->me_context_ptr->compute_global_motion &&
                     in_results_ptr->segment_index == 0)
                     global_motion_estimation(
                         pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
-#if GLOBAL_WARPED_MOTION
             }
-#endif
-#endif
 
             // Segments
             segment_index = in_results_ptr->segment_index;

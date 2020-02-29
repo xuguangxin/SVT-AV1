@@ -34,147 +34,15 @@
 extern "C" {
 #endif
 
-// Speed up M1 & Beyond!
-#define PD_REF_ADP_OTHERWISE 0
-#define PD_BASE_ADP_OTHERWISE 0
-#define PME_OFF_IF_NSQ 0
-#define COMP_OFF_IF_NSQ 0
-#define OBMC_OFF_IF_NSQ 0
-#define WARP_OFF_IF_NSQ 0
-#define MRP_OFF_IF_NSQ 0
-#define CFL_OFF_IF_NSQ 0
-
-#define DISABLE_QPSM_1PASS                  1 // Disable 1 pass QPS and QPM
-
-#define PME_UP_TO_4_REF                     1 // add a new PME level to restrict PME to use 4 ref frames
-#define TH_BASED_CFL                        1 // disbale cfl based on relative inter/intra costs
-#define TH_BASED_CHROMA_SEARCH              1 // skip chroma search based on relative inter/intra costs
-#define NSQ_HV                              1 // skip NSQ partitions based on H vs V costs
-
-#define OMARK_LAMBDA                1 // 2. fix lambda calculation for HBD0
-#define OMARK_HBD1_CDEF             1 // 3. fix CDEF lambda for hbd1/2
-#define OMARK_HBD0_ED               1 // 4. fix ED lambda for hbd0
-#define OMARK_HBD0_IFS              1 // 5. fix IFS lambda for hbd0
-#define OMARK_HBD0_MD               1 // 5. fix MD lambda for hbd0
-#define OMARK_HBD0_RDOQ             1 // 6. fix RDOQ lambda for hbd0
-#define RDQO_ON_HBD0                1 // 6. turn ON RDOQ for hbd0
-#define PICT_SWITCH                 1  // Fix picture switching
-#define QUANT_CLEANUP               1
-#define QUANT_HBD0_FIX              1
-#define NEW_MD_LAMBDA               1
-
-
-
-
-#define FEB19_PD0_TH                        1
-#define TUNE_SUBPEL_SEARCH                  1
-
-#define JAN6_PRESETS                        1
-#if 1
-#define MRP1D_COMPOUND                      1
-#define PALETTE_TL                          1   // remove temporal layer check for palette SC
-#define FEB28_ADOPTIONS                     1
-#define FEB27_ADOPTIONS                     1
-#define FEB24_ADOPTIONS                     1
-#define M0_FEB23_ADOPTIONS                  1
-#define M2_FEB22_ADOPTION                   1
-#define M0_FEB21_ADOPTIONS                  1
-#define M1_FEB22_ADOPTIONS                  1
-#define SC_FEB12_ADOPTION                   1
-#define M2_FEB14_ADOPTION                   1
-#define M0_FEB22_ADOPTIONS                  1
-#define FEB14_ADOPTIONS                     1
-#define SC_FEB4_ADOPTION                    1
-#define M1_FEB4_ADOPTION                    1
-#define SC_PRESETS_OPT                      1
-#define PRESETS_OPT                         1
-#define SC_ADOPTION_FEB_19                  1
-#define FEB18_ADOPTIONS                     1
-#define MR_MODE_CLEAN_UP                    1
-#define M2_ADOPTIONS                        1
-#define ENABLE_HME_360P                     1
-#define MR_FEB4_ADOPTION                    1
-#define SPATIAL_DOMAIN_ONLY_LAST_STAGE      1
-#define MD_STAGE_1_CLASS_PRUNNING_TH        1 // to enable as part of blue towards speed
-#define MD_STAGE_2_CAND_PRUNNING_TH         1 // to enable as part of blue towards bd-rate
-#define SC_REDUCE_DIFF                      1 // Reduce feature diff to normal encoder
-#define JAN31_M2                            1 // adopt new M2
-#endif
-#define OPT_REC_ME              1 // Rect_block inherit Full-pel MVs from sq_sq_blocks in ME
-#define OPT_REC_SUBP            1 // Rect_block inherit Sub-pel MVs from sq_sq_blocks in ME
-#define SKIP_DEPTH              1 // Skip the child blocks whenthe SQ block is better than the NSQ
-
-#define REVERT_TF_SEETINGS 1 // TF settings.
-#define PLANE_WISE_TF 1 // plane wise temporal filtering.
-#define PLANE_WISE_TF_OPT 1 // Added intrinsic code for planewise filtering
-// Added the ability to use 32x32 MVs, and the ability to switch between using 16x16 MVs or 32x32 MVs
-// Decoupled search / compensation @ ALTREF core, REGULAR @ search and SHARP @ compensation, and 1 / 2 Pel Ref and 1 / 4 Pel Ref @ only ALTREF core(15x15 search ~the ME Full - Pel MV).
-#define IMPROVED_TF_ME_INPUT 1
-
-#define CHROMA_SEARCH_OPT        1 // Move chroma search to be done on the best intra candidate survived from MD stage 2
-#if CHROMA_SEARCH_OPT
-#define INFR_OPT                 1 // Lossless: Infrastructure work to allow the protability of the chroma search
-#define MOVE_OPT                 1 // Semi-lossless: Move the intra search to just before last md_stage
-#define COMP_OPT                 1 // Speed optimisation by restricting the search only when at least 1 intra candidate survives to the last md_stage
-#endif
-
-#define NSQ_ME_OPT 1
-
-#define ALTREF_PACK               1// pack the whole picture once for temporal filtering
-
-#define NICS_CLEANUP        1
-#define COMP_SIMILAR        1 //use previously coded similar blocks to prune compound modes
-#define INTRA_SIMILAR       1 //If previous similar block is intra, do not inject any inter
-#define OIS_MEM              1 //reduce memory consumption due to ois struct
-#define SB_SIZE_ADOPTION     1 // ENABLE_SB128_360P , SC_FEB4_ADOPTION
-#define MULTI_STAGE_ME       1
-#if MULTI_STAGE_ME
-#define MUS_ME               1 //MUlti-Stage ME - HME pruning
-#define SHUT_HME_L1_CHECK    1 //Remove usage of ME results for list=0 refIndex=0 to decide HME centre. Feature has wrong assumptions as: MRP OFF and list1 distance = list0 distance.
-
-#define MUS_ME_FP            1 //Multi-Stage ME - Decouple full-pel from subpel
-#define MUS_ME_FP_SB         1 //Multi-Stage ME - Full-pel pruning
-#define SKIP_ME_BASED_ON_HME     1 //Multi-Stage ME - Reduce SR based on HME distortion
-#define REDUCE_ME_FOR_LOW_M_SB   1 //Multi-Stage ME - Reduce SR based on HME distortion and HME MV
-#define SWITCHED_HALF_PEL_MODE   1 //Multi-Stage ME - Adapt half_pel mode based on fulpel distortion
-#define SC_HME_PRUNING          1
-#endif
-#define MC_DYNAMIC_PAD              1
-#define DIST_BASED_ME_SEARCH_AREA       1 // Distance-based multiper for ME search region
-#define GLOBAL_WARPED_MOTION 1 // Global warped motion detection and insertion
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
-#define PRED_STR_UPDATE 1 // Prediction structure update
 
-#define MRP_31B_SUPPORT 1
-#define TILES_PARALLEL 1
-#define LOW_DELAY_TUNE 1 // Tuning the 0B, 1B and 3B settings
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
-#define ENCDEC_16BIT 1 // 16Bit pipeline support for encdec
-#if ENCDEC_16BIT
 #define SHUT_FILTERING 0 //1
-#endif
-#if TILES_PARALLEL
 #define MAX_TILE_CNTS 128 // Annex A.3
-#endif
-#define ALTREF_IMPROVEMENT     1 // Enable TF for layer 1 in 1 pass encoding. Adjust the filter strength
-#define MD_RATE_EST_ENH 1 // MD rate estimation enhancement. Active for LP =1 for now
-
-#define WARP_IMPROVEMENT       1 // Improve Warp motion by adding all the candidates in list0 and list 1
-#define QPS_CHANGE              1 // CQP QP assigment.
-                                  // Add support for other prediction structure
-#define QPS_CHANGE_II           1 // Change the QP assignment for I
 #define MR_MODE 0
-
 #define ALT_REF_QP_THRESH 20
-
-#define FASTER_RDOQ 1 // Perform a fast RDOQ stage to reduce non-zero coeffs before the main/complex RDOQ stage for inter and chroma blocks
-#define FP_QUANT_BOTH_INTRA_INTER 1 // Add quantize_fp for INTER blocks
-#define ENHANCED_SQ_WEIGHT 1 // tune sq_weight threshold based on block properties
-#define ENHANCED_ME_MV 1 // (1) Improved Nx4 and 4xN INTER candidates for all categories: used the parent ME_MV instead of using of the 64x64 ME_MV, (2) Added ME_MV 1 / 8 Pel refinement.
-#define TXS_DEPTH_2 1 // TXS for Depth_2
-
 #define HIGH_PRECISION_MV_QTHRESH 150
 
 #define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
@@ -190,12 +58,8 @@ extern "C" {
 #define AOM_LEFT_TOP_MARGIN_SCALED(subsampling) \
     (AOM_LEFT_TOP_MARGIN_PX(subsampling) << SCALE_SUBPEL_BITS)
 
-#if M0_FEB23_ADOPTIONS &&  TUNE_SUBPEL_SEARCH
 #define H_PEL_SEARCH_WIND_3 3  // 1/2-pel serach window 3
 #define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2
-#else
-#define H_PEL_SEARCH_WIND 3 // 1/2-pel search window
-#endif
 #define HP_REF_OPT 1 // Remove redundant positions.
 
 #define ENABLE_PME_SAD 0
@@ -207,18 +71,13 @@ extern "C" {
 typedef enum MeHpMode {
     EX_HP_MODE        = 0, // Exhaustive  1/2-pel serach mode.
     REFINEMENT_HP_MODE = 1 // Refinement 1/2-pel serach mode.
-#if SWITCHED_HALF_PEL_MODE
     , SWITCHABLE_HP_MODE = 2 // Switch between EX_HP_MODE and REFINEMENT_HP_MODE mode.
-#endif
 } MeHpMode;
-#if GLOBAL_WARPED_MOTION
 typedef enum GM_LEVEL {
     GM_FULL      = 0, // Exhaustive search mode.
     GM_DOWN      = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension
     GM_TRAN_ONLY = 2 // Translation only using ME MV.
 } GM_LEVEL;
-#endif
-#if ENHANCED_SQ_WEIGHT
 typedef enum SqWeightOffsets {
     CONSERVATIVE_OFFSET_0 =   5,
     CONSERVATIVE_OFFSET_1 =  10,
@@ -233,7 +92,6 @@ typedef enum Qp {
     QP_55 = 55,
     QP_63 = 63
 } Qp;
-#endif
 struct Buf2D {
     uint8_t *buf;
     uint8_t *buf0;
@@ -252,12 +110,10 @@ typedef struct {
     uint8_t bx;
     uint8_t skip;
 } CdefList;
-#if FEB27_ADOPTIONS
 #define BLK_BASED_SKIP_TX_SR_TH 0      // Set tx_weight based on block size
 #define FC_SKIP_TX_SR_TH150     250     // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH025     125     // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010     110     // Fast cost skip tx search threshold.
-#endif
 
 /*!\brief force enum to be unsigned 1 byte*/
 #define UENUM1BYTE(enumvar) \
@@ -293,21 +149,12 @@ enum {
 #define ADD_DELTA_QP_SUPPORT 1 // Add delta QP support
 #define BLOCK_MAX_COUNT_SB_128 4421 // TODO: reduce alloction for 64x64
 #define BLOCK_MAX_COUNT_SB_64 1101 // TODO: reduce alloction for 64x64
-#if TXS_DEPTH_2
 #define MAX_TXB_COUNT 16 // Maximum number of transform blocks per depth
-#else
-#define MAX_TXB_COUNT 4 // Maximum number of transform blocks.
-#endif
 #define MAX_NFL 125 // Maximum number of candidates MD can support
-#if INFR_OPT
 #define MAX_NFL_BUFF_Y \
     (MAX_NFL + CAND_CLASS_TOTAL) //need one extra temp buffer for each fast loop call
 #define MAX_NFL_BUFF \
     (MAX_NFL_BUFF_Y + 84) //need one extra temp buffer for each fast loop call
-#else
-#define MAX_NFL_BUFF \
-    (MAX_NFL + CAND_CLASS_TOTAL) //need one extra temp buffer for each fast loop call
-#endif
 #define MAX_LAD 120 // max lookahead-distance 2x60fps
 #define ROUND_UV(x) (((x) >> 3) << 3)
 #define AV1_PROB_COST_SHIFT 9
@@ -540,7 +387,6 @@ static __inline void mem_put_le16(void *vmem, MEM_VALUE_T val) {
     mem[1] = (MAU_T)((val >> 8) & 0xff);
 }
 
-#if TILES_PARALLEL
 static __inline void mem_put_le24(void *vmem, MEM_VALUE_T val) {
     MAU_T *mem = (MAU_T *)vmem;
 
@@ -548,7 +394,6 @@ static __inline void mem_put_le24(void *vmem, MEM_VALUE_T val) {
     mem[1] = (MAU_T)((val >>  8) & 0xff);
     mem[2] = (MAU_T)((val >> 16) & 0xff);
 }
-#endif
 
 static __inline void mem_put_le32(void *vmem, MEM_VALUE_T val) {
     MAU_T *mem = (MAU_T *)vmem;
@@ -655,15 +500,9 @@ typedef enum MdStagingMode {
     MD_STAGING_MODE_TOTAL
 } MdStagingMode;
 
-#if NICS_CLEANUP
 // NICS
 #define MAX_FRAME_TYPE    3  // Max number of frame type allowed for nics
 #define ALL_S0           -1  // Allow all candidates from stage0
-#else
-#define INTRA_NFL 16
-#define INTER_NEW_NFL 16
-#define INTER_PRED_NFL 16
-#endif
 #if MR_MODE
 #define BEST_CANDIDATE_COUNT 23
 #else
@@ -1141,9 +980,7 @@ typedef enum ATTRIBUTE_PACKED {
     COMPOUND_TYPES,
     MASKED_COMPOUND_TYPES = 2,
 } CompoundType;
-#if MRP1D_COMPOUND
 #define MAX_REF_DISTANCE_COMPOUND      1//1: only first ref     4 : keep all
-#endif
 #define COMPOUND_INTRA 4 //just for the decoder
 #define AOM_BLEND_A64_ROUND_BITS 6
 #define AOM_BLEND_A64_MAX_ALPHA (1 << AOM_BLEND_A64_ROUND_BITS) // 64
@@ -3261,20 +3098,12 @@ typedef struct StatStruct
 //     M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
 static const uint8_t enable_hme_flag[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
-#if ENABLE_HME_360P
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
-#else
-        {   0,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
-#endif
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_1080p_RANGE
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 }       // INPUT_SIZE_4K_RANGE
     },{
-#if ENABLE_HME_360P
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
-#else
-        {   0,    0,    0,    0,    0,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
-#endif
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 },      // INPUT_SIZE_1080p_RANGE
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1,    1 }       // INPUT_SIZE_4K_RANGE
@@ -3511,7 +3340,6 @@ static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 }
     }
 };
-#if DIST_BASED_ME_SEARCH_AREA
 /******************************************************************************
                           MAX & MIN  ME search region
 *******************************************************************************/
@@ -3519,17 +3347,10 @@ static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL
 static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB22_ADOPTIONS
         { 256,    256,    256,    128,    96 ,    96,     72 ,    72,     72,     72,     72 ,    72,     72  },  // INPUT_SIZE_576p_RANGE_OR_LOWER
         { 384,    384,    384,    256,    200,    200,    152,    152,    152,    152,    152,    152,    152 },  // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         { 480,    480,    480,    384,    296,    296,    224,    224,    224,    224,    224,    224,    224 },  // INPUT_SIZE_1080p_RANGE
         { 720,    720,    720,    384,    296,    296,    224,    224,    224,    224,    224,    224,    224 }   // INPUT_SIZE_4K_RANGE
-#else
-        { 128,    128,    128,    128,    96 ,    96,     72 ,    72,     72,     72,     72 ,    72,     72  }, // INPUT_SIZE_576p_RANGE_OR_LOWER
-        { 256,    256,    256,    256,    200,    200,    152,    152,    152,    152,    152,    152,    152 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
-        { 384,    384,    384,    384,    296,    296,    224,    224,    224,    224,    224,    224,    224 }, // INPUT_SIZE_1080p_RANGE
-        { 384,    384,    384,    384,    296,    296,    224,    224,    224,    224,    224,    224,    224 }  // INPUT_SIZE_4K_RANGE
-#endif
     },{
     // SC
         { 512,    512,    512,    480,    368,    368,    280,    280,    280,    280,    280,    280,    280 },
@@ -3541,17 +3362,10 @@ static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SU
 static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB22_ADOPTIONS
         { 128,    128,    128,    64,     48,    48,      40,     40,     40,     40,     40,     40,     40  },
         { 192,    192,    192,    128,    96,    96,      72,     72,     72,     72,     72,     72,     72  },
         { 240,    240,    240,    192,    144,    144,    112,    112,    112,    112,    112,    112,    112 },
         { 360,    360,    360,    192,    144,    144,    112,    112,    112,    112,    112,    112,    112 }
-#else
-        { 64,     64,     64,     64,     48,    48,      40,     40,     40,     40,     40,     40,     40  },
-        { 128,    128,    128,    128,    96,    96,      72,     72,     72,     72,     72,     72,     72  },
-        { 192,    192,    192,    192,    144,    144,    112,    112,    112,    112,    112,    112,    112 },
-        { 192,    192,    192,    192,    144,    144,    112,    112,    112,    112,    112,    112,    112 }
-#endif
     },{
     // SC
         { 512,    512,     512,     480,     368,    368,    280,    280,    280,    280,    280,    280,    280 },
@@ -3564,59 +3378,31 @@ static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
 static const uint16_t min_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB23_ADOPTIONS
         { 128,  128,   128,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
         { 192,  192,   192,    64,    48,    48,    40,    40,    40,    40,    40,    40,    40 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         { 240,  240,   240,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }, // INPUT_SIZE_1080p_RANGE
         { 360,  360,   360,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }  // INPUT_SIZE_4K_RANGE
-#else
-        { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
-        { 64,    64,    64,    64,    48,    48,    40,    40,    40,    40,    40,    40,    40 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }, // INPUT_SIZE_1080p_RANGE
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }  // INPUT_SIZE_4K_RANGE
-#endif
     } , {
     // SC
-#if M0_FEB22_ADOPTIONS
         { 168,   168,   168,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
         { 256,   256,   256,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
         { 320,   320,   320,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
         { 480,   480,   480,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
-#else
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
-#endif
     }
 };
 static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB23_ADOPTIONS
         { 64,   64,    64,     16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
         { 96,   96,    96,     32,    24,    24,    16,    16,    16,    16,    16,    16,    16 },
         { 120,  120,   120,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 },
         { 180,  180,   180,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }
-#else
-        { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
-        { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 },
-        { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 },
-        { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }
-#endif
     } , {
     // SC
-#if M0_FEB22_ADOPTIONS
         { 168,  168,   168,    96,    24,    24,    16,    16,    16,    16,    16,    16,    16 },
         { 256,  256,   256,    96,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
         { 320,  320,   320,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
         { 480,  480,   480,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
-#else
-        { 96,    96,    96,    96,    24,    24,    16,    16,    16,    16,    16,    16,    16 },
-        { 96,    96,    96,    96,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
-        { 96,    96,    96,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
-#endif
 
     }
 };
@@ -3628,17 +3414,10 @@ static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
 static const uint16_t max_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB22_ADOPTIONS
         { 64,    64,    64,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
         { 80,    80,    80,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
         { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
-#else
-        { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
-        { 40,    40,    40,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
-        { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
-        { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
-#endif
     } , {
     // SC
         { 60,    60,   60,     60,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
@@ -3650,17 +3429,10 @@ static const uint16_t max_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 static const uint16_t max_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     //NSC
-#if M0_FEB22_ADOPTIONS
         { 64,    64,    64,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
         { 80,    80,    80,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
         { 96,    96,    96,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
-#else
-        { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
-        { 40,    40,    40,    40,    32,    32,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
-        { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
-        { 48,    48,    48,    48,    40,    40,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
-#endif
     } , {
     // SC
         { 60,    60,    60,    60,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
@@ -3673,17 +3445,10 @@ static const uint16_t max_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX
 static const uint16_t min_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB22_ADOPTIONS
         { 16,    16,    16,    8,     8,     8,     8,     8,     8,     8,     8,     8,     8  },
         { 24,    24,    24,    12,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
         { 32,    32,    32,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
         { 32,    32,    32,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 }
-#else
-        { 8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8  },
-        { 12,    12,    12,    12,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
-        { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
-        { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 }
-#endif
     } , {
     // SC
         { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
@@ -3695,17 +3460,10 @@ static const uint16_t min_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 static const uint16_t min_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
     // NSC
-#if M0_FEB22_ADOPTIONS
         {  8,    8,     8,     4,     4,     4,     4,     4,     4,     4,    4,     4,     4 },
         {  12,   12,    12,    6,     6,     6,     6,     6,     6,     6,    6,     6,     6 },
         {  16,   16,    16,    8,     8,     8,     8,     8,     8,     8,    8,     8,     8 },
         {  16,   16,    16,    8,     8,     8,     8,     8,     8,     8,    8,     8,     8 }
-#else
-        {  4,    4,     4,     4,     4,     4,     4,     4,     4,     4,    4,     4,     4 },
-        {  6,    6,     6,     6,     6,     6,     6,     6,     6,     6,    6,     6,     6 },
-        {  8,    8,     8,     8,     8,     8,     8,     8,     8,     8,    8,     8,     8 },
-        {  8,    8,     8,     8,     8,     8,     8,     8,     8,     8,    8,     8,     8 }
-#endif
     } , {
     // SC
         { 8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8,     8  },
@@ -3714,54 +3472,6 @@ static const uint16_t min_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX
         { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 }
     }
 };
-#else
-static const uint16_t search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
-    {
-        { 128,  64,  64,  64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
-        { 160,  64,  64,  64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
-        { 192,  64,  64,  64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
-        { 192,  64,  64,  64,   64,   64,   64,   64,   48,   16,   16,    16,   16 }
-    } , {
-
-#if (!MR_MODE)
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {640 ,  640,  640,  288,  288,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {640 ,  640,  640,  288,  288,  168,  128,  128,   64,   80,   80,    80,   80 }
-
-#else
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {960 ,  640,  640,  288,  288,  168,  128,  128,   64,   80,   80,    80,   80 },
-        {960 ,  640,  640,  288,  288,  168,  128,  128,   64,   80,   80,    80,   80 }
-#endif
-    }
-};
-static const uint16_t search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
-    {
-        { 128,  32,  32,  32,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
-        { 160,  32,  32,  32,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
-        { 192,  32,  32,  32,   32,   32,   32,   32,   16,    9,    9,     9,    9 },
-        { 192,  32,  32,  32,   32,   32,   32,   32,   16,    9,    9,     9,    9 }
-
-    } , {
-
-#if (!MR_MODE)
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {640 ,  640,  640,  288,  288,  168,   80,   80,   48,   80,   80,    80,   80 },
-        {640 ,  640,  640,  288,  288,  168,   80,   80,   48,   80,   80,    80,   80 }
-#else
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {480 ,  480,  480,  144,  144,   88,   48,   48,   48,   48,   48,    48,   48 },
-        {960 ,  640,  640,  288,  288,  168,   80,   80,   48,   80,   80,    80,   80 },
-        {960 ,  640,  640,  288,  288,  168,   80,   80,   48,   80,   80,    80,   80 }
-#endif
-    }
-
-    //     M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
-};
-#endif
 
 /******************************************************************************
                             ME/HME settings for Altref Temporal Filtering

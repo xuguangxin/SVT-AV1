@@ -2008,7 +2008,6 @@ void build_masked_compound_no_round(uint8_t *dst, int dst_stride, const CONV_BUF
                                      conv_params);
     }
 }
-#if ENCDEC_16BIT
 void build_masked_compound_no_round_hbd(uint8_t *dst, int dst_stride, const CONV_BUF_TYPE *src0,
     int src0_stride, const CONV_BUF_TYPE *src1, int src1_stride,
     const InterInterCompoundData *const comp_data,
@@ -2035,7 +2034,6 @@ void build_masked_compound_no_round_hbd(uint8_t *dst, int dst_stride, const CONV
         conv_params,
         bit_depth);
 }
-#endif
 
 void av1_find_ref_dv(IntMv *ref_dv, const TileInfo *const tile, int mib_size, int mi_row,
                      int mi_col) {

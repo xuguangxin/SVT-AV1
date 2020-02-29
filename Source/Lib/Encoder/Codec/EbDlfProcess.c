@@ -116,7 +116,6 @@ void *dlf_kernel(void *input_ptr) {
 
         EbBool is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
 
-#if ENCDEC_16BIT
         if (scs_ptr->static_config.encoder_16bit_pipeline &&
             scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
 
@@ -179,20 +178,15 @@ void *dlf_kernel(void *input_ptr) {
                 input_buffer->width >> 1,
                 input_buffer->height >> 1);
         }
-#endif
 
 
         EbBool dlf_enable_flag = (EbBool)pcs_ptr->parent_pcs_ptr->loop_filter_mode;
-#if TILES_PARALLEL
         uint16_t total_tile_cnt = pcs_ptr->parent_pcs_ptr->av1_cm->tiles_info.tile_cols *
                                   pcs_ptr->parent_pcs_ptr->av1_cm->tiles_info.tile_rows;
         // Jing: Move sb level lf to here if tile_parallel
         if ((dlf_enable_flag && pcs_ptr->parent_pcs_ptr->loop_filter_mode >= 2) ||
             (dlf_enable_flag && pcs_ptr->parent_pcs_ptr->loop_filter_mode == 1 &&
              total_tile_cnt > 1)) {
-#else
-        if (dlf_enable_flag && pcs_ptr->parent_pcs_ptr->loop_filter_mode >= 2) {
-#endif
             EbPictureBufferDesc *recon_buffer =
                 is_16bit ? pcs_ptr->recon_picture16bit_ptr : pcs_ptr->recon_picture_ptr;
 
@@ -268,11 +262,7 @@ void *dlf_kernel(void *input_ptr) {
                 }
                 cm->use_highbitdepth = 1;
             }
-#if ENCDEC_16BIT
             link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show, is_16bit || scs_ptr->static_config.encoder_16bit_pipeline);
-#else
-            link_eb_to_aom_buffer_desc(recon_picture_ptr, cm->frame_to_show);
-#endif
             if (scs_ptr->seq_header.enable_restoration)
                 eb_av1_loop_restoration_save_boundary_lines(cm->frame_to_show, cm, 0);
             if (scs_ptr->seq_header.enable_cdef && pcs_ptr->parent_pcs_ptr->cdef_filter_mode) {

@@ -48,9 +48,7 @@ void eb_av1_predict_intra_block(TileInfo *tile, STAGE stage, const BlockGeom *bl
                                 ModeInfo **mi_grid_base, SeqHeader *seq_header_ptr);
 
 void eb_av1_predict_intra_block_16bit(
-#if ENCDEC_16BIT
         EbBitDepthEnum bit_depth,
-#endif
         TileInfo *tile, STAGE stage, const BlockGeom *blk_geom, const Av1Common *cm, int32_t wpx,
         int32_t hpx, TxSize tx_size, PredictionMode mode, int32_t angle_delta, int32_t use_palette,
         PaletteInfo *palette_info, FilterIntraMode filter_intra_mode, uint16_t *top_neigh_array,

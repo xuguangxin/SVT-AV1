@@ -27,7 +27,6 @@
 
 void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
                               EbPictureBufferDesc *input_picture_ptr) {
-#if GLOBAL_WARPED_MOTION
     // Get downsampled pictures with a downsampling factor of 2 in each dimension
     EbPaReferenceObject *pa_reference_object;
     EbPictureBufferDesc *quarter_ref_pic_ptr;
@@ -40,7 +39,6 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
         (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED)
             ? (EbPictureBufferDesc *)pa_reference_object->quarter_filtered_picture_ptr
             : (EbPictureBufferDesc *)pa_reference_object->quarter_decimated_picture_ptr;
-#endif
     uint32_t num_of_list_to_search =
         (pcs_ptr->slice_type == P_SLICE) ? (uint32_t)REF_LIST_0 : (uint32_t)REF_LIST_1;
 
@@ -69,7 +67,6 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
                     (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                         ->object_ptr;
 
-#if GLOBAL_WARPED_MOTION
             // Set the source and the reference picture to be used by the global motion search
             // based on the input search mode
             if (pcs_ptr->gm_level == GM_DOWN) {
@@ -82,10 +79,6 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
             } else {
                 ref_picture_ptr = (EbPictureBufferDesc *)reference_object->input_padded_picture_ptr;
             }
-#else
-            EbPictureBufferDesc *ref_picture_ptr =
-                (EbPictureBufferDesc *)reference_object->input_padded_picture_ptr;
-#endif
 
             compute_global_motion(input_picture_ptr,
                                   ref_picture_ptr,

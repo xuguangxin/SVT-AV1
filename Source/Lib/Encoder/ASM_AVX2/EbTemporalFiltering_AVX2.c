@@ -17,7 +17,6 @@
 #include "EbTemporalFiltering_AVX2.h"
 
 
-#if PLANE_WISE_TF_OPT
 #define SSE_STRIDE (BW + 2)
 
 DECLARE_ALIGNED(32, static const uint32_t, sse_bytemask[4][8]) = {
@@ -269,4 +268,3 @@ void svt_av1_apply_temporal_filter_planewise_avx2(
             ss_x_shift, ss_y_shift);
     }
 }
-#endif

@@ -173,7 +173,6 @@ EbErrorType eb_reference_object_ctor(EbReferenceObject *reference_object,
             reference_object,
             picture_buffer_desc_init_data_ptr,
             picture_buffer_desc_init_data_16bit_ptr.bit_depth);
-#if ENCDEC_16BIT
         if (picture_buffer_desc_init_data_ptr->is_16bit_pipeline)
         {
             picture_buffer_desc_init_data_16bit_ptr.split_mode = EB_FALSE;
@@ -183,7 +182,6 @@ EbErrorType eb_reference_object_ctor(EbReferenceObject *reference_object,
                 (EbPtr)&picture_buffer_desc_init_data_16bit_ptr);
             reference_object->reference_picture16bit->bit_depth = EB_8BIT;
         }
-#endif
     }
     if (picture_buffer_desc_init_data_ptr->mfmv) {
         //MFMV map is 8x8 based.

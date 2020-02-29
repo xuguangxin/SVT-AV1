@@ -131,11 +131,8 @@ void set_global_motion_field(PictureControlSet *pcs_ptr) {
     }
 
     //Update MV
-#if GLOBAL_WARPED_MOTION
     PictureParentControlSet *parent_pcs_ptr = pcs_ptr->parent_pcs_ptr;
-#if GLOBAL_WARPED_MOTION
     if (parent_pcs_ptr->gm_level <= GM_DOWN) {
-#endif
         if (parent_pcs_ptr
                 ->is_global_motion[get_list_idx(LAST_FRAME)][get_ref_frame_idx(LAST_FRAME)])
             parent_pcs_ptr->global_motion[LAST_FRAME] =
@@ -146,7 +143,6 @@ void set_global_motion_field(PictureControlSet *pcs_ptr) {
             parent_pcs_ptr->global_motion[BWDREF_FRAME] =
                 parent_pcs_ptr->global_motion_estimation[get_list_idx(BWDREF_FRAME)]
                                                         [get_ref_frame_idx(BWDREF_FRAME)];
-#if GLOBAL_WARPED_MOTION
         // Upscale the translation parameters by 2, because the search is done on a down-sampled
         // version of the source picture (with a down-sampling factor of 2 in each dimension).
         if (parent_pcs_ptr->gm_level == GM_DOWN) {
@@ -155,9 +151,6 @@ void set_global_motion_field(PictureControlSet *pcs_ptr) {
             parent_pcs_ptr->global_motion[BWDREF_FRAME].wmmat[0] *= 2;
             parent_pcs_ptr->global_motion[BWDREF_FRAME].wmmat[1] *= 2;
         }
-#endif
-#endif
-#if GLOBAL_WARPED_MOTION
     } else {
         if (pcs_ptr->parent_pcs_ptr->is_pan && pcs_ptr->parent_pcs_ptr->is_tilt) {
             pcs_ptr->parent_pcs_ptr->global_motion[LAST_FRAME].wmtype = TRANSLATION;
@@ -204,7 +197,6 @@ void set_global_motion_field(PictureControlSet *pcs_ptr) {
                            GM_TRANS_MIN * GM_TRANS_DECODE_FACTOR,
                            GM_TRANS_MAX * GM_TRANS_DECODE_FACTOR);
     }
-#endif
 }
 
 void eb_av1_set_quantizer(PictureParentControlSet *pcs_ptr, int32_t q) {
@@ -1013,7 +1005,6 @@ void derive_sb_md_mode(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
 Input   : encoder mode and tune
 Output  : EncDec Kernel signal(s)
 ******************************************************/
-#if JAN6_PRESETS // mdc signals
 EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     ModeDecisionConfigurationContext *context_ptr) {
@@ -1087,97 +1078,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     pcs_ptr->hbd_mode_decision =
         scs_ptr->static_config.enable_hbd_mode_decision;
 
-#if PICT_SWITCH
     pcs_ptr->hbd_mode_decision = scs_ptr->static_config.enable_hbd_mode_decision;
-#endif
     return return_error;
 }
 
-#else
-EbErrorType signal_derivation_mode_decision_config_kernel_oq(
-    SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
-    ModeDecisionConfigurationContext *context_ptr) {
-    UNUSED(scs_ptr);
-    EbErrorType return_error = EB_ErrorNone;
-
-    context_ptr->adp_level = pcs_ptr->parent_pcs_ptr->enc_mode;
-
-    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-        if (pcs_ptr->enc_mode <= ENC_M6)
-            pcs_ptr->update_cdf = 1;
-        else
-            pcs_ptr->update_cdf = 0;
-    else
-        pcs_ptr->update_cdf = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
-    if (pcs_ptr->update_cdf) assert(scs_ptr->cdf_mode == 0 && "use cdf_mode 0");
-    //Filter Intra Mode : 0: OFF  1: ON
-    if (scs_ptr->seq_header.enable_filter_intra)
-        pcs_ptr->pic_filter_intra_mode =
-            pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->temporal_layer_index == 0
-                ? 1
-                : 0;
-    else
-        pcs_ptr->pic_filter_intra_mode = 0;
-    FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
-    frm_hdr->allow_high_precision_mv =
-        pcs_ptr->enc_mode <= ENC_M7 &&
-                frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
-                (scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
-            ? 1
-            : 0;
-    EbBool enable_wm;
-    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-        enable_wm = EB_FALSE;
-    else
-#if WARP_IMPROVEMENT
-        enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2 ||
-#else
-        enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode == ENC_M0 ||
-#endif
-                     (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5 &&
-                      pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
-                        ? EB_TRUE
-                        : EB_FALSE;
-
-    if (pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_warped_motion != DEFAULT)
-        enable_wm = (EbBool)pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.enable_warped_motion;
-
-    frm_hdr->allow_warped_motion =
-        enable_wm &&
-        !(frm_hdr->frame_type == KEY_FRAME || frm_hdr->frame_type == INTRA_ONLY_FRAME) &&
-        !frm_hdr->error_resilient_mode;
-    frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
-    // OBMC Level                                   Settings
-    // 0                                            OFF
-    // 1                                            OBMC @(MVP, PME and ME) + 16 NICs
-    // 2                                            OBMC @(MVP, PME and ME) + Opt NICs
-    // 3                                            OBMC @(MVP, PME ) + Opt NICs
-    // 4                                            OBMC @(MVP, PME ) + Opt2 NICs
-    if (scs_ptr->static_config.enable_obmc) {
-        if (pcs_ptr->parent_pcs_ptr->enc_mode == ENC_M0)
-            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = pcs_ptr->slice_type != I_SLICE ? 2 : 0;
-        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
-            pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
-                pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE
-                    ? 2
-                    : 0;
-        else
-            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
-
-#if MR_MODE
-        pcs_ptr->parent_pcs_ptr->pic_obmc_mode =
-            pcs_ptr->parent_pcs_ptr->sc_content_detected == 0 && pcs_ptr->slice_type != I_SLICE ? 1
-                                                                                                : 0;
-#endif
-    } else
-        pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
-
-    frm_hdr->is_motion_mode_switchable =
-        frm_hdr->is_motion_mode_switchable || pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
-
-    return return_error;
-}
-#endif
 void forward_sq_non4_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
     uint32_t sb_index;
     EbBool   split_flag;
@@ -1581,7 +1485,6 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
 
         eb_av1_qm_init(pcs_ptr->parent_pcs_ptr);
 
-#if QUANT_CLEANUP
         Quants *const quants_bd = &pcs_ptr->parent_pcs_ptr->quants_bd;
         Dequants *const deq_bd = &pcs_ptr->parent_pcs_ptr->deq_bd;
         eb_av1_set_quantizer(
@@ -1608,32 +1511,6 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V],
             quants_8bit,
             deq_8bit);
-#else
-        Quants *const   quants   = &pcs_ptr->parent_pcs_ptr->quants;
-        Dequants *const dequants = &pcs_ptr->parent_pcs_ptr->deq;
-
-        eb_av1_set_quantizer(pcs_ptr->parent_pcs_ptr, frm_hdr->quantization_params.base_q_idx);
-
-        eb_av1_build_quantizer((AomBitDepth)scs_ptr->static_config.encoder_bit_depth,
-                               frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_Y],
-                               frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_U],
-                               frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_U],
-                               frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_V],
-                               frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V],
-                               quants,
-                               dequants);
-
-        Quants *const   quants_md   = &pcs_ptr->parent_pcs_ptr->quants_md;
-        Dequants *const dequants_md = &pcs_ptr->parent_pcs_ptr->deq_md;
-        eb_av1_build_quantizer(pcs_ptr->hbd_mode_decision ? AOM_BITS_10 : AOM_BITS_8,
-                               frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_Y],
-                               frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_U],
-                               frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_U],
-                               frm_hdr->quantization_params.delta_q_dc[AOM_PLANE_V],
-                               frm_hdr->quantization_params.delta_q_ac[AOM_PLANE_V],
-                               quants_md,
-                               dequants_md);
-#endif
         // Hsan: collapse spare code
         MdRateEstimationContext *md_rate_estimation_array;
         uint32_t                 entropy_coding_qp;
@@ -1650,17 +1527,9 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
             &lambdasad_,
             &lambda_sse,
-#if !NEW_MD_LAMBDA
-            &lambdasad_,
-            &lambda_sse,
-#endif
             (uint8_t)pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->bit_depth,
             context_ptr->qp_index,
-#if OMARK_LAMBDA
             EB_TRUE);
-#else
-            pcs_ptr->hbd_mode_decision);
-#endif
         context_ptr->lambda      = (uint64_t)lambdasad_;
         md_rate_estimation_array = pcs_ptr->md_rate_estimation_array;
         // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
@@ -1879,7 +1748,6 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             pcs_ptr);
 
         // Post the results to the MD processes
-#if TILES_PARALLEL
 
         uint16_t tg_count =
             pcs_ptr->parent_pcs_ptr->tile_group_cols * pcs_ptr->parent_pcs_ptr->tile_group_rows;
@@ -1895,17 +1763,6 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             // Post the Full Results Object
             eb_post_full_object(enc_dec_tasks_wrapper_ptr);
         }
-#else
-        eb_get_empty_object(context_ptr->mode_decision_configuration_output_fifo_ptr,
-                            &enc_dec_tasks_wrapper_ptr);
-
-        enc_dec_tasks_ptr                  = (EncDecTasks *)enc_dec_tasks_wrapper_ptr->object_ptr;
-        enc_dec_tasks_ptr->pcs_wrapper_ptr = rate_control_results_ptr->pcs_wrapper_ptr;
-        enc_dec_tasks_ptr->input_type      = ENCDEC_TASKS_MDC_INPUT;
-
-        // Post the Full Results Object
-        eb_post_full_object(enc_dec_tasks_wrapper_ptr);
-#endif
 
         // Release Rate Control Results
         eb_release_object(rate_control_results_wrapper_ptr);

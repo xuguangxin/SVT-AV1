@@ -358,9 +358,7 @@ typedef struct BlkStruct {
     int32_t        ii_wedge_sign;
     uint8_t        filter_intra_mode;
     PaletteInfo    palette_info;
-#if SKIP_DEPTH
     uint8_t        do_not_process_block;
-#endif
 } BlkStruct;
 
 typedef struct OisCandidate {

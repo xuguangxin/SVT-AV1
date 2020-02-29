@@ -1803,7 +1803,6 @@ uint64_t full_distortion_kernel16_bits_avx2(uint8_t *input, uint32_t input_offse
     __m128i s = _mm_add_epi64(_mm256_castsi256_si128(sum64), _mm256_extracti128_si256(sum64, 1));
     return _mm_extract_epi64(s, 0) + _mm_extract_epi64(s, 1);
 }
-#if ENCDEC_16BIT
 void convert_8bit_to_16bit_avx2(uint8_t* src, uint32_t src_stride, uint16_t* dst,
     uint32_t dst_stride, uint32_t width, uint32_t height) {
     __m128i tmp128, tmp128_2;
@@ -1945,5 +1944,4 @@ void convert_16bit_to_8bit_avx2(uint16_t *src, uint32_t src_stride, uint8_t *dst
 
 
 }
-#endif
 
