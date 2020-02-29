@@ -234,7 +234,7 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **Injector** | -inj | [0-1, 0 for default] | 0 | Inject pictures at defined frame rate(0: OFF[default],1: ON) |
 | **InjectorFrameRate** | -inj-frm-rt | Null | Null | Set injector frame rate |
 | **SpeedControlFlag** | -speed-ctrl | [0-1, 0 for default] | 0 | Enable speed control(0: OFF[default], 1: ON) |
-| **FilmGrain** | -film-grain | [0-1, 0 for default] | 0 | Enable film grain(0: OFF[default], 1: ON) |
+| **FilmGrain** | -film-grain | [0-50, 0 for default] | 0 | Enable film grain(0: OFF[default], 1 - 50: Level of denoising for film grain) |
 | **HmeLevel0SearchAreaInWidth** | -hme-l0-w | [1 - 256] | Depends on input resolution | HME Level 0 Search Area in Width for each region, separated in spaces, the number of input search areas must equal to NumberHmeSearchRegionInWidth, and the sum must equal toHmeLevel0TotalSearchAreaWidth |
 | **HmeLevel0SearchAreaInHeight** | -hme-l0-h | [1 - 256] | Depends on input resolution | HME Level 0 Search Area in Height for each region, separated in spaces, the number of input search areas must equal to NumberHmeSearchRegionInHeight, and the sum must equal toHmeLevel0TotalSearchAreaHeight |
 | **HmeLevel1SearchAreaInWidth** | -hme-l1-w | [1 - 256] | Depends on input resolution | HME Level 1 Search Area in Width for each region, separated in spaces, the number of input search areas must equal to NumberHmeSearchRegionInWidth |

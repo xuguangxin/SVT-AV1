@@ -205,6 +205,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.superres_kf_denom = config->superres_kf_denom;
     callback_data->eb_enc_parameters.superres_qthres = config->superres_qthres;
     // --- end: SUPER-RESOLUTION SUPPORT
+    callback_data->eb_enc_parameters.film_grain_denoise_strength = config->film_grain_denoise_strength;
 
     for (hme_region_index = 0;
          hme_region_index < callback_data->eb_enc_parameters.number_hme_search_region_in_width;

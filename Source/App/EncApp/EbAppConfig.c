@@ -1013,7 +1013,7 @@ ConfigEntry config_entry_specific[] = {
     // Annex A parameters
     {SINGLE_INPUT,
      FILM_GRAIN_TOKEN,
-     "Enable film grain(0: OFF[default], 1: ON)",
+     "Enable film grain(0: OFF[default], 1-50: ON, film-grain denoising strength)",
      set_cfg_film_grain},
     // HME
     {ARRAY_INPUT,
