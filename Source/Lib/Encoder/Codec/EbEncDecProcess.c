@@ -3091,7 +3091,7 @@ void *enc_dec_kernel(void *input_ptr) {
                                     context_ptr);
 #else
                     // Encode Pass
-                    av1_encode_pass_16bit(
+                    av1_encode_pass(
                         scs_ptr, pcs_ptr, sb_ptr, sb_index, sb_origin_x, sb_origin_y, context_ptr);
 #endif
 
