@@ -2244,7 +2244,7 @@ static INLINE void build_obmc_inter_pred_left_hbd(uint8_t bit_depth, MacroBlockD
             mask,
             bw,
             bh,
-            8);
+            bit_depth);
     }
 }
 #endif

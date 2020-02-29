@@ -830,8 +830,8 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
     TransformUnit *txb_ptr = &blk_ptr->txb_array[context_ptr->txb_itr];
     //    EB_SLICE               slice_type = sb_ptr->pcs_ptr->slice_type;
     //    uint32_t                 temporal_layer_index = sb_ptr->pcs_ptr->temporal_layer_index;
-    uint32_t qp = blk_ptr->qp;
-
+    uint32_t             qp        = blk_ptr->qp;
+    uint32_t             bit_depth = context_ptr->bit_depth;
     EbPictureBufferDesc *input_samples16bit = context_ptr->input_sample16bit_buffer;
     EbPictureBufferDesc *pred_samples16bit  = pred_samples;
     uint32_t             round_origin_x = (origin_x >> 3) << 3; // for Chroma blocks with size of 4
@@ -869,7 +869,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
 
     uint32_t scratch_luma_offset, scratch_cb_offset, scratch_cr_offset;
 
-    if (context_ptr->is_16bit) {
+    if (bit_depth != EB_8BIT) {
         scratch_luma_offset =
             context_ptr->blk_geom->origin_x + context_ptr->blk_geom->origin_y * SB_STRIDE_Y;
         scratch_cb_offset = ROUND_UV(context_ptr->blk_geom->origin_x) / 2 +
@@ -966,7 +966,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 NOT_USED_VALUE,
                 context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->three_quad_energy,
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_Y],
                 PLANE_TYPE_Y,
                 DEFAULT_SHAPE);
@@ -991,7 +991,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 &eob[0],
                 &(count_non_zero_coeffs[0]),
                 COMPONENT_LUMA,
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_Y],
                 &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
                 context_ptr->md_context->luma_txb_skip_context,
@@ -1000,7 +1000,8 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 blk_ptr->av1xd->use_intrabc,
 #if OMARK_HBD0_RDOQ
 #if NEW_MD_LAMBDA
-                context_ptr->md_context->full_lambda_md[context_ptr->is_16bit ? EB_10_BIT_MD : EB_8_BIT_MD],
+                context_ptr->md_context
+                    ->full_lambda_md[(bit_depth == EB_10BIT) ? EB_10_BIT_MD : EB_8_BIT_MD],
 #else
                 context_ptr->md_context->full_lambda,
 #endif
@@ -1124,7 +1125,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 NOT_USED_VALUE,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->three_quad_energy,
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 DEFAULT_SHAPE);
@@ -1149,7 +1150,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 &eob[1],
                 &(count_non_zero_coeffs[1]),
                 COMPONENT_CHROMA_CB,
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
                 context_ptr->md_context->cb_txb_skip_context,
@@ -1158,7 +1159,8 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 blk_ptr->av1xd->use_intrabc,
 #if OMARK_HBD0_RDOQ
 #if NEW_MD_LAMBDA
-                context_ptr->md_context->full_lambda_md[context_ptr->is_16bit ? EB_10_BIT_MD : EB_8_BIT_MD],
+                context_ptr->md_context
+                    ->full_lambda_md[(bit_depth == EB_10BIT) ? EB_10_BIT_MD : EB_8_BIT_MD],
 #else
                 context_ptr->md_context->full_lambda,
 #endif
@@ -1182,7 +1184,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 NOT_USED_VALUE,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
                 &context_ptr->three_quad_energy,
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 DEFAULT_SHAPE);
@@ -1202,7 +1204,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 &eob[2],
                 &(count_non_zero_coeffs[2]),
                 COMPONENT_CHROMA_CR,
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 &(context_ptr->md_context->candidate_buffer_ptr_array[0][0]),
                 context_ptr->md_context->cr_txb_skip_context,
@@ -1211,7 +1213,8 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
                 blk_ptr->av1xd->use_intrabc,
 #if OMARK_HBD0_RDOQ
 #if NEW_MD_LAMBDA
-                context_ptr->md_context->full_lambda_md[context_ptr->is_16bit ? EB_10_BIT_MD : EB_8_BIT_MD],
+                context_ptr->md_context
+                    ->full_lambda_md[(bit_depth == EB_10BIT) ? EB_10_BIT_MD : EB_8_BIT_MD],
 #else
                 context_ptr->md_context->full_lambda,
 #endif
@@ -1392,7 +1395,7 @@ static void av1_encode_generate_recon_16bit(EncDecContext *context_ptr, uint32_t
                     CONVERT_TO_BYTEPTR(pred_buffer),
                     pred_samples->stride_y,
                     context_ptr->blk_geom->txsize[blk_ptr->tx_depth][context_ptr->txb_itr],
-                    context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                    (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                     txb_ptr->transform_type[PLANE_TYPE_Y],
                     PLANE_TYPE_Y,
                     eob[0],
@@ -1427,7 +1430,7 @@ static void av1_encode_generate_recon_16bit(EncDecContext *context_ptr, uint32_t
                 CONVERT_TO_BYTEPTR(pred_buffer),
                 pred_samples->stride_cb,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 eob[1],
@@ -1449,7 +1452,7 @@ static void av1_encode_generate_recon_16bit(EncDecContext *context_ptr, uint32_t
                 CONVERT_TO_BYTEPTR(pred_buffer),
                 pred_samples->stride_cr,
                 context_ptr->blk_geom->txsize_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
-                context_ptr->is_16bit ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
+                (context_ptr->bit_depth == EB_10BIT) ? BIT_INCREMENT_10BIT : BIT_INCREMENT_8BIT,
                 txb_ptr->transform_type[PLANE_TYPE_UV],
                 PLANE_TYPE_UV,
                 eob[2],
@@ -1520,9 +1523,9 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                                EncDecContext *context_ptr) {
     SequenceControlSet * scs_ptr  = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     EbBool               is_16bit = context_ptr->is_16bit;
-    EbBool               is_16bit_pipeline = scs_ptr->static_config.encoder_16bit_pipeline;
+    uint32_t             bit_depth = context_ptr->bit_depth;
     uint8_t              is_inter          = 0; // set to 0 b/c this is the intra path
-    EbPictureBufferDesc *recon_buffer      = (is_16bit || is_16bit_pipeline)
+    EbPictureBufferDesc *recon_buffer      = (is_16bit)
                                             ? pcs_ptr->recon_picture16bit_ptr
                                             : pcs_ptr->recon_picture_ptr;
     EbPictureBufferDesc *coeff_buffer_sb = sb_ptr->quantized_coeff;
@@ -1530,22 +1533,22 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
 #if TILES_PARALLEL
     uint16_t           tile_idx = context_ptr->tile_index;
     NeighborArrayUnit *ep_luma_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_luma_recon_neighbor_array16bit[tile_idx]
+        (is_16bit) ? pcs_ptr->ep_luma_recon_neighbor_array16bit[tile_idx]
                                         : pcs_ptr->ep_luma_recon_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_cb_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_cb_recon_neighbor_array16bit[tile_idx]
+        (is_16bit) ? pcs_ptr->ep_cb_recon_neighbor_array16bit[tile_idx]
                                         : pcs_ptr->ep_cb_recon_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_cr_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_cr_recon_neighbor_array16bit[tile_idx]
+        (is_16bit) ? pcs_ptr->ep_cr_recon_neighbor_array16bit[tile_idx]
                                         : pcs_ptr->ep_cr_recon_neighbor_array[tile_idx];
 #else
     NeighborArrayUnit *ep_luma_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_luma_recon_neighbor_array16bit
+        (is_16bit) ? pcs_ptr->ep_luma_recon_neighbor_array16bit
                                         : pcs_ptr->ep_luma_recon_neighbor_array;
-    NeighborArrayUnit *ep_cb_recon_neighbor_array = (is_16bit || is_16bit_pipeline)
+    NeighborArrayUnit *ep_cb_recon_neighbor_array = (is_16bit)
                                                         ? pcs_ptr->ep_cb_recon_neighbor_array16bit
                                                         : pcs_ptr->ep_cb_recon_neighbor_array;
-    NeighborArrayUnit *ep_cr_recon_neighbor_array = (is_16bit || is_16bit_pipeline)
+    NeighborArrayUnit *ep_cr_recon_neighbor_array = (is_16bit)
                                                         ? pcs_ptr->ep_cr_recon_neighbor_array16bit
                                                         : pcs_ptr->ep_cr_recon_neighbor_array;
 #endif
@@ -1564,7 +1567,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
 
     if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
         //get the 16bit form of the input SB
-        if (is_16bit || is_16bit_pipeline)
+        if (is_16bit)
             recon_buffer = ((EbReferenceObject *)
                                 pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
                                ->reference_picture16bit;
@@ -1573,7 +1576,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                                 pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
                                ->reference_picture;
     else // non ref pictures
-        recon_buffer = (is_16bit || is_16bit_pipeline) ? pcs_ptr->recon_picture16bit_ptr
+        recon_buffer = (is_16bit) ? pcs_ptr->recon_picture16bit_ptr
                                                        : pcs_ptr->recon_picture_ptr;
 
     uint32_t tot_tu = context_ptr->blk_geom->txb_count[blk_ptr->tx_depth];
@@ -1604,7 +1607,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                     &context_ptr->md_context->luma_txb_skip_context,
                     &context_ptr->md_context->luma_dc_sign_context);
 
-        if (is_16bit || is_16bit_pipeline) {
+        if (is_16bit) {
             uint16_t       top_neigh_array[64 * 2 + 1];
             uint16_t       left_neigh_array[64 * 2 + 1];
             PredictionMode mode;
@@ -1630,7 +1633,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
 
             eb_av1_predict_intra_block_16bit(
 #if ENCDEC_16BIT
-                is_16bit ? EB_10BIT : EB_8BIT,
+                bit_depth,
 #endif
                 &sb_ptr->tile_info,
                 ED_STAGE,
@@ -1731,7 +1734,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
         // Encode Transform Unit -INTRA-
 
         uint16_t cb_qp = blk_ptr->qp;
-        av1_encode_loop_func_table[is_16bit || is_16bit_pipeline](pcs_ptr,
+        av1_encode_loop_func_table[is_16bit](pcs_ptr,
                                                                   context_ptr,
                                                                   sb_ptr,
                                                                   txb_origin_x,
@@ -1789,7 +1792,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                 COMPONENT_LUMA);
         }
 
-        av1_enc_gen_recon_func_ptr[is_16bit || is_16bit_pipeline](context_ptr,
+        av1_enc_gen_recon_func_ptr[is_16bit](context_ptr,
                                                                   txb_origin_x,
                                                                   txb_origin_y,
                                                                   recon_buffer,
@@ -1810,7 +1813,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
             context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
             PICTURE_BUFFER_DESC_LUMA_MASK,
-            is_16bit || is_16bit_pipeline);
+            is_16bit);
 
         context_ptr->coded_area_sb +=
             context_ptr->blk_geom->tx_width[blk_ptr->tx_depth][context_ptr->txb_itr] *
@@ -1884,7 +1887,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
             &context_ptr->md_context->cr_txb_skip_context,
             &context_ptr->md_context->cr_dc_sign_context);
 
-        if (is_16bit || is_16bit_pipeline) {
+        if (is_16bit) {
             uint16_t       top_neigh_array[64 * 2 + 1];
             uint16_t       left_neigh_array[64 * 2 + 1];
             PredictionMode mode;
@@ -1931,7 +1934,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
 
                 eb_av1_predict_intra_block_16bit(
 #if ENCDEC_16BIT
-                    is_16bit ? EB_10BIT : EB_8BIT,
+                    bit_depth,
 #endif
                     &sb_ptr->tile_info,
                     ED_STAGE,
@@ -2065,7 +2068,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
         // Encode Transform Unit -INTRA-
         uint16_t cb_qp = blk_ptr->qp;
 
-        av1_encode_loop_func_table[is_16bit || is_16bit_pipeline](pcs_ptr,
+        av1_encode_loop_func_table[is_16bit](pcs_ptr,
                                                                   context_ptr,
                                                                   sb_ptr,
                                                                   txb_origin_x,
@@ -2123,7 +2126,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
                 COMPONENT_CHROMA);
         }
 
-        av1_enc_gen_recon_func_ptr[is_16bit || is_16bit_pipeline](context_ptr,
+        av1_enc_gen_recon_func_ptr[is_16bit](context_ptr,
                                                                   txb_origin_x,
                                                                   txb_origin_y,
                                                                   recon_buffer,
@@ -2144,7 +2147,7 @@ void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, u
             context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height_uv[blk_ptr->tx_depth][context_ptr->txb_itr],
             PICTURE_BUFFER_DESC_CHROMA_MASK,
-            is_16bit || is_16bit_pipeline);
+            is_16bit);
 
         context_ptr->coded_area_sb_uv +=
             context_ptr->blk_geom->tx_width_uv[blk_ptr->tx_depth][context_ptr->txb_itr] *
@@ -5222,8 +5225,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
     SuperBlock *sb_ptr, uint32_t sb_addr, uint32_t sb_origin_x,
     uint32_t sb_origin_y, EncDecContext *context_ptr) {
     EbBool               is_16bit = context_ptr->is_16bit;
-    EbBool               is_16bit_pipeline = scs_ptr->static_config.encoder_16bit_pipeline;
-    EbPictureBufferDesc *recon_buffer = (is_16bit || is_16bit_pipeline)
+    EbPictureBufferDesc *recon_buffer = (is_16bit)
         ? pcs_ptr->recon_picture16bit_ptr
         : pcs_ptr->recon_picture_ptr;
     EbPictureBufferDesc *coeff_buffer_sb = sb_ptr->quantized_coeff;
@@ -5265,13 +5267,13 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
         pcs_ptr->ep_intra_chroma_mode_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_mv_neighbor_array = pcs_ptr->ep_mv_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_luma_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_luma_recon_neighbor_array16bit[tile_idx]
+        (is_16bit) ? pcs_ptr->ep_luma_recon_neighbor_array16bit[tile_idx]
         : pcs_ptr->ep_luma_recon_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_cb_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_cb_recon_neighbor_array16bit[tile_idx]
+        (is_16bit) ? pcs_ptr->ep_cb_recon_neighbor_array16bit[tile_idx]
         : pcs_ptr->ep_cb_recon_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_cr_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_cr_recon_neighbor_array16bit[tile_idx]
+        (is_16bit) ? pcs_ptr->ep_cr_recon_neighbor_array16bit[tile_idx]
         : pcs_ptr->ep_cr_recon_neighbor_array[tile_idx];
     NeighborArrayUnit *ep_skip_flag_neighbor_array = pcs_ptr->ep_skip_flag_neighbor_array[tile_idx];
 #else
@@ -5282,12 +5284,12 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
         pcs_ptr->ep_intra_chroma_mode_neighbor_array;
     NeighborArrayUnit *ep_mv_neighbor_array = pcs_ptr->ep_mv_neighbor_array;
     NeighborArrayUnit *ep_luma_recon_neighbor_array =
-        (is_16bit || is_16bit_pipeline) ? pcs_ptr->ep_luma_recon_neighbor_array16bit
+        (is_16bit) ? pcs_ptr->ep_luma_recon_neighbor_array16bit
         : pcs_ptr->ep_luma_recon_neighbor_array;
-    NeighborArrayUnit *ep_cb_recon_neighbor_array = (is_16bit || is_16bit_pipeline)
+    NeighborArrayUnit *ep_cb_recon_neighbor_array = (is_16bit)
         ? pcs_ptr->ep_cb_recon_neighbor_array16bit
         : pcs_ptr->ep_cb_recon_neighbor_array;
-    NeighborArrayUnit *ep_cr_recon_neighbor_array = (is_16bit || is_16bit_pipeline)
+    NeighborArrayUnit *ep_cr_recon_neighbor_array = (is_16bit)
         ? pcs_ptr->ep_cr_recon_neighbor_array16bit
         : pcs_ptr->ep_cr_recon_neighbor_array;
     NeighborArrayUnit *ep_skip_flag_neighbor_array = pcs_ptr->ep_skip_flag_neighbor_array;
@@ -5308,7 +5310,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 
     if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)
         //get the 16bit form of the input SB
-        if ((is_16bit || is_16bit_pipeline))
+        if (is_16bit)
             recon_buffer = ((EbReferenceObject *)
                 pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
             ->reference_picture16bit;
@@ -5317,14 +5319,14 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                 pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
             ->reference_picture;
     else // non ref pictures
-        recon_buffer = (is_16bit || is_16bit_pipeline) ? pcs_ptr->recon_picture16bit_ptr
+        recon_buffer = (is_16bit) ? pcs_ptr->recon_picture16bit_ptr
                                                        : pcs_ptr->recon_picture_ptr;
 
     // DeriveZeroLumaCbf
     EbBool high_intra_ref = EB_FALSE;
     EbBool check_zero_luma_cbf = EB_FALSE;
 
-    if (is_16bit) {
+    if (is_16bit && scs_ptr->static_config.encoder_bit_depth > EB_8BIT) {
         //SB128_TODO change 10bit SB creation
 
         if ((scs_ptr->static_config.ten_bit_format == 1) ||
@@ -5433,7 +5435,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
     }
 #if ENCDEC_16BIT
 
-    if (!is_16bit && is_16bit_pipeline) {
+    if (is_16bit && scs_ptr->static_config.encoder_bit_depth == EB_8BIT) {
         const uint32_t input_luma_offset =
             ((sb_origin_y + input_picture->origin_y) * input_picture->stride_y) +
             (sb_origin_x + input_picture->origin_x);
@@ -5798,14 +5800,14 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                         ->reference_picture_wrapper_ptr->object_ptr)
                                     ->reference_picture;
 
-                                if (is_16bit || is_16bit_pipeline)
+                                if (is_16bit)
                                     ref_pic_list0 =
                                     ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr
                                         ->reference_picture_wrapper_ptr->object_ptr)
                                     ->reference_picture16bit;
 
 
-                                if (is_16bit_pipeline) {
+                                if (is_16bit) {
                                     av1_inter_prediction_16bit_pipeline(
                                         pcs_ptr,
                                         blk_ptr->interp_filters,
@@ -5942,7 +5944,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                 {
                                     uint16_t cb_qp = blk_ptr->qp;
 
-                                    av1_encode_loop_func_table[is_16bit || is_16bit_pipeline](
+                                    av1_encode_loop_func_table[is_16bit](
                                         pcs_ptr,
                                         context_ptr,
                                         sb_ptr,
@@ -6023,7 +6025,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 #endif
                                     }
                                     //intra mode
-                                    av1_enc_gen_recon_func_ptr[is_16bit || is_16bit_pipeline](
+                                    av1_enc_gen_recon_func_ptr[is_16bit](
                                         context_ptr,
 #if TXS_DEPTH_2
                                         txb_origin_x,
@@ -6148,7 +6150,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                     context_ptr->blk_geom->bheight_uv,
                                     blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK
                                                      : PICTURE_BUFFER_DESC_LUMA_MASK,
-                                    is_16bit || is_16bit_pipeline);
+                                    is_16bit);
 
                                 // Update the luma Dc Sign Level Coeff Neighbor Array
                                 {
@@ -6262,7 +6264,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                 context_ptr->blk_geom->bheight_uv,
                                 context_ptr->blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK
                                                               : PICTURE_BUFFER_DESC_LUMA_MASK,
-                                is_16bit || is_16bit_pipeline);
+                                is_16bit);
 #endif
 #if !TXS_DEPTH_2
                             context_ptr->coded_area_sb += blk_geom->bwidth * blk_geom->bheight;
@@ -6387,7 +6389,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 #if WARP_IMPROVEMENT
                                 EbPictureBufferDesc *ref_pic_list0;
                                 EbPictureBufferDesc *ref_pic_list1;
-                                if (is_16bit || is_16bit_pipeline) {
+                                if (is_16bit) {
                                     ref_pic_list0 =
                                         blk_ptr->prediction_unit_array->ref_frame_index_l0 >= 0
                                             ? ref_obj_0->reference_picture16bit
@@ -6407,7 +6409,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                             : (EbPictureBufferDesc *)EB_NULL;
                                 }
 #endif
-                                if (is_16bit_pipeline) {
+                                if (is_16bit) {
                                     warped_motion_prediction_16bit_pipeline(
                                         pcs_ptr,
                                         &context_ptr->mv_unit,
@@ -6424,9 +6426,9 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 #else
                                 //ref_obj_0->reference_picture16bit,
                                 //ref_idx_l1 >= 0 ? ref_obj_1->reference_picture16bit : NULL,
-                                (is_16bit || is_16bit_pipeline) ? ref_obj_0->reference_picture16bit
+                                (is_16bit) ? ref_obj_0->reference_picture16bit
                                                                 : ref_obj_0->reference_picture,
-                                ref_idx_l1 >= 0 ? (is_16bit || is_16bit_pipeline)
+                                ref_idx_l1 >= 0 ? (is_16bit)
                                                       ? ref_obj_1->reference_picture16bit
                                                       : ref_obj_1->reference_picture
                                                 : NULL,
@@ -6456,10 +6458,10 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 #else
                                         //ref_obj_0->reference_picture16bit,
                                         //ref_idx_l1 >= 0 ? ref_obj_1->reference_picture16bit : NULL,
-                                        (is_16bit || is_16bit_pipeline)
+                                        (is_16bit)
                                             ? ref_obj_0->reference_picture16bit
                                             : ref_obj_0->reference_picture,
-                                        ref_idx_l1 >= 0 ? (is_16bit || is_16bit_pipeline)
+                                        ref_idx_l1 >= 0 ? (is_16bit)
                                                               ? ref_obj_1->reference_picture16bit
                                                               : ref_obj_1->reference_picture
                                                         : NULL,
@@ -6479,7 +6481,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                 EbPictureBufferDesc *ref_pic_list0;
                                 EbPictureBufferDesc *ref_pic_list1;
 
-                                    if (is_16bit || is_16bit_pipeline) {
+                                    if (is_16bit) {
                                         ref_pic_list0 =
                                             blk_ptr->prediction_unit_array->ref_frame_index_l0 >= 0
                                                 ? ref_obj_0->reference_picture16bit
@@ -6499,7 +6501,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                                 : (EbPictureBufferDesc *)EB_NULL;
                                     }
 
-                                    if (is_16bit_pipeline) {
+                                    if (is_16bit) {
                                         av1_inter_prediction_16bit_pipeline(
                                             pcs_ptr,
                                             blk_ptr->interp_filters,
@@ -6662,7 +6664,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                     }
                                     if (!zero_luma_cbf_md) {
                                         //inter mode  1
-                                        av1_encode_loop_func_table[is_16bit || is_16bit_pipeline](
+                                        av1_encode_loop_func_table[is_16bit](
                                             pcs_ptr,
                                             context_ptr,
                                             sb_ptr,
@@ -7065,7 +7067,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                 } else if ((&blk_ptr->prediction_unit_array[0])->merge_flag ==
                                            EB_TRUE) {
                                     //inter mode  2
-                                    av1_encode_loop_func_table[is_16bit || is_16bit_pipeline](
+                                    av1_encode_loop_func_table[is_16bit](
                                         pcs_ptr,
                                         context_ptr,
                                         sb_ptr,
@@ -7146,7 +7148,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
 
                                 //inter mode
                                 if (do_recon) {
-                                    av1_enc_gen_recon_func_ptr[is_16bit || is_16bit_pipeline](
+                                    av1_enc_gen_recon_func_ptr[is_16bit](
                                         context_ptr,
                                         txb_origin_x,
                                         txb_origin_y,
@@ -7302,7 +7304,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                                     context_ptr->blk_geom->bheight_uv,
                                     context_ptr->blk_geom->has_uv ? PICTURE_BUFFER_DESC_FULL_MASK
                                                                   : PICTURE_BUFFER_DESC_LUMA_MASK,
-                                    is_16bit || is_16bit_pipeline);
+                                    is_16bit);
 #else
                             encode_pass_update_recon_sample_neighbour_arrays(
                                 ep_luma_recon_neighbor_array,
@@ -7528,7 +7530,7 @@ EB_EXTERN void av1_encode_pass_16bit(SequenceControlSet *scs_ptr, PictureControl
                             EB_ENC_CL_ERROR2);
                     }
 
-                    if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit_pipeline) {
+                    if (pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc && is_16bit && (context_ptr->bit_depth == EB_8BIT)) {
                         EbPictureBufferDesc *recon_buffer_16bit;
                         EbPictureBufferDesc *recon_buffer_8bit;
                         if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag == EB_TRUE)

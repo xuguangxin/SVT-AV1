@@ -1900,7 +1900,7 @@ int32_t av1_quantize_inv_quantize(
     if (perform_rdoq && !is_inter) {
 #endif
 #if ENCDEC_16BIT
-        if (bit_increment || (is_encode_pass && scs_ptr->static_config.is_16bitPipeline)) {
+        if (bit_increment || (is_encode_pass && scs_ptr->static_config.encoder_16bit_pipeline)) {
 #else
         if (bit_increment) {
 #endif
@@ -1924,7 +1924,7 @@ int32_t av1_quantize_inv_quantize(
         }
     } else {
 #if ENCDEC_16BIT
-        if (bit_increment || (is_encode_pass && scs_ptr->static_config.is_16bitPipeline)) {
+        if (bit_increment || (is_encode_pass && scs_ptr->static_config.encoder_16bit_pipeline)) {
 #else
         if (bit_increment) {
 #endif

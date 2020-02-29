@@ -644,7 +644,6 @@ typedef struct EbSvtAv1EncConfiguration {
    *
    * Default is 0. */
     int32_t manual_pred_struct_entry_num;
-    EbBool is_16bitPipeline;
 } EbSvtAv1EncConfiguration;
 
 /* STEP 1: Call the library to construct a Component Handle.

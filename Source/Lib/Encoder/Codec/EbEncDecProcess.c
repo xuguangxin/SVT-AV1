@@ -253,7 +253,8 @@ static void reset_encode_pass_neighbor_arrays(PictureControlSet *pcs_ptr) {
  **************************************************/
 static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr,
                           SequenceControlSet *scs_ptr, uint32_t segment_index) {
-    context_ptr->is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
+    context_ptr->is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT) || (EbBool)(scs_ptr->static_config.encoder_16bit_pipeline);
+    context_ptr->bit_depth = scs_ptr->static_config.encoder_bit_depth;
     uint16_t picture_qp   = pcs_ptr->picture_qp;
 #if TILES_PARALLEL
     uint16_t tile_group_idx = context_ptr->tile_group_index;
@@ -4368,8 +4369,6 @@ void *enc_dec_kernel(void *input_ptr) {
                                     context_ptr);
 #else
 #if ENCDEC_16BIT
-                    //TODO: set this varaible according to static config
-                    scs_ptr->static_config.is_16bitPipeline = 0;
                     // Encode Pass
                     av1_encode_pass_16bit(
                         scs_ptr, pcs_ptr, sb_ptr, sb_index, sb_origin_x, sb_origin_y, context_ptr);

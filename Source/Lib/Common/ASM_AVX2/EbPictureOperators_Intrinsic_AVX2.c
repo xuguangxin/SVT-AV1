@@ -1908,7 +1908,7 @@ void convert_8bit_to_16bit_avx2(uint8_t* src, uint32_t src_stride, uint16_t* dst
                 _mm256_storeu_si256((__m256i *)(_dst + k), tmp2);
                 _mm256_storeu_si256((__m256i *)(_dst +k + 16), tmp3);
             }
-            for (; k < width; k++) {
+            for (; k < (int32_t)width; k++) {
                 _dst[k] = (_src[k]);
             }
             _dst += dst_stride;
@@ -1934,7 +1934,7 @@ void convert_16bit_to_8bit_avx2(uint16_t *src, uint32_t src_stride, uint8_t *dst
             tmp3 = _mm256_permute4x64_epi64(tmp3, 0xd8);
             _mm256_storeu_si256((__m256i *)(_dst + k), tmp3);
         }
-        for (; k < width; k++) {
+        for (; k < (int32_t)width; k++) {
             _dst[k] = (uint8_t)(_src[k]);
         }
         _dst += dst_stride;
