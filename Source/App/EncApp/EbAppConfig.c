@@ -758,6 +758,7 @@ ConfigEntry config_entry_global_options[] = {
      set_frame_rate_denominator},
     //{SINGLE_INPUT, ENCODER_BIT_DEPTH, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
     {SINGLE_INPUT, INPUT_DEPTH_TOKEN, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
+    {SINGLE_INPUT, ENCODER_16BIT_PIPELINE, "Bit depth for enc-dec(0: lbd[default], 1: hbd)", set_encoder_16bit_pipeline},
     //{SINGLE_INPUT, LEVEL_TOKEN, "Level", set_level},
     {SINGLE_INPUT, HIERARCHICAL_LEVELS_TOKEN, "Set hierarchical levels(3 or 4[default])", set_hierarchical_levels},
     {SINGLE_INPUT,

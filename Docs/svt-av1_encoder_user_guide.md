@@ -142,6 +142,7 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **FrameRateNumerator** | --fps-num | [0 - 2^64 -1] | 0 | Frame rate numerator e.g. 6000 |
 | **FrameRateDenominator** | --fps-denom | [0 - 2^64 -1] | 0 | Frame rate denominator e.g. 100 |
 | **EncoderBitDepth** | --input-depth | [8 , 10] | 8 | specifies the bit depth of the input video |
+| **Encoder16BitPipeline** | --16bit-pipeline | [0 , 1] | 0 | Bit depth for enc-dec(0: lbd[default], 1: hbd) |
 | **HierarchicalLevels** | --hierarchical-levels | [3 - 4] | 4 | 0 : Flat4: 5-Level HierarchyMinigop Size = (2^HierarchicalLevels) (e.g. 3 == > 7B pyramid, 4 == > 15B Pyramid) |
 | **PredStructure** | --pred-struct | [0-2, 2 for default] | 2 | Set prediction structure( 0: low delay P, 1: low delay B, 2: random access [default]) |
 | **HighDynamicRangeInput** | --enable-hdr | [0-1, 0 for default] | 0 | Enable high dynamic range(0: OFF[default], ON: 1) |
