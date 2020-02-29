@@ -839,7 +839,7 @@ ConfigEntry config_entry_intra_refresh[] = {
      set_cfg_intra_period},
     {SINGLE_INPUT,
      INTRA_REFRESH_TYPE_TOKEN,
-     "Intra refresh type (1: CRA (Open GOP)2: IDR (Closed GOP))",
+     "Intra refresh type (1: Fwd frame (Open GOP)[default] 2: Key frame (Closed GOP))",
      set_tile_row},
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
@@ -1070,7 +1070,7 @@ ConfigEntry config_entry_specific[] = {
       set_screen_content_mode},
      {SINGLE_INPUT,
       HBD_MD_ENABLE_TOKEN,
-      "Enable high bit depth mode decision(0: OFF, 1: ON partially[default],2: fully ON)",
+      "Enable high bit depth mode decision(0: OFF, 1: fully ON, 2: ON partially[default])",
       set_enable_hbd_mode_decision},
      {SINGLE_INPUT,
       PALETTE_TOKEN,
