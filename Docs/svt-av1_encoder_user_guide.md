@@ -184,13 +184,13 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **TileCol** | --tile-columns | [0-6] | 0 | log2 of tile columns |
 | **QP** | -q | [0 - 63] | 50 | Quantization parameter used when RateControl is set to 0 |
 | **LookAheadDistance** | --lookahead | [0 - 120] | 33 | When Rate Control is set to 1 it&#39;s best to set this parameter to be equal to the Intra period value (such is the default set by the encoder) [this value is capped by the encoder to its maximum need e.g. 33 for CQP, 2*fps for rate control] |
-| **LoopFilterDisable** | --dlf | [0-1, 0 for default] | 0 | Disable loop filter(0: loop filter enabled[default] ,1: loop filter disabled) |
-| **CDEFMode** | -cdef-mode | [0-5, -1 for default] | -1 | CDEF Mode, 0: OFF, 1-5: ON with 2,4,8,16,64 step refinement, -1: DEFAULT|
+| **LoopFilterDisable** | --disable-dlf | [0-1, 0 for default] | 0 | Disable loop filter(0: loop filter enabled[default] ,1: loop filter disabled) |
+| **CDEFMode** | --cdef-mode | [0-5, -1 for default] | -1 | CDEF Mode, 0: OFF, 1-5: ON with 2,4,8,16,64 step refinement, -1: DEFAULT|
 | **RestorationFilter** | --enable-restoration-filtering | [0/1, -1 for default] | -1 | Enable restoration filtering , 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **SelfGuidedFilterMode** | --sg-filter-mode | [0-4,  -1 for default] | -1 | Self-guided filter mode (0:OFF, 1: step 0, 2: step 1, 3: step 4, 4: step 16, -1: DEFAULT)|
 | **WienerFilterMode** | --wn-filter-mode | [0-3,  -1 for default] | -1 | Wiener filter mode (0:OFF, 1: 3-Tap luma/ 3-Tap chroma, 2: 5-Tap luma/ 5-Tap chroma, 3: 7-Tap luma/ 7-Tap chroma, -1: DEFAULT)|
 | **Mfmv** | --enable-mfmv | [0/1, -1 for default] | -1 | Enable motion field motion vector, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **RedundantBlock** | --enable-redundant-blk | [0/1, -1 for default] | -1 | Enable redundant block, 0 = OFF, 1 = ON, -1 = DEFAULT|
+| **RedundantBlock** | --enable-redundant-blk | [0/1, -1 for default] | -1 | Enable redundant block skipping same neighbors non-square partitions, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **SpatialSSEfl** | --enable-spatial-sse-fl | [0/1, -1 for default] | -1 | Enable spatial sse full loop, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **Subpel** | --subpel | [0/1, -1 for default] | -1 | Enable subpel, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **OverBoundryBlock** | --enable-over-bndry-blk | [0/1, -1 for default] | -1 | Enable over boundary block mode, 0 = OFF, 1 = ON, -1 = DEFAULT|
@@ -200,20 +200,21 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **NsqTable** | --enable-nsq-table-use | [0/1, -1 for default] | -1 | Enable nsq table, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **FrameEndCdfUpdate** | --enable-framend-cdf-upd-mode | [0/1, -1 for default] | -1 | Enable frame end cdf update mode, 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **ChromaMode** | --chroma-mode | [0-3, -1 for default] | -1 | Chroma Mode <br>-1 = DEFAULT<br>0 = Full chroma search @ MD  <br>1 = Fast chroma search @ MD  <br>2 = Chroma blind @ MD + CFL @ EP <br>3 = Chroma blind @ MD + no CFL @ EP |
-| **DisableCfl** | --dcfl | [0/1, -1 for default] | -1 | Disable chroma from luma (CFL), 0 = OFF (do not disable), 1 = ON (disable), -1 = DEFAULT|
+| **DisableCfl** | --disable-cfl | [0/1, -1 for default] | -1 | Disable chroma from luma (CFL), 0 = OFF (do not disable), 1 = ON (disable), -1 = DEFAULT|
 | **LocalWarpedMotion** | --enable-local-warp | [0 - 1] | 0 | Enable warped motion use , 0 = OFF, 1 = ON |
 | **GlobalMotion** | --enable-global-motion | [0-1, 1 for default] | 1 | Enable global motion (0: OFF, 1: ON [default]) |
-| **CombineClass12** | --enable-class-12 | [0/1, -1 for default] | -1 | Enable combine MD Class1&2, 0 = OFF, 1 = ON, -1 = DEFAULT|
+| **CombineClass12** | --enable-class-12 | [0/1, -1 for default] | -1 | Enable combine Mode decision Classes 1 and 2 (inter classes), 0 = OFF, 1 = ON, -1 = DEFAULT|
 | **EdgeSkipAngleIntra** | --enable-intra-edge-skp | [0/1, -1 for default] | -1 | Enable skip angle intra based on edge, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **IntraAngleDelta** | -intra-angle-delta | [0/1, -1 for default] | -1 | Enable intra angle delta filtering (0: OFF, 1: ON, -1 = DEFAULT |
+| **PicBasedRateEst** | --enable-pic-based-rate-est | [0/1, -1 for default] | -1 | Enable picture based rate estimation. Only active with lp 1 (0: OFF, 1: ON, -1: DEFAULT)|
+| **IntraAngleDelta** | --enable-intra-angle-delta | [0/1, -1 for default] | -1 | Enable intra angle delta filtering (0: OFF, 1: ON, -1 = DEFAULT |
 | **InterIntraCompound** | --enable-interintra-comp | [0/1, -1 for default] | -1 | Enable inter intra compound, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **Paeth** | --paeth | [0/1, -1 for default] | -1 | Enable Paeth, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **Smooth** | --smooth | [0/1, -1 for default] | -1 | Enable Smooth, 0 = OFF, 1 = ON, -1 = DEFAULT|
-| **Obmc** | --obmc | [0-1, 1 for default] | 1 | Enable OBMC(0: OFF, 1: ON[default]) |
+| **Paeth** | --enable-paeth | [0/1, -1 for default] | -1 | Enable Intra Paeth pred, 0 = OFF, 1 = ON, -1 = DEFAULT|
+| **Smooth** | --enable-smooth | [0/1, -1 for default] | -1 | Enable Intra Smooth pred, 0 = OFF, 1 = ON, -1 = DEFAULT|
+| **Obmc** | --enable-obmc | [0-1, 1 for default] | 1 | Enable OBMC(0: OFF, 1: ON[default]) |
 | **RDOQ** | --enable-rdoq | [0/1, -1 for default] | -1 | Enable RDOQ, 0 = OFF, 1 = ON, -1 = DEFAULT |
 | **FilterIntra** | --enable-filter-intra | [0-1, 1 for default] | 1 | Enable filter intra prediction mode (0: OFF, 1: ON [default]) |
-| **IntraEdgeFilter** | --intra-edge-filter | [0/1, -1 for default] | -1 | Enable intra edge filter (0: OFF, 1: ON, -1: DEFAULT)|
-| **PredMe** | --pred-me | [0-5, -1 for default] | -1 | Set predictive me level: <BR>-1 = DEFAULT<BR>0 = OFF <BR>1 = 7x5 full-pel search + sub-pel refinement off <BR>2 = 7x5 full-pel search +  (H + V) sub-pel refinement only = 4 half-pel + 4 quarter-pel = 8 positions + pred_me_distortion to pa_me_distortion deviation on <BR>3 = 7x5 full-pel search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on <BR>4 = 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on <BR>5 = 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off |
+| **IntraEdgeFilter** | --enable-intra-edge-filter | [0/1, -1 for default] | -1 | Enable intra edge filter (0: OFF, 1: ON, -1: DEFAULT)|
+| **PredMe** | --pred-me | [0-5, -1 for default] | -1 | Closed loop motion search. Set predictive me level: <BR>-1 = DEFAULT<BR>0 = OFF <BR>1 = 7x5 full-pel search + sub-pel refinement off <BR>2 = 7x5 full-pel search +  (H + V) sub-pel refinement only = 4 half-pel + 4 quarter-pel = 8 positions + pred_me_distortion to pa_me_distortion deviation on <BR>3 = 7x5 full-pel search +  (H + V + D only ~ the best) sub-pel refinement = up to 6 half-pel + up to 6  quarter-pel = up to 12 positions + pred_me_distortion to pa_me_distortion deviation on <BR>4 = 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation on <BR>5 = 7x5 full-pel search +  (H + V + D) sub-pel refinement = 8 half-pel + 8 quarter-pel = 16 positions + pred_me_distortion to pa_me_distortion deviation off |
 | **Bipred3x3** | --bipred-3x3 | [0-2, -1 for default] | -1 | Set bipred3x3 injection, 0 = OFF, 1 = ON FULL, 2 = Reduced set, -1 = DEFAULT|
 | **CompoundLevel** | --compound | [0-2, -1 for default] | -1 | Set compound mode: <BR>-1 = DEFAULT<BR>0 = OFF: No compond mode search : AVG only <BR>1 = ON: compond mode search: AVG/DIST/DIFF <BR>2 = ON: AVG/DIST/DIFF/WEDGE |
 | **UseDefaultMeHme** | --use-default-me-hme | [0 - 1] | 1 | 0 : Overwrite Default ME HME parameters1 : Use default ME HME parameters, dependent on width and height |
@@ -252,7 +253,7 @@ The encoder parameters present in the `Sample.cfg` file are listed in this table
 | **MDS1PruneCandThreshold** | --mds-1-cand-th | 0 for off and any whole number percentage | 75 | Deviation threshold (expressed as a percentage) of an intra-class candidate pruning mechanism before MD Stage 1 |
 | **MDS23PruneClassThreshold** | --mds-2-3-class-th | 0 for off and any whole number percentage | 25 | Deviation threshold (expressed as a percentage) of an inter-class class pruning mechanism before MD Stage 2/3 |
 | **MDS23PruneCandThreshold** | --mds-2-3-cand-th | 0 for off and any whole number percentage | 15 | Deviation threshold (expressed as a percentage) of an intra-class candidate pruning mechanism before MD Stage 2/3 |
-| **StatReport** | --enable-stat-report | [0 - 1] | 0 | When set to 1, calculate and display PSNR values |
+| **StatReport** | --enable-stat-report | [0 - 1] | 0 | When set to 1, calculates and outputs average PSNR values |
 
 ## Appendix A Encoder Parameters
 

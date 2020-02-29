@@ -701,7 +701,8 @@ static void read_stat_from_file(PictureParentControlSet *pcs_ptr, SequenceContro
 *  the encoding pipeline and passes this data along with the current encoder settings
 *  to the picture analysis process
 *  Encoder settings include, but are not limited to QPs, picture type, encoding
-*  parameters that change per picture sequence
+*  parameters that change per picture and sequence parameters when processing
+*  the initial picture
 *
 * @param[in] EbBufferHeaderType
 *  EbBufferHeaderType containing the input picture samples along with settings specific to that picture

@@ -55,68 +55,6 @@ jobs:
         name: svtav1-current
         path: ./svtav1-current.tar.gz
 
-  binary-identical-test:
-    runs-on: ubuntu-18.04
-    needs: [build]
-    steps:
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gcc-9 g++-9 nasm yasm cmake
-    - name: Download videos
-      run: |
-        wget -nc https://raw.githubusercontent.com/OpenVisualCloud/SVT-AV1-Resources/master/video.tar.gz || wget -nc http://randomderp.com/video.tar.gz
-        tar xf video.tar.gz
-        mv -t $HOME akiyo_cif.y4m
-        mv -t $HOME Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m
-    - name: Checkout SVT-AV1 (master)
-      uses: actions/checkout@v2
-      with:
-        ref: master
-    - name: Build SVT-AV1 (master)
-      run: |
-        mkdir $HOME/master
-        mv * $HOME/master
-        $HOME/master/Build/linux/build.sh static
-    - name: Encode videos (master)
-      run: |
-        $HOME/master/Bin/Release/SvtAv1EncApp -enc-mode 8 -i $HOME/akiyo_cif.y4m -n 120 -b $HOME/test-master-8bit-m8.ivf
-        $HOME/master/Bin/Release/SvtAv1EncApp -enc-mode 0 -i $HOME/akiyo_cif.y4m -n 3 -b $HOME/test-master-8bit-m0.ivf
-        $HOME/master/Bin/Release/SvtAv1EncApp -enc-mode 8 -i $HOME/Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m -n 120 -b $HOME/test-master-10bit-m8.ivf
-        $HOME/master/Bin/Release/SvtAv1EncApp -enc-mode 0 -i $HOME/Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m -n 3 -b $HOME/test-master-10bit-m0.ivf
-    - name: Download artifact SVT-AV1 (current)
-      uses: actions/download-artifact@v1
-      with:
-        name: svtav1-current
-    - name: Extract artifact SVT-AV1 (current)
-      run: |
-        mkdir $HOME/current
-        tar xf svtav1-current/svtav1-current.tar.gz -C $HOME/current
-    - name: Encode videos (current)
-      run: |
-        $HOME/current/Bin/Release/SvtAv1EncApp -enc-mode 8 -i $HOME/akiyo_cif.y4m -n 120 -b $HOME/test-pr-8bit-m8.ivf
-        $HOME/current/Bin/Release/SvtAv1EncApp -enc-mode 0 -i $HOME/akiyo_cif.y4m -n 3 -b $HOME/test-pr-8bit-m0.ivf
-        $HOME/current/Bin/Release/SvtAv1EncApp -enc-mode 8 -i $HOME/Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m -n 120 -b $HOME/test-pr-10bit-m8.ivf
-        $HOME/current/Bin/Release/SvtAv1EncApp -enc-mode 0 -i $HOME/Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m -n 3 -b $HOME/test-pr-10bit-m0.ivf
-    - name: Binary compare
-      run: |
-        echo Comparing 8-bit M8: akiyo_cif.y4m
-        diff $HOME/test-pr-8bit-m8.ivf $HOME/test-master-8bit-m8.ivf
-        echo Comparing 8-bit M0: akiyo_cif.y4m
-        diff $HOME/test-pr-8bit-m0.ivf $HOME/test-master-8bit-m0.ivf
-        echo Comparing 10-bit M8: Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m
-        diff $HOME/test-pr-10bit-m8.ivf $HOME/test-master-10bit-m8.ivf
-        echo Comparing 10-bit M0: Chimera-Aerial_480x264_2997fps_10bit_420_150frames.y4m
-        diff $HOME/test-pr-10bit-m0.ivf $HOME/test-master-10bit-m0.ivf
-    - name: On fail, compress SVT-AV1 (master)
-      if: failure()
-      run: tar czf ./svtav1-master.tar.gz $HOME/master/Bin/Release/*
-    - name: On fail, upload artifact SVT-AV1 (master)
-      if: failure()
-      uses: actions/upload-artifact@v1
-      with:
-        name: svtav1-master
-        path: ./svtav1-master.tar.gz
 
   # Compile and run tests in shards with only one compiler
   unit-tests:

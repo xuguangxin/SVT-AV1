@@ -562,15 +562,22 @@ considerations.
 
 ### Resource Coordination Process
 
-The Resource Coordination Process performs two functions, namely it
-gathers input data and distributes encoder-setting changes properly into
-the encoder pipeline. Input data is passed to the encoder in packets
-that can contain varying amounts of data from partial segments of one
-input pictures to multiple pictures. The Resource Coordination Process
-assembles the input data packets into complete frames and passes this
-data along with the current encoder settings to the Picture Analysis
-Processes. Encoder settings include, but are not limited to Bitrate
-Settings, Rate Control Mode of operation, etc.
+The Resource Coordination Process is the first stage that input pictures
+this process is a single threaded, picture-based process that handles one picture at a time
+in display order.
+Input input picture samples are available once the input_buffer_fifo_ptr queue gets any items
+The Resource Coordination Process assembles the input information and creates
+the appropriate buffers that would travel with the input picture all along
+the encoding pipeline and passes this data along with the current encoder settings
+to the picture analysis process
+Encoder settings include, but are not limited to QPs, picture type, encoding
+parameters that change per picture and sequence parameters when processing
+the initial picture
+
+The function implementation for this process is in the EbResourceCoordinationProcess.c file.
+```
+void *resource_coordination_kernel(void *input_ptr)
+```
 
 
 ### Picture Analysis Process
@@ -586,6 +593,11 @@ statistics for each 8x8 block in the picture which are used to compute
 variance, input subsampling and screen content detection. All
 image-modifying functions should be completed before any
 statistics-gathering functions begin.
+
+The function implementation for this process is in the EbPictureAnalysisProcess.c file.
+```
+void *picture_analysis_kernel(void *input_ptr)
+```
 
 #### Statistical Moments
 
@@ -667,6 +679,11 @@ hold input pictures until they can be started into the Motion Estimation
 process while following the proper prediction structure. The data flow
 in the picture decision process is show in Figure 7.
 
+The function implementation for this process is in the EbPictureDecisionProcess.c file.
+```
+void *picture_decision_kernel(void *input_ptr)
+```
+
 ![image7](./img/image7.png)
 <a name = "figure-7"></a>
 ##### Figure 7: Picture decision process dataflow.
@@ -739,6 +756,11 @@ chroma modes are not considered. The intra prediction process is
 conformant with the AOM-AV1 specification; however, the intra reference
 samples disregard filtering and use input samples rather than the
 nominal reconstructed samples.
+
+The function implementation for this process is in the EbMotionEstimationProcess.c file.
+```
+void *motion_estimation_kernel(void *input_ptr)
+```
 
 #### Hierarchical Motion Estimation
 
@@ -865,6 +887,11 @@ allowed. Note that through this process, until the subsequent Picture
 Manager process, no reference picture data has been used. The data flow
 in the Initial Rate Control process is illustrated in Figure 16.
 
+The function implementation for this process is in the EbInitialRateControlProcess.c file.
+```
+void *initial_rate_control_kernel(void *input_ptr)
+```
+
 ![image16](./img/image16.png)
 <a name = "figure-16"></a>
 ##### Figure 16: Initial Rate Control Process Dataflow.
@@ -876,6 +903,11 @@ identify spatiotemporal characteristics of the input pictures. Some of
 the operations aim at characterizing individual SBs (e.g. grass areas),
 others aim at characterizing whole pictures (e.g. Potential aura areas).
 
+The function implementation for this process is in the EbSourceBasedOperationsProcess.c file.
+```
+void *source_based_operations_kernel(void *input_ptr)
+```
+
 ### Picture Manager Process
 
 The Picture Manager Process performs the function of managing both the
@@ -886,6 +918,7 @@ currently in use. The Picture Manager Process uses the Enhanced Picture
 and Reference Picture buffers to implement Pyramidal B GoP structures.
 Figure 17 shows the interaction of the Picture Management algorithm with
 the Enhanced Input Picture and Reference Picture buffers.
+
 
 ![image17](./img/image17.png)
 <a name = "figure-17"></a>
@@ -918,12 +951,22 @@ management actions are triggered by either receiving a Key\_Frame,
 prediction structure reset, or upon the successful start of an Input
 Picture into the pipeline.
 
+The function implementation for this process is in the EbPictureManagerProcess.c file.
+```
+void *picture_manager_kernel(void *input_ptr)
+```
+
 ### Rate Control Process
 
 The Rate Control process uses the distortion and image statistics
 generated in previous processes, the current picture’s bit budget, and
 previous picture statistics to set the QP and the bit budget for each
 picture. The encoder currently supports VBR -type of rate control.
+
+The function implementation for this process is in the EbRateControlProcess.c file.
+```
+void *rate_control_kernel(void *input_ptr)
+```
 
 ### Partitioning, Mode Decision and Encoding
 
@@ -1023,12 +1066,26 @@ picture depth mode.
 
 ### EncDec Process
 
-The EncDec process currently encapsulates the PD stages where many
-of the encoder tasks such as Intra Prediction, Motion Compensated
-Prediction, Transform, Quantization and Mode Decision are performed.
-It takes as input the Motion Vector XY Pairs and distortion estimations
-from the Motion Estimation process, and the picture-level QP from the
-Rate Control process. The EncDec process operates on an SB basis.
+The EncDec process contains both the mode decision and the encode pass engines
+of the encoder. The mode decision encapsulates multiple partitioning decision (PD) stages
+and multiple mode decision (MD) stages. At the end of the last mode decision stage,
+the winning partition and modes combinations per block get reconstructed in the encode pass
+operation which is part of the common section between the encoder and the decoder
+Common encoder and decoder tasks such as Intra Prediction, Motion Compensated Prediction,
+Transform, Quantization are performed in this process.
+The EncDec process operates on an SB basis it takes as input the Motion Vector XY pairs candidates
+and corresponding distortion estimates from the Motion Estimation process,
+and the picture-level QP from the Rate Control process. All inputs are passed
+through the picture structures: PictureControlSet and SequenceControlSet.
+local structures of type EncDecContext and ModeDecisionContext contain all parameters
+and results corresponding to the SuperBlock being processed.
+each of the context structures is local to on thread and thus there's no risk of
+affecting (changing) other SBs data in the process.
+
+The function implementation for this process is in the EbEncDecProcess.c file.
+```
+void *enc_dec_kernel(void *input_ptr)
+```
 
 #### Neighbor Array
 
@@ -1200,6 +1257,11 @@ The steps involved in the deblocking filter are as follows:
 
 A more detailed description of the deblocking loop filter is presented in the Appendix.
 
+The function implementation for this process is in the EbDlfProcess.c file.
+```
+void *dlf_kernel(void *input_ptr)
+```
+
 ### Constrained Directional Enhancement Filter Process
 
 The constrained directional enhancement filter (CDEF) is applied after
@@ -1235,6 +1297,11 @@ Signaling:
 More details on the CDEF algorithm and its implementation in SVT-AV1 are
 included in the Appendix.
 
+The function implementation for this process is in the EbCdefProcess.c file.
+```
+void *cdef_kernel(void *input_ptr)
+```
+
 ### Restoration Filter Process
 
 The restoration filter is applied after the constrained directional
@@ -1250,6 +1317,11 @@ filter can be performed on a restoration unit basis.
 
 A more detailed description of the restoration filter is presented in the Appendix
 
+The function implementation for this process is in the EbRestProcess.c file.
+```
+void *rest_kernel(void *input_ptr)
+```
+
 ### Entropy Coding Process
 
 The Entropy Coding process is responsible for producing an AV1
@@ -1257,6 +1329,11 @@ conformant bitstream for each frame. It takes as input the coding
 decisions and information for each block and produces as output the
 bitstream for each frame. The entropy coder is a frame-based process and
 is based on multi-symbol arithmetic range coding.
+
+The function implementation for this process is in the EbEntropyCodingProcess.c file.
+```
+void *entropy_coding_kernel(void *input_ptr)
+```
 
 ### Packetization Process
 
@@ -1267,6 +1344,10 @@ process takes as input the bitstreams for each frame as well as sequence
 and picture level coding settings and produces the final bitstream in
 picture-decoding order.
 
+The function implementation for this process is in the EbPacketizationProcess.c file.
+```
+void *packetization_kernel(void *input_ptr)
+```
 
 ## Detailed Feature Implementation Design Appendices
 
@@ -1287,9 +1368,6 @@ The following appendices highlight the design and implementation of features in 
 - [Subpel Interpolation in the Open Loop Motion Estimation Appendix](Appendix-Subpel-Interpolation-Open-Loop-ME.md)
 - [Transform Search Appendix](Appendix-TX-Search.md)
 - [Variance Based Adaptive Quantization Appendix](Appendix-Variance-Based-Adaptive-Quantization.md)
-
-## References
-
 
 ## Legal Disclaimer
 

@@ -331,6 +331,29 @@ void update_rc_rate_tables(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
         }
     }
 }
+/* Packetization */
+
+/*********************************************************************************
+*
+* @brief
+*  The Packetization process is responsible to prepare the bitstream for the full frame
+*  and reorderes the pictures in decode order and sends them out to the application
+*
+* @par Description:
+*  The Packetization process gathers the bitstreams from each frame, codes
+*  the Temporal Delimiter (TD) as well as the sequence and frame headers,
+*  and serves as an end-point for the encoder pipeline. The Packetization
+*  process takes as input the bitstreams for each frame as well as sequence
+*  and picture level coding settings and produces the final bitstream in
+*  picture-decoding order.
+*
+* @param[in] Coding Decisions
+*  Coding decisions and information for each block.
+*
+* @param[out] bitstream
+*  Bitstream for each block
+*
+********************************************************************************/
 void *packetization_kernel(void *input_ptr) {
     // Context
     EbThreadContext *     thread_context_ptr = (EbThreadContext *)input_ptr;

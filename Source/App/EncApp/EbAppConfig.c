@@ -1164,7 +1164,7 @@ ConfigEntry config_entry_specific[] = {
      {SINGLE_INPUT, STAT_REPORT_NEW_TOKEN, "Stat Report", set_stat_report},
      {SINGLE_INPUT,
      INTRA_ANGLE_DELTA_NEW_TOKEN,
-     "CDEF Mode, 0: OFF, 1-5: ON with 2,4,8,16,64 step refinement, -1: DEFAULT",
+     "Enable skipping the angle intra mode (0: OFF, 1: ON, -1: DEFAULT)",
      set_cdef_mode},
 
     // double dash
