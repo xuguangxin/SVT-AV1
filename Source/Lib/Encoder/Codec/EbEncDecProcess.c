@@ -1338,7 +1338,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             context_ptr->tx_weight = MAX_MODE_COST;
         else if (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0)
-            context_ptr->tx_weight = BLK_BASED_SKIP_TX_SR_TH;
+            context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else if (pcs_ptr->enc_mode <= ENC_M0)
             context_ptr->tx_weight = MAX_MODE_COST;
         else if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1409,12 +1409,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.set_chroma_mode ==
         DEFAULT) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-            if (pcs_ptr->enc_mode <= ENC_M0)
-                context_ptr->chroma_level = CHROMA_MODE_0;
-            else if (pcs_ptr->enc_mode <= ENC_M6)
+            if (pcs_ptr->enc_mode <= ENC_M6)
                 context_ptr->chroma_level = CHROMA_MODE_1;
-            else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index ==
-                0)
+            else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
                 context_ptr->chroma_level = CHROMA_MODE_1;
             else
                 context_ptr->chroma_level =
@@ -1461,7 +1458,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 
             if (pcs_ptr->enc_mode <= ENC_M5)
-
                 context_ptr->full_loop_escape = 0;
             else
                 context_ptr->full_loop_escape = 2;
@@ -1483,7 +1479,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 
             if (pcs_ptr->enc_mode <= ENC_M3)
-
                 context_ptr->global_mv_injection = 1;
             else
                 context_ptr->global_mv_injection = 0;
@@ -1679,11 +1674,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     else
 
-        if (pcs_ptr->enc_mode <= ENC_M1)
-
-            context_ptr->md_staging_mode = MD_STAGING_MODE_1;
-
-        else if (pcs_ptr->enc_mode <= ENC_M4)
+        if (pcs_ptr->enc_mode <= ENC_M4)
             context_ptr->md_staging_mode = MD_STAGING_MODE_1;
         else
             context_ptr->md_staging_mode = MD_STAGING_MODE_0;
@@ -1886,10 +1877,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_cand_prune_th = 5;
     else
-        if (pcs_ptr->enc_mode <= ENC_M0 ||
+        if (pcs_ptr->enc_mode <= ENC_M3 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
-            context_ptr->md_stage_2_3_cand_prune_th = 15;
-        else if (pcs_ptr->enc_mode <= ENC_M3)
             context_ptr->md_stage_2_3_cand_prune_th = 15;
         else
             context_ptr->md_stage_2_3_cand_prune_th = 5;

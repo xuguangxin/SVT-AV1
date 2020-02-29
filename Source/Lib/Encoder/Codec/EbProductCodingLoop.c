@@ -1533,7 +1533,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 
             ////MULT
-            if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && context_ptr->blk_geom->shape == PART_N)) {
+            if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) || (pcs_ptr->enc_mode <= ENC_M1 && context_ptr->blk_geom->shape == PART_N)) {
                 uint8_t mult_factor_num   = 5;
                 uint8_t mult_factor_denum = 4;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -1569,14 +1569,12 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint8_t mult_factor_num   = 4;
                 uint8_t mult_factor_denum = 3;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
-                    if (i != CAND_CLASS_0 || i != CAND_CLASS_6 || i != CAND_CLASS_7) {
                         context_ptr->md_stage_1_count[i] =
                             (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
                                   mult_factor_denum);
                         context_ptr->md_stage_2_count[i] =
                             (uint32_t) round((mult_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
                                   mult_factor_denum);
-                    }
                 }
             }
 
