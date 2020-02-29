@@ -1521,7 +1521,6 @@ void move_blk_data(PictureControlSet *pcs, EncDecContext *context_ptr, BlkStruct
 void perform_intra_coding_loop(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint32_t sb_addr,
                                BlkStruct *blk_ptr, PredictionUnit *pu_ptr,
                                EncDecContext *context_ptr) {
-    SequenceControlSet * scs_ptr  = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     EbBool               is_16bit = context_ptr->is_16bit;
     uint32_t             bit_depth = context_ptr->bit_depth;
     uint8_t              is_inter          = 0; // set to 0 b/c this is the intra path
