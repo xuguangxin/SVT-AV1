@@ -32,6 +32,20 @@
 #include "EbLog.h"
 #include "EbCommonUtils.h"
 
+#if FIXED_SQ_WEIGHT_PER_QP
+// sq_weight
+static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                                        -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,  -9,  -8,  -7,
+                                         -6,  -5,  -4,  -3,  -2,  -1,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+// nsq_weight
+static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,
+                                         -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -4,  -4,
+                                         -3,  -3,  -2,  -2,  -1,  -1,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+#endif
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                                      uint32_t *         fast_candidate_total_count,
                                      PictureControlSet *pcs_ptr);
@@ -7908,9 +7922,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
     // return immediately if the skip nsq threshold is infinite
     if (sq_weight == (uint32_t)~0) return skip_nsq;
 
+#if FIXED_SQ_WEIGHT_PER_QP
+    // use an aggressive threshold for low QPs
+    sq_weight += sq_weight_per_qp[scs_ptr->static_config.qp];
+#else
     // use an aggressive threshold for QP 20
     if (scs_ptr->static_config.qp <= QP_20) sq_weight += AGGRESSIVE_OFFSET_1;
-
+#endif
     // use a conservative threshold for H4, V4 blocks
     if (context_ptr->blk_geom->shape == PART_H4 || context_ptr->blk_geom->shape == PART_V4)
         sq_weight += CONSERVATIVE_OFFSET_0;
@@ -7964,8 +7982,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     uint32_t offset = 10;
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_H4)
                         offset = 5;
+#if FIXED_SQ_WEIGHT_PER_QP
+                    if (offset >= (uint32_t ) -nsq_weight_per_qp[scs_ptr->static_config.qp])
+                        offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
+#else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
                         offset -= 5;
+#endif
                     uint32_t v_weight = 100 + offset;
                     skip_nsq = (h_cost > ((v_cost * v_weight) / 100));
                 }
@@ -8017,9 +8040,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
                         offset = 5;
+#if FIXED_SQ_WEIGHT_PER_QP
+                    if (offset >= (uint32_t) -nsq_weight_per_qp[scs_ptr->static_config.qp])
+                        offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
+#else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
                         offset -= 5;
-
+#endif
                     uint32_t h_weight = 100 + offset;
                     skip_nsq = (v_cost > ((h_cost * h_weight) / 100));
                 }

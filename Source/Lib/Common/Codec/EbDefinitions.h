@@ -51,6 +51,8 @@ extern "C" {
 #define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
 #define IFS_MD_STAGE_3 1
 
+#define FIXED_SQ_WEIGHT_PER_QP 1
+
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC \
@@ -88,6 +90,7 @@ typedef enum SqWeightOffsets {
     AGGRESSIVE_OFFSET_1   = -10
 } SqWeightOffsets;
 
+#if !FIXED_SQ_WEIGHT_PER_QP
 typedef enum Qp {
     QP_20 = 20,
     QP_32 = 32,
@@ -95,6 +98,7 @@ typedef enum Qp {
     QP_55 = 55,
     QP_63 = 63
 } Qp;
+#endif
 struct Buf2D {
     uint8_t *buf;
     uint8_t *buf0;
