@@ -1467,6 +1467,9 @@ static void apply_filtering_block_plane_wise(
 }
 uint32_t get_mds_idx(uint32_t orgx, uint32_t orgy, uint32_t size, uint32_t use_128x128);
 static void tf_16x16_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
+#if ALTREF_PACK_II
+                                    PictureParentControlSet *pcs_ref,
+#endif
                                     EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
                                     uint16_t **pred_16bit, uint32_t *stride_pred, EbByte *src,
                                     uint16_t **src_16bit, uint32_t *stride_src,
@@ -1507,7 +1510,19 @@ static void tf_16x16_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
         prediction_ptr.buffer_y  = (uint8_t *)pred_16bit[C_Y];
         prediction_ptr.buffer_cb = (uint8_t *)pred_16bit[C_U];
         prediction_ptr.buffer_cr = (uint8_t *)pred_16bit[C_V];
-
+#if ALTREF_PACK_II
+        UNUSED(ss_y);
+        reference_ptr.buffer_y = (uint8_t*)pcs_ref->altref_buffer_highbd[C_Y];
+        reference_ptr.buffer_cb = (uint8_t*)pcs_ref->altref_buffer_highbd[C_U];
+        reference_ptr.buffer_cr = (uint8_t*)pcs_ref->altref_buffer_highbd[C_V];
+        reference_ptr.origin_x = pic_ptr_ref->origin_x;
+        reference_ptr.origin_y = pic_ptr_ref->origin_y;
+        reference_ptr.stride_y = pic_ptr_ref->stride_y;
+        reference_ptr.stride_cb = pic_ptr_ref->stride_cb;
+        reference_ptr.stride_cr = pic_ptr_ref->stride_cr;
+        reference_ptr.width = pic_ptr_ref->width;
+        reference_ptr.height = pic_ptr_ref->height;
+#else
         reference_ptr.buffer_y  = (uint8_t *)malloc(pic_ptr_ref->luma_size * sizeof(uint16_t));
         reference_ptr.buffer_cb = (uint8_t *)malloc(pic_ptr_ref->chroma_size * sizeof(uint16_t));
         reference_ptr.buffer_cr = (uint8_t *)malloc(pic_ptr_ref->chroma_size * sizeof(uint16_t));
@@ -1548,6 +1563,7 @@ static void tf_16x16_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
                    reference_ptr.stride_cr,
                    reference_ptr.stride_cr,
                    height_y >> ss_y);
+#endif
     }
 
     uint32_t bsize = 16;
@@ -1661,14 +1677,19 @@ static void tf_16x16_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
             context_ptr->tf_16x16_mv_y[idx_32x32 * 4 + idx_16x16] = best_mv_y;
         }
     }
+#if !ALTREF_PACK_II
     if (is_highbd) {
         free(reference_ptr.buffer_y);
         free(reference_ptr.buffer_cb);
         free(reference_ptr.buffer_cr);
     }
+#endif
 }
 
 static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
+#if ALTREF_PACK_II
+                                   PictureParentControlSet *pcs_ref,
+#endif
                                     EbPictureBufferDesc *pic_ptr_ref, EbByte *pred,
                                     uint16_t **pred_16bit, uint32_t *stride_pred, EbByte *src,
                                     uint16_t **src_16bit, uint32_t *stride_src,
@@ -1710,6 +1731,20 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
         prediction_ptr.buffer_cb = (uint8_t *)pred_16bit[C_U];
         prediction_ptr.buffer_cr = (uint8_t *)pred_16bit[C_V];
 
+
+#if ALTREF_PACK_II
+        UNUSED(ss_y);
+        reference_ptr.buffer_y = (uint8_t*)pcs_ref->altref_buffer_highbd[C_Y];
+        reference_ptr.buffer_cb = (uint8_t*)pcs_ref->altref_buffer_highbd[C_U];
+        reference_ptr.buffer_cr = (uint8_t*)pcs_ref->altref_buffer_highbd[C_V];
+        reference_ptr.origin_x = pic_ptr_ref->origin_x;
+        reference_ptr.origin_y = pic_ptr_ref->origin_y;
+        reference_ptr.stride_y = pic_ptr_ref->stride_y;
+        reference_ptr.stride_cb = pic_ptr_ref->stride_cb;
+        reference_ptr.stride_cr = pic_ptr_ref->stride_cr;
+        reference_ptr.width = pic_ptr_ref->width;
+        reference_ptr.height = pic_ptr_ref->height;
+#else
         reference_ptr.buffer_y  = (uint8_t *)malloc(pic_ptr_ref->luma_size * sizeof(uint16_t));
         reference_ptr.buffer_cb = (uint8_t *)malloc(pic_ptr_ref->chroma_size * sizeof(uint16_t));
         reference_ptr.buffer_cr = (uint8_t *)malloc(pic_ptr_ref->chroma_size * sizeof(uint16_t));
@@ -1750,6 +1785,7 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
                    reference_ptr.stride_cr,
                    reference_ptr.stride_cr,
                    height_y >> ss_y);
+#endif
     }
 
     uint32_t bsize = 32;
@@ -1857,11 +1893,13 @@ static void tf_32x32_sub_pel_search(PictureParentControlSet *pcs_ptr, MeContext 
         context_ptr->tf_32x32_mv_x[idx_32x32] = best_mv_x;
         context_ptr->tf_32x32_mv_y[idx_32x32] = best_mv_y;
     }
+#if !ALTREF_PACK_II
     if (is_highbd) {
         free(reference_ptr.buffer_y);
         free(reference_ptr.buffer_cb);
         free(reference_ptr.buffer_cr);
     }
+#endif
 }
 
 static void tf_inter_prediction(PictureParentControlSet *pcs_ptr, MeContext *context_ptr,
@@ -2336,6 +2374,9 @@ static EbErrorType produce_temporally_filtered_pic(
                     // Perform TF sub-pel search for 32x32 blocks
                     tf_32x32_sub_pel_search(picture_control_set_ptr_central,
                                             context_ptr,
+#if ALTREF_PACK_II
+                                            list_picture_control_set_ptr[frame_index],
+#endif
                                             list_input_picture_ptr[frame_index],
                                             pred,
                                             pred_16bit,
@@ -2352,6 +2393,9 @@ static EbErrorType produce_temporally_filtered_pic(
                     // Perform TF sub-pel search for 16x16 blocks
                     tf_16x16_sub_pel_search(picture_control_set_ptr_central,
                                             context_ptr,
+#if ALTREF_PACK_II
+                                            list_picture_control_set_ptr[frame_index],
+#endif
                                             list_input_picture_ptr[frame_index],
                                             pred,
                                             pred_16bit,
