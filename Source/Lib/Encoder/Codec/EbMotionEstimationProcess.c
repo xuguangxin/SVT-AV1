@@ -823,8 +823,11 @@ void *motion_estimation_kernel(void *input_ptr) {
                             buffer_index = (quarter_picture_ptr->origin_y + (sb_origin_y >> 1)) *
                                                quarter_picture_ptr->stride_y +
                                            quarter_picture_ptr->origin_x + (sb_origin_x >> 1);
-
+#if ENABLE_HME_AT_INC_SB
+                            for (sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 1); sb_row++) {
+#else
                             for (sb_row = 0; sb_row < (sb_height >> 1); sb_row++) {
+#endif
                                 EB_MEMCPY(
                                     (&(context_ptr->me_context_ptr
                                            ->quarter_sb_buffer[sb_row *
@@ -849,7 +852,11 @@ void *motion_estimation_kernel(void *input_ptr) {
                                     context_ptr->me_context_ptr->sixteenth_sb_buffer;
                                 if (context_ptr->me_context_ptr->hme_search_method ==
                                     FULL_SAD_SEARCH) {
+#if ENABLE_HME_AT_INC_SB
+                                    for (sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row++) {
+#else
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 1) {
+#endif
                                         EB_MEMCPY(local_ptr,
                                                   frame_ptr,
                                                   (sb_width >> 2) * sizeof(uint8_t));
@@ -857,7 +864,11 @@ void *motion_estimation_kernel(void *input_ptr) {
                                         frame_ptr += sixteenth_picture_ptr->stride_y;
                                     }
                                 } else {
+#if ENABLE_HME_AT_INC_SB
+                                    for (sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row++) {
+#else
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 2) {
+#endif
                                         EB_MEMCPY(local_ptr,
                                                   frame_ptr,
                                                   (sb_width >> 2) * sizeof(uint8_t));
