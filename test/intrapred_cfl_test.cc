@@ -211,7 +211,7 @@ class AomUpsampledPredTest
         const int run_times = 100;
         for (int i = 0; i < run_times; ++i) {
             memset(ref_, 1, sizeof(ref_));
-            for (int j = 0; j < width * height; j++) {
+            for (int j = 0; j < width * height+ 3 * width; j++) {
                 ref_[j] = rnd_.random();
             }
 
@@ -225,7 +225,7 @@ class AomUpsampledPredTest
                                  height,
                                  subpel_x_q3,
                                  subpel_y_q3,
-                                 ref_,
+                                 ref_ + 3 * width,
                                  width,
                                  subpel_search);
             test_impl(NULL,
@@ -238,7 +238,7 @@ class AomUpsampledPredTest
                       height,
                       subpel_x_q3,
                       subpel_y_q3,
-                      ref_,
+                      ref_ + 3 * width,
                       width,
                       subpel_search);
 
