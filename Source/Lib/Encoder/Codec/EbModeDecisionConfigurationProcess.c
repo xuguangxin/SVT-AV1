@@ -1016,7 +1016,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 
     // CDF
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR2_M7_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
             pcs_ptr->update_cdf = 1;
         else
             pcs_ptr->update_cdf = 0;
@@ -1045,11 +1049,22 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 
     // Warped
     EbBool enable_wm;
+#if MAR2_M7_ADOPTIONS
+    enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
+                (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5 &&
+                    pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ||
+                    (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7 &&
+                        !(pcs_ptr->parent_pcs_ptr->sc_content_detected) &&
+                        pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
+                ? EB_TRUE
+                : EB_FALSE;
+#else
     enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
                  (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5 &&
                   pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
                     ? EB_TRUE
                     : EB_FALSE;
+#endif
 
     frm_hdr->allow_warped_motion =
         enable_wm &&

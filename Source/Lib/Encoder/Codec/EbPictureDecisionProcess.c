@@ -855,7 +855,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         : pcs_ptr->hierarchical_levels < 3
         ? PIC_MULTI_PASS_PD_MODE_0
         : PIC_MULTI_PASS_PD_MODE_1;
+#if MAR2_M7_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M5) // Using this pic_depth_mode above M5 causes a crash
+#else
     else if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
         // Use a single-stage PD if I_SLICE
         pcs_ptr->pic_depth_mode =
         (pcs_ptr->slice_type == I_SLICE)

@@ -38,6 +38,7 @@ extern "C" {
 #define NON_AVX512_SUPPORT
 #endif
 #define MAR2_M8_ADOPTIONS 1
+#define MAR2_M7_ADOPTIONS 1
 
 #define ALTREF_PACK_II  1 // add packing for the altref search
 

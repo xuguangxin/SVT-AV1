@@ -1427,7 +1427,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.set_chroma_mode ==
         DEFAULT) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR2_M7_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M7)
+#else
             if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
                 context_ptr->chroma_level = CHROMA_MODE_1;
             else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
                 context_ptr->chroma_level = CHROMA_MODE_1;
@@ -1479,7 +1483,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->full_loop_escape = 0;
             else
                 context_ptr->full_loop_escape = 2;
+#if MAR2_M7_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             context_ptr->full_loop_escape = 0;
         else
             context_ptr->full_loop_escape = 2;
