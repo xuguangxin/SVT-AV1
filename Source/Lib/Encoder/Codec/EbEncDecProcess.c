@@ -1310,14 +1310,26 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR2_M8_ADOPTIONS
+        context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+#else
         if (pcs_ptr->enc_mode <= ENC_M6)
             context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
         else if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
             context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
         else
             context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M4)
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+#if MAR2_M8_ADOPTIONS
+    else {
+        if (pcs_ptr->temporal_layer_index == 0)
+            context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+        else
+            context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
+    }
+#else
     else if (pcs_ptr->enc_mode <= ENC_M7) {
         if (pcs_ptr->temporal_layer_index == 0)
             context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
@@ -1326,6 +1338,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     else
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
+#endif
 
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -1361,10 +1374,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->tx_search_reduced_set = 0;
             else
                 context_ptr->tx_search_reduced_set = 1;
+#if MAR2_M8_ADOPTIONS
+        else
+            context_ptr->tx_search_reduced_set = 1;
+#else
         else if (pcs_ptr->enc_mode <= ENC_M7)
             context_ptr->tx_search_reduced_set = 1;
         else
             context_ptr->tx_search_reduced_set = 2;
+#endif
     else if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
         context_ptr->tx_search_reduced_set = 0;
     else if (pcs_ptr->enc_mode <= ENC_M3)

@@ -1944,7 +1944,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 
     //0: MRP Mode 0 (4,3)
     //1: MRP Mode 1 (2,2)
+#if MAR2_M8_ADOPTIONS
+    scs_ptr->mrp_mode = 0;
+#else
     scs_ptr->mrp_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M7) ? 0 : 1;
+#endif
     //0: ON
     //1: OFF
     scs_ptr->cdf_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M6) ? 0 : 1;

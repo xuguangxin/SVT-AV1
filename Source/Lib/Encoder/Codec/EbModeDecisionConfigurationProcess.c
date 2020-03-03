@@ -1035,7 +1035,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // High Precision
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     frm_hdr->allow_high_precision_mv =
+#if !MAR2_M8_ADOPTIONS
         pcs_ptr->enc_mode <= ENC_M7 &&
+#endif
                 frm_hdr->quantization_params.base_q_idx < HIGH_PRECISION_MV_QTHRESH &&
                 (scs_ptr->input_resolution == INPUT_SIZE_576p_RANGE_OR_LOWER)
             ? 1

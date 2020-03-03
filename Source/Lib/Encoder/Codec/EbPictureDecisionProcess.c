@@ -1011,13 +1011,16 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (!pcs_ptr->scs_ptr->static_config
         .disable_dlf_flag &&
         frm_hdr->allow_intrabc == 0) {
-
+#if MAR2_M8_ADOPTIONS
+        pcs_ptr->loop_filter_mode = 3;
+#else
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->loop_filter_mode = 3;
 
         else
             pcs_ptr->loop_filter_mode =
             pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#endif
     }
     else
         pcs_ptr->loop_filter_mode = 0;
@@ -1030,6 +1033,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
+#if MAR2_M8_ADOPTIONS
+        if (pcs_ptr->sc_content_detected)
+            pcs_ptr->cdef_filter_mode = 5;
+        else
+#endif
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->cdef_filter_mode = 5;
         else
@@ -1083,6 +1091,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            OIS based Intra
     // 5                                            Light OIS based Intra
     if (pcs_ptr->slice_type == I_SLICE)
+#if MAR2_M8_ADOPTIONS
+        pcs_ptr->intra_pred_mode = 0;
+#else
         if (sc_content_detected)
             if (pcs_ptr->enc_mode <= ENC_M6)
                 pcs_ptr->intra_pred_mode = 0;
@@ -1092,6 +1103,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 0;
         else
             pcs_ptr->intra_pred_mode = 4;
+#endif
     else {
         if (sc_content_detected)
             if (pcs_ptr->enc_mode <= ENC_M3)
@@ -1110,7 +1122,13 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->intra_pred_mode = 4;
         else if (pcs_ptr->enc_mode <= ENC_M3)
             pcs_ptr->intra_pred_mode = 0;
-
+#if MAR2_M8_ADOPTIONS
+        else
+            if (pcs_ptr->temporal_layer_index == 0)
+                pcs_ptr->intra_pred_mode = 1;
+            else
+                pcs_ptr->intra_pred_mode = 3;
+#else
         else if (pcs_ptr->enc_mode <= ENC_M7)
 
             if (pcs_ptr->temporal_layer_index == 0)
@@ -1119,6 +1137,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->intra_pred_mode = 3;
         else
             pcs_ptr->intra_pred_mode = 4;
+#endif
     }
 
     // Set Tx Search     Settings
