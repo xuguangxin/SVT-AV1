@@ -1990,7 +1990,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
         if (scs_ptr->static_config.screen_content_mode == 1)
             scs_ptr->mfmv_enabled = 0;
         else
+#if MAR3_M2_ADOPTIONS
+            scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+#else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
+#endif
     else
         scs_ptr->mfmv_enabled = scs_ptr->static_config.enable_mfmv;
 
