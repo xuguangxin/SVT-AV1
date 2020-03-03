@@ -52,7 +52,7 @@ extern "C" {
 #define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
 #define IFS_MD_STAGE_3 1
 
-#define FIXED_SQ_WEIGHT_PER_QP 1
+#define FIXED_SQ_WEIGHT_PER_QP 0
 
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
