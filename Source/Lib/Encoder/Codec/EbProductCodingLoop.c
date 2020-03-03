@@ -33,6 +33,20 @@
 #include "EbCommonUtils.h"
 
 #if FIXED_SQ_WEIGHT_PER_QP
+#if SQ_WEIGHT_PATCH
+// sq_weight
+static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                                        -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,  -9,  -8,  -7,
+                                         -6,  -5,  -4,  -3,  -2,  -1,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+// nsq_weight
+static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,
+                                         -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -4,  -4,
+                                         -3,  -3,  -2,  -2,  -1,  -1,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+#else
 // sq_weight
 static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, 
                                         -10, -10, -10, -10, -10, -10, -10, -10,  -9,  -8,  -7,  -6,  -5,  
@@ -45,6 +59,7 @@ static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5, 
                                          -2,  -2,  -1,  -1,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0    };
+#endif
 #endif
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                                      uint32_t *         fast_candidate_total_count,
@@ -7924,7 +7939,11 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
 #if FIXED_SQ_WEIGHT_PER_QP
     // use an aggressive threshold for low QPs
+#if SQ_WEIGHT_PATCH
+    sq_weight += sq_weight_per_qp[scs_ptr->static_config.qp];
+#else
     sq_weight += sq_weight_per_qp[context_ptr->qp];
+#endif
 #else
     // use an aggressive threshold for QP 20
     if (scs_ptr->static_config.qp <= QP_20) sq_weight += AGGRESSIVE_OFFSET_1;
@@ -7983,8 +8002,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_H4)
                         offset = 5;
 #if FIXED_SQ_WEIGHT_PER_QP
+#if SQ_WEIGHT_PATCH
+                    if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
+                        offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
+#else
                     if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp])
                         offset += nsq_weight_per_qp[context_ptr->qp];
+#endif
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
                         offset -= 5;
@@ -8041,8 +8065,13 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
                         offset = 5;
 #if FIXED_SQ_WEIGHT_PER_QP
+#if SQ_WEIGHT_PATCH
+                    if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
+                        offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
+#else
                     if (offset >= (uint32_t) -nsq_weight_per_qp[context_ptr->qp])
                         offset += nsq_weight_per_qp[context_ptr->qp];
+#endif
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
                         offset -= 5;

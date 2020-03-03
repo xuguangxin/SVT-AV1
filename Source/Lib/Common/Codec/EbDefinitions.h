@@ -54,7 +54,9 @@ extern "C" {
 #define IFS_MD_STAGE_3 1
 
 #define FIXED_SQ_WEIGHT_PER_QP 0
-
+#if FIXED_SQ_WEIGHT_PER_QP
+#define SQ_WEIGHT_PATCH 1
+#endif
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC \
