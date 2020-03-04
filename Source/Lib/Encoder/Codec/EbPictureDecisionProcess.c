@@ -847,7 +847,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->slice_type == I_SLICE)
         ? PIC_ALL_DEPTH_MODE
         : PIC_MULTI_PASS_PD_MODE_0;
+#if MAR4_M6_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M5)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
         // Use a single-stage PD if I_SLICE
         pcs_ptr->pic_depth_mode =
         (pcs_ptr->slice_type == I_SLICE)
@@ -1013,7 +1017,11 @@ EbErrorType signal_derivation_multi_processes_oq(
                     EB_8BIT &&
                     scs_ptr->static_config.enable_hbd_mode_decision ==
                     0)) &&
+#if MAR4_M3_ADOPTIONS
+            pcs_ptr->enc_mode <= ENC_M3
+#else
             pcs_ptr->enc_mode <= ENC_M2
+#endif
             ? 6
             : 0;
         else
@@ -1049,11 +1057,6 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
-#if MAR2_M8_ADOPTIONS
-        if (pcs_ptr->sc_content_detected)
-            pcs_ptr->cdef_filter_mode = 5;
-        else
-#endif
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->cdef_filter_mode = 5;
         else
@@ -1163,12 +1166,22 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set Tx Search     Settings
     // 0                 OFF
     // 1                 ON
+#if MAR4_M6_ADOPTIONS
+    if (pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
+        else
+            pcs_ptr->tx_size_search_mode = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+        pcs_ptr->tx_size_search_mode = 1;
+#else
     if (pcs_ptr->enc_mode <= ENC_M3)
         pcs_ptr->tx_size_search_mode =
         (pcs_ptr->sc_content_detected &&
             pcs_ptr->slice_type != I_SLICE)
         ? 0
         : 1;
+#endif
     else
         pcs_ptr->tx_size_search_mode = 0;
 
@@ -1210,8 +1223,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (scs_ptr->static_config.compound_level == DEFAULT) {
         if (scs_ptr->compound_mode)
 
+#if MAR4_M3_ADOPTIONS
+            pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M3 ? 2 : 1;
+#else
             pcs_ptr->compound_mode =
             pcs_ptr->enc_mode <= ENC_M2 ? 2 : 1;
+#endif
         else
             pcs_ptr->compound_mode = 0;
     }
@@ -1229,10 +1246,17 @@ EbErrorType signal_derivation_multi_processes_oq(
         scs_ptr->static_config.frame_end_cdf_update;
 
     if (scs_ptr->static_config.prune_unipred_me == DEFAULT)
+#if MAR4_M6_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            pcs_ptr->prune_unipred_at_me = 1;
+        else
+            pcs_ptr->prune_unipred_at_me = 0;
+#else
         if (pcs_ptr->enc_mode >= ENC_M4)
             pcs_ptr->prune_unipred_at_me = 0;
         else
             pcs_ptr->prune_unipred_at_me = 1;
+#endif
     else
         pcs_ptr->prune_unipred_at_me =
         scs_ptr->static_config.prune_unipred_me;

@@ -37,6 +37,8 @@ extern "C" {
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
+#define MAR4_M3_ADOPTIONS 1
+#define MAR4_M6_ADOPTIONS 1
 #define MAR4_M8_ADOPTIONS 1
 #define MAR3_M6_ADOPTIONS 1
 #define MAR3_M2_ADOPTIONS 1

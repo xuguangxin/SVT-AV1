@@ -282,7 +282,16 @@ EbErrorType signal_derivation_me_kernel_oq(
 
     if (scs_ptr->static_config.enable_global_motion == EB_TRUE)
     {
+#if MAR4_M6_ADOPTIONS
+        if (pcs_ptr->sc_content_detected)
+            if (enc_mode <= ENC_M3)
+                context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
+            else
+                context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+        else if (enc_mode <= ENC_M5)
+#else
         if (enc_mode <= ENC_M3)
+#endif
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
