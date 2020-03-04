@@ -1826,7 +1826,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->redundant_blk = EB_TRUE;
                 else
                     context_ptr->redundant_blk = EB_FALSE;
+#if MAR4_M8_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M8)
+#else
             else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
                 context_ptr->redundant_blk = EB_TRUE;
             else
                 context_ptr->redundant_blk = EB_FALSE;

@@ -964,7 +964,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         frm_hdr->allow_screen_content_tools =
             pcs_ptr->sc_content_detected;
 #if MAR3_M6_ADOPTIONS
+#if MAR4_M8_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M8)
+#else
         if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
@@ -973,7 +977,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             frm_hdr->allow_intrabc = 0;
 
         // IBC Modes:   0:Slow   1:Fast   2:Faster
+#if MAR4_M8_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M8)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             pcs_ptr->ibc_mode = 0;
         else
             pcs_ptr->ibc_mode = 1;
