@@ -57,7 +57,8 @@ extern "C" {
 
 #define FIXED_SQ_WEIGHT_PER_QP 0
 #if FIXED_SQ_WEIGHT_PER_QP
-#define SQ_WEIGHT_PATCH 1
+#define SQ_WEIGHT_PATCH_0 0
+#define SQ_WEIGHT_PATCH_1 1
 #endif
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
