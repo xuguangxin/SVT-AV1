@@ -45,7 +45,7 @@ static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5, 
                                          -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -4,  -4,
                                          -3,  -3,  -2,  -2,  -1,  -1,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0    };
 #elif SQ_WEIGHT_PATCH_1
 // sq_weight
 static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
@@ -58,7 +58,33 @@ static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5, 
                                          -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0    };
+#elif SQ_WEIGHT_PATCH_2
+// sq_weight
+static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                                        -10, -10, -10, -10, -10, -10, -10, -10,  -9,  -8,  -7,  -6,  -5,  
+                                         -4,  -3,  -2,  -1,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+// nsq_weight
+static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,
+                                         -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -4,  -4,  -3,  -3,  -2,
+                                         -2,  -1,  -1,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+#elif SQ_WEIGHT_PATCH_3
+// sq_weight
+static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
+                                        -10, -10, -10, -10, -10, -10, -10, -10,  -9,  -8,  -7,  -6,  -5,
+                                         -4,  -3,  -2,  -1,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0    };
+// nsq_weight
+static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,
+                                         -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,  -4,  -3,  -2,  -1,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+                                          0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0    };
 #else
 // sq_weight
 static int32_t sq_weight_per_qp[64] = { -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10, -10,
@@ -7952,7 +7978,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
 #if FIXED_SQ_WEIGHT_PER_QP
     // use an aggressive threshold for low QPs
-#if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1
+#if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
     sq_weight += sq_weight_per_qp[scs_ptr->static_config.qp];
 #else
     sq_weight += sq_weight_per_qp[context_ptr->qp];
@@ -8015,7 +8041,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_H4)
                         offset = 5;
 #if FIXED_SQ_WEIGHT_PER_QP
-#if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1
+#if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
                         offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
 #else
@@ -8078,7 +8104,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
                         offset = 5;
 #if FIXED_SQ_WEIGHT_PER_QP
-#if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1
+#if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
                         offset += nsq_weight_per_qp[scs_ptr->static_config.qp];
 #else
