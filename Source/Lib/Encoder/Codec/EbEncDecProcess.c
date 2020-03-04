@@ -1320,7 +1320,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
+#if MAR3_M6_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
 #if MAR2_M8_ADOPTIONS
     else {
@@ -1601,7 +1605,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (pcs_ptr->enc_mode <= ENC_M1)
 #endif
             context_ptr->bipred3x3_injection = 1;
+#if MAR3_M6_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
             context_ptr->bipred3x3_injection = 2;
         else
             context_ptr->bipred3x3_injection = 0;
@@ -1646,8 +1654,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     else if (pcs_ptr->enc_mode <= ENC_M3)
 
                         context_ptr->predictive_me_level = 5;
-
+#if MAR3_M6_ADOPTIONS
+                    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
                     else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
                         context_ptr->predictive_me_level = 2;
                     else
                         context_ptr->predictive_me_level = 0;

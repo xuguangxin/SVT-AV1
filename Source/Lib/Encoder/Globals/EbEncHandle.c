@@ -1965,12 +1965,20 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     // 0                            0: filtering
     // 1                            1: decimation
     if (scs_ptr->static_config.screen_content_mode == 1)
+#if MAR3_M6_ADOPTIONS
+        if (scs_ptr->static_config.enc_mode <= ENC_M6)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M4)
+#endif
             scs_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
         else
             scs_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
     else
+#if MAR3_M6_ADOPTIONS
+        if (scs_ptr->static_config.enc_mode <= ENC_M6)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M4)
+#endif
             scs_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
         else
             scs_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;

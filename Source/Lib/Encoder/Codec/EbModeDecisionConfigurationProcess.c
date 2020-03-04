@@ -1026,7 +1026,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             pcs_ptr->update_cdf = 0;
     else
         pcs_ptr->update_cdf =
+#if MAR3_M6_ADOPTIONS
+            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6) ? 1 : 0;
+#else
             (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+#endif
     if (pcs_ptr->update_cdf)
         assert(scs_ptr->cdf_mode == 0 && "use cdf_mode 0");
 

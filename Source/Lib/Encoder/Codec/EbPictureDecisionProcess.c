@@ -963,7 +963,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->slice_type == I_SLICE) {
         frm_hdr->allow_screen_content_tools =
             pcs_ptr->sc_content_detected;
+#if MAR3_M6_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             frm_hdr->allow_intrabc = pcs_ptr->sc_content_detected;
         else
             frm_hdr->allow_intrabc = 0;
@@ -1075,7 +1079,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 2                                            5-Tap luma/ 5-Tap chroma
     // 3                                            7-Tap luma/ 5-Tap chroma
     if (sc_content_detected)
+#if MAR3_M6_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             cm->wn_filter_mode = 3;
         else
             cm->wn_filter_mode = 0;
