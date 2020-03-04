@@ -555,6 +555,8 @@ void *entropy_coding_kernel(void *input_ptr) {
         // Get Mode Decision Results
 #if TILES_PARALLEL
         eb_get_full_object(context_ptr->enc_dec_input_fifo_ptr, &rest_results_wrapper_ptr);
+        EB_CHECK_END_OBJ(rest_results_wrapper_ptr);
+
         rest_results_ptr = (RestResults *)rest_results_wrapper_ptr->object_ptr;
         pcs_ptr          = (PictureControlSet *)rest_results_ptr->pcs_wrapper_ptr->object_ptr;
 #else

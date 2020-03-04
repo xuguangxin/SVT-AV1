@@ -1732,6 +1732,26 @@ __attribute__((visibility("default")))
 EB_API EbErrorType eb_deinit_encoder(EbComponentType *svt_enc_component){
     if(svt_enc_component == NULL)
         return EB_ErrorBadParameter;
+
+    EbEncHandle *handle = (EbEncHandle*)svt_enc_component->p_component_private;
+    if (handle) {
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->input_buffer_resource_ptr, 0),                    EB_ResourceCoordinationProcessInitCount);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->resource_coordination_results_resource_ptr, 0),   handle->scs_instance_array[0]->scs_ptr->picture_analysis_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->picture_analysis_results_resource_ptr, 0),        EB_PictureDecisionProcessInitCount);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->picture_decision_results_resource_ptr, 0),        handle->scs_instance_array[0]->scs_ptr->motion_estimation_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->motion_estimation_results_resource_ptr, 0),       EB_InitialRateControlProcessInitCount);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->initial_rate_control_results_resource_ptr, 0),    handle->scs_instance_array[0]->scs_ptr->source_based_operations_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->picture_demux_results_resource_ptr, 0),           EB_PictureManagerProcessInitCount);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->rate_control_tasks_resource_ptr, 0),              EB_RateControlProcessInitCount);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->rate_control_results_resource_ptr, 0),            handle->scs_instance_array[0]->scs_ptr->mode_decision_configuration_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->enc_dec_tasks_resource_ptr, 0),                   handle->scs_instance_array[0]->scs_ptr->enc_dec_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->enc_dec_results_resource_ptr, 0),                 handle->scs_instance_array[0]->scs_ptr->dlf_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->entropy_coding_results_resource_ptr, 0),          EB_PacketizationProcessInitCount);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->dlf_results_resource_ptr, 0),                     handle->scs_instance_array[0]->scs_ptr->cdef_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->cdef_results_resource_ptr, 0),                    handle->scs_instance_array[0]->scs_ptr->rest_process_init_count);
+        EB_SEND_END_OBJ(eb_system_resource_get_producer_fifo(handle->rest_results_resource_ptr, 0),                    handle->scs_instance_array[0]->scs_ptr->entropy_coding_process_init_count);
+    }
+
     return EB_ErrorNone;
 }
 

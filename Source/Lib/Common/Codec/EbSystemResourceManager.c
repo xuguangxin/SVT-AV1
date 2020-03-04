@@ -377,6 +377,7 @@ static EbErrorType eb_object_wrapper_ctor(EbObjectWrapper *wrapper, EbSystemReso
     ret            = object_creator(&wrapper->object_ptr, object_init_data_ptr);
     if (ret != EB_ErrorNone) return ret;
     wrapper->release_enable      = EB_TRUE;
+    wrapper->quit_signal         = EB_FALSE;
     wrapper->system_resource_ptr = resource;
     wrapper->object_destroyer    = object_destroyer;
     return EB_ErrorNone;

@@ -866,6 +866,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
         // Get Input Full Object
         eb_get_full_object(context_ptr->motion_estimation_results_input_fifo_ptr,
                            &in_results_wrapper_ptr);
+        EB_CHECK_END_OBJ(in_results_wrapper_ptr);
 
         in_results_ptr = (MotionEstimationResults *)in_results_wrapper_ptr->object_ptr;
         pcs_ptr        = (PictureParentControlSet *)in_results_ptr->pcs_wrapper_ptr->object_ptr;

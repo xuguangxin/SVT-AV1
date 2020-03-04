@@ -513,6 +513,7 @@ void *cdef_kernel(void *input_ptr) {
     for (;;) {
         // Get DLF Results
         eb_get_full_object(context_ptr->cdef_input_fifo_ptr, &dlf_results_wrapper_ptr);
+        EB_CHECK_END_OBJ(dlf_results_wrapper_ptr);
 
         dlf_results_ptr = (DlfResults *)dlf_results_wrapper_ptr->object_ptr;
         pcs_ptr         = (PictureControlSet *)dlf_results_ptr->pcs_wrapper_ptr->object_ptr;

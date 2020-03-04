@@ -106,6 +106,7 @@ void *dlf_kernel(void *input_ptr) {
     for (;;) {
         // Get EncDec Results
         eb_get_full_object(context_ptr->dlf_input_fifo_ptr, &enc_dec_results_wrapper_ptr);
+        EB_CHECK_END_OBJ(enc_dec_results_wrapper_ptr);
 
         enc_dec_results_ptr = (EncDecResults *)enc_dec_results_wrapper_ptr->object_ptr;
         pcs_ptr             = (PictureControlSet *)enc_dec_results_ptr->pcs_wrapper_ptr->object_ptr;

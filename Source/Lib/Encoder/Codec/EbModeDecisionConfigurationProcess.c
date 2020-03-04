@@ -1497,6 +1497,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         // Get RateControl Results
         eb_get_full_object(context_ptr->rate_control_input_fifo_ptr,
                            &rate_control_results_wrapper_ptr);
+        EB_CHECK_END_OBJ(rate_control_results_wrapper_ptr);
 
         rate_control_results_ptr =
             (RateControlResults *)rate_control_results_wrapper_ptr->object_ptr;
