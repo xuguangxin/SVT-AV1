@@ -42,6 +42,9 @@ extern "C" {
 #define MAR2_M8_ADOPTIONS 1
 #define MAR2_M7_ADOPTIONS 1
 
+#define CLEANUP_INTER_INTRA  1  //shutting inter intra could be done via 2 ways.at the seq level(in ress coord), or at the pic level (in pic decision)
+#define MRP_CTRL             1  //add control to inject smaller number of references. 
+
 #define ALTREF_PACK_II  1 // add packing for the altref search
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
