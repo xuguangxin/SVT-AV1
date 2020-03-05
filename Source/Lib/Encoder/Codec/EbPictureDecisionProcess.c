@@ -4913,9 +4913,9 @@ void* picture_decision_kernel(void *input_ptr)
                                 pcs_ptr->ref_list0_count = (picture_type == I_SLICE) ? 0 :
                                                                             (pcs_ptr->is_overlay) ? 1 : (uint8_t)pred_position_ptr->ref_list0.reference_list_count;
                                 pcs_ptr->ref_list1_count = (picture_type == I_SLICE || pcs_ptr->is_overlay) ? 0 : (uint8_t)pred_position_ptr->ref_list1.reference_list_count;
-                                
+
 #if MRP_CTRL
-                                //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references. 
+                                //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
                                 if (pcs_ptr->sc_content_detected){
                                     pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                     pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
@@ -4925,7 +4925,7 @@ void* picture_decision_kernel(void *input_ptr)
                                 }
                                 assert(pcs_ptr->ref_list0_count_try <= pcs_ptr->ref_list0_count);
                                 assert(pcs_ptr->ref_list1_count_try <= pcs_ptr->ref_list1_count);
-#endif                         
+#endif
                                 if (!pcs_ptr->is_overlay) {
                                     input_entry_ptr->list0_ptr = &pred_position_ptr->ref_list0;
                                     input_entry_ptr->list1_ptr = &pred_position_ptr->ref_list1;

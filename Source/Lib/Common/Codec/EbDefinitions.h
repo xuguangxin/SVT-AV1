@@ -37,18 +37,33 @@ extern "C" {
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
-#define MAR4_M3_ADOPTIONS 1
-#define MAR4_M6_ADOPTIONS 1
-#define MAR4_M8_ADOPTIONS 1
-#define MAR3_M6_ADOPTIONS 1
-#define MAR3_M2_ADOPTIONS 1
-#define MAR2_M8_ADOPTIONS 1
-#define MAR2_M7_ADOPTIONS 1
+// START  BEYOND_CS2 /////////////////////////////////////////////////////////
 
-#define CLEANUP_INTER_INTRA  1  //shutting inter intra could be done via 2 ways.at the seq level(in ress coord), or at the pic level (in pic decision)
-#define MRP_CTRL             1  //add control to inject smaller number of references. 
+#define BEYOND_CS2        1 // BASED ON CS2 branch dd212a58170d9c0dd6a215b35aea93050d8c26b2
 
-#define ALTREF_PACK_II  1 // add packing for the altref search
+#if BEYOND_CS2
+
+#define ALTREF_PACK_II              1 // add packing for the altref search
+#define FIXED_SQ_WEIGHT_PER_QP      1
+#if FIXED_SQ_WEIGHT_PER_QP
+#define SQ_WEIGHT_PATCH_0 1
+#define SQ_WEIGHT_PATCH_1 0
+#define SQ_WEIGHT_PATCH_2 0
+#define SQ_WEIGHT_PATCH_3 0
+#endif
+#define MAR2_M8_ADOPTIONS           1
+#define MAR2_M7_ADOPTIONS           1
+#define MAR3_M2_ADOPTIONS           1
+#define MAR3_M6_ADOPTIONS           1
+#define CLEANUP_INTER_INTRA         1  //shutting inter intra could be done via 2 ways.at the seq level(in ress coord), or at the pic level (in pic decision)
+#define MRP_CTRL                    1  //add control to inject smaller number of references.
+#define MAR4_M8_ADOPTIONS           1
+#define MAR4_M3_ADOPTIONS           1
+#define MAR4_M6_ADOPTIONS           1
+
+#endif
+
+// END  BEYOND_CS2 /////////////////////////////////////////////////////////
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
@@ -61,13 +76,6 @@ extern "C" {
 #define ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS 1 // Updated Multi-Pass-PD and MD-Staging Settings
 #define IFS_MD_STAGE_3 1
 
-#define FIXED_SQ_WEIGHT_PER_QP 1
-#if FIXED_SQ_WEIGHT_PER_QP
-#define SQ_WEIGHT_PATCH_0 1
-#define SQ_WEIGHT_PATCH_1 0
-#define SQ_WEIGHT_PATCH_2 0
-#define SQ_WEIGHT_PATCH_3 0
-#endif
 // Actions in the second pass: Frame and SB QP assignment and temporal filtering strenght change
 //FOR DEBUGGING - Do not remove
 #define NO_ENCDEC \
