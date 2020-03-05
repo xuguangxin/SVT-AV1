@@ -39,7 +39,7 @@ extern "C" {
 #endif
 // START  BEYOND_CS2 /////////////////////////////////////////////////////////
 
-#define BEYOND_CS2        1 // BASED ON CS2 branch dd212a58170d9c0dd6a215b35aea93050d8c26b2
+#define BEYOND_CS2        1 // BASED ON CS2 branch 3a19f29b789df30ef81d5bb263ce991617cbf30c
 
 #if BEYOND_CS2
 
