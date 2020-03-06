@@ -470,6 +470,18 @@ EbFifo *eb_system_resource_get_consumer_fifo(const EbSystemResource *resource_pt
     return eb_muxing_queue_get_fifo(resource_ptr->full_queue, index);
 }
 
+EbErrorType eb_system_resource_shutdown(const EbSystemResource *resource_ptr) {
+    EbFifo *fifo_ptr = eb_system_resource_get_producer_fifo(resource_ptr, 0);
+    EbObjectWrapper *wrapper_ptr;
+    //notify all consumers we are shutdown
+    for (unsigned int i = 0; i < resource_ptr->full_queue->process_total_count; i++) {
+        eb_get_empty_object(fifo_ptr, &wrapper_ptr);
+        wrapper_ptr->quit_signal = EB_TRUE;
+        eb_post_full_object(wrapper_ptr);
+    }
+    return EB_ErrorNone;
+}
+
 /*********************************************************************
  * EbSystemResourceReleaseProcess
  *********************************************************************/
