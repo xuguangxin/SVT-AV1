@@ -301,8 +301,11 @@ extern EbErrorType eb_get_full_object_non_blocking(EbFifo *          full_fifo_p
      *********************************************************************/
 extern EbErrorType eb_release_object(EbObjectWrapper *object_ptr);
 
-#define EB_CHECK_END_OBJ(wrapper_ptr) \
-    if (wrapper_ptr->quit_signal == EB_TRUE) { break; }
+#define EB_GET_FULL_OBJECT(full_fifo_ptr, wrapper_dbl_ptr)       \
+     do {                                                        \
+          eb_get_full_object(full_fifo_ptr, wrapper_dbl_ptr);    \
+          if (*wrapper_dbl_ptr->quit_signal) return NULL;        \
+     } while (0)
 
 #ifdef __cplusplus
 }
