@@ -51,6 +51,8 @@ extern "C" {
 #define SQ_WEIGHT_PATCH_2 0
 #define SQ_WEIGHT_PATCH_3 0
 #endif
+#define SHUT_ME_DISTORTION 1
+
 #define MAR2_M8_ADOPTIONS           1
 #define MAR2_M7_ADOPTIONS           1
 #define MAR3_M2_ADOPTIONS           1
@@ -2794,18 +2796,22 @@ typedef enum EbPictureDepthMode
     PIC_ALL_C_DEPTH_MODE        = 5, // ALL sq and nsq with control :  SB size -> 4x4
     PIC_SQ_DEPTH_MODE           = 6, // ALL sq:  SB size -> 4x4
     PIC_SQ_NON4_DEPTH_MODE      = 7, // SQ:  SB size -> 8x8
+#if SHUT_ME_DISTORTION
+    PIC_SB_SWITCH_DEPTH_MODE    = 8  // Adaptive Depth Partitioning
+#else
     PIC_OPEN_LOOP_DEPTH_MODE    = 8, // Early Inter Depth Decision:  SB size -> 8x8
     PIC_SB_SWITCH_DEPTH_MODE    = 9  // Adaptive Depth Partitioning
-
+#endif
 } EbPictureDepthMode;
 
 #define EB_SB_DEPTH_MODE              uint8_t
 #define SB_SQ_BLOCKS_DEPTH_MODE             1
 #define SB_SQ_NON4_BLOCKS_DEPTH_MODE        2
+#if !SHUT_ME_DISTORTION
 #define SB_OPEN_LOOP_DEPTH_MODE             3
 #define SB_FAST_OPEN_LOOP_DEPTH_MODE        4
 #define SB_PRED_OPEN_LOOP_DEPTH_MODE        5
-
+#endif
 static const int32_t global_motion_threshold[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_LAYERS] = { // [Highest Temporal Layer] [Temporal Layer Index]
     { 2 },
     { 4, 2 },

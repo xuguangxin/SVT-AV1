@@ -11,6 +11,7 @@
 #include "EbDefinitions.h"
 
 #include "EbLog.h"
+#if !SHUT_ME_DISTORTION
 /********************************************
  * Constants
  ********************************************/
@@ -760,5 +761,5 @@ EbErrorType early_mode_decision_sb(
 
     return return_error;
 }
-
+#endif
 // clang-format on

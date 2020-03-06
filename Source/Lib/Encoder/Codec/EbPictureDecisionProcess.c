@@ -869,11 +869,15 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->slice_type == I_SLICE)
         ? PIC_ALL_DEPTH_MODE
         : PIC_MULTI_PASS_PD_MODE_2;
+#if SHUT_ME_DISTORTION
+    else
+        pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#else
     else if (pcs_ptr->slice_type == I_SLICE)
         pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
     else
         pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
-
+#endif
     if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 

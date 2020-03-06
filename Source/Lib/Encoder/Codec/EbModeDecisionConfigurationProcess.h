@@ -55,7 +55,11 @@ typedef struct ModeDecisionConfigurationContext {
 
     // Adaptive Depth Partitioning
     uint32_t *sb_score_array;
+#if SHUT_ME_DISTORTION
+    uint8_t   cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE];
+#else
     uint8_t   cost_depth_mode[SB_PRED_OPEN_LOOP_DEPTH_MODE];
+#endif
     uint8_t * sb_cost_array;
     uint32_t  predicted_cost;
     uint32_t  budget;
