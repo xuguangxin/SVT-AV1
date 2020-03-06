@@ -845,7 +845,7 @@ void *picture_manager_kernel(void *input_ptr) {
 
                         child_pcs_ptr->enc_dec_coded_sb_count = 0;
 #if REST_MEM_OPT
-                        child_pcs_ptr->parent_pcs_ptr->av1_cm->pcs = child_pcs_ptr;
+                        child_pcs_ptr->parent_pcs_ptr->av1_cm->rst_tmpbuf = child_pcs_ptr->rst_tmpbuf;
 #endif
                         //3.make all  init for ChildPCS
                         pic_width_in_sb = (uint8_t)((entry_pcs_ptr->aligned_width +

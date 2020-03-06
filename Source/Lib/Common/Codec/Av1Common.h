@@ -12,9 +12,7 @@
 #include "EbDefinitions.h"
 #include "EbRestoration.h"
 
-#if REST_MEM_OPT
-#include "EbPictureControlSet.h"
-#endif
+
 #ifndef EbAV1Common_h
 #define EbAV1Common_h
 
@@ -61,12 +59,10 @@ typedef struct Av1Common {
     int32_t rst_end_stripe[MAX_TILE_ROWS];
     // Output of loop restoration
     Yv12BufferConfig rst_frame;
-#if REST_MEM_OPT
-    struct PictureControlSet *pcs;
-#else
+
     // pointer to a scratch buffer used by self-guided restoration
     int32_t *                       rst_tmpbuf;
-#endif
+
     Yv12BufferConfig *              frame_to_show;
     int32_t                         byte_alignment;
     int32_t                         last_tile_cols, last_tile_rows;

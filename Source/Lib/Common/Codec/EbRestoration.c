@@ -1352,11 +1352,8 @@ void eb_av1_loop_restoration_filter_frame(Yv12BufferConfig *frame, Av1Common *cm
         ctxt.dst8        = dst->buffers[plane];
         ctxt.data_stride = frame->strides[is_uv];
         ctxt.dst_stride  = dst->strides[is_uv];
-#if REST_MEM_OPT
-        ctxt.tmpbuf      = cm->pcs->rst_tmpbuf;
-#else
         ctxt.tmpbuf      = cm->rst_tmpbuf;
-#endif
+
 
         av1_foreach_rest_unit_in_frame(
             cm, plane, filter_frame_on_tile, filter_frame_on_unit, &ctxt);
