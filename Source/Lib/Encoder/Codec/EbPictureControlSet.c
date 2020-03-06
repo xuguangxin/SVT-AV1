@@ -123,6 +123,9 @@ void picture_control_set_dctor(EbPtr p) {
     uint8_t            depth;
     av1_hash_table_destroy(&obj->hash_table);
     EB_FREE_ALIGNED_ARRAY(obj->tpl_mvs);
+#if REST_MEM_OPT
+    EB_FREE_ALIGNED(obj->rst_tmpbuf);
+#endif
     EB_DELETE_PTR_ARRAY(obj->enc_dec_segment_ctrl, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->ep_intra_luma_mode_neighbor_array, tile_cnt);
     EB_DELETE_PTR_ARRAY(obj->ep_intra_chroma_mode_neighbor_array, tile_cnt);
@@ -1121,6 +1124,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     }
     object_ptr->hash_table.p_lookup_table = NULL;
     av1_hash_table_create(&object_ptr->hash_table);
+
+#if REST_MEM_OPT
+    EB_MALLOC_ALIGNED(object_ptr->rst_tmpbuf, RESTORATION_TMPBUF_SIZE);
+#endif
+
     return EB_ErrorNone;
 }
 
@@ -1192,7 +1200,9 @@ static void picture_parent_control_set_dctor(EbPtr p) {
             EB_FREE(boundaries->stripe_boundary_below);
         }
         EB_FREE_ARRAY(obj->av1_cm->frame_to_show);
+#if !REST_MEM_OPT
         EB_FREE_ALIGNED(obj->av1_cm->rst_tmpbuf);
+#endif
         if (obj->av1_cm->rst_frame.buffer_alloc_sz) {
             EB_FREE_ARRAY(obj->av1_cm->rst_frame.buffer_alloc);
         }

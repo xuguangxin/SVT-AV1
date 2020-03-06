@@ -1352,7 +1352,11 @@ void eb_av1_loop_restoration_filter_frame(Yv12BufferConfig *frame, Av1Common *cm
         ctxt.dst8        = dst->buffers[plane];
         ctxt.data_stride = frame->strides[is_uv];
         ctxt.dst_stride  = dst->strides[is_uv];
+#if REST_MEM_OPT
+        ctxt.tmpbuf      = cm->pcs->rst_tmpbuf;
+#else
         ctxt.tmpbuf      = cm->rst_tmpbuf;
+#endif
 
         av1_foreach_rest_unit_in_frame(
             cm, plane, filter_frame_on_tile, filter_frame_on_unit, &ctxt);
@@ -1934,7 +1938,7 @@ EbErrorType eb_av1_alloc_restoration_buffers(Av1Common *cm) {
     const int32_t num_planes   = 3; // av1_num_planes(cm);
     for (int32_t p = 0; p < num_planes; ++p)
         return_error = eb_av1_alloc_restoration_struct(cm, &cm->rst_info[p], p > 0);
-
+#if ! REST_MEM_OPT
     //CHKNif (cm->rst_tmpbuf == NULL)
     {
         //CHKN CHECK_MEM_ERROR(cm, cm->rst_tmpbuf,
@@ -1942,7 +1946,7 @@ EbErrorType eb_av1_alloc_restoration_buffers(Av1Common *cm) {
 
         EB_MALLOC_ALIGNED(cm->rst_tmpbuf, RESTORATION_TMPBUF_SIZE);
     }
-
+#endif
     // For striped loop restoration, we divide each row of tiles into "stripes",
     // of height 64 luma pixels but with an offset by RESTORATION_UNIT_OFFSET
     // luma pixels to match the output from CDEF. We will need to store 2 *

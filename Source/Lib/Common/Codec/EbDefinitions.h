@@ -63,6 +63,8 @@ extern "C" {
 #define MAR4_M3_ADOPTIONS           1
 #define MAR4_M6_ADOPTIONS           1
 #define GM_BUG_FIX                  1 //Port PR#1123: fixed gm_down bitstream corruption issue
+#define REST_MEM_OPT                1 //lossless memory optimization of restoration buffer (move from parent to child pcs)
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

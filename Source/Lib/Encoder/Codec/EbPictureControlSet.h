@@ -383,6 +383,10 @@ typedef struct PictureControlSet {
     uint16_t tile_column_count;
     uint16_t sb_total_count_pix;
     uint16_t sb_total_count_unscaled;//omran??
+#if REST_MEM_OPT
+    // pointer to a scratch buffer used by self-guided restoration
+    int32_t *                       rst_tmpbuf;
+#endif
 } PictureControlSet;
 
 // To optimize based on the max input size
