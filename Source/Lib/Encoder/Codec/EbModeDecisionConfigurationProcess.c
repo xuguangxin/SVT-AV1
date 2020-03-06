@@ -847,11 +847,11 @@ void derive_optimal_budget_per_sb(SequenceControlSet *scs_ptr, PictureControlSet
     }
 }
 
-EbErrorType derive_default_segments(SequenceControlSet *              scs_ptr,
-                                    ModeDecisionConfigurationContext *context_ptr) {
-    EbErrorType return_error = EB_ErrorNone;
 
 #if SHUT_ME_DISTORTION
+EbErrorType derive_default_segments(ModeDecisionConfigurationContext *context_ptr) {
+    EbErrorType return_error = EB_ErrorNone;
+
     context_ptr->number_of_segments = 2;
     context_ptr->score_th[0] = (int8_t)((1 * 100) / context_ptr->number_of_segments);
     context_ptr->score_th[1] = (int8_t)((2 * 100) / context_ptr->number_of_segments);
@@ -860,7 +860,12 @@ EbErrorType derive_default_segments(SequenceControlSet *              scs_ptr,
     context_ptr->interval_cost[0] = context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
     context_ptr->interval_cost[1] =
         context_ptr->cost_depth_mode[SB_SQ_BLOCKS_DEPTH_MODE - 1];
+    return return_error;
+}
 #else
+EbErrorType derive_default_segments(SequenceControlSet *              scs_ptr,
+    ModeDecisionConfigurationContext *context_ptr) {
+    EbErrorType return_error = EB_ErrorNone;
     if (context_ptr->budget > (uint16_t)(scs_ptr->sb_tot_cnt * U_140)) {
         context_ptr->number_of_segments = 2;
         context_ptr->score_th[0]        = (int8_t)((1 * 100) / context_ptr->number_of_segments);
@@ -899,9 +904,10 @@ EbErrorType derive_default_segments(SequenceControlSet *              scs_ptr,
         context_ptr->interval_cost[3] =
             context_ptr->cost_depth_mode[SB_SQ_NON4_BLOCKS_DEPTH_MODE - 1];
     }
-#endif
     return return_error;
 }
+#endif
+
 /******************************************************
 * Compute the score of each SB
     Input   : distortion, detection signals
@@ -919,7 +925,9 @@ void derive_sb_score(PictureControlSet *pcs_ptr,
     context_ptr->sb_max_score = 0u;
 
     for (sb_index = 0; sb_index < pcs_ptr->sb_total_count_pix; sb_index++) {
+#if !SHUT_ME_DISTORTION
         SbParams *sb_params = &pcs_ptr->parent_pcs_ptr->sb_params_array[sb_index];
+#endif
         if (pcs_ptr->slice_type == I_SLICE)
             assert(0);
         else {
@@ -1036,7 +1044,11 @@ void derive_sb_md_mode(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
     set_target_budget_oq(pcs_ptr, context_ptr);
 
     // Set the percentage based thresholds
+#if SHUT_ME_DISTORTION
+    derive_default_segments(context_ptr);
+#else
     derive_default_segments(scs_ptr, context_ptr);
+#endif
     // Perform Budgetting
     derive_optimal_budget_per_sb(scs_ptr, pcs_ptr, context_ptr);
 
@@ -1594,7 +1606,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
 
         // QP Index
         context_ptr->qp_index = (uint8_t)frm_hdr->quantization_params.base_q_idx;
-
+#if !SHUT_ME_DISTORTION
         // Lambda Assignement
         uint32_t lambda_sse;
         uint32_t lambdasad_;
@@ -1605,6 +1617,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             context_ptr->qp_index,
             EB_TRUE);
         context_ptr->lambda      = (uint64_t)lambdasad_;
+#endif
         md_rate_estimation_array = pcs_ptr->md_rate_estimation_array;
         // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
         if (context_ptr->is_md_rate_estimation_ptr_owner) {
@@ -1644,7 +1657,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
                 } else if (pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] ==
                            SB_SQ_NON4_BLOCKS_DEPTH_MODE) {
                     sb_forward_sq_non4_blocks_to_md(scs_ptr, pcs_ptr, sb_index);
-                } 
+                }
 #if !SHUT_ME_DISTORTION
                 else {
                     perform_early_sb_partitionning_sb(context_ptr, scs_ptr, pcs_ptr, sb_index);
