@@ -62,8 +62,6 @@ extern "C" {
 #define SQ_WEIGHT_PATCH_2 0
 #define SQ_WEIGHT_PATCH_3 0
 #endif
-#define SHUT_ME_DISTORTION 1
-
 #define MAR2_M8_ADOPTIONS           1
 #define MAR2_M7_ADOPTIONS           1
 #define MAR3_M2_ADOPTIONS           1
@@ -74,6 +72,7 @@ extern "C" {
 #define MAR4_M3_ADOPTIONS           1
 #define MAR4_M6_ADOPTIONS           1
 #define GM_BUG_FIX                  1 //Port PR#1123: fixed gm_down bitstream corruption issue
+#define SHUT_ME_DISTORTION          1 //Removed the ME distortions (209 elements), and the HEVC-legacy early inter-depth decision.
 #define REST_MEM_OPT                1 //lossless memory optimization of restoration buffer (move from parent to child pcs)
 
 #endif
