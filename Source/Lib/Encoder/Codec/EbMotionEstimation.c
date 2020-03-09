@@ -10755,7 +10755,7 @@ void set_final_seach_centre_sb(
         }
     }
 }
-void prune_references_hme(
+void prune_hme_results(
     MeContext                 *context_ptr,
     uint8_t                   hme_level
 ){
@@ -10848,7 +10848,7 @@ void hme_sb(
         input_ptr);
     // prune hierarchical ME level 0
 #if PRUNE_HME_L0
-    prune_references_hme(
+    prune_hme_results(
         context_ptr,
         0);
 #endif
@@ -10861,7 +10861,7 @@ void hme_sb(
         input_ptr);
     // prune hierarchical ME level 1
 #if PRUNE_HME_L1
-    prune_references_hme(
+    prune_hme_results(
         context_ptr,
         1);
 #endif
@@ -11460,7 +11460,7 @@ void prune_references(
                 context_ptr->hme_results[li][ri].do_ref = 0;
             if (context_ptr->hme_results[li][ri].hme_sad < REDUCE_SR_TH)
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
-            if (context_ptr->hme_results[li][ri].hme_sc_x <= displacement_th && context_ptr->hme_results[li][ri].hme_sc_y <= displacement_th && context_ptr->hme_results[li][ri].hme_sad < (2*REDUCE_SR_TH))
+            if (ABS(context_ptr->hme_results[li][ri].hme_sc_x) <= displacement_th && ABS(context_ptr->hme_results[li][ri].hme_sc_y) <= displacement_th && context_ptr->hme_results[li][ri].hme_sad < (2*REDUCE_SR_TH))
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
         }
     }
