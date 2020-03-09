@@ -11460,7 +11460,11 @@ void prune_references(
                 context_ptr->hme_results[li][ri].do_ref = 0;
             if (context_ptr->hme_results[li][ri].hme_sad < REDUCE_SR_TH)
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
+#if HME_PRUNE_BUG_FIX
             if (ABS(context_ptr->hme_results[li][ri].hme_sc_x) <= displacement_th && ABS(context_ptr->hme_results[li][ri].hme_sc_y) <= displacement_th && context_ptr->hme_results[li][ri].hme_sad < (2*REDUCE_SR_TH))
+#else
+            if (context_ptr->hme_results[li][ri].hme_sc_x <= displacement_th && context_ptr->hme_results[li][ri].hme_sc_y <= displacement_th && context_ptr->hme_results[li][ri].hme_sad < (2*REDUCE_SR_TH))
+#endif
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
         }
     }

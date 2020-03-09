@@ -43,17 +43,6 @@ extern "C" {
 
 #if BEYOND_CS2
 
-#define MULTI_STAGE_HME                   1
-#if MULTI_STAGE_HME
-#define DISABLE_HME_PRE_CHECK             1
-#define ENABLE_HME_AT_INC_SB              1
-#define NEW_HME_DISTANCE_ALGORITHM        1
-#define DISABLE_HME_OF_SAME_POC           1
-#define DISABLE_HME_L0_FOR_240P           1
-#define PRUNE_HME_L0                      0
-#define PRUNE_HME_L1                      0
-#endif
-
 #define ALTREF_PACK_II              1 // add packing for the altref search
 #define FIXED_SQ_WEIGHT_PER_QP      1
 #if FIXED_SQ_WEIGHT_PER_QP
@@ -74,7 +63,17 @@ extern "C" {
 #define GM_BUG_FIX                  1 //Port PR#1123: fixed gm_down bitstream corruption issue
 #define SHUT_ME_DISTORTION          1 //Removed the ME distortions (209 elements), and the HEVC-legacy early inter-depth decision.
 #define REST_MEM_OPT                1 //lossless memory optimization of restoration buffer (move from parent to child pcs)
-
+#define MULTI_STAGE_HME                   1
+#if MULTI_STAGE_HME
+#define DISABLE_HME_PRE_CHECK             1
+#define ENABLE_HME_AT_INC_SB              1
+#define NEW_HME_DISTANCE_ALGORITHM        1
+#define DISABLE_HME_OF_SAME_POC           1
+#define DISABLE_HME_L0_FOR_240P           1
+#define PRUNE_HME_L0                      0
+#define PRUNE_HME_L1                      0
+#endif
+#define HME_PRUNE_BUG_FIX                 1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
