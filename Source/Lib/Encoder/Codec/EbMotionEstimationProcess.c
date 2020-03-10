@@ -237,7 +237,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
+#if MAR10_ADOPTIONS
+    if (enc_mode <= ENC_M1) {
+#else
     if (enc_mode <= ENC_M0) {
+#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
@@ -284,7 +288,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
+#if MAR10_ADOPTIONS
+            if (enc_mode <= ENC_M2)
+#else
             if (enc_mode <= ENC_M3)
+#endif
                 context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
             else
                 context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
@@ -304,7 +312,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     // 1: perform me nsq_search only for the best refrenece picture.
     // 2: perform me nsq_search only for the nearest refrenece pictures.
     // 3: me nsq_search off.
+#if MAR10_ADOPTIONS
+    if (enc_mode <= ENC_M1 && pcs_ptr->sc_content_detected == 0)
+#else
     if (MR_MODE && pcs_ptr->sc_content_detected == 0)
+#endif
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
     else
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
@@ -445,7 +457,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
         // adopt M2 setting in M1
+#if MAR10_ADOPTIONS
+    if (enc_mode <= ENC_M1) {
+#else
     if (enc_mode <= ENC_M0) {
+#endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
@@ -487,15 +503,23 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
     // ME Search Method
     if (pcs_ptr->sc_content_detected)
+#if MAR10_ADOPTIONS
+        if (enc_mode <= ENC_M8)
+#else
         if (enc_mode <= ENC_M3)
+#endif
             context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
     else
+#if MAR10_ADOPTIONS
+        context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
+#else
         context_ptr->me_context_ptr->me_search_method = (enc_mode <= ENC_M4) ?
 
         FULL_SAD_SEARCH :
         SUB_SAD_SEARCH;
+#endif
     // Me nsq search levels.
     // 0: feature off -> perform nsq_search.
     // 1: perform me nsq_search for the best refrenece picture.

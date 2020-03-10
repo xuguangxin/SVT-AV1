@@ -1995,7 +1995,11 @@ EbErrorType prediction_structure_group_ctor(PredictionStructureGroup *pred_struc
         ref_count_used = MR_MODE ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
     else
 #if MAR4_M3_ADOPTIONS
+#if MAR10_ADOPTIONS
+        ref_count_used = enc_mode <= ENC_M3 ? MAX_REF_IDX : enc_mode <= ENC_M4 ? 2 : 1;
+#else
         ref_count_used = enc_mode <= ENC_M3 ? MAX_REF_IDX : 1;
+#endif
 #else
         ref_count_used = enc_mode <= ENC_M1 ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
 #endif

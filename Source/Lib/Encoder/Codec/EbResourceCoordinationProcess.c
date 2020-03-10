@@ -183,9 +183,11 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
         scs_ptr->seq_header.pic_based_rate_est = (uint8_t)scs_ptr->static_config.pic_based_rate_est;
 
     if (scs_ptr->static_config.enable_restoration_filtering == DEFAULT) {
+#if !MAR10_ADOPTIONS
         if (pcs_ptr->enc_mode >= ENC_M8)
             scs_ptr->seq_header.enable_restoration = 0;
         else
+#endif
             scs_ptr->seq_header.enable_restoration = 1;
     } else
         scs_ptr->seq_header.enable_restoration =
@@ -861,6 +863,12 @@ void *resource_coordination_kernel(void *input_ptr) {
             // 0                 OFF
             // 1                 ON
             if (scs_ptr->static_config.enable_filter_intra)
+#if MAR10_ADOPTIONS
+                if (scs_ptr->static_config.screen_content_mode == 1)
+                    scs_ptr->seq_header.enable_filter_intra =
+                    (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+                else
+#endif
                 scs_ptr->seq_header.enable_filter_intra =
                     (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
             else

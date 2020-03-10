@@ -1363,6 +1363,9 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #define NIC_S4_5 5
 #define NIC_C4 6
 
+#if MAR10_ADOPTIONS
+        uint8_t nics_level = NIC_C4;
+#else
         uint8_t nics_level = pcs_ptr->enc_mode <= ENC_M2
                                  ? NIC_S8
                                  : pcs_ptr->enc_mode <= ENC_M3 ? NIC_S11 : NIC_S_OLD;
@@ -1371,6 +1374,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
 #if MR_MODE || MR_NICS
         nics_level = NIC_S4_5;
+#endif
 #endif
 
         if (nics_level == NIC_S_OLD) {
@@ -1601,8 +1605,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 
             ////MULT
+#if MAR10_ADOPTIONS
+            if ((pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+                (pcs_ptr->enc_mode <= ENC_M1 && context_ptr->blk_geom->shape == PART_N)) {
+#else
             if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 ((pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected)) && context_ptr->blk_geom->shape == PART_N)) {
+#endif
                 uint8_t mult_factor_num   = 5;
                 uint8_t mult_factor_denum = 4;
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -1647,6 +1656,102 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
             }
 
+#if MAR10_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                ////DIVIDE
+                uint32_t inter_scaling_num = 1;
+                uint32_t inter_scaling_denom = 1;
+                uint32_t intra_scaling_num = 1;
+                uint32_t intra_scaling_denom = 1;
+                if (pcs_ptr->enc_mode <= ENC_M1) {
+                    // INTER
+                    inter_scaling_num = 1;
+                    inter_scaling_denom = 1;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 1;
+                }
+                else if (pcs_ptr->enc_mode <= ENC_M7) {
+                    // INTER
+                    inter_scaling_num = 7;
+                    inter_scaling_denom = 8;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 1;
+                }
+                else {
+                    // INTER
+                    inter_scaling_num = 3;
+                    inter_scaling_denom = 8;
+                    // INTRA
+                    intra_scaling_num = 4;
+                    intra_scaling_denom = 8;
+                }
+
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    // INTER SCALING
+                    if (i != CAND_CLASS_0 && i != CAND_CLASS_6 && i != CAND_CLASS_7) {
+                        context_ptr->md_stage_1_count[i] = (uint32_t)round((inter_scaling_num * ((float)context_ptr->md_stage_1_count[i])) / inter_scaling_denom);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = (uint32_t)round((inter_scaling_num * ((float)context_ptr->md_stage_2_count[i])) / inter_scaling_denom);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                    else { //INTRA SCALING
+                        context_ptr->md_stage_1_count[i] = (uint32_t)round((intra_scaling_num * ((float)context_ptr->md_stage_1_count[i])) / intra_scaling_denom);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = (uint32_t)round((intra_scaling_num * ((float)context_ptr->md_stage_2_count[i])) / intra_scaling_denom);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                }
+            }
+            else {
+                ////DIVIDE
+                uint32_t inter_scaling_num = 1;
+                uint32_t inter_scaling_denom = 1;
+                uint32_t intra_scaling_num = 1;
+                uint32_t intra_scaling_denom = 1;
+                if (pcs_ptr->enc_mode <= ENC_M3) {
+                    // INTER
+                    inter_scaling_num = 1;
+                    inter_scaling_denom = 1;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 1;
+                }
+                else if (pcs_ptr->enc_mode <= ENC_M7) {
+                    // INTER
+                    inter_scaling_num = 3;
+                    inter_scaling_denom = 4;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 1;
+                }
+                else {
+                    // INTER
+                    inter_scaling_num = 1;
+                    inter_scaling_denom = 4;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 4;
+                }
+
+                for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
+                    // INTER SCALING
+                    if (i != CAND_CLASS_0 && i != CAND_CLASS_6 && i != CAND_CLASS_7) {
+                        context_ptr->md_stage_1_count[i] = (uint32_t)round((inter_scaling_num * ((float)context_ptr->md_stage_1_count[i])) / inter_scaling_denom);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = (uint32_t)round((inter_scaling_num * ((float)context_ptr->md_stage_2_count[i])) / inter_scaling_denom);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                    else { //INTRA SCALING
+                        context_ptr->md_stage_1_count[i] = (uint32_t)round((intra_scaling_num * ((float)context_ptr->md_stage_1_count[i])) / intra_scaling_denom);
+                        context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+                        context_ptr->md_stage_2_count[i] = (uint32_t)round((intra_scaling_num * ((float)context_ptr->md_stage_2_count[i])) / intra_scaling_denom);
+                        context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+                    }
+                }
+            }
+#else
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
                 ////DIVIDE
                 uint8_t division_factor_num   = 1;
@@ -1702,7 +1807,12 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     }
                 }
             }
+#endif
+#if MAR10_ADOPTIONS
+            if (pcs_ptr->enc_mode > ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
             if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
                 uint8_t division_factor_num   = 1;
                 uint8_t division_factor_denum = 1;
                 if (context_ptr->blk_geom->bheight <= 8 && context_ptr->blk_geom->bwidth <= 8) {
@@ -2513,6 +2623,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #endif
         }
 
+#if !MAR10_ADOPTIONS
         if (pcs_ptr->enc_mode >= ENC_M8)
             context_ptr->md_stage_2_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
@@ -2617,7 +2728,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                         context_ptr->md_stage_1_count[CAND_CLASS_3];
             }
         }
-
+#endif
         // Set md_stage_3 NICs
 
         context_ptr->md_stage_3_count[CAND_CLASS_0] =

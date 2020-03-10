@@ -1933,7 +1933,14 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     if (scs_ptr->use_output_stat_file)
         scs_ptr->static_config.super_block_size = 64;
     else
+#if MAR10_ADOPTIONS
+        if (scs_ptr->static_config.screen_content_mode == 1)
+            scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
+        else
+            scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 128 : 64;
+#else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
+#endif
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 1) ? 64 : scs_ptr->static_config.super_block_size;
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
     // Configure the padding
@@ -1964,14 +1971,22 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 
     //0: NSQ absent
     //1: NSQ present
+#if MAR10_ADOPTIONS
+    scs_ptr->nsq_present = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#else
     scs_ptr->nsq_present = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
+#endif
 
     // Set down-sampling method     Settings
     // 0                            0: filtering
     // 1                            1: decimation
     if (scs_ptr->static_config.screen_content_mode == 1)
 #if MAR3_M6_ADOPTIONS
+#if MAR10_ADOPTIONS
+        if (scs_ptr->static_config.enc_mode <= ENC_M8)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M6)
+#endif
 #else
         if (scs_ptr->static_config.enc_mode <= ENC_M4)
 #endif
@@ -2005,7 +2020,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
         else
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
+#if MAR10_ADOPTIONS
+            scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M3) ? 1 : 0;
+#endif
 #else
             scs_ptr->mfmv_enabled = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
 #endif
@@ -2042,8 +2061,7 @@ void copy_api_from_app(
     scs_ptr->static_config.intra_period_length = ((EbSvtAv1EncConfiguration*)config_struct)->intra_period_length;
     scs_ptr->static_config.intra_refresh_type = ((EbSvtAv1EncConfiguration*)config_struct)->intra_refresh_type;
     scs_ptr->static_config.hierarchical_levels = ((EbSvtAv1EncConfiguration*)config_struct)->hierarchical_levels;
-    scs_ptr->static_config.enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode > ENC_M1 ? ENC_M8 :
-        ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
+    scs_ptr->static_config.enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
     scs_ptr->static_config.snd_pass_enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->snd_pass_enc_mode;
     scs_ptr->intra_period_length = scs_ptr->static_config.intra_period_length;
     scs_ptr->intra_refresh_type = scs_ptr->static_config.intra_refresh_type;
@@ -2347,9 +2365,6 @@ static EbErrorType verify_settings(
     if (config->enc_mode > MAX_ENC_PRESET) {
         SVT_LOG("Error instance %u: EncoderMode must be in the range of [0-%d]\n", channel_number + 1, MAX_ENC_PRESET);
         return_error = EB_ErrorBadParameter;
-    }
-    if (config->enc_mode > ENC_M1 && config->enc_mode < MAX_ENC_PRESET) {
-        SVT_LOG("Warning instance %u: Running EncoderMode 8 \n", channel_number + 1, MAX_ENC_PRESET);
     }
     if (config->snd_pass_enc_mode > MAX_ENC_PRESET + 1) {
         SVT_LOG("Error instance %u: Second pass encoder mode must be in the range of [0-%d]\n", channel_number + 1, MAX_ENC_PRESET + 1);
