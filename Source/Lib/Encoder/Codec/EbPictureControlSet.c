@@ -425,6 +425,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     EB_MALLOC_ARRAY(object_ptr->md_rate_estimation_array, 1);
     memset(object_ptr->md_rate_estimation_array, 0, sizeof(MdRateEstimationContext));
     EB_MALLOC_ARRAY(object_ptr->ec_ctx_array, all_sb);
+#if RATE_MEM_OPT
+    if(init_data_ptr->serial_rate_est)
+       EB_MALLOC_ARRAY(object_ptr->rate_est_array, 1);
+    else
+#endif 
     EB_MALLOC_ARRAY(object_ptr->rate_est_array, all_sb);
 
     if (init_data_ptr->cfg_palette) {

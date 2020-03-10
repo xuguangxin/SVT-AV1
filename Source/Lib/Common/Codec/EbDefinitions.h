@@ -74,6 +74,9 @@ extern "C" {
 #define PRUNE_HME_L1                      0
 #endif
 #define HME_PRUNE_BUG_FIX                 1
+#define RATE_MEM_OPT                      1 //lossless memory optimization of rate estimation
+
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

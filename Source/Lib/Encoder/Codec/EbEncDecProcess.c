@@ -2999,7 +2999,10 @@ void *enc_dec_kernel(void *input_ptr) {
                     context_ptr->sb_index = sb_index;
 
                     if (pcs_ptr->update_cdf) {
+
+#if ! RATE_MEM_OPT
                         pcs_ptr->rate_est_array[sb_index] = *pcs_ptr->md_rate_estimation_array;
+#endif
                         if (scs_ptr->seq_header.pic_based_rate_est &&
                             scs_ptr->enc_dec_segment_row_count_array[pcs_ptr
                                                                          ->temporal_layer_index] ==
@@ -3039,6 +3042,35 @@ void *enc_dec_kernel(void *input_ptr) {
                             }
                         }
 
+#if RATE_MEM_OPT
+                        //in case of using 1 enc-dec segment, point to first SB data
+                        uint32_t real_sb_idx = scs_ptr->seq_header.pic_based_rate_est &&
+                            scs_ptr->enc_dec_segment_row_count_array[pcs_ptr->temporal_layer_index] == 1 &&
+                            scs_ptr->enc_dec_segment_col_count_array[pcs_ptr->temporal_layer_index] == 1 ?
+                            0 : sb_index;
+
+                        // Copy all fileds from picture
+                        pcs_ptr->rate_est_array[real_sb_idx] = *pcs_ptr->md_rate_estimation_array;
+
+                        // Compute rate using latest CDFs
+                        av1_estimate_syntax_rate(&pcs_ptr->rate_est_array[real_sb_idx],
+                            pcs_ptr->slice_type == I_SLICE,
+                            &pcs_ptr->ec_ctx_array[sb_index]);
+                        av1_estimate_mv_rate(pcs_ptr,
+                            &pcs_ptr->rate_est_array[real_sb_idx],
+                            &pcs_ptr->ec_ctx_array[sb_index]);
+                        av1_estimate_coefficients_rate(&pcs_ptr->rate_est_array[real_sb_idx],
+                            &pcs_ptr->ec_ctx_array[sb_index]);
+
+                        //let the candidate point to the new rate table.
+                        uint32_t cand_index;
+                        for (cand_index = 0; cand_index < MODE_DECISION_CANDIDATE_MAX_COUNT;
+                            ++cand_index)
+                            context_ptr->md_context->fast_candidate_ptr_array[cand_index]
+                            ->md_rate_estimation_ptr = &pcs_ptr->rate_est_array[real_sb_idx];
+                        context_ptr->md_context->md_rate_estimation_ptr =
+                            &pcs_ptr->rate_est_array[real_sb_idx];
+#else
                         // Initial Rate Estimation of the syntax elements
                         av1_estimate_syntax_rate(&pcs_ptr->rate_est_array[sb_index],
                                                  pcs_ptr->slice_type == I_SLICE,
@@ -3059,6 +3091,9 @@ void *enc_dec_kernel(void *input_ptr) {
                                 ->md_rate_estimation_ptr = &pcs_ptr->rate_est_array[sb_index];
                         context_ptr->md_context->md_rate_estimation_ptr =
                             &pcs_ptr->rate_est_array[sb_index];
+
+#endif
+
                     }
                     // Configure the SB
                     mode_decision_configure_sb(

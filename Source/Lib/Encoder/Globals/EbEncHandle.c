@@ -1067,6 +1067,11 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         input_data.tile_row_count = parent_pcs->av1_cm->tiles_info.tile_rows;
         input_data.tile_column_count = parent_pcs->av1_cm->tiles_info.tile_cols;
         input_data.is_16bit_pipeline = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.encoder_16bit_pipeline;
+#if RATE_MEM_OPT
+        input_data.serial_rate_est = enc_handle_ptr->scs_instance_array[0]->scs_ptr->static_config.pic_based_rate_est &&
+            input_data.enc_dec_segment_col == 1 && input_data.enc_dec_segment_row == 1 ?  1 : 0;
+#endif
+
         EB_NEW(
             enc_handle_ptr->picture_control_set_pool_ptr_array[instance_index],
             eb_system_resource_ctor,
