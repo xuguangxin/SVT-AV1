@@ -429,7 +429,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     if(init_data_ptr->serial_rate_est)
        EB_MALLOC_ARRAY(object_ptr->rate_est_array, 1);
     else
-#endif 
+#endif
     EB_MALLOC_ARRAY(object_ptr->rate_est_array, all_sb);
 
     if (init_data_ptr->cfg_palette) {
