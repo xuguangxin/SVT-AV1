@@ -1552,7 +1552,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR10_ADOPTIONS
+#if MAR11_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M1)
+#else
                 if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #else
                 if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1655,7 +1659,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->bipred3x3_injection = 0;
 #if MAR3_M2_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if MAR11_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M2)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #else
         else if (pcs_ptr->enc_mode <= ENC_M2)
 #endif
@@ -2040,8 +2048,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_class_prune_th = 100;
     else
+#if MAR11_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M2 ||
+            pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
         if (pcs_ptr->enc_mode <= ENC_M3 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
             context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
         else
             context_ptr->md_stage_1_class_prune_th =
@@ -2081,8 +2094,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
         else
 #endif
+#if MAR11_ADOPTIONS
+            if ((pcs_ptr->enc_mode <= ENC_M2 &&
+                pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
         if ((pcs_ptr->enc_mode <= ENC_M3 &&
             pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#endif
 
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
         else
@@ -2176,7 +2194,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1: If previous similar block is not compound, do not inject compound
     // 2: If previous similar block is not compound, do not inject compound else
     // consider the compound modes up the similar s one
+#if MAR11_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
         context_ptr->comp_similar_mode = 1;
     else
         context_ptr->comp_similar_mode = 2;

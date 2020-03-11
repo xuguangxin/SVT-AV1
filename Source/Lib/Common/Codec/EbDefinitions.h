@@ -94,6 +94,7 @@ extern "C" {
 #define CLEAN_UP_SB_DATA_11  1 // mb
 #define CLEAN_UP_SB_DATA_12  1 // mds index
 #endif
+#define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

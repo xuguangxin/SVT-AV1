@@ -211,8 +211,13 @@ EbErrorType signal_derivation_me_kernel_oq(
 
 
     if (pcs_ptr->sc_content_detected)
+#if MAR11_ADOPTIONS
+        // fractional_search_method is not used if subpel is OFF
+        context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
+#else
         context_ptr->me_context_ptr->fractional_search_method =
         (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : SUB_SAD_SEARCH;
+#endif
     else
 #if MAR2_M8_ADOPTIONS
         context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
@@ -245,6 +250,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
+#if !MAR11_ADOPTIONS
 #if MAR3_M2_ADOPTIONS
     else if (enc_mode <= ENC_M2) {
 #else
@@ -253,6 +259,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
     }
+#endif
     else {
         context_ptr->me_context_ptr->half_pel_mode =
             REFINEMENT_HP_MODE;
@@ -289,7 +296,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
 #if MAR10_ADOPTIONS
+#if MAR11_ADOPTIONS
+            if (enc_mode <= ENC_M1)
+#else
             if (enc_mode <= ENC_M2)
+#endif
 #else
             if (enc_mode <= ENC_M3)
 #endif
@@ -424,11 +435,16 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         max_metf_search_height[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
 
     if (pcs_ptr->sc_content_detected)
+#if MAR11_ADOPTIONS
+        // fractional_search_method is irrelevant if subpel is OFF
+        context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
+#else
         if (enc_mode <= ENC_M2)
             context_ptr->me_context_ptr->fractional_search_method =
             (enc_mode <= ENC_M1) ? FULL_SAD_SEARCH : FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->fractional_search_method = SUB_SAD_SEARCH;
+#endif
     else
 #if MAR2_M8_ADOPTIONS
         context_ptr->me_context_ptr->fractional_search_method = SSD_SEARCH;
@@ -447,10 +463,14 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (pcs_ptr->sc_content_detected)
+#if MAR11_ADOPTIONS
+            context_ptr->me_context_ptr->use_subpel_flag = 0;
+#else
             if (enc_mode <= ENC_M2)
                 context_ptr->me_context_ptr->use_subpel_flag = 1;
             else
                 context_ptr->me_context_ptr->use_subpel_flag = 0;
+#endif
         else
             context_ptr->me_context_ptr->use_subpel_flag = 1;
     else
@@ -465,6 +485,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
     }
+#if !MAR11_ADOPTIONS
 #if MAR3_M2_ADOPTIONS
     else if (enc_mode <= ENC_M2) {
 #else
@@ -473,6 +494,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : SWITCHABLE_HP_MODE;
     }
+#endif
     else {
         context_ptr->me_context_ptr->half_pel_mode =
             REFINEMENT_HP_MODE;

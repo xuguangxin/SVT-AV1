@@ -865,8 +865,13 @@ void *resource_coordination_kernel(void *input_ptr) {
             if (scs_ptr->static_config.enable_filter_intra)
 #if MAR10_ADOPTIONS
                 if (scs_ptr->static_config.screen_content_mode == 1)
+#if MAR11_ADOPTIONS
+                    scs_ptr->seq_header.enable_filter_intra =
+                    (scs_ptr->static_config.enc_mode <= ENC_M1) ? 1 : 0;
+#else
                     scs_ptr->seq_header.enable_filter_intra =
                     (scs_ptr->static_config.enc_mode <= ENC_M2) ? 1 : 0;
+#endif
                 else
 #endif
                 scs_ptr->seq_header.enable_filter_intra =
@@ -878,7 +883,11 @@ void *resource_coordination_kernel(void *input_ptr) {
             // 0                 OFF: No compond mode search : AVG only
             // 1                 ON: full
             if (scs_ptr->static_config.compound_level == DEFAULT) {
+#if MAR11_ADOPTIONS
+                scs_ptr->compound_mode = (scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+#else
                 scs_ptr->compound_mode = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
+#endif
             } else
                 scs_ptr->compound_mode = scs_ptr->static_config.compound_level;
 

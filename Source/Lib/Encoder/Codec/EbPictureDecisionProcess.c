@@ -1103,7 +1103,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             cm->sg_filter_mode = 0;
 #if MAR10_ADOPTIONS
+#if MAR11_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1214,7 +1218,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->tx_size_search_mode = 0;
 #if MAR10_ADOPTIONS
+#if MAR11_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1235,7 +1243,16 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 1                 Fast: If two predictors are very similar, skip wedge compound mode search
     // 2                 Fast: estimate Wedge sign
     // 3                 Fast: Mode 1 & Mode 2
+#if MAR11_ADOPTIONS
+    if (pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M1)
+            pcs_ptr->wedge_mode = 0;
+        else
+            pcs_ptr->wedge_mode = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
     if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
         pcs_ptr->wedge_mode = 0;
     else
         pcs_ptr->wedge_mode = 1;
