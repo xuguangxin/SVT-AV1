@@ -919,7 +919,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->is_used_as_reference_flag)
         ? NSQ_SEARCH_LEVEL6
         : NSQ_SEARCH_LEVEL3;
+#if MAR10_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M8)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 
         if (pcs_ptr->is_used_as_reference_flag)
             pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL3;

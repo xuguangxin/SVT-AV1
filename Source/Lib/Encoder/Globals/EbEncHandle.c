@@ -1964,7 +1964,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     //0: ON
     //1: OFF
 #if MAR2_M7_ADOPTIONS
+#if MAR10_ADOPTIONS
+    scs_ptr->cdf_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 0 : 1;
+#else
     scs_ptr->cdf_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M7) ? 0 : 1;
+#endif
 #else
     scs_ptr->cdf_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M6) ? 0 : 1;
 #endif
