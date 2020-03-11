@@ -1342,7 +1342,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         context_ptr->intra_luma_left_mode,
         context_ptr->intra_luma_top_mode);
 
-#ifdef R2R_FIX
+#if R2R_FIX
     // Init full cost in case we by pass stage1/stage2
     if (context_ptr->md_staging_mode == MD_STAGING_MODE_0) {
         *(candidate_buffer->full_cost_ptr) = *(candidate_buffer->fast_cost_ptr);
