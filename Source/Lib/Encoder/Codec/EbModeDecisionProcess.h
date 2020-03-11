@@ -90,6 +90,46 @@ typedef struct MdBlkStruct {
     CandidateMv          ed_ref_mv_stack[MODE_CTX_REF_FRAMES]
                                [MAX_REF_MV_STACK_SIZE]; //to be used in MD and EncDec
     uint8_t avail_blk_flag; //tells whether this CU is tested in MD and have a valid cu data
+#if CLEAN_UP_SB_DATA_1
+    uint32_t best_d1_blk;
+#endif
+#if CLEAN_UP_SB_DATA_3
+    uint8_t *neigh_left_recon[3]; //only for MD
+    uint8_t *neigh_top_recon[3];
+    uint16_t *neigh_left_recon_16bit[3];
+    uint16_t *neigh_top_recon_16bit[3];
+#endif
+#if CLEAN_UP_SB_DATA_4
+    uint8_t skip_coeff_context;
+    uint8_t reference_mode_context;
+    uint8_t compoud_reference_type_context;
+    int32_t quantized_dc[3][MAX_TXB_COUNT];
+    uint32_t is_inter_ctx;
+    uint8_t skip_flag_context;
+#endif
+#if CLEAN_UP_SB_DATA_0
+    IntMv ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES]; //used only for nonCompound modes.
+#endif
+#if CLEAN_UP_SB_DATA_8
+    // txb
+    uint8_t u_has_coeff[TRANSFORM_UNIT_MAX_COUNT];
+    uint8_t v_has_coeff[TRANSFORM_UNIT_MAX_COUNT];
+    uint8_t y_has_coeff[TRANSFORM_UNIT_MAX_COUNT];
+#endif
+#if CLEAN_UP_SB_DATA_10
+    // wm
+    EbWarpedMotionParams wm_params_l0;
+    EbWarpedMotionParams wm_params_l1;
+    // ref frame
+    int8_t ref_frame_index_l0;
+    int8_t ref_frame_index_l1;
+    // compound
+    uint8_t                compound_idx;
+    InterInterCompoundData interinter_comp;
+#endif
+#if CLEAN_UP_SB_DATA_7
+    uint8_t merge_flag;
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;
@@ -159,7 +199,9 @@ typedef struct ModeDecisionContext {
     uint32_t full_lambda_md[2];
     //  Context Variables---------------------------------
     SuperBlock *     sb_ptr;
+#if !CLEAN_UP_SB_DATA_8
     TransformUnit *  txb_ptr;
+#endif
     BlkStruct *     blk_ptr;
     const BlockGeom *blk_geom;
     PredictionUnit * pu_ptr;

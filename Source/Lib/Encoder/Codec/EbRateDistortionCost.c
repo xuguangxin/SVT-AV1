@@ -560,6 +560,12 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                              uint64_t luma_distortion, uint64_t chroma_distortion, uint64_t lambda,
                              EbBool use_ssd, PictureControlSet *pcs_ptr, CandidateMv *ref_mv_stack,
                              const BlockGeom *blk_geom, uint32_t miRow, uint32_t miCol,
+#if CLEAN_UP_SB_DATA_4
+                             uint8_t reference_mode_context,
+                             uint8_t compoud_reference_type_context,
+                             uint32_t is_inter_ctx,
+                             uint8_t skip_flag_context,
+#endif
                              uint8_t enable_inter_intra, EbBool full_cost_shut_fast_rate_flag,
                              uint8_t md_pass, uint32_t left_neighbor_mode,
                              uint32_t top_neighbor_mode)
@@ -573,6 +579,10 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
     UNUSED(top_neighbor_mode);
     UNUSED(md_pass);
     UNUSED(enable_inter_intra);
+#if CLEAN_UP_SB_DATA_4
+    UNUSED(reference_mode_context);
+    UNUSED(compoud_reference_type_context);
+#endif
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     if (av1_allow_intrabc(&pcs_ptr->parent_pcs_ptr->frm_hdr, pcs_ptr->parent_pcs_ptr->slice_type)
         && candidate_ptr->use_intrabc) {
@@ -638,8 +648,12 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
         uint64_t intra_chroma_mode_bits_num     = 0;
         uint64_t intra_chroma_ang_mode_bits_num = 0;
         uint64_t skip_mode_rate                 = 0;
+#if CLEAN_UP_SB_DATA_4
+        uint8_t  skip_mode_ctx = skip_flag_context;
+#else
         uint8_t  skip_mode_ctx =
             blk_ptr->skip_flag_context; // NM - Harcoded to 1 until the skip_mode context is added.
+#endif
         PredictionMode intra_mode = (PredictionMode)candidate_ptr->pred_mode;
         // Luma and chroma rate
         uint32_t rate;
@@ -754,11 +768,17 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                 }
             }
         }
-
+#if CLEAN_UP_SB_DATA_4
+        uint32_t is_inter_rate = pcs_ptr->slice_type != I_SLICE
+            ? candidate_ptr->md_rate_estimation_ptr
+            ->intra_inter_fac_bits[is_inter_ctx][0]
+            : 0;
+#else
         uint32_t is_inter_rate = pcs_ptr->slice_type != I_SLICE
                                      ? candidate_ptr->md_rate_estimation_ptr
                                            ->intra_inter_fac_bits[blk_ptr->is_inter_ctx][0]
                                      : 0;
+#endif
         luma_rate =
             (uint32_t)(intra_mode_bits_num + skip_mode_rate + intra_luma_mode_bits_num +
                        intra_luma_ang_mode_bits_num + is_inter_rate + intra_filter_mode_bits_num);
@@ -825,6 +845,10 @@ static INLINE int has_uni_comp_refs(const MbModeInfo *mbmi) {
 uint64_t estimate_ref_frames_num_bits(PictureControlSet *    pcs_ptr,
                                       ModeDecisionCandidate *candidate_ptr, BlkStruct *blk_ptr,
                                       uint32_t bwidth, uint32_t bheight, uint8_t ref_frame_type,
+#if CLEAN_UP_SB_DATA_4
+                                      uint8_t reference_mode_context,
+                                      uint8_t compoud_reference_type_context,
+#endif
                                       uint8_t md_pass, EbBool is_compound) {
     FrameHeader *frm_hdr       = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     uint64_t     ref_rate_bits = 0;
@@ -1049,7 +1073,11 @@ uint64_t estimate_ref_frames_num_bits(PictureControlSet *    pcs_ptr,
             if (frm_hdr->reference_mode == REFERENCE_MODE_SELECT) {
                 if (MIN(bwidth, bheight) >= 8) {
                     int32_t context = 0;
+#if CLEAN_UP_SB_DATA_4
+                    context = reference_mode_context;
+#else
                     context         = blk_ptr->reference_mode_context;
+#endif
                     assert(context >= 0 && context < 5);
                     ref_rate_a = candidate_ptr->md_rate_estimation_ptr
                                      ->comp_inter_fac_bits[context][is_compound];
@@ -1064,8 +1092,11 @@ uint64_t estimate_ref_frames_num_bits(PictureControlSet *    pcs_ptr,
                     BIDIR_COMP_REFERENCE;
                 MvReferenceFrame ref_type[2];
                 av1_set_ref_frame(ref_type, ref_frame_type);
-
+#if CLEAN_UP_SB_DATA_4
+                context = compoud_reference_type_context;
+#else
                 context = blk_ptr->compoud_reference_type_context;
+#endif
                 assert(context >= 0 && context < 5);
                 ref_rate_b = candidate_ptr->md_rate_estimation_ptr
                                  ->comp_ref_type_fac_bits[context][comp_ref_type];
@@ -1365,6 +1396,12 @@ uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                              uint64_t luma_distortion, uint64_t chroma_distortion, uint64_t lambda,
                              EbBool use_ssd, PictureControlSet *pcs_ptr, CandidateMv *ref_mv_stack,
                              const BlockGeom *blk_geom, uint32_t miRow, uint32_t miCol,
+#if CLEAN_UP_SB_DATA_4
+                             uint8_t reference_mode_context,
+                             uint8_t compoud_reference_type_context,
+                             uint32_t is_inter_ctx,
+                             uint8_t skip_flag_context,
+#endif
                              uint8_t enable_inter_intra, EbBool full_cost_shut_fast_rate_flag,
                              uint8_t md_pass, uint32_t left_neighbor_mode,
                              uint32_t top_neighbor_mode)
@@ -1401,8 +1438,11 @@ uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
     PredictionMode inter_mode = (PredictionMode)candidate_ptr->pred_mode;
 
     uint64_t inter_mode_bits_num = 0;
-
+#if CLEAN_UP_SB_DATA_4
+    uint8_t skip_mode_ctx = skip_flag_context;
+#else
     uint8_t          skip_mode_ctx = blk_ptr->skip_flag_context;
+#endif
     MvReferenceFrame rf[2];
     av1_set_ref_frame(rf, candidate_ptr->ref_frame_type);
     uint32_t mode_context = av1_mode_context_analyzer(blk_ptr->inter_mode_ctx, rf);
@@ -1417,6 +1457,10 @@ uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
                                                               blk_geom->bwidth,
                                                               blk_geom->bheight,
                                                               candidate_ptr->ref_frame_type,
+#if CLEAN_UP_SB_DATA_4
+                                                              reference_mode_context,
+                                                              compoud_reference_type_context,
+#endif
                                                               md_pass,
                                                               candidate_ptr->is_compound);
 
@@ -1655,11 +1699,17 @@ uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
     //        for (dir = 0; dir < 2; dir++)
     //            interp_filter[dir] = interpolation_filter
     //    }
+#if CLEAN_UP_SB_DATA_4
+    uint32_t is_inter_rate =
+        candidate_ptr->md_rate_estimation_ptr->intra_inter_fac_bits[is_inter_ctx][1];
+    luma_rate = (uint32_t)(reference_picture_bits_num + skip_mode_rate + inter_mode_bits_num +
+        mv_rate + is_inter_rate);
+#else
     uint32_t is_inter_rate =
         candidate_ptr->md_rate_estimation_ptr->intra_inter_fac_bits[blk_ptr->is_inter_ctx][1];
     luma_rate = (uint32_t)(reference_picture_bits_num + skip_mode_rate + inter_mode_bits_num +
                            mv_rate + is_inter_rate);
-
+#endif
     //chroma_rate = intra_chroma_mode_bits_num + intra_chroma_ang_mode_bits_num;
 
     // Keep the Fast Luma and Chroma rate for future use
@@ -1906,6 +1956,43 @@ EbErrorType av1_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
     // Coeff rate
 
     if (context_ptr->blk_skip_decision && candidate_buffer_ptr->candidate_ptr->type != INTRA_MODE) {
+#if CLEAN_UP_SB_DATA_4
+        uint64_t non_skip_cost =
+            RDCOST(lambda,
+            (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits + tx_size_bits +
+                (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                ->skip_fac_bits[context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context][0]),
+                (y_distortion[0] + cb_distortion[0] + cr_distortion[0]));
+        uint64_t skip_cost =
+            RDCOST(lambda,
+            ((uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                ->skip_fac_bits[context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context][1]),
+                (y_distortion[1] + cb_distortion[1] + cr_distortion[1]));
+
+
+        if ((candidate_buffer_ptr->candidate_ptr->block_has_coeff == 0) ||
+            (skip_cost < non_skip_cost)) {
+            y_distortion[0] = y_distortion[1];
+            cb_distortion[0] = cb_distortion[1];
+            cr_distortion[0] = cr_distortion[1];
+            candidate_buffer_ptr->candidate_ptr->block_has_coeff = 0;
+        }
+        if (candidate_buffer_ptr->candidate_ptr->block_has_coeff)
+            coeff_rate = (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
+            (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                ->skip_fac_bits[context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context][0]);
+        else
+            coeff_rate = MIN((uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                ->skip_fac_bits[context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context][1],
+                (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
+                (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                    ->skip_fac_bits[context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context][0]));
+    }
+    else
+        coeff_rate = (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
+        (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+            ->skip_fac_bits[context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context][0]);
+#else
         uint64_t non_skip_cost =
             RDCOST(lambda,
                    (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits + tx_size_bits +
@@ -1917,28 +2004,31 @@ EbErrorType av1_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
                    ((uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
                         ->skip_fac_bits[blk_ptr->skip_coeff_context][1]),
                    (y_distortion[1] + cb_distortion[1] + cr_distortion[1]));
+
         if ((candidate_buffer_ptr->candidate_ptr->block_has_coeff == 0) ||
             (skip_cost < non_skip_cost)) {
-            y_distortion[0]                                      = y_distortion[1];
-            cb_distortion[0]                                     = cb_distortion[1];
-            cr_distortion[0]                                     = cr_distortion[1];
+            y_distortion[0] = y_distortion[1];
+            cb_distortion[0] = cb_distortion[1];
+            cr_distortion[0] = cr_distortion[1];
             candidate_buffer_ptr->candidate_ptr->block_has_coeff = 0;
         }
         if (candidate_buffer_ptr->candidate_ptr->block_has_coeff)
             coeff_rate = (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
-                          (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
-                              ->skip_fac_bits[blk_ptr->skip_coeff_context][0]);
+            (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                ->skip_fac_bits[blk_ptr->skip_coeff_context][0]);
         else
             coeff_rate = MIN((uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
-                                 ->skip_fac_bits[blk_ptr->skip_coeff_context][1],
-                             (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
-                              (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
-                                  ->skip_fac_bits[blk_ptr->skip_coeff_context][0]));
-    } else
+                ->skip_fac_bits[blk_ptr->skip_coeff_context][1],
+                (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
+                (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+                    ->skip_fac_bits[blk_ptr->skip_coeff_context][0]));
+    }
+    else
         coeff_rate = (*y_coeff_bits + *cb_coeff_bits + *cr_coeff_bits +
-                      (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
-                          ->skip_fac_bits[blk_ptr->skip_coeff_context][0]);
+        (uint64_t)candidate_buffer_ptr->candidate_ptr->md_rate_estimation_ptr
+            ->skip_fac_bits[blk_ptr->skip_coeff_context][0]);
 
+#endif
     luma_sse         = y_distortion[0];
     chroma_sse       = cb_distortion[0] + cr_distortion[0];
     total_distortion = luma_sse + chroma_sse;
@@ -1972,7 +2062,10 @@ EbErrorType av1_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
 **********************************************************************************/
 EbErrorType av1_merge_skip_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                                      struct ModeDecisionCandidateBuffer *candidate_buffer_ptr,
-                                     BlkStruct *blk_ptr, uint64_t *y_distortion,
+#if !CLEAN_UP_SB_DATA_4
+                                     BlkStruct *blk_ptr,
+#endif
+                                     uint64_t *y_distortion,
                                      uint64_t *cb_distortion, uint64_t *cr_distortion,
                                      uint64_t lambda, uint64_t *y_coeff_bits,
                                      uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits,
@@ -1982,7 +2075,11 @@ EbErrorType av1_merge_skip_full_cost(PictureControlSet *pcs_ptr, ModeDecisionCon
     UNUSED(pcs_ptr);
 
     EbErrorType return_error  = EB_ErrorNone;
+#if CLEAN_UP_SB_DATA_4
+    uint64_t    skip_mode_ctx = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context;
+#else
     uint64_t    skip_mode_ctx = blk_ptr->skip_flag_context;
+#endif
     uint64_t    merge_rate    = 0;
     uint64_t    skip_rate     = 0;
     // Merge
@@ -2191,7 +2288,9 @@ EbErrorType av1_inter_full_cost(PictureControlSet *pcs_ptr, ModeDecisionContext 
         av1_merge_skip_full_cost(pcs_ptr,
                                  context_ptr,
                                  candidate_buffer_ptr,
+#if !CLEAN_UP_SB_DATA_4
                                  blk_ptr,
+#endif
                                  y_distortion,
                                  cb_distortion,
                                  cr_distortion,
@@ -2255,7 +2354,7 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
         get_neighbor_array_unit_top_index(leaf_partition_neighbor_array, blk_origin_x);
 
     // Intra Luma Neighbor Modes
-
+#if !CLEAN_UP_SB_DATA_7
     blk_ptr->prediction_unit_array->intra_luma_left_mode = (uint32_t)(
         (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index] != INTRA_MODE)
             ? (uint32_t)DC_PRED
@@ -2265,7 +2364,7 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
         (mode_type_neighbor_array->top_array[mode_type_top_neighbor_index] != INTRA_MODE)
             ? (uint32_t)DC_PRED
             : intra_luma_mode_neighbor_array->top_array[intra_luma_mode_top_neighbor_index]);
-
+#endif
     int32_t context_index;
     if (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index] !=
             (uint8_t)INVALID_MODE &&
@@ -2297,24 +2396,62 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
                             : 0;
     else
         context_index = 0;
+#if CLEAN_UP_SB_DATA_4
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].is_inter_ctx = context_index;
+#else
     blk_ptr->is_inter_ctx = context_index;
     //  if(blk_ptr->is_inter_ctx!=0) //
     //      SVT_LOG("ctx:%i \n",blk_ptr->is_inter_ctx);
-
+#endif
     //   Top Intra Mode Neighbor Array instead of a Full
     // Skip Flag Context
+#if CLEAN_UP_SB_DATA_4
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context =
+#else
     blk_ptr->skip_flag_context =
+#endif
         (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index] ==
          (uint8_t)INVALID_MODE)
             ? 0
             : (skip_flag_neighbor_array->left_array[skip_flag_left_neighbor_index] == EB_TRUE) ? 1
                                                                                                : 0;
+#if CLEAN_UP_SB_DATA_4
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_flag_context +=
+#else
     blk_ptr->skip_flag_context +=
+#endif
         (mode_type_neighbor_array->top_array[mode_type_top_neighbor_index] == (uint8_t)INVALID_MODE)
             ? 0
             : (skip_flag_neighbor_array->top_array[skip_flag_top_neighbor_index] == EB_TRUE) ? 1
                                                                                              : 0;
 
+#if CLEAN_UP_SB_DATA_4
+    // Split Flag Context (neighbor info)
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].left_neighbor_mode = (uint32_t)(
+        (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index] != INTRA_MODE)
+        ? (uint32_t)DC_PRED
+        : intra_luma_mode_neighbor_array->left_array[intra_luma_mode_left_neighbor_index]);
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].left_neighbor_depth =
+        leaf_depth_neighbor_array->left_array[leaf_depth_left_neighbor_index];
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].top_neighbor_mode = (uint32_t)(
+        (mode_type_neighbor_array->top_array[mode_type_top_neighbor_index] != INTRA_MODE)
+        ? (uint32_t)DC_PRED
+        : intra_luma_mode_neighbor_array->top_array[intra_luma_mode_top_neighbor_index]);
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].top_neighbor_depth =
+        leaf_depth_neighbor_array->top_array[leaf_depth_top_neighbor_index];
+
+    // Generate Partition context
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].above_neighbor_partition =
+        (((PartitionContext *)
+            leaf_partition_neighbor_array->top_array)[partition_above_neighbor_index]
+            .above == (int8_t)INVALID_NEIGHBOR_DATA)
+        ? 0
+        : ((PartitionContext *)
+            leaf_partition_neighbor_array->top_array)[partition_above_neighbor_index]
+        .above;
+
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].left_neighbor_partition =
+#else
     // Split Flag Context (neighbor info)
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].left_neighbor_mode = (uint32_t)(
         (mode_type_neighbor_array->left_array[mode_type_left_neighbor_index] != INTRA_MODE)
@@ -2340,6 +2477,7 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
                   .above;
 
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].left_neighbor_partition =
+#endif
         (((PartitionContext *)
               leaf_partition_neighbor_array->left_array)[partition_left_neighbor_index]
              .left == (int8_t)INVALID_NEIGHBOR_DATA)
@@ -2352,7 +2490,19 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
         get_neighbor_array_unit_left_index(skip_coeff_neighbor_array, blk_origin_y);
     uint32_t skip_coeff_top_neighbor_index =
         get_neighbor_array_unit_top_index(skip_coeff_neighbor_array, blk_origin_x);
+#if CLEAN_UP_SB_DATA_4
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context =
+        (skip_coeff_neighbor_array->left_array[skip_coeff_left_neighbor_index] ==
+        (uint8_t)INVALID_NEIGHBOR_DATA)
+        ? 0
+        : (skip_coeff_neighbor_array->left_array[skip_coeff_left_neighbor_index]) ? 1 : 0;
 
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].skip_coeff_context +=
+        (skip_coeff_neighbor_array->top_array[skip_coeff_top_neighbor_index] ==
+        (uint8_t)INVALID_NEIGHBOR_DATA)
+        ? 0
+        : (skip_coeff_neighbor_array->top_array[skip_coeff_top_neighbor_index]) ? 1 : 0;
+#else
     blk_ptr->skip_coeff_context =
         (skip_coeff_neighbor_array->left_array[skip_coeff_left_neighbor_index] ==
          (uint8_t)INVALID_NEIGHBOR_DATA)
@@ -2364,13 +2514,22 @@ void coding_loop_context_generation(ModeDecisionContext *context_ptr, BlkStruct 
          (uint8_t)INVALID_NEIGHBOR_DATA)
             ? 0
             : (skip_coeff_neighbor_array->top_array[skip_coeff_top_neighbor_index]) ? 1 : 0;
+#endif
     // Generate reference mode context
+#if CLEAN_UP_SB_DATA_4
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].reference_mode_context =
+        (uint8_t)eb_av1_get_reference_mode_context(
+            blk_origin_x, blk_origin_y, mode_type_neighbor_array, inter_pred_dir_neighbor_array);
 
+    context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].compoud_reference_type_context = (uint8_t)eb_av1_get_comp_reference_type_context(
+        blk_origin_x, blk_origin_y, mode_type_neighbor_array, inter_pred_dir_neighbor_array);
+#else
     blk_ptr->reference_mode_context = (uint8_t)eb_av1_get_reference_mode_context(
         blk_origin_x, blk_origin_y, mode_type_neighbor_array, inter_pred_dir_neighbor_array);
 
     blk_ptr->compoud_reference_type_context = (uint8_t)eb_av1_get_comp_reference_type_context(
         blk_origin_x, blk_origin_y, mode_type_neighbor_array, inter_pred_dir_neighbor_array);
+#endif
 
     //Collect Neighbor ref cout
     av1_collect_neighbors_ref_counts_new(blk_ptr->av1xd);
@@ -2669,17 +2828,28 @@ EbErrorType av1_encode_txb_calc_cost(EncDecContext *context_ptr, uint32_t *count
             y_zero_cbf_cost = RDCOST(lambda, y_zero_cbf_rate, y_zero_cbf_distortion);
         // **Compute Cost
         y_non_zero_cbf_cost = RDCOST(lambda, y_non_zero_cbf_rate, y_non_zero_cbf_distortion);
+#if CLEAN_UP_SB_DATA_8
+        context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].y_has_coeff[txb_index] =
+            ((y_count_non_zero_coeffs != 0) && (y_non_zero_cbf_cost < y_zero_cbf_cost)) ? EB_TRUE
+            : EB_FALSE;
+#else
         blk_ptr->txb_array[txb_index].y_has_coeff =
             ((y_count_non_zero_coeffs != 0) && (y_non_zero_cbf_cost < y_zero_cbf_cost)) ? EB_TRUE
                                                                                         : EB_FALSE;
+#endif
         *y_txb_coeff_bits = (y_non_zero_cbf_cost < y_zero_cbf_cost) ? *y_txb_coeff_bits : 0;
         y_txb_distortion[DIST_CALC_RESIDUAL] = (y_non_zero_cbf_cost < y_zero_cbf_cost)
                                                    ? y_txb_distortion[DIST_CALC_RESIDUAL]
                                                    : y_txb_distortion[DIST_CALC_PREDICTION];
     } else
+#if CLEAN_UP_SB_DATA_8
+        context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].y_has_coeff[txb_index] = EB_FALSE;
+    context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].u_has_coeff[txb_index] = cb_count_non_zero_coeffs != 0 ? EB_TRUE : EB_FALSE;
+    context_ptr->md_context->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].v_has_coeff[txb_index] = cr_count_non_zero_coeffs != 0 ? EB_TRUE : EB_FALSE;
+#else
         blk_ptr->txb_array[txb_index].y_has_coeff = EB_FALSE;
     blk_ptr->txb_array[txb_index].u_has_coeff = cb_count_non_zero_coeffs != 0 ? EB_TRUE : EB_FALSE;
     blk_ptr->txb_array[txb_index].v_has_coeff = cr_count_non_zero_coeffs != 0 ? EB_TRUE : EB_FALSE;
-
+#endif
     return return_error;
 }

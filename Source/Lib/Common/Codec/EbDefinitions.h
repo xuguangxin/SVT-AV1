@@ -76,8 +76,24 @@ extern "C" {
 #define HME_PRUNE_BUG_FIX                 1
 #define RATE_MEM_OPT                      1 //lossless memory optimization of rate estimation
 #define MAR10_ADOPTIONS                   1 // Adoptions for all presets
-
-
+#define CLEAN_UP_SB_DATA     1
+#if CLEAN_UP_SB_DATA
+#define CLEAN_UP_SB_DATA_0   1 // ref_mvs
+#define CLEAN_UP_SB_DATA_1   1
+#define CLEAN_UP_SB_DATA_2   1
+#define CLEAN_UP_SB_DATA_3   1
+#define CLEAN_UP_SB_DATA_4   1 // md only context
+#define CLEAN_UP_SB_DATA_5   1
+#define CLEAN_UP_SB_DATA_6   1
+#define CLEAN_UP_SB_DATA_7   1
+#if CLEAN_UP_SB_DATA_7
+#define CLEAN_UP_SB_DATA_8   1 // tx_depth,  has_coef
+#endif
+#define CLEAN_UP_SB_DATA_9   1 // mdc ??
+#define CLEAN_UP_SB_DATA_10  1
+#define CLEAN_UP_SB_DATA_11  1 // mb
+#define CLEAN_UP_SB_DATA_12  1 // mds index
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

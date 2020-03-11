@@ -112,13 +112,17 @@ typedef struct ModeDecisionCandidate {
     // Inter Mode
     PredictionMode         inter_mode;
     EbBool                 is_compound;
+#if !CLEAN_UP_SB_DATA_7
     uint32_t               pred_mv_weight;
+#endif
     uint8_t                ref_frame_type;
     uint8_t                ref_mv_index;
     int8_t                 ref_frame_index_l0;
     int8_t                 ref_frame_index_l1;
     EbBool                 is_new_mv;
+#if !CLEAN_UP_SB_DATA_7
     EbBool                 is_zero_mv;
+#endif
     TxType                 transform_type[MAX_TXB_COUNT];
     TxType                 transform_type_uv;
     MacroblockPlane        candidate_plane[MAX_MB_PLANE];
@@ -141,7 +145,9 @@ typedef struct ModeDecisionCandidate {
     uint8_t                is_interintra_used;
     uint8_t                use_wedge_interintra;
     int32_t                interintra_wedge_index; //inter_intra wedge index
+#if !CLEAN_UP_SB_DATA_5
     int32_t                ii_wedge_sign; //inter_intra wedge sign=-1
+#endif
 } ModeDecisionCandidate;
 
 /**************************************
@@ -151,14 +157,21 @@ typedef EbErrorType (*EbPredictionFunc)(uint8_t                             hbd_
                                         struct ModeDecisionContext *        context_ptr,
                                         PictureControlSet *                 pcs_ptr,
                                         struct ModeDecisionCandidateBuffer *candidate_buffer_ptr);
-typedef uint64_t (*EbFastCostFunc)(BlkStruct *                  blk_ptr,
+typedef uint64_t (*EbFastCostFunc)(BlkStruct *                   blk_ptr,
                                    struct ModeDecisionCandidate *candidate_buffer, uint32_t qp,
                                    uint64_t luma_distortion, uint64_t chroma_distortion,
                                    uint64_t lambda, EbBool use_ssd, PictureControlSet *pcs_ptr,
                                    CandidateMv *ref_mv_stack, const BlockGeom *blk_geom,
-                                   uint32_t miRow, uint32_t miCol, uint8_t enable_inter_intra,
-                                   EbBool full_cost_shut_fast_rate_flag, uint8_t md_pass,
-                                   uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);
+                                   uint32_t miRow, uint32_t miCol,
+#if CLEAN_UP_SB_DATA_4
+                                   uint8_t reference_mode_context,
+                                   uint8_t compoud_reference_type_context,
+                                   uint32_t is_inter_ctx,
+                                   uint8_t skip_flag_context,
+#endif
+                                   uint8_t enable_inter_intra, EbBool full_cost_shut_fast_rate_flag,
+                                   uint8_t md_pass, uint32_t left_neighbor_mode,
+                                   uint32_t top_neighbor_mode);
 
 typedef EbErrorType (*EB_FULL_COST_FUNC)(
     SuperBlock *sb_ptr, BlkStruct *blk_ptr, uint32_t cu_size, uint32_t cu_size_log2,

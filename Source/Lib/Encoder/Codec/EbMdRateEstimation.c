@@ -21,7 +21,6 @@
 #include "filter.h"
 #include "EbEntropyCoding.h"
 #include "EbBitstreamUnit.h"
-
 static INLINE int32_t get_interinter_wedge_bits(BlockSize sb_type) {
     const int32_t wbits = get_wedge_params_bits(sb_type);
     return (wbits > 0) ? wbits + 1 : 0;

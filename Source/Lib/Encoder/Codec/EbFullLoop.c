@@ -3062,9 +3062,14 @@ uint64_t d1_non_square_block_decision(ModeDecisionContext *context_ptr, uint32_t
          merge_block_flag == EB_FALSE)) {
         //store best partition cost in parent square
         context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost = tot_cost;
+
+#if CLEAN_UP_SB_DATA_1
+        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].best_d1_blk = first_blk_idx;
+#else
+        context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds].best_d1_blk = first_blk_idx;
+#endif
         context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds].part =
             from_shape_to_part[context_ptr->blk_geom->shape];
-        context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds].best_d1_blk = first_blk_idx;
     }
     return tot_cost;
 }
@@ -3131,7 +3136,9 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
         *above_depth_cost = MAX_MODE_COST;
     if (context_ptr->blk_geom->bsize > BLOCK_4X4) {
         if (context_ptr->md_local_blk_unit[curr_depth_blk0_mds].tested_blk_flag)
+
             if (context_ptr->md_blk_arr_nsq[curr_depth_blk0_mds].mdc_split_flag == 0)
+
                 av1_split_flag_rate(pcs_ptr,
                                     context_ptr,
                                     &context_ptr->md_blk_arr_nsq[curr_depth_blk0_mds],
@@ -3143,7 +3150,9 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
                                     scs_ptr->max_sb_depth);
 
         if (context_ptr->md_local_blk_unit[curr_depth_blk1_mds].tested_blk_flag)
+
             if (context_ptr->md_blk_arr_nsq[curr_depth_blk1_mds].mdc_split_flag == 0)
+
                 av1_split_flag_rate(pcs_ptr,
                                     context_ptr,
                                     &context_ptr->md_blk_arr_nsq[curr_depth_blk1_mds],
@@ -3155,7 +3164,9 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
                                     scs_ptr->max_sb_depth);
 
         if (context_ptr->md_local_blk_unit[curr_depth_blk2_mds].tested_blk_flag)
+
             if (context_ptr->md_blk_arr_nsq[curr_depth_blk2_mds].mdc_split_flag == 0)
+
                 av1_split_flag_rate(pcs_ptr,
                                     context_ptr,
                                     &context_ptr->md_blk_arr_nsq[curr_depth_blk2_mds],
@@ -3167,7 +3178,9 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
                                     scs_ptr->max_sb_depth);
 
         if (context_ptr->md_local_blk_unit[curr_depth_blk3_mds].tested_blk_flag)
+
             if (context_ptr->md_blk_arr_nsq[curr_depth_blk3_mds].mdc_split_flag == 0)
+
                 av1_split_flag_rate(pcs_ptr,
                                     context_ptr,
                                     &context_ptr->md_blk_arr_nsq[curr_depth_blk3_mds],
@@ -3273,7 +3286,9 @@ void compute_depth_costs_md_skip(ModeDecisionContext *context_ptr, SequenceContr
         uint64_t curr_non_split_rate_blk = 0;
         if (context_ptr->blk_geom->bsize > BLOCK_4X4) {
             if (context_ptr->md_local_blk_unit[curr_depth_cur_blk_mds].tested_blk_flag)
+
                 if (context_ptr->md_blk_arr_nsq[curr_depth_cur_blk_mds].mdc_split_flag == 0)
+
                     av1_split_flag_rate(pcs_ptr,
                                         context_ptr,
                                         &context_ptr->md_blk_arr_nsq[curr_depth_cur_blk_mds],

@@ -30,7 +30,9 @@ EbErrorType largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t
                                      PictureControlSet *picture_control_set)
 
 {
+#if !CLEAN_UP_SB_DATA_7
     uint32_t                    txb_index;
+#endif
     EbPictureBufferDescInitData coeff_init_data;
 
     larget_coding_unit_ptr->dctor = largest_coding_unit_dctor;
@@ -52,9 +54,13 @@ EbErrorType largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->av1xd, tot_blk_num);
 
     for (cu_i = 0; cu_i < tot_blk_num; ++cu_i) {
+#if !CLEAN_UP_SB_DATA_7
         for (txb_index = 0; txb_index < TRANSFORM_UNIT_MAX_COUNT; ++txb_index)
             larget_coding_unit_ptr->final_blk_arr[cu_i].txb_array[txb_index].txb_index = txb_index;
+#endif
+#if !CLEAN_UP_SB_DATA_9
         larget_coding_unit_ptr->final_blk_arr[cu_i].leaf_index = cu_i;
+#endif
         larget_coding_unit_ptr->final_blk_arr[cu_i].av1xd = larget_coding_unit_ptr->av1xd + cu_i;
     }
 

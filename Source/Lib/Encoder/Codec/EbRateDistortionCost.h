@@ -119,6 +119,12 @@ extern uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *c
                                     uint64_t chroma_distortion, uint64_t lambda, EbBool use_ssd,
                                     PictureControlSet *pcs_ptr, CandidateMv *ref_mv_stack,
                                     const BlockGeom *blk_geom, uint32_t miRow, uint32_t miCol,
+#if CLEAN_UP_SB_DATA_4
+                                    uint8_t reference_mode_context,
+                                    uint8_t compoud_reference_type_context,
+                                    uint32_t is_inter_ctx,
+                                    uint8_t skip_flag_context,
+#endif
                                     uint8_t enable_inter_intra,
                                     EbBool full_cost_shut_fast_rate_flag, uint8_t md_pass,
                                     uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);
@@ -128,6 +134,12 @@ extern uint64_t av1_inter_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *c
                                     uint64_t chroma_distortion, uint64_t lambda, EbBool use_ssd,
                                     PictureControlSet *pcs_ptr, CandidateMv *ref_mv_stack,
                                     const BlockGeom *blk_geom, uint32_t miRow, uint32_t miCol,
+#if CLEAN_UP_SB_DATA_4
+                                    uint8_t reference_mode_context,
+                                    uint8_t compoud_reference_type_context,
+                                    uint32_t is_inter_ctx,
+                                    uint8_t skip_flag_context,
+#endif
                                     uint8_t enable_inter_intra,
                                     EbBool full_cost_shut_fast_rate_flag, uint8_t md_pass,
                                     uint32_t left_neighbor_mode, uint32_t top_neighbor_mode);

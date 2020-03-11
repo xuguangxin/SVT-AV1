@@ -227,9 +227,11 @@ typedef struct MacroBlockPlane {
 typedef struct macroblockd_plane {
     int          subsampling_x;
     int          subsampling_y;
+#if !CLEAN_UP_SB_DATA_11
     struct Buf2D dst;
     struct Buf2D pre[2];
     uint8_t      width, height;
+#endif
 } MACROBLOCKD_PLANE;
 
 typedef struct MacroBlockD {
@@ -298,7 +300,95 @@ typedef struct IntraBcContext {
     CRC_CALCULATOR crc_calculator1;
     CRC_CALCULATOR crc_calculator2;
 } IntraBcContext;
-
+#if CLEAN_UP_SB_DATA
+typedef struct BlkStruct {
+    uint16_t  mds_idx; //equivalent of leaf_index in the nscu context. we will keep both for now and use the right one on a case by case basis.
+    // txb
+    uint8_t tx_depth; // ec
+    TransformUnit          txb_array[TRANSFORM_UNIT_MAX_COUNT]; // ec
+    PredictionUnit         prediction_unit_array[MAX_NUM_OF_PU_PER_CU]; // ec
+    InterInterCompoundData interinter_comp; // ec
+    uint8_t                compound_idx; // ec
+    uint8_t                comp_group_idx; // ec
+#if CLEAN_UP_SB_DATA_4
+    uint8_t                prediction_mode_flag; // ec
+    uint8_t                block_has_coeff; // ec
+#else
+    unsigned               skip_flag_context : 2; // to do
+    unsigned               prediction_mode_flag : 2; // ec
+    unsigned               block_has_coeff : 1; // ec
+    unsigned               split_flag_context : 2; // to do
+#endif
+    uint16_t               qp; // ec
+#if !CLEAN_UP_SB_DATA_2
+    uint16_t               ref_qp;
+    int16_t                delta_qp; // can be signed 8bits
+#endif
+#if CLEAN_UP_SB_DATA_9
+    uint8_t                split_flag;
+    uint8_t                skip_flag; // ec
+    uint8_t                mdc_split_flag; // ?
+#else
+    // Coded Tree
+    struct {
+        unsigned leaf_index : 8;
+        unsigned split_flag : 1;
+        unsigned skip_flag : 1;
+        unsigned mdc_split_flag : 1;
+    };
+#endif
+#if NO_ENCDEC
+    EbPictureBufferDesc *quant_tmp;
+    EbPictureBufferDesc *coeff_tmp;
+    EbPictureBufferDesc *recon_tmp;
+    uint32_t             cand_buff_index;
+#endif
+    MacroBlockD *av1xd;
+    // uint8_t ref_mv_count[MODE_CTX_REF_FRAMES];
+    int16_t inter_mode_ctx[MODE_CTX_REF_FRAMES];// ec
+#if !CLEAN_UP_SB_DATA_0
+    IntMv   ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES]; //used only for nonCompound modes.
+#endif
+    uint8_t drl_index; // ec
+    PredictionMode pred_mode; // ec
+    IntMv          predmv[2]; // ec
+#if !CLEAN_UP_SB_DATA_4
+    uint8_t        skip_coeff_context;
+    uint8_t        reference_mode_context;
+    uint8_t        compoud_reference_type_context;
+    int32_t        quantized_dc[3][MAX_TXB_COUNT];
+    uint32_t       is_inter_ctx;
+#endif
+    uint32_t       interp_filters;// ec
+    uint8_t        segment_id;// ec
+    uint8_t        seg_id_predicted; // valid only when temporal_update is enabled
+    PartitionType  part;
+#if !CLEAN_UP_SB_DATA_2
+    Part           shape;
+#endif
+#if !CLEAN_UP_SB_DATA_3
+    uint8_t *      neigh_left_recon[3]; //only for MD
+    uint8_t *      neigh_top_recon[3];
+    uint16_t *     neigh_left_recon_16bit[3];
+    uint16_t *     neigh_top_recon_16bit[3];
+#endif
+#if !CLEAN_UP_SB_DATA_1
+    uint32_t       best_d1_blk;
+#endif
+    InterIntraMode interintra_mode;// ec
+    uint8_t        is_interintra_used;// ec
+    uint8_t        use_wedge_interintra;// ec
+    int32_t        interintra_wedge_index;// ec
+#if !CLEAN_UP_SB_DATA_5
+    int32_t        ii_wedge_sign;
+#endif
+    uint8_t        filter_intra_mode;// ec
+    PaletteInfo    palette_info; // ec
+#if !CLEAN_UP_SB_DATA_6
+    uint8_t        do_not_process_block;
+#endif
+} BlkStruct;
+#else
 typedef struct BlkStruct {
     TransformUnit          txb_array[TRANSFORM_UNIT_MAX_COUNT]; // 2-bytes * 21 = 42-bytes
     PredictionUnit         prediction_unit_array[MAX_NUM_OF_PU_PER_CU]; // 35-bytes * 4 = 140 bytes
@@ -344,7 +434,7 @@ typedef struct BlkStruct {
     PartitionType  part;
     Part           shape;
     uint16_t
-                   mds_idx; //equivalent of leaf_index in the nscu context. we will keep both for now and use the right one on a case by case basis.
+        mds_idx; //equivalent of leaf_index in the nscu context. we will keep both for now and use the right one on a case by case basis.
     uint8_t *      neigh_left_recon[3]; //only for MD
     uint8_t *      neigh_top_recon[3];
     uint16_t *     neigh_left_recon_16bit[3];
@@ -360,7 +450,7 @@ typedef struct BlkStruct {
     PaletteInfo    palette_info;
     uint8_t        do_not_process_block;
 } BlkStruct;
-
+#endif
 typedef struct OisCandidate {
     union {
         struct {

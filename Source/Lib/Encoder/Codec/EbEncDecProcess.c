@@ -2879,8 +2879,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = 0;
                             e_depth = 0;
                         } else
-
+#if CLEAN_UP_SB_DATA_1
+                            if (context_ptr->md_local_blk_unit[blk_index].best_d1_blk == blk_index) {
+#else
                             if (context_ptr->md_blk_arr_nsq[blk_index].best_d1_blk == blk_index) {
+#endif
                             s_depth = -1;
                             e_depth = 0;
                         } else {

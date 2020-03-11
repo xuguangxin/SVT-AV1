@@ -48,6 +48,22 @@ static void mode_decision_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->full_cost_array);
     EB_FREE_ARRAY(obj->full_cost_skip_ptr);
     EB_FREE_ARRAY(obj->full_cost_merge_ptr);
+
+#if CLEAN_UP_SB_DATA_3
+    if (obj->md_local_blk_unit) {
+        if (obj->hbd_mode_decision > EB_8_BIT_MD) {
+            EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_left_recon_16bit[0]);
+            EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_top_recon_16bit[0]);
+        }
+        if (obj->hbd_mode_decision != EB_10_BIT_MD) {
+            EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_left_recon[0]);
+            EB_FREE_ARRAY(obj->md_local_blk_unit[0].neigh_top_recon[0]);
+        }
+    }
+    if (obj->md_blk_arr_nsq) {
+        EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].av1xd);
+    }
+#else
     if (obj->md_blk_arr_nsq) {
         EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].av1xd);
         if (obj->hbd_mode_decision > EB_8_BIT_MD) {
@@ -59,7 +75,7 @@ static void mode_decision_context_dctor(EbPtr p) {
             EB_FREE_ARRAY(obj->md_blk_arr_nsq[0].neigh_top_recon[0]);
         }
     }
-
+#endif
     EB_FREE_ARRAY(obj->md_local_blk_unit);
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
     EB_FREE_ARRAY(obj->md_ep_pipe_sb);
@@ -150,12 +166,57 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
            context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT);
 
     EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_tx_depth_2->candidate_ptr, 1);
+
+#if CLEAN_UP_SB_DATA_3
+    context_ptr->md_local_blk_unit[0].neigh_left_recon[0] = NULL;
+    context_ptr->md_local_blk_unit[0].neigh_top_recon[0] = NULL;
+    context_ptr->md_local_blk_unit[0].neigh_left_recon_16bit[0] = NULL;
+    context_ptr->md_local_blk_unit[0].neigh_top_recon_16bit[0] = NULL;
+    uint16_t sz = sizeof(uint16_t);
+    if (context_ptr->hbd_mode_decision > EB_8_BIT_MD) {
+        EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_left_recon_16bit[0],
+            BLOCK_MAX_COUNT_SB_128 * 128 * 3 * sz);
+        EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_top_recon_16bit[0],
+            BLOCK_MAX_COUNT_SB_128 * 128 * 3 * sz);
+    }
+    if (context_ptr->hbd_mode_decision != EB_10_BIT_MD) {
+        EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_left_recon[0],
+            BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+        EB_MALLOC_ARRAY(context_ptr->md_local_blk_unit[0].neigh_top_recon[0],
+            BLOCK_MAX_COUNT_SB_128 * 128 * 3);
+    }
+#if CLEAN_UP_SB_DATA_7
+    uint32_t coded_leaf_index;
+#else
+    uint32_t coded_leaf_index, txb_index;
+#endif
+    for (coded_leaf_index = 0; coded_leaf_index < BLOCK_MAX_COUNT_SB_128; ++coded_leaf_index) {
+        for (int i = 0; i < 3; i++) {
+            size_t offset = (coded_leaf_index * 128 * 3 + i * 128) * sz;
+            context_ptr->md_local_blk_unit[coded_leaf_index].neigh_left_recon_16bit[i] =
+                context_ptr->md_local_blk_unit[0].neigh_left_recon_16bit[0] + offset;
+            context_ptr->md_local_blk_unit[coded_leaf_index].neigh_top_recon_16bit[i] =
+                context_ptr->md_local_blk_unit[0].neigh_top_recon_16bit[0] + offset;
+        }
+        for (int i = 0; i < 3; i++) {
+            size_t offset = coded_leaf_index * 128 * 3 + i * 128;
+            context_ptr->md_local_blk_unit[coded_leaf_index].neigh_left_recon[i] =
+                context_ptr->md_local_blk_unit[0].neigh_left_recon[0] + offset;
+            context_ptr->md_local_blk_unit[coded_leaf_index].neigh_top_recon[i] =
+                context_ptr->md_local_blk_unit[0].neigh_top_recon[0] + offset;
+        }
+    }
+#endif
+
     context_ptr->md_blk_arr_nsq[0].av1xd                     = NULL;
+#if !CLEAN_UP_SB_DATA_3
     context_ptr->md_blk_arr_nsq[0].neigh_left_recon[0]       = NULL;
     context_ptr->md_blk_arr_nsq[0].neigh_top_recon[0]        = NULL;
     context_ptr->md_blk_arr_nsq[0].neigh_left_recon_16bit[0] = NULL;
     context_ptr->md_blk_arr_nsq[0].neigh_top_recon_16bit[0]  = NULL;
+#endif
     EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].av1xd, BLOCK_MAX_COUNT_SB_128);
+#if !CLEAN_UP_SB_DATA_3
     uint16_t sz = sizeof(uint16_t);
     if (context_ptr->hbd_mode_decision > EB_8_BIT_MD) {
         EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].neigh_left_recon_16bit[0],
@@ -170,16 +231,21 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
                         BLOCK_MAX_COUNT_SB_128 * 128 * 3);
     }
     uint32_t coded_leaf_index, txb_index;
+#endif
     for (coded_leaf_index = 0; coded_leaf_index < BLOCK_MAX_COUNT_SB_128; ++coded_leaf_index) {
+#if !CLEAN_UP_SB_DATA_7
         for (txb_index = 0; txb_index < TRANSFORM_UNIT_MAX_COUNT; ++txb_index)
             context_ptr->md_blk_arr_nsq[coded_leaf_index].txb_array[txb_index].txb_index =
                 txb_index;
+#endif
+#if !CLEAN_UP_SB_DATA_3
         const BlockGeom *blk_geom = get_blk_geom_mds(coded_leaf_index);
         UNUSED(blk_geom);
+#endif
         context_ptr->md_blk_arr_nsq[coded_leaf_index].av1xd =
             context_ptr->md_blk_arr_nsq[0].av1xd + coded_leaf_index;
         context_ptr->md_blk_arr_nsq[coded_leaf_index].segment_id = 0;
-
+#if !CLEAN_UP_SB_DATA_3
         for (int i = 0; i < 3; i++) {
             size_t offset = (coded_leaf_index * 128 * 3 + i * 128) * sz;
             context_ptr->md_blk_arr_nsq[coded_leaf_index].neigh_left_recon_16bit[i] =
@@ -194,6 +260,7 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
             context_ptr->md_blk_arr_nsq[coded_leaf_index].neigh_top_recon[i] =
                 context_ptr->md_blk_arr_nsq[0].neigh_top_recon[0] + offset;
         }
+#endif
         if (cfg_palette)
             EB_MALLOC_ARRAY(
                 context_ptr->md_blk_arr_nsq[coded_leaf_index].palette_info.color_idx_map,
