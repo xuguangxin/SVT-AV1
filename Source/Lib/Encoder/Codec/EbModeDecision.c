@@ -5673,11 +5673,13 @@ EbErrorType generate_md_stage_0_cand(
                     context_ptr->md_stage_0_count[CAND_CLASS_4]++;
 
                 }
+#if !REMOVE_COMBINE_CLASS12
                 else
                 if (context_ptr->combine_class12) {
                     cand_ptr->cand_class = CAND_CLASS_1;
                     context_ptr->md_stage_0_count[CAND_CLASS_1]++;
                 }
+#endif
                 else {
                     if (cand_ptr->is_new_mv) {
                         // ME pred

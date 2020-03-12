@@ -96,6 +96,8 @@ extern "C" {
 #endif
 #define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
 #define DEPTH_PART_CLEAN_UP  1 // sb_128x128 if NSC, sb_64x64 if SC, and multi-pass PD till M8
+#define REMOVE_COMBINE_CLASS12  1 // remove code associated with combine_class12 feature
+#define REMOVE_OLD_NICS         1 // Remove code for old NICS levels
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

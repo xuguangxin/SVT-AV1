@@ -1458,6 +1458,9 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #define NIC_S4_5 5
 #define NIC_C4 6
 
+#if REMOVE_OLD_NICS
+        uint8_t nics_level = NIC_C4;
+#else
 #if MAR10_ADOPTIONS
         uint8_t nics_level = NIC_C4;
 #else
@@ -1471,7 +1474,8 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         nics_level = NIC_S4_5;
 #endif
 #endif
-
+#endif
+#if !REMOVE_OLD_NICS
         if (nics_level == NIC_S_OLD) {
             // Step 2: set md_stage count
             context_ptr->md_stage_1_count[CAND_CLASS_0] =
@@ -1504,13 +1508,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             context_ptr->md_stage_1_count[CAND_CLASS_7] = 12;
             context_ptr->md_stage_1_count[CAND_CLASS_8] =
                 (pcs_ptr->temporal_layer_index == 0) ? 5 : 4;
-
+#if !REMOVE_COMBINE_CLASS12
             // DONT CARE
             if (context_ptr->combine_class12) {
                 context_ptr->md_stage_1_count[CAND_CLASS_1] =
                     context_ptr->md_stage_1_count[CAND_CLASS_1] * 2;
             }
-
+#endif
             if (pcs_ptr->enc_mode >= ENC_M3) {
                 context_ptr->md_stage_1_count[CAND_CLASS_1] =
                     context_ptr->md_stage_1_count[CAND_CLASS_1] / 2;
@@ -1587,13 +1591,14 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 (pcs_ptr->temporal_layer_index == 0)
                     ? 4
                     : (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 3 : 2;
-
+#if !REMOVE_COMBINE_CLASS12
             // DONT CARE
             if (context_ptr->combine_class12) {
                 context_ptr->md_stage_2_count[CAND_CLASS_1] =
                     context_ptr->md_stage_2_count[CAND_CLASS_1] * 2;
             }
             /////
+#endif
             if (!context_ptr->combine_class12 && pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                 pcs_ptr->enc_mode == ENC_M0) {
                 context_ptr->md_stage_2_count[CAND_CLASS_0] =
@@ -1613,7 +1618,9 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                         ? 0
                         : (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 12 : 6;
             }
-        } else if (nics_level == NIC_C4) { // C4
+        } else
+#endif
+        if (nics_level == NIC_C4) { // C4
             // Step 2: set md_stage count
             context_ptr->md_stage_1_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
@@ -1652,11 +1659,12 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     ? 8
                     : (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 6 : 4;
 
+#if !REMOVE_COMBINE_CLASS12
             if (context_ptr->combine_class12) {
                 context_ptr->md_stage_1_count[CAND_CLASS_1] =
                     context_ptr->md_stage_1_count[CAND_CLASS_1] * 2;
             }
-
+#endif
             context_ptr->md_stage_2_count[CAND_CLASS_0] =
                 (pcs_ptr->slice_type == I_SLICE)
                     ? 32
@@ -1693,12 +1701,12 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 (pcs_ptr->slice_type == I_SLICE)
                     ? 6
                     : (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 2;
-
+#if !REMOVE_COMBINE_CLASS12
             if (context_ptr->combine_class12) {
                 context_ptr->md_stage_2_count[CAND_CLASS_1] =
                     context_ptr->md_stage_2_count[CAND_CLASS_1] * 2;
             }
-
+#endif
             ////MULT
 #if MAR10_ADOPTIONS
             if ((pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
@@ -1938,7 +1946,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
             }
         }
-
+#if !REMOVE_OLD_NICS
         else if (nics_level == NIC_S8) { // S8
             // Step 2: set md_stage count
             context_ptr->md_stage_1_count[CAND_CLASS_0] =
@@ -2824,6 +2832,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
         }
 #endif
+#endif
         // Set md_stage_3 NICs
 
         context_ptr->md_stage_3_count[CAND_CLASS_0] =
@@ -2909,12 +2918,13 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     context_ptr->md_stage_3_count[CAND_CLASS_8] = context_ptr->bypass_md_stage_2[CAND_CLASS_8]
                                                       ? context_ptr->md_stage_2_count[CAND_CLASS_8]
                                                       : context_ptr->md_stage_3_count[CAND_CLASS_8];
-
+#if !REMOVE_COMBINE_CLASS12
     // Step 4: zero-out count for CAND_CLASS_3 if CAND_CLASS_1 and CAND_CLASS_2
     // are merged (i.e. shift to the left)
     if (context_ptr->combine_class12)
         context_ptr->md_stage_1_count[CAND_CLASS_3] = context_ptr->md_stage_2_count[CAND_CLASS_3] =
             0;
+#endif
 }
 void sort_fast_cost_based_candidates(
     struct ModeDecisionContext *context_ptr, uint32_t input_buffer_start_idx,

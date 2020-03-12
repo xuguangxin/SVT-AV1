@@ -343,8 +343,9 @@ typedef struct ModeDecisionContext {
     uint32_t md_stage_3_total_intra_count;
     uint64_t best_intra_cost;
     uint64_t best_inter_cost;
+#if !REMOVE_COMBINE_CLASS12
     uint8_t combine_class12; // 1:class1 and 2 are combined.
-
+#endif
     CandClass target_class;
 
     // fast_loop_core signals

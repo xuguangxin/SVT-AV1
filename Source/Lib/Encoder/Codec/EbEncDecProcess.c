@@ -1822,6 +1822,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_staging_count_level = 2;
     }
 
+#if !REMOVE_COMBINE_CLASS12
     // Combine MD Class1&2
     // 0                    OFF
     // 1                    ON
@@ -1834,7 +1835,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->combine_class12 = (pcs_ptr->enc_mode <= ENC_M4) ? 0 : 1;
     else
         context_ptr->combine_class12 = sequence_control_set_ptr->static_config.combine_class_12;
-
+#endif
     // Set interpolation filter search blk size
     // Level                Settings
     // 0                    ON for 8x8 and above

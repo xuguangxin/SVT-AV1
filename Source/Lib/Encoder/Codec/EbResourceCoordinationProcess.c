@@ -203,7 +203,11 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
     scs_ptr->seq_header.enable_cdef = 0;
 #endif
 #if MAR2_M7_ADOPTIONS
+#if MAR10_ADOPTIONS
+    scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M8) ? 0 : 1;
+#else
     scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M7) ? 0 : 1;
+#endif
 #else
     scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M6) ? 0 : 1;
 #endif
