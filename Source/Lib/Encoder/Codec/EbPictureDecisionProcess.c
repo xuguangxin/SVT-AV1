@@ -1098,9 +1098,6 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
-#if MAR12_M8_ADOPTIONS
-        pcs_ptr->cdef_filter_mode = 5;
-#else
 #if MAR10_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
             pcs_ptr->cdef_filter_mode = 5;
@@ -1110,7 +1107,6 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->cdef_filter_mode = 5;
         else
             pcs_ptr->cdef_filter_mode = 2;
-#endif
     }
     else
         pcs_ptr->cdef_filter_mode = 0;
@@ -1157,6 +1153,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 2                                            5-Tap luma/ 5-Tap chroma
     // 3                                            7-Tap luma/ 5-Tap chroma
     if (sc_content_detected)
+#if MAR12_M8_ADOPTIONS
+        cm->wn_filter_mode = 3;
+#else
 #if MAR3_M6_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M6)
 #else
@@ -1165,6 +1164,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             cm->wn_filter_mode = 3;
         else
             cm->wn_filter_mode = 0;
+#endif
     else
         if (pcs_ptr->enc_mode <= ENC_M5)
             cm->wn_filter_mode = 3;
