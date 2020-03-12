@@ -279,10 +279,12 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is -1. */
     int enable_smooth;
 
+#if !REMOVE_COMBINE_CLASS12
     /* combine class 12
     *
     * Default is -1. */
     int combine_class_12;
+#endif
 
     /* motion field motion vector
     *

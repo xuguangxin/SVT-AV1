@@ -2107,8 +2107,10 @@ void copy_api_from_app(
     scs_ptr->static_config.sg_filter_mode = ((EbSvtAv1EncConfiguration*)config_struct)->sg_filter_mode;
     scs_ptr->static_config.wn_filter_mode = ((EbSvtAv1EncConfiguration*)config_struct)->wn_filter_mode;
 
+#if !REMOVE_COMBINE_CLASS12
     //combine class 12
     scs_ptr->static_config.combine_class_12             = ((EbSvtAv1EncConfiguration*)config_struct)->combine_class_12;
+#endif
     // edge skip angle intra
     scs_ptr->static_config.edge_skp_angle_intra         = ((EbSvtAv1EncConfiguration*)config_struct)->edge_skp_angle_intra;
     // intra angle delta
@@ -2764,10 +2766,12 @@ static EbErrorType verify_settings(
       return_error = EB_ErrorBadParameter;
     }
 
+#if !REMOVE_COMBINE_CLASS12
     if (config->combine_class_12 != 0 && config->combine_class_12 != 1 && config->combine_class_12 != -1) {
       SVT_LOG("Error instance %u: Invalid combine MD Class1&2 flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->combine_class_12);
       return_error = EB_ErrorBadParameter;
     }
+#endif
 
     if (config->edge_skp_angle_intra != 0 && config->edge_skp_angle_intra != 1 && config->edge_skp_angle_intra != -1) {
       SVT_LOG("Error instance %u: Invalid Enable skip angle intra based on edge flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->edge_skp_angle_intra);
@@ -2973,7 +2977,9 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->wn_filter_mode = DEFAULT;
     config_ptr->edge_skp_angle_intra = DEFAULT;
     config_ptr->intra_angle_delta = DEFAULT;
+#if !REMOVE_COMBINE_CLASS12
     config_ptr->combine_class_12 = DEFAULT;
+#endif
     config_ptr->inter_intra_compound = DEFAULT;
     config_ptr->enable_paeth = DEFAULT;
     config_ptr->enable_smooth = DEFAULT;

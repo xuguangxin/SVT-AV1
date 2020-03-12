@@ -1728,6 +1728,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     if (pcs_ptr->enc_mode <= ENC_M0)
 #endif
                         context_ptr->predictive_me_level = 6;
+#if MAR12_M8_ADOPTIONS
+                    else
+                        context_ptr->predictive_me_level = 5;
+#else
 #if MAR4_M6_ADOPTIONS
                     else if (pcs_ptr->enc_mode <= ENC_M5)
 #else
@@ -1746,6 +1750,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 2;
                     else
                         context_ptr->predictive_me_level = 0;
+#endif
 
             }
             else

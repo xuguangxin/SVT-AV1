@@ -332,6 +332,22 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
 
+#if ADD_ME_SIGNAL_FOR_PRUNING_TH
+    if (enc_mode <= ENC_M7)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+    else
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
+
+    if (enc_mode <= ENC_M7)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 30;
+    else
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 15;
+#endif
+
+#if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
+    context_ptr->me_context_ptr->max_hme_sr_area_multipler = 3;
+#endif
+
     return return_error;
 };
 
@@ -549,6 +565,21 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     // 3: me nsq_search off.
     context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
 
+#if ADD_ME_SIGNAL_FOR_PRUNING_TH
+    if (enc_mode <= ENC_M7)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+    else
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
+
+    if (enc_mode <= ENC_M7)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 30;
+    else
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 15;
+#endif
+
+#if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
+    context_ptr->me_context_ptr->max_hme_sr_area_multipler = 3;
+#endif
     return return_error;
 };
 static void motion_estimation_context_dctor(EbPtr p) {

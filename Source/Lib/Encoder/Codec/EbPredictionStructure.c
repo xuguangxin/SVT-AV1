@@ -1990,6 +1990,9 @@ EbErrorType prediction_structure_group_ctor(PredictionStructureGroup *pred_struc
     uint32_t number_of_references;
 
     pred_struct_group_ptr->dctor = prediction_structure_group_dctor;
+#if MAR12_M8_ADOPTIONS
+    uint8_t ref_count_used = MAX_REF_IDX;
+#else
     uint8_t ref_count_used;
     if (config->screen_content_mode == 1)
 #if MAR11_ADOPTIONS
@@ -2006,6 +2009,7 @@ EbErrorType prediction_structure_group_ctor(PredictionStructureGroup *pred_struc
 #endif
 #else
         ref_count_used = enc_mode <= ENC_M1 ? MAX_REF_IDX : enc_mode <= ENC_M2 ? 2 : 1;
+#endif
 #endif
 
     // Insert manual prediction structure into array

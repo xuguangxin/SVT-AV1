@@ -98,6 +98,9 @@ extern "C" {
 #define DEPTH_PART_CLEAN_UP  1 // sb_128x128 if NSC, sb_64x64 if SC, and multi-pass PD till M8
 #define REMOVE_COMBINE_CLASS12  1 // remove code associated with combine_class12 feature
 #define REMOVE_OLD_NICS         1 // Remove code for old NICS levels
+#define ADD_ME_SIGNAL_FOR_PRUNING_TH    1 // Add signals for mode-dependent ME thresholds
+#define ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL   1 // Add ME signal for the max HME search area multiplier
+#define MAR12_M8_ADOPTIONS                  1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

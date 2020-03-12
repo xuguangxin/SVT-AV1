@@ -1098,6 +1098,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
+#if MAR12_M8_ADOPTIONS
+        pcs_ptr->cdef_filter_mode = 5;
+#else
 #if MAR10_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
             pcs_ptr->cdef_filter_mode = 5;
@@ -1107,6 +1110,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->cdef_filter_mode = 5;
         else
             pcs_ptr->cdef_filter_mode = 2;
+#endif
     }
     else
         pcs_ptr->cdef_filter_mode = 0;
@@ -1119,10 +1123,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     Av1Common *cm = pcs_ptr->av1_cm;
     if (sc_content_detected)
+#if MAR12_M8_ADOPTIONS
+        cm->sg_filter_mode = 4;
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
             cm->sg_filter_mode = 4;
         else
             cm->sg_filter_mode = 0;
+#endif
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1133,10 +1141,15 @@ EbErrorType signal_derivation_multi_processes_oq(
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
         cm->sg_filter_mode = 4;
+#if MAR12_M8_ADOPTIONS
+    else
+        cm->sg_filter_mode = 3;
+#else
     else if (pcs_ptr->enc_mode <= ENC_M6)
         cm->sg_filter_mode = 3;
     else
         cm->sg_filter_mode = 1;
+#endif
 
     // WN Level                                     Settings
     // 0                                            OFF
@@ -1155,10 +1168,15 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         if (pcs_ptr->enc_mode <= ENC_M5)
             cm->wn_filter_mode = 3;
+#if MAR12_M8_ADOPTIONS
+        else
+            cm->wn_filter_mode = 2;
+#else
         else if (pcs_ptr->enc_mode <= ENC_M7)
             cm->wn_filter_mode = 2;
         else
             cm->wn_filter_mode = 0;
+#endif
 
     // Intra prediction modes                       Settings
     // 0                                            FULL

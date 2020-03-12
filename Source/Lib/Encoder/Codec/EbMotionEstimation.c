@@ -10013,12 +10013,18 @@ void prune_references_fp(
             }
         }
     }
+#if !ADD_ME_SIGNAL_FOR_PRUNING_TH
     uint8_t  BIGGER_THAN_TH = 30;
+#endif
     uint64_t best = sorted[0][0].hme_sad;//is this always the best?
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++){
+#if ADD_ME_SIGNAL_FOR_PRUNING_TH
+            if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp * best))
+#else
            // uint32_t dev = ((context_ptr->hme_results[li][ri].hme_sad - best) * 100) / best;
             if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100  > BIGGER_THAN_TH*best)
+#endif
                 context_ptr->hme_results[li][ri].do_ref = 0;
             if (context_ptr->half_pel_mode == SWITCHABLE_HP_MODE)
                 if (context_ptr->hme_results[li][ri].hme_sad > sorted[0][1].hme_sad)
@@ -10185,7 +10191,11 @@ void hme_level0_sb(
                         int8_t round_up = ((dist%8) == 0) ? 0 : 1;
                         uint16_t exp = pcs_ptr->sc_content_detected ? 4 : 5;
                         dist = ((dist * exp) / 8) + round_up;
+#if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
+                        dist = MIN(context_ptr->max_hme_sr_area_multipler, dist);
+#else
                         dist = MIN(7,dist);
+#endif
                         hme_sr_factor_x = dist * 100;
                         hme_sr_factor_y = dist * 100;
 #endif
@@ -11450,13 +11460,19 @@ void prune_references(
             }
         }
     }
+#if !ADD_ME_SIGNAL_FOR_PRUNING_TH
     uint8_t  BIGGER_THAN_TH = 80;
+#endif
     uint64_t best = sorted[0][0].hme_sad;//is this always the best?
     uint64_t REDUCE_SR_TH = 6000;
     int16_t  displacement_th = 4;
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++){
+#if ADD_ME_SIGNAL_FOR_PRUNING_TH
+            if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th * best))
+#else
             if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100  > BIGGER_THAN_TH*best)
+#endif
                 context_ptr->hme_results[li][ri].do_ref = 0;
             if (context_ptr->hme_results[li][ri].hme_sad < REDUCE_SR_TH)
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
