@@ -95,6 +95,7 @@ extern "C" {
 #define CLEAN_UP_SB_DATA_12  1 // mds index
 #endif
 #define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
+#define DEPTH_PART_CLEAN_UP  1 // sb_128x128 if NSC, sb_64x64 if SC, and multi-pass PD till M8
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

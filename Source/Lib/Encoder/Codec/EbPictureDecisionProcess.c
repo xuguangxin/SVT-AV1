@@ -839,6 +839,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (pcs_ptr->enc_mode <= ENC_M2)
 #endif
             pcs_ptr->pic_depth_mode = PIC_ALL_DEPTH_MODE;
+#if DEPTH_PART_CLEAN_UP
+        else
+            // Use a single-stage PD if I_SLICE
+            pcs_ptr->pic_depth_mode =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? PIC_ALL_DEPTH_MODE
+            : PIC_MULTI_PASS_PD_MODE_2;
+#else
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M8)
 #else
@@ -850,6 +858,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
         else
             pcs_ptr->pic_depth_mode = PIC_SQ_NON4_DEPTH_MODE;
+#endif
     else if (MR_MODE)
         pcs_ptr->pic_depth_mode =
         (pcs_ptr->slice_type == I_SLICE)
@@ -867,6 +876,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         : pcs_ptr->hierarchical_levels < 3
         ? PIC_MULTI_PASS_PD_MODE_0
         : PIC_MULTI_PASS_PD_MODE_1;
+#if DEPTH_PART_CLEAN_UP
+    else
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->pic_depth_mode =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? PIC_ALL_DEPTH_MODE
+        : PIC_MULTI_PASS_PD_MODE_2;
+#else
 #if MAR2_M7_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M5)
 #else
@@ -886,6 +903,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->pic_depth_mode = PIC_SB_SWITCH_DEPTH_MODE;
 #endif
+#endif
     if (pcs_ptr->pic_depth_mode < PIC_SQ_DEPTH_MODE)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
 
@@ -894,6 +912,9 @@ EbErrorType signal_derivation_multi_processes_oq(
         ? MAX_ME_PU_COUNT
         : SQUARE_PU_COUNT;
 
+#if DEPTH_PART_CLEAN_UP
+    pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
+#else
     // NSQ search Level                               Settings
     // NSQ_SEARCH_OFF                                 OFF
     // NSQ_SEARCH_LEVEL1                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 1 NSQ SHAPE
@@ -964,7 +985,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         printf("nsq_search_level is not supported\n");
         break;
     }
-
+#endif
     if (pcs_ptr->nsq_search_level == NSQ_SEARCH_OFF)
         if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)
             pcs_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;

@@ -1935,13 +1935,21 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     else
 #if MAR10_ADOPTIONS
         if (scs_ptr->static_config.screen_content_mode == 1)
+#if DEPTH_PART_CLEAN_UP
+            scs_ptr->static_config.super_block_size = 64;
+#else
 #if MAR11_ADOPTIONS
             scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M1) ? 128 : 64;
 #else
             scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
 #endif
+#endif
         else
+#if DEPTH_PART_CLEAN_UP
+            scs_ptr->static_config.super_block_size = 128;
+#else
             scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 128 : 64;
+#endif
 #else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
 #endif
