@@ -102,6 +102,7 @@ extern "C" {
 #define ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL   1 // Add ME signal for the max HME search area multiplier
 #define MAR12_M8_ADOPTIONS                  1
 #define MAR12_ADOPTIONS                     1 // Adoptions for all modes
+#define REMOVED_MEM_OPT_CDF 1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -2829,6 +2830,25 @@ typedef enum EbSaoMode
 
 // Multi-Pass Partitioning Depth(Multi - Pass PD) performs multiple PD stages for the same SB towards 1 final Partitioning Structure
 // As we go from PDn to PDn + 1, the prediction accuracy of the MD feature(s) increases while the number of block(s) decreases
+#if DEPTH_PART_CLEAN_UP
+typedef enum MultiPassPdLevel
+{
+    MULTI_PASS_PD_OFF = 0, // Multi-Pass PD OFF = 1-single PD Pass (e.g. I_SLICE, SC)
+    MULTI_PASS_PD_LEVEL_0 = 1, // Multi-Pass PD Mode 0: PD0 | PD0_REFINEMENT
+    MULTI_PASS_PD_LEVEL_1 = 2, // Multi-Pass PD Mode 1: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ only
+    MULTI_PASS_PD_LEVEL_2 = 3, // Multi-Pass PD Mode 2: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ and SQ coeff info
+    MULTI_PASS_PD_LEVEL_3 = 4, // Multi-Pass PD Mode 3: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ and both SQ and NSQ coeff info
+    MULTI_PASS_PD_INVALID = 5, // Invalid Multi-Pass PD Mode
+} MultiPassPdLevel;
+
+typedef enum AdpLevel
+{
+    ADP_OFF = 0, // All SBs use the same Multi-Pass PD level
+    ADP_LEVEL_1 = 1, // read @ ADP budget derivation (e.g. high budget_boost)
+    ADP_LEVEL_2 = 2, // read @ ADP budget derivation (e.g. moderate budget_boost)
+    ADP_LEVEL_3 = 3, // read @ ADP budget derivation (e.g. low budget_boost)
+} AdpLevel;
+#else
 typedef enum EbPictureDepthMode
 {
     PIC_MULTI_PASS_PD_MODE_0    = 0, // Multi-Pass PD Mode 0: PD0 | PD0_REFINEMENT
@@ -2846,7 +2866,7 @@ typedef enum EbPictureDepthMode
     PIC_SB_SWITCH_DEPTH_MODE    = 9  // Adaptive Depth Partitioning
 #endif
 } EbPictureDepthMode;
-
+#endif
 #define EB_SB_DEPTH_MODE              uint8_t
 #define SB_SQ_BLOCKS_DEPTH_MODE             1
 #define SB_SQ_NON4_BLOCKS_DEPTH_MODE        2

@@ -4143,7 +4143,11 @@ void half_pel_refinement_sb(
     perform_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 2 && ref_pic_index) ? 0: perform_nsq_flag;
     perform_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 3 ) ? 0 : perform_nsq_flag;
     if(perform_nsq_flag){
+#if DEPTH_PART_CLEAN_UP // disallow_nsq
+    if (!pcs_ptr->disallow_nsq) {
+#else
     if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
+#endif
         // 64x32
         for (pu_index = 0; pu_index < 2; ++pu_index) {
             block_index_shift_x = 0;
@@ -5439,7 +5443,11 @@ void half_pel_search_sb(SequenceControlSet *scs_ptr, // input parameter, Sequenc
                 &context_ptr->psub_pel_direction8x8[idx]);
         }
     }
+#if DEPTH_PART_CLEAN_UP // disallow_nsq
+    if (!pcs_ptr->disallow_nsq) {
+#else
     if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
+#endif
         // 64x32
         for (pu_index = 0; pu_index < 2; ++pu_index) {
             pu_shift_x_index = 0;
@@ -9735,7 +9743,11 @@ void integer_search_sb(
                 (int16_t)(ref_pic_ptr->origin_y + sb_origin_y) + y_search_area_origin;
             search_region_index =
                 x_top_left_search_region + y_top_left_search_region * ref_pic_ptr->stride_y;
+#if DEPTH_PART_CLEAN_UP // disallow_nsq
+            if (!pcs_ptr->disallow_nsq) {
+#else
             if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
+#endif
                 initialize_buffer_32bits(
                             context_ptr->p_sb_best_sad[list_index][ref_pic_index],
                             52,
@@ -11647,8 +11659,11 @@ EbErrorType motion_estimate_sb(
                            //we can also make the ME small and shut subpel
             {
                 {
+#if DEPTH_PART_CLEAN_UP // disallow_nsq
+                    if (!pcs_ptr->disallow_nsq) {
+#else
                     if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
-
+#endif
                         context_ptr->p_best_sad_64x64 = &(
                             context_ptr
                                 ->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
@@ -12014,7 +12029,11 @@ EbErrorType motion_estimate_sb(
                             enable_half_pel_16x16,
                             enable_half_pel_8x8,
                             enable_quarter_pel,
+#if DEPTH_PART_CLEAN_UP // disallow_nsq
+                            !pcs_ptr->disallow_nsq);
+#else
                             pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE);
+#endif
                     }
                 }
             }

@@ -1969,6 +1969,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     //0: MRP Mode 0 (4,3)
     //1: MRP Mode 1 (2,2)
 #if MAR2_M8_ADOPTIONS
+    // Memory Footprint reduction tool ONLY if no MRP (should be controlled using an API signal and not f(enc_mode))
     scs_ptr->mrp_mode = 0;
 #else
     scs_ptr->mrp_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M7) ? 0 : 1;
@@ -1977,7 +1978,8 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     //1: OFF
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
-    scs_ptr->cdf_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 0 : 1;
+    // Memory Footprint reduction tool ONLY if no CDF (should be controlled using an API signal and not f(enc_mode))
+    scs_ptr->cdf_mode = 0;
 #else
     scs_ptr->cdf_mode = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M7) ? 0 : 1;
 #endif
@@ -1988,7 +1990,8 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     //0: NSQ absent
     //1: NSQ present
 #if MAR10_ADOPTIONS
-    scs_ptr->nsq_present = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M8) ? 1 : 0;
+        // Memory Footprint reduction tool ONLY if no NSQ (should be controlled using an API signal and not f(enc_mode))
+    scs_ptr->nsq_present = 1;
 #else
     scs_ptr->nsq_present = (uint8_t)(scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
 #endif

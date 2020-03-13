@@ -77,6 +77,7 @@ static void mode_decision_context_dctor(EbPtr p) {
     }
 #endif
     EB_FREE_ARRAY(obj->md_local_blk_unit);
+
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
     EB_FREE_ARRAY(obj->md_ep_pipe_sb);
 }

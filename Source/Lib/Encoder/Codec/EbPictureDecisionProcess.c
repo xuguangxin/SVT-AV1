@@ -831,6 +831,71 @@ EbErrorType signal_derivation_multi_processes_oq(
         [scs_ptr->input_resolution]
     [enc_mode_hme];
 
+
+#if DEPTH_PART_CLEAN_UP
+    // Set Adp level
+    pcs_ptr->adp_level = ADP_OFF;
+
+    // Set the Multi-Pass PD level
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M4)
+            pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+        else
+            // Use a single-stage PD if I_SLICE
+            pcs_ptr->multi_pass_pd_level =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? MULTI_PASS_PD_OFF
+            : MULTI_PASS_PD_LEVEL_2;
+    else if (MR_MODE)
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : MULTI_PASS_PD_LEVEL_0;
+    else if (pcs_ptr->enc_mode <= ENC_M5)
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : pcs_ptr->hierarchical_levels < 3
+        ? MULTI_PASS_PD_LEVEL_0
+        : MULTI_PASS_PD_LEVEL_1;
+    else
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : MULTI_PASS_PD_LEVEL_2;
+    // If ADP then set multi_pass_pd_level to INVALID
+    if(pcs_ptr->adp_level != ADP_OFF)
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
+    
+
+    // Set disallow_nsq
+    pcs_ptr->disallow_nsq = EB_FALSE;
+    if (!pcs_ptr->disallow_nsq)
+        assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
+    pcs_ptr->max_number_of_pus_per_sb =
+        pcs_ptr->disallow_nsq
+        ? SQUARE_PU_COUNT 
+        : MAX_ME_PU_COUNT;
+    // If disallow_nsq then shut ADP, and shut Multi-Pass PD
+    if (pcs_ptr->disallow_nsq) {
+        pcs_ptr->adp_level = ADP_OFF;
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+    }
+
+    // Set sb_64x64_simulated
+    pcs_ptr->sb_64x64_simulated = EB_FALSE;
+
+    // Set disallow_4x4
+    pcs_ptr->disallow_4x4 = EB_FALSE;
+
+    // Set disallow_all_nsq_blocks_below_8x8
+    pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
+
+    // Set disallow_all_nsq_blocks_below_16x16
+     pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_FALSE;
+#else
     // Set pic_depth_mode
     if (sc_content_detected)
 #if MAR10_ADOPTIONS
@@ -911,10 +976,8 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)
         ? MAX_ME_PU_COUNT
         : SQUARE_PU_COUNT;
-
-#if DEPTH_PART_CLEAN_UP
-    pcs_ptr->nsq_search_level = NSQ_SEARCH_LEVEL6;
-#else
+#endif
+#if !DEPTH_PART_CLEAN_UP
     // NSQ search Level                               Settings
     // NSQ_SEARCH_OFF                                 OFF
     // NSQ_SEARCH_LEVEL1                              Allow only NSQ Inter-NEAREST/NEAR/GLOBAL if parent SQ has no coeff + reordering nsq_table number and testing only 1 NSQ SHAPE
@@ -985,13 +1048,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         printf("nsq_search_level is not supported\n");
         break;
     }
-#endif
+
     if (pcs_ptr->nsq_search_level == NSQ_SEARCH_OFF)
         if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE)
             pcs_ptr->pic_depth_mode = PIC_SQ_DEPTH_MODE;
     if (pcs_ptr->pic_depth_mode > PIC_SQ_DEPTH_MODE)
         assert(pcs_ptr->nsq_search_level == NSQ_SEARCH_OFF);
-
+#endif
     // Loop filter Level                            Settings
     // 0                                            OFF
     // 1                                            CU-BASED

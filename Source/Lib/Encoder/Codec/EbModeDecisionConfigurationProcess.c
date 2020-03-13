@@ -503,6 +503,7 @@ void perform_early_sb_partitionning_sb(ModeDecisionConfigurationContext *context
     early_mode_decision_sb(scs_ptr, pcs_ptr, sb_ptr, sb_index, context_ptr);
 }
 #endif
+#if !DEPTH_PART_CLEAN_UP
 void forward_all_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
     uint32_t sb_index;
     EbBool   split_flag;
@@ -638,7 +639,7 @@ void sb_forward_sq_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *
     }
     pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
 }
-
+#endif
 /******************************************************
 * Derive MD parameters
 ******************************************************/
@@ -1095,9 +1096,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #else
             (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
 #endif
+#if !REMOVED_MEM_OPT_CDF
     if (pcs_ptr->update_cdf)
         assert(scs_ptr->cdf_mode == 0 && "use cdf_mode 0");
-
+#endif
     // Filter INTRA
     if (scs_ptr->seq_header.enable_filter_intra)
         pcs_ptr->pic_filter_intra_mode = 1;
@@ -1204,7 +1206,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     pcs_ptr->hbd_mode_decision = scs_ptr->static_config.enable_hbd_mode_decision;
     return return_error;
 }
-
+#if !DEPTH_PART_CLEAN_UP
 void forward_sq_non4_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
     uint32_t sb_index;
     EbBool   split_flag;
@@ -1343,6 +1345,7 @@ void forward_all_c_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *
 
     pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
 }
+#endif
 void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type);
 
 static INLINE int get_relative_dist(const OrderHintInfo *oh, int a, int b) {
@@ -1684,9 +1687,14 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         // Initial Rate Estimation of the quantized coefficients
         av1_estimate_coefficients_rate(md_rate_estimation_array,
                                        pcs_ptr->coeff_est_entropy_coder_ptr->fc);
-        if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_DEPTH_MODE) {
-            derive_sb_md_mode(scs_ptr, pcs_ptr, context_ptr);
 
+#if DEPTH_PART_CLEAN_UP
+        if (pcs_ptr->parent_pcs_ptr->adp_level != ADP_OFF)
+#else
+        if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_DEPTH_MODE) {
+#endif
+            derive_sb_md_mode(scs_ptr, pcs_ptr, context_ptr);
+#if !DEPTH_PART_CLEAN_UP
             for (int sb_index = 0; sb_index < pcs_ptr->sb_total_count; ++sb_index) {
                 if (pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] ==
                     SB_SQ_BLOCKS_DEPTH_MODE) {
@@ -1724,6 +1732,7 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         } else { // (pcs_ptr->parent_pcs_ptr->mdMode == PICT_BDP_DEPTH_MODE || pcs_ptr->parent_pcs_ptr->mdMode == PICT_LIGHT_BDP_DEPTH_MODE )
             pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
         }
+#endif
         if (frm_hdr->allow_intrabc) {
             int            i;
             int            speed          = 1;

@@ -7707,6 +7707,17 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
         context_ptr->md_stage_3_total_count += context_ptr->md_stage_3_count[cand_class_it];
     }
 }
+
+#if DEPTH_PART_CLEAN_UP
+EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
+    if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) || 
+       (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
+       (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq))
+        return EB_FALSE;
+    else
+        return EB_TRUE;
+}
+#endif
 void md_encode_block(PictureControlSet *pcs_ptr,
                      ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
                      ModeDecisionCandidateBuffer *bestcandidate_buffers[5]) {
@@ -7740,6 +7751,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     for (uint8_t ref_idx = 0; ref_idx < MAX_REF_TYPE_CAND; ref_idx++)
         context_ptr->ref_best_cost_sq_table[ref_idx] = MAX_CU_COST;
 
+#if DEPTH_PART_CLEAN_UP
+    if (is_block_allowed(pcs_ptr, context_ptr)) {
+#endif
     const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
     context_ptr->source_variance =
         eb_av1_get_sby_perpixel_variance(fn_ptr,
@@ -8313,6 +8327,13 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
 
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].avail_blk_flag = EB_TRUE;
+#if DEPTH_PART_CLEAN_UP
+    } else {
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost         = MAX_MODE_COST;
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].default_cost = MAX_MODE_COST;
+        blk_ptr->prediction_unit_array->ref_frame_type               = 0;
+    }
+#endif
 }
 
 /*
@@ -8591,8 +8612,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     const EbMdcLeafData *const leaf_data_array = mdcResultTbPtr->leaf_data_array;
     const uint16_t tile_idx = context_ptr->tile_index;
     context_ptr->sb_ptr                        = sb_ptr;
-
+#if !DEPTH_PART_CLEAN_UP
     EbBool all_blk_init = (pcs_ptr->parent_pcs_ptr->pic_depth_mode <= PIC_SQ_DEPTH_MODE);
+#endif
     init_sq_nsq_block(scs_ptr, context_ptr);
 
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
@@ -8800,11 +8822,19 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
+#if DEPTH_PART_CLEAN_UP 
+        if(!pcs_ptr->parent_pcs_ptr->disallow_nsq)
+#else
         if (all_blk_init)
+#endif
             check_redundant_block(blk_geom, context_ptr, &redundant_blk_avail, &redundant_blk_mds);
 
         context_ptr->similar_blk_avail = 0;
+#if DEPTH_PART_CLEAN_UP 
+        if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
+#else
         if (all_blk_init)
+#endif
             check_similar_block(blk_geom, context_ptr, &context_ptr->similar_blk_avail, &context_ptr->similar_blk_mds);
         if (redundant_blk_avail && context_ptr->redundant_blk) {
             // Copy results

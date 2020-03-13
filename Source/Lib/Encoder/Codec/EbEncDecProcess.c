@@ -2593,7 +2593,11 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
 
     int8_t start_depth = sb_size == BLOCK_128X128 ? 0 : 1;
+#if DEPTH_PART_CLEAN_UP  // refinement rest
+    int8_t end_depth = pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 : 5;
+#else
     int8_t end_depth   = 5;
+#endif
     int8_t depth       = blk_geom->depth + start_depth;
 
     int8_t depthp1 = MIN(depth + 1, end_depth);
@@ -2690,6 +2694,9 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
         *e_depth = 1;
     else
         *e_depth = 0;
+#if DEPTH_PART_CLEAN_UP  // refinement rest
+    *e_depth = MIN(end_depth - depth, *e_depth);
+#endif
 }
 
 static uint64_t generate_best_part_cost(
@@ -2795,6 +2802,14 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 
                         }
                     } else if (context_ptr->pd_pass == PD_PASS_1) {
+
+
+#if DEPTH_PART_CLEAN_UP
+                        EbBool zero_coeff_present_flag =
+                            context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff == 0;
+
+                        if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3)) {
+#else
                         EbBool zero_coeff_present_flag = EB_FALSE;
 
                         if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2)
@@ -2946,8 +2961,8 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             default: assert(0); break;
                             }
                         }
-
                         if (zero_coeff_present_flag) {
+#endif
                             s_depth = 0;
                             e_depth = 0;
                         } else
@@ -2960,7 +2975,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             e_depth = 0;
                         } else {
                             s_depth = 0;
+#if DEPTH_PART_CLEAN_UP // refinement rest
+                            e_depth = (blk_geom->sq_size == 8 && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 0 : 1;
+#else
                             e_depth = 1;
+#endif
                         }
                     }
 
@@ -2990,6 +3009,45 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
     }
 }
 
+#if DEPTH_PART_CLEAN_UP
+// Build the t=0 cand_block_array
+void build_starting_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr, EncDecContext *context_ptr, MdcSbData *results_ptr) {
+    
+    results_ptr->leaf_count = 0;
+    uint32_t blk_index = 0;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
+
+        uint8_t is_blk_allowed =
+            (blk_geom->sq_size == 128 && (pcs_ptr->slice_type == I_SLICE || pcs_ptr->parent_pcs_ptr->sb_64x64_simulated)) || 
+            (blk_geom->sq_size == 4   && pcs_ptr->parent_pcs_ptr->disallow_4x4)
+                ? 0
+                : 1;
+
+        int32_t min_sq_size = (pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 8 : 4;
+
+        if (pcs_ptr->parent_pcs_ptr->sb_geom[context_ptr->sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
+            results_ptr->leaf_data_array[results_ptr->leaf_count].tot_d1_blocks =
+                blk_geom->sq_size == 128
+                ? 17
+                : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
+
+            results_ptr->leaf_data_array[results_ptr->leaf_count].leaf_index =
+                0; //valid only for square 85 world. will be removed.
+            results_ptr->leaf_data_array[results_ptr->leaf_count].mds_idx = blk_index;
+            if (blk_geom->sq_size > min_sq_size)
+                results_ptr->leaf_data_array[results_ptr->leaf_count++].split_flag = EB_TRUE;
+            else
+                results_ptr->leaf_data_array[results_ptr->leaf_count++].split_flag = EB_FALSE;
+        }
+
+        blk_index++;
+    }
+
+
+    pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
+}
+#endif
 /* EncDec (Encode Decode) Kernel */
 /*********************************************************************************
 *
@@ -3277,17 +3335,27 @@ void *enc_dec_kernel(void *input_ptr) {
                     // Configure the SB
                     mode_decision_configure_sb(
                         context_ptr->md_context, pcs_ptr, (uint8_t)sb_ptr->qp);
+#if DEPTH_PART_CLEAN_UP
+                    // Build the t=0 cand_block_array
+                    build_starting_cand_block_array(scs_ptr, pcs_ptr, context_ptr, mdc_ptr);
+#endif
                     // Multi-Pass PD Path
                     // For each SB, all blocks are tested in PD0 (4421 blocks if 128x128 SB, and 1101 blocks if 64x64 SB).
                     // Then the PD0 predicted Partitioning Structure is refined by considering up to three refinements depths away from the predicted depth, both in the direction of smaller block sizes and in the direction of larger block sizes (up to Pred - 3 / Pred + 3 refinement). The selection of the refinement depth is performed using the cost
                     // deviation between the current depth cost and candidate depth cost. The generated blocks are used as input candidates to PD1.
                     // The PD1 predicted Partitioning Structure is also refined (up to Pred - 1 / Pred + 1 refinement) using the square (SQ) vs. non-square (NSQ) decision(s)
                     // inside the predicted depth and using coefficient information. The final set of blocks is evaluated in PD2 to output the final Partitioning Structure
-
+#if DEPTH_PART_CLEAN_UP
+                    if ((pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3) &&
+#else
                     if ((pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3) &&
+#endif
                         pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].is_complete_sb) {
                         // Save a clean copy of the neighbor arrays
                         copy_neighbour_arrays(pcs_ptr,
@@ -3333,10 +3401,15 @@ void *enc_dec_kernel(void *input_ptr) {
                                               0,
                                               sb_origin_x,
                                               sb_origin_y);
-
+#if DEPTH_PART_CLEAN_UP
+                        if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
+                            pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
+                            pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3) {
+#else
                         if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
                             pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||
                             pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_3) {
+#endif
                             // [PD_PASS_1] Signal(s) derivation
                             context_ptr->md_context->pd_pass = PD_PASS_1;
                             signal_derivation_enc_dec_kernel_oq(

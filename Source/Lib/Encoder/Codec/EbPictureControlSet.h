@@ -261,10 +261,8 @@ typedef struct PictureControlSet {
     uint16_t rest_segments_total_count;
     uint8_t  rest_segments_column_count;
     uint8_t  rest_segments_row_count;
-
     // Mode Decision Config
     MdcSbData *mdc_sb_array;
-
     // Slice Type
     EB_SLICE slice_type;
 
@@ -605,7 +603,18 @@ typedef struct PictureParentControlSet {
     EB_SB_DEPTH_MODE *sb_depth_mode_array;
 
     // Multi-modes signal(s)
+#if DEPTH_PART_CLEAN_UP
+    AdpLevel adp_level;
+    MultiPassPdLevel multi_pass_pd_level;
+    EbBool sb_64x64_simulated;
+    EbBool disallow_4x4;
+
+    EbBool disallow_nsq;
+    EbBool disallow_all_nsq_blocks_below_8x8;
+    EbBool disallow_all_nsq_blocks_below_16x16;
+#else
     EbPictureDepthMode pic_depth_mode;
+#endif
     uint8_t            loop_filter_mode;
     uint8_t            intra_pred_mode;
     uint8_t            tx_size_search_mode;
@@ -693,9 +702,13 @@ typedef struct PictureParentControlSet {
     int32_t             cdef_frame_strength;
     int32_t             cdf_ref_frame_strength;
     int32_t             use_ref_frame_cdef_strength;
+#if !DEPTH_PART_CLEAN_UP
     uint8_t             nsq_search_level;
+#endif
     uint8_t             palette_mode;
+#if !DEPTH_PART_CLEAN_UP
     uint8_t             nsq_max_shapes_md; // max number of shapes to be tested in MD
+#endif
     uint8_t             sc_content_detected;
     uint8_t             ibc_mode;
     SkipModeInfo        skip_mode_info;
