@@ -1350,6 +1350,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else {
         if (context_ptr->tx_search_level == TX_SEARCH_ENC_DEC)
             context_ptr->tx_weight = MAX_MODE_COST;
+#if MAR12_ADOPTIONS
+        else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (pcs_ptr->enc_mode <= ENC_M3)
+                context_ptr->tx_weight = MAX_MODE_COST;
+            else
+                context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+#endif
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M1)
 #else
@@ -1551,6 +1558,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR12_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M3)
+#else
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
                 if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1559,6 +1569,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
                 if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
                     context_ptr->global_mv_injection = 1;
                 else
@@ -1657,6 +1668,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->bipred3x3_injection = 1;
             else
                 context_ptr->bipred3x3_injection = 0;
+#if MAR12_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
 #if MAR3_M2_ADOPTIONS
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
@@ -1669,6 +1683,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
         else if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
 #endif
             context_ptr->bipred3x3_injection = 1;
 #if MAR3_M6_ADOPTIONS
@@ -1962,6 +1977,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (context_ptr->pd_pass == PD_PASS_1)
             context_ptr->edge_based_skip_angle_intra = 1;
         else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
+#if MAR12_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+                if (pcs_ptr->enc_mode <= ENC_M3)
+                    context_ptr->edge_based_skip_angle_intra = 0;
+                else
+                    context_ptr->edge_based_skip_angle_intra = 1;
+            else
+#endif
 #if MAR10_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M1)
 #else
@@ -2054,12 +2077,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_class_prune_th = 100;
     else
+#if MAR12_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M3 ||
+            pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
 #if MAR11_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M2 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #else
         if (pcs_ptr->enc_mode <= ENC_M3 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #endif
             context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
         else
@@ -2100,12 +2128,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
         else
 #endif
+#if MAR12_ADOPTIONS
+            if ((pcs_ptr->enc_mode <= ENC_M3 &&
+                pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
 #if MAR11_ADOPTIONS
             if ((pcs_ptr->enc_mode <= ENC_M2 &&
                 pcs_ptr->parent_pcs_ptr->sc_content_detected))
 #else
         if ((pcs_ptr->enc_mode <= ENC_M3 &&
             pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#endif
 #endif
 
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
@@ -2128,6 +2161,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->sq_weight =
             sequence_control_set_ptr->static_config.sq_weight + 15;
         else
+#if MAR12_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+                if (pcs_ptr->enc_mode <= ENC_M3)
+                    context_ptr->sq_weight =
+                    sequence_control_set_ptr->static_config.sq_weight + 5;
+                else
+                    context_ptr->sq_weight =
+                    sequence_control_set_ptr->static_config.sq_weight - 5;
+            else
+
+#endif
 #if MAR10_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M1)
 #else

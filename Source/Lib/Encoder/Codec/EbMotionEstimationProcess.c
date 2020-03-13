@@ -295,6 +295,9 @@ EbErrorType signal_derivation_me_kernel_oq(
     {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
+#if MAR12_ADOPTIONS
+            if (enc_mode <= ENC_M3)
+#else
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
             if (enc_mode <= ENC_M1)
@@ -303,6 +306,7 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 #else
             if (enc_mode <= ENC_M3)
+#endif
 #endif
                 context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
             else
@@ -372,9 +376,10 @@ void* tf_set_me_hme_params_oq(
 
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
 
+#if !MAR12_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M2)
         hmeMeLevel = ENC_M0;
-
+#endif
 
     // HME Level0
     me_context_ptr->hme_level0_total_search_area_width =
@@ -435,8 +440,10 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
 
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
 
+#if !MAR12_ADOPTIONS
     if (hmeMeLevel <= ENC_M2 && pcs_ptr->sc_content_detected == 0)
         hmeMeLevel = ENC_M0;
+#endif
 
     // Set ME/HME search regions
     tf_set_me_hme_params_oq(

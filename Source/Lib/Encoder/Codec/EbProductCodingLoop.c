@@ -1708,12 +1708,17 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 #endif
             ////MULT
+#if MAR12_ADOPTIONS
+            if ((pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+                ((pcs_ptr->enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
+#else
 #if MAR10_ADOPTIONS
             if ((pcs_ptr->enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 (pcs_ptr->enc_mode <= ENC_M1 && context_ptr->blk_geom->shape == PART_N)) {
 #else
             if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 ((pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected)) && context_ptr->blk_geom->shape == PART_N)) {
+#endif
 #endif
                 uint8_t mult_factor_num   = 5;
                 uint8_t mult_factor_denum = 4;
@@ -1766,7 +1771,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint32_t inter_scaling_denom = 1;
                 uint32_t intra_scaling_num = 1;
                 uint32_t intra_scaling_denom = 1;
+#if MAR12_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M3) {
+#else
                 if (pcs_ptr->enc_mode <= ENC_M1) {
+#endif
                     // INTER
                     inter_scaling_num = 1;
                     inter_scaling_denom = 1;
@@ -1813,6 +1822,16 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint32_t inter_scaling_denom = 1;
                 uint32_t intra_scaling_num = 1;
                 uint32_t intra_scaling_denom = 1;
+#if MAR12_ADOPTIONS
+                if (MR_MODE) {
+                    // INTER
+                    inter_scaling_num = 3;
+                    inter_scaling_denom = 2;
+                    // INTRA
+                    intra_scaling_num = 2;
+                    intra_scaling_denom = 1;
+                } else
+#endif
                 if (pcs_ptr->enc_mode <= ENC_M3) {
                     // INTER
                     inter_scaling_num = 1;

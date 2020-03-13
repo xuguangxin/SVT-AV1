@@ -1201,17 +1201,23 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
         if (sc_content_detected)
+#if MAR12_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M3)
+#else
 #if MAR10_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
+#endif
                 pcs_ptr->intra_pred_mode = 0;
+#if !MAR12_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M2)
                 if (pcs_ptr->temporal_layer_index == 0)
                     pcs_ptr->intra_pred_mode = 1;
                 else
                     pcs_ptr->intra_pred_mode = 2;
+#endif
             else if (pcs_ptr->enc_mode <= ENC_M6)
                 if (pcs_ptr->temporal_layer_index == 0)
                     pcs_ptr->intra_pred_mode = 2;
@@ -1284,7 +1290,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 3                 Fast: Mode 1 & Mode 2
 #if MAR11_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
+#if MAR12_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M3)
+#else
         if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
             pcs_ptr->wedge_mode = 0;
         else
             pcs_ptr->wedge_mode = 1;
@@ -1384,6 +1394,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // GM_DOWN                                    Downsampled resolution with a
     // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
     // using ME MV.
+#if MAR12_ADOPTIONS
+    if (pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M3)
+            pcs_ptr->gm_level = GM_FULL;
+        else
+            pcs_ptr->gm_level = GM_DOWN;
+    else
+#endif
 #if MAR10_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M1)
 #else
