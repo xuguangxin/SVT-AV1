@@ -102,7 +102,8 @@ extern "C" {
 #define ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL   1 // Add ME signal for the max HME search area multiplier
 #define MAR12_M8_ADOPTIONS                  1
 #define MAR12_ADOPTIONS                     1 // Adoptions for all modes
-#define REMOVED_MEM_OPT_CDF 1
+#define REMOVED_MEM_OPT_CDF                 1
+#define M8_CAP_NUMBER_OF_REF_IN_MD             1 // CAP the number of used reference in MD
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

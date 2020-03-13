@@ -2336,8 +2336,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_max_ref_count = 4;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_max_ref_count = 1;
+#if M8_CAP_NUMBER_OF_REF_IN_MD
+    else if(pcs_ptr->enc_mode <= ENC_M7)
+        context_ptr->md_max_ref_count = 4;
+    else
+        context_ptr->md_max_ref_count = pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0 ? 4: 2;
+#else
     else
         context_ptr->md_max_ref_count = 4;
+#endif
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
     if (context_ptr->pd_pass == PD_PASS_0)
