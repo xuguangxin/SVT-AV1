@@ -3012,14 +3012,14 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if DEPTH_PART_CLEAN_UP
 // Build the t=0 cand_block_array
 void build_starting_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr, EncDecContext *context_ptr, MdcSbData *results_ptr) {
-    
+
     results_ptr->leaf_count = 0;
     uint32_t blk_index = 0;
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
 
         uint8_t is_blk_allowed =
-            (blk_geom->sq_size == 128 && (pcs_ptr->slice_type == I_SLICE || pcs_ptr->parent_pcs_ptr->sb_64x64_simulated)) || 
+            (blk_geom->sq_size == 128 && (pcs_ptr->slice_type == I_SLICE || pcs_ptr->parent_pcs_ptr->sb_64x64_simulated)) ||
             (blk_geom->sq_size == 4   && pcs_ptr->parent_pcs_ptr->disallow_4x4)
                 ? 0
                 : 1;

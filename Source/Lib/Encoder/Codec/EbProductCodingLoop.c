@@ -7710,7 +7710,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 
 #if DEPTH_PART_CLEAN_UP
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
-    if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) || 
+    if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq))
         return EB_FALSE;
@@ -8822,7 +8822,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
-#if DEPTH_PART_CLEAN_UP 
+#if DEPTH_PART_CLEAN_UP
         if(!pcs_ptr->parent_pcs_ptr->disallow_nsq)
 #else
         if (all_blk_init)
@@ -8830,7 +8830,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             check_redundant_block(blk_geom, context_ptr, &redundant_blk_avail, &redundant_blk_mds);
 
         context_ptr->similar_blk_avail = 0;
-#if DEPTH_PART_CLEAN_UP 
+#if DEPTH_PART_CLEAN_UP
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
 #else
         if (all_blk_init)

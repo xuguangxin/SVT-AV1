@@ -868,7 +868,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     // If ADP then set multi_pass_pd_level to INVALID
     if(pcs_ptr->adp_level != ADP_OFF)
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
-    
+
 
     // Set disallow_nsq
     pcs_ptr->disallow_nsq = EB_FALSE;
@@ -876,7 +876,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
     pcs_ptr->max_number_of_pus_per_sb =
         pcs_ptr->disallow_nsq
-        ? SQUARE_PU_COUNT 
+        ? SQUARE_PU_COUNT
         : MAX_ME_PU_COUNT;
     // If disallow_nsq then shut ADP, and shut Multi-Pass PD
     if (pcs_ptr->disallow_nsq) {
