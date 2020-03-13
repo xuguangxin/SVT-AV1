@@ -2595,6 +2595,35 @@ uint64_t  pd_level_tab[2][9][2][3] =
         {{5,0,0},{5,0,0}}
     }
 };
+#if FIX_MR_PD1
+uint64_t  mr_pd_level_tab[2][9][2][3] =
+{
+    {
+        // Thresholds to use if block is screen content or an I-slice
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+        {{200,200,200},{200,200,200}},
+    } ,
+    {
+        // Thresholds to use if block is not screen content or an I-slice
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+        {{100,10,10},{100,10,10}},
+    }
+};
+#endif
 void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint32_t sb_size,
                             int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
@@ -2617,19 +2646,36 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
 
     uint64_t max_distance = 0xFFFFFFFFFFFFFFFF;
 
-    uint64_t mth01 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
-    uint64_t mth02 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
-    uint64_t mth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
-    uint64_t pth01 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
-    uint64_t pth02 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
-    uint64_t pth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
-                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
+    uint64_t mth01, mth02, mth03, pth01, pth02, pth03;
 
+    mth01 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
+    mth02 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
+    mth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
+    pth01 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
+    pth02 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
+    pth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
+#if FIX_MR_PD1
+    if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
+        mth01 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
+        mth02 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][1];
+        mth03 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][0][2];
+        pth01 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][0];
+        pth02 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][1];
+        pth03 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+                                  pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
+    }
+#endif
     uint64_t dist_001 =
         sb_ptr->depth_cost[depth] == 0
             ? max_distance
@@ -2794,8 +2840,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             pcs_ptr,
                             context_ptr,
                             sb_index);
-
+#if FIX_MR_PD1
+                        if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0) {
+#else
                         if (best_part_cost < early_exit_th) {
+#endif
                             s_depth = 0;
                             e_depth = 0;
                         }
