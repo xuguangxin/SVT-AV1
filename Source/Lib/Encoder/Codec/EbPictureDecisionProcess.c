@@ -888,7 +888,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->sb_64x64_simulated = EB_FALSE;
 
     // Set disallow_4x4
-    pcs_ptr->disallow_4x4 = EB_FALSE;
+    if (pcs_ptr->enc_mode <= ENC_M7)
+        pcs_ptr->disallow_4x4 = EB_FALSE;
+    else
+        pcs_ptr->disallow_4x4 = EB_TRUE;
 
     // Set disallow_all_nsq_blocks_below_8x8
     pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
