@@ -4287,9 +4287,42 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                     context_ptr->best_spatial_pred_mv[list_idx][ref_idx][1] = best_search_mvy;
                     context_ptr->valid_refined_mv[list_idx][ref_idx]        = 1;
                 }
+
+
+#if PME_SORT_REF               
+                context_ptr->pme_res[list_idx][ref_idx].dist = best_search_distortion;
+#endif
             }
         }
     }
+
+
+#if PME_SORT_REF
+    uint32_t      num_of_cand_to_sort = MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH;
+    RefResults    *res_p = context_ptr->pme_res[0];
+    for (uint32_t i = 0; i < num_of_cand_to_sort - 1; ++i) {
+        for (uint32_t j = i + 1; j < num_of_cand_to_sort; ++j) {
+            if (res_p[j].dist < res_p[i].dist) {
+                RefResults temp = res_p[i];
+                res_p[i] = res_p[j];
+                res_p[j] = temp;
+            }
+        }
+    }
+
+    if (context_ptr->pd_pass == PD_PASS_2) {
+        uint8_t  BIGGER_THAN_TH = 100;
+        uint64_t best = context_ptr->pme_res[0][0].dist;
+        for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+            for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+               // if ((context_ptr->pme_res[li][ri].dist - best) * 100 > BIGGER_THAN_TH*best)
+               //     context_ptr->valid_refined_mv[context_ptr->pme_res[li][ri].list_i][context_ptr->pme_res[li][ri].ref_i] = 0;
+
+            }
+        }
+    }
+#endif
+
 }
 void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                        SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
@@ -7828,6 +7861,19 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     // Read and (if needed) perform 1/8 Pel ME MVs refinement
     read_refine_me_mvs(
         pcs_ptr, context_ptr, input_picture_ptr, input_origin_index, blk_origin_index);
+
+
+#if PME_SORT_REF
+    for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; ++li) {
+        for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ++ri) {
+            context_ptr->pme_res[li][ri].dist = 0xFFFFFFFF;
+            context_ptr->pme_res[li][ri].list_i = li;
+            context_ptr->pme_res[li][ri].ref_i = ri;
+            context_ptr->pme_res[li][ri].do_ref = 1;
+        }
+    }
+#endif
+
     // Perform ME search around the best MVP
     if (context_ptr->predictive_me_level)
         predictive_me_search(

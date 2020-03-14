@@ -1289,6 +1289,49 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
     }
 }
 
+#if OBMC_FAST
+void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
+
+    ObmcControls*obmc_ctrls = &mdctxt->obmc_ctrls;
+    
+    switch (obmc_mode)
+    {
+    case 0:
+        obmc_ctrls->enabled = 0;
+        obmc_ctrls->pme_best_ref = 0;
+        obmc_ctrls->me_count = 0;
+        obmc_ctrls->mvp_ref_count = 0;
+        obmc_ctrls->near_count = 0;
+        break;
+    case 1:
+        obmc_ctrls->enabled = 1;
+        obmc_ctrls->pme_best_ref = 0;
+        obmc_ctrls->me_count = ~0;
+        obmc_ctrls->mvp_ref_count = 4;
+        obmc_ctrls->near_count = 3;
+        break;
+    case 2:
+        obmc_ctrls->enabled = 1;
+        obmc_ctrls->pme_best_ref = 0;
+        obmc_ctrls->me_count = ~0;
+        obmc_ctrls->mvp_ref_count = 4;
+        obmc_ctrls->near_count = 3;
+        break;
+    case 3:
+        obmc_ctrls->enabled = 1;
+        obmc_ctrls->pme_best_ref = 1;
+        obmc_ctrls->me_count = 1;
+        obmc_ctrls->mvp_ref_count = 1;
+        obmc_ctrls->near_count = 1;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+      
+
+}
+#endif
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -2277,6 +2320,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_pic_obmc_mode =
         pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
+
+#if OBMC_FAST
+    set_obmc_controls(context_ptr,context_ptr->md_pic_obmc_mode);
+#endif
 
     // Set enable_inter_intra @ MD
 #if  CLEANUP_INTER_INTRA

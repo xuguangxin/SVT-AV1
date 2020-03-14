@@ -105,6 +105,11 @@ extern "C" {
 #define REMOVED_MEM_OPT_CDF                 1
 #define M8_CAP_NUMBER_OF_REF_IN_MD             1 // CAP the number of used reference in MD
 #define FIX_MR_PD1                          1 // Disable PD1 refinement changes for MR.
+
+#define PME_SORT_REF    1 //add reference sorting of pme results
+#define OBMC_FAST       1 //faster obmc mode (3). cleaner obmc signalling. 
+
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -1183,6 +1183,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
 #endif
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+#if OBMC_FAST
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
+                pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
+#endif
             else
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
@@ -1190,6 +1194,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
 #endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+#if OBMC_FAST
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
+#endif
         else
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
     } else

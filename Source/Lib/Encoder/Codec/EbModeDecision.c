@@ -99,7 +99,11 @@ MotionMode obmc_motion_mode_allowed(const PictureControlSet *   pcs_ptr,
                                     MvReferenceFrame rf0, MvReferenceFrame rf1,
                                     PredictionMode mode) {
 
+#if OBMC_FAST
+    if (!context_ptr->obmc_ctrls.enabled) return SIMPLE_TRANSLATION;
+#else
     if (!context_ptr->md_pic_obmc_mode) return SIMPLE_TRANSLATION;
+#endif
 
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
 
@@ -1650,6 +1654,11 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
             uint8_t is_obmc_allowed =
                 obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARESTMV) ==
                 OBMC_CAUSAL;
+#if OBMC_FAST
+            is_obmc_allowed = context_ptr->obmc_ctrls.mvp_ref_count == 0 ? 0 :
+                ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;            
+#endif
+
             tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
             for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                 cand_array[cand_idx].type                    = INTER_MODE;
@@ -1761,6 +1770,13 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                 uint8_t is_obmc_allowed =
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARMV) ==
                     OBMC_CAUSAL;
+#if OBMC_FAST
+                is_obmc_allowed = context_ptr->obmc_ctrls.mvp_ref_count == 0 ? 0 :
+                    ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;
+                is_obmc_allowed = context_ptr->obmc_ctrls.near_count == 0 ? 0 :
+                    drli > context_ptr->obmc_ctrls.near_count - 1 ? 0 : is_obmc_allowed;  
+#endif
+
                 tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
                 for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                     cand_array[cand_idx].type                    = INTER_MODE;
@@ -3269,9 +3285,17 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                 uint8_t is_obmc_allowed =
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) ==
                     OBMC_CAUSAL;
+
+#if OBMC_FAST                   
+                is_obmc_allowed = context_ptr->obmc_ctrls.me_count == 0 ? 0 :
+                    me_candidate_index > context_ptr->obmc_ctrls.me_count - 1 ? 0 :
+                    is_obmc_allowed;
+                tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
+#else
                 tot_inter_types = is_obmc_allowed && context_ptr->md_pic_obmc_mode <= 2
                                       ? tot_inter_types + 1
                                       : tot_inter_types;
+#endif
                 for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                     cand_array[cand_total_cnt].type                    = INTER_MODE;
                     cand_array[cand_total_cnt].distortion_ready        = 0;
@@ -3406,10 +3430,16 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                     uint8_t is_obmc_allowed =
                         obmc_motion_mode_allowed(
                             pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
+#if OBMC_FAST                   
+                    is_obmc_allowed =context_ptr->obmc_ctrls.me_count == 0 ? 0 :
+                        me_candidate_index > context_ptr->obmc_ctrls.me_count - 1 ? 0 :
+                        is_obmc_allowed;
+                    tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;                                     
+#else
                     tot_inter_types = is_obmc_allowed && pcs_ptr->parent_pcs_ptr->pic_obmc_mode <= 2
                                           ? tot_inter_types + 1
                                           : tot_inter_types;
-
+#endif
                     for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                         cand_array[cand_total_cnt].type                    = INTER_MODE;
                         cand_array[cand_total_cnt].distortion_ready        = 0;
@@ -3700,6 +3730,12 @@ void inject_predictive_me_candidates(
                     uint8_t is_obmc_allowed =
                         obmc_motion_mode_allowed(
                             pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
+#if OBMC_FAST
+                    if(context_ptr->obmc_ctrls.pme_best_ref)
+                        if(context_ptr->pme_res[0][0].list_i!= list_index ||
+                           context_ptr->pme_res[0][0].ref_i != ref_pic_index )
+                             is_obmc_allowed = 0;
+#endif
                     tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
                     for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                         cand_array[cand_total_cnt].type                    = INTER_MODE;
@@ -3801,6 +3837,12 @@ void inject_predictive_me_candidates(
                         uint8_t is_obmc_allowed =
                             obmc_motion_mode_allowed(
                                 pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
+#if OBMC_FAST
+                        if (context_ptr->obmc_ctrls.pme_best_ref)
+                            if (context_ptr->pme_res[0][0].list_i != list_index ||
+                                context_ptr->pme_res[0][0].ref_i != ref_pic_index)
+                                    is_obmc_allowed = 0;
+#endif
                         tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
                         for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                             cand_array[cand_total_cnt].type                    = INTER_MODE;
