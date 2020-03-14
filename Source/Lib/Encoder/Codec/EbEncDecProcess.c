@@ -2074,7 +2074,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->inter_inter_wedge_variance_th = 0;
     else
         context_ptr->inter_inter_wedge_variance_th = 100;
-
+#if !REMOVE_MD_EXIT
     // Derive MD Exit TH
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->md_exit_th = 0;
@@ -2100,6 +2100,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_exit_th = 0;
         else
             context_ptr->md_exit_th = 18;
+#endif
     // md_stage_1_cand_prune_th (for single candidate removal per class)
     // Remove candidate if deviation to the best is higher than md_stage_1_cand_prune_th
     if (context_ptr->pd_pass == PD_PASS_0)

@@ -389,7 +389,9 @@ typedef struct ModeDecisionContext {
     uint8_t      prune_ref_frame_for_rec_partitions;
     unsigned int source_variance; // input block variance
     unsigned int inter_inter_wedge_variance_th;
+#if !REMOVE_MD_EXIT
     uint64_t     md_exit_th;
+#endif
     uint64_t     md_stage_1_cand_prune_th;
     uint64_t     md_stage_1_class_prune_th;
     uint64_t     md_stage_2_3_cand_prune_th;

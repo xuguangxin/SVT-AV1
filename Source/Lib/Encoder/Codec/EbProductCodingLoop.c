@@ -8980,12 +8980,16 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
                 // compare the cost of the parent to the cost of the already encoded child + an estimated cost for the remaining child @ the current depth
                 // if the total child cost is higher than the parent cost then skip the remaining  child @ the current depth
+#if REMOVE_MD_EXIT
+                if (parent_depth_cost != MAX_MODE_COST && parent_depth_cost <= current_depth_cost) {
+#else
                 // when md_exit_th=0 the estimated cost for the remaining child is not taken into account and the action will be lossless compared to no exit
                 // MD_EXIT_THSL could be tuned toward a faster encoder but lossy
                 if (parent_depth_cost != MAX_MODE_COST && parent_depth_cost <=
                     current_depth_cost +
-                        (current_depth_cost * (4 - context_ptr->blk_geom->quadi) *
-                         context_ptr->md_exit_th / context_ptr->blk_geom->quadi / 100)) {
+                    (current_depth_cost * (4 - context_ptr->blk_geom->quadi) *
+                        context_ptr->md_exit_th / context_ptr->blk_geom->quadi / 100)) {
+#endif
                     skip_next_sq = 1;
                     next_non_skip_blk_idx_mds =
                         parent_depth_idx_mds +
@@ -9054,9 +9058,13 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             for (int blk_it = 0; blk_it < blk_geom->nsi + 1; blk_it++)
                 tot_cost += context_ptr->md_local_blk_unit[first_blk_idx + blk_it].cost;
             nsq_cost[context_ptr->blk_geom->shape] = tot_cost;
+#if REMOVE_MD_EXIT
+            if (tot_cost > context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost)
+#else
             if ((tot_cost + tot_cost * (blk_geom->totns - (blk_geom->nsi + 1)) *
                                 context_ptr->md_exit_th / (blk_geom->nsi + 1) / 100) >
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost)
+#endif
                 skip_next_nsq = 1;
         }
         if (blk_geom->shape != PART_N) {

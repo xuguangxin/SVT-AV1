@@ -108,7 +108,7 @@ extern "C" {
 
 #define PME_SORT_REF    1 //add reference sorting of pme results
 #define OBMC_FAST       1 //faster obmc mode (3). cleaner obmc signalling.
-
+#define REMOVE_MD_EXIT 1 // remove md_exit
 
 #endif
 
