@@ -80,6 +80,9 @@ static void mode_decision_context_dctor(EbPtr p) {
 
     EB_FREE_ARRAY(obj->md_blk_arr_nsq);
     EB_FREE_ARRAY(obj->md_ep_pipe_sb);
+#if DEPTH_PART_CLEAN_UP
+    EB_FREE_ARRAY(obj->mdc_sb_array);
+#endif
 }
 
 /******************************************************
@@ -217,6 +220,11 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
     context_ptr->md_blk_arr_nsq[0].neigh_top_recon_16bit[0]  = NULL;
 #endif
     EB_MALLOC_ARRAY(context_ptr->md_blk_arr_nsq[0].av1xd, BLOCK_MAX_COUNT_SB_128);
+
+#if DEPTH_PART_CLEAN_UP
+    EB_MALLOC_ARRAY(context_ptr->mdc_sb_array, 1);
+#endif
+
 #if !CLEAN_UP_SB_DATA_3
     uint16_t sz = sizeof(uint16_t);
     if (context_ptr->hbd_mode_decision > EB_8_BIT_MD) {

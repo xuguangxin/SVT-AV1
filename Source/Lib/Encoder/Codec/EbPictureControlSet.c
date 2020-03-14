@@ -214,7 +214,9 @@ void picture_control_set_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->ec_ctx_array);
     EB_FREE_ARRAY(obj->rate_est_array);
     if (obj->tile_tok[0][0]) EB_FREE_ARRAY(obj->tile_tok[0][0]);
+#if !DEPTH_PART_CLEAN_UP
     EB_FREE_ARRAY(obj->mdc_sb_array);
+#endif
     EB_DESTROY_MUTEX(obj->entropy_coding_pic_mutex);
     EB_DESTROY_MUTEX(obj->intra_mutex);
     EB_DESTROY_MUTEX(obj->cdef_search_mutex);
@@ -441,8 +443,10 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         EB_CALLOC_ARRAY(object_ptr->tile_tok[0][0], tokens);
     } else
         object_ptr->tile_tok[0][0] = NULL;
+#if !DEPTH_PART_CLEAN_UP
     // Mode Decision Control config
     EB_MALLOC_ARRAY(object_ptr->mdc_sb_array, object_ptr->sb_total_count);
+#endif
 
     object_ptr->hbd_mode_decision = init_data_ptr->hbd_mode_decision;
     // Mode Decision Neighbor Arrays

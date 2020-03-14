@@ -2569,9 +2569,16 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
     }
 }
 
+#if DEPTH_PART_CLEAN_UP
+static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
+    uint32_t sb_index) {
+    MdcSbData *results_ptr = context_ptr->mdc_sb_array;
+#else
 static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
-                                   uint32_t sb_index) {
-    MdcSbData *results_ptr  = &pcs_ptr->mdc_sb_array[sb_index];
+    uint32_t sb_index) {
+
+    MdcSbData *results_ptr = &pcs_ptr->mdc_sb_array[sb_index];
+#endif
     results_ptr->leaf_count = 0;
     uint32_t blk_index      = 0;
     uint32_t d1_blocks_accumlated, tot_d1_blocks = 0, d1_block_idx;
@@ -2829,7 +2836,11 @@ static uint64_t generate_best_part_cost(
 }
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
+#if DEPTH_PART_CLEAN_UP
+    MdcSbData *results_ptr = context_ptr->mdc_sb_array;
+#else
     MdcSbData *results_ptr = &pcs_ptr->mdc_sb_array[sb_index];
+#endif
     uint32_t   blk_index   = 0;
 
     // Reset mdc_sb_array data to defaults; it will be updated based on the predicted blocks (stored in md_blk_arr_nsq)
@@ -3335,7 +3346,11 @@ void *enc_dec_kernel(void *input_ptr) {
                     sb_row_index_count = (x_sb_index + 1 == tile_group_width_in_sb)
                                              ? sb_row_index_count + 1
                                              : sb_row_index_count;
+#if DEPTH_PART_CLEAN_UP
+                    mdc_ptr = context_ptr->md_context->mdc_sb_array;
+#else
                     mdc_ptr               = &pcs_ptr->mdc_sb_array[sb_index];
+#endif
                     context_ptr->sb_index = sb_index;
 
                     if (pcs_ptr->update_cdf) {
@@ -3494,8 +3509,11 @@ void *enc_dec_kernel(void *input_ptr) {
                             scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
 
                         // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
+#if DEPTH_PART_CLEAN_UP
+                        build_cand_block_array(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#else
                         build_cand_block_array(scs_ptr, pcs_ptr, sb_index);
-
+#endif
                         // Reset neighnor information to current SB @ position (0,0)
                         copy_neighbour_arrays(pcs_ptr,
                                               context_ptr->md_context,
@@ -3540,8 +3558,11 @@ void *enc_dec_kernel(void *input_ptr) {
                                 scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
 
                             // Re-build mdc_blk_ptr for the 3rd PD Pass [PD_PASS_2]
+#if DEPTH_PART_CLEAN_UP
+                            build_cand_block_array(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#else
                             build_cand_block_array(scs_ptr, pcs_ptr, sb_index);
-
+#endif
                             // Reset neighnor information to current SB @ position (0,0)
                             copy_neighbour_arrays(pcs_ptr,
                                                   context_ptr->md_context,

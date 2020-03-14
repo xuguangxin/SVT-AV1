@@ -169,6 +169,9 @@ typedef struct ModeDecisionContext {
     InterPredictionContext *      inter_prediction_context;
     MdBlkStruct *                md_local_blk_unit;
     BlkStruct *                  md_blk_arr_nsq;
+#if DEPTH_PART_CLEAN_UP
+    MdcSbData *mdc_sb_array;
+#endif
     NeighborArrayUnit *intra_luma_mode_neighbor_array;
     NeighborArrayUnit *intra_chroma_mode_neighbor_array;
     NeighborArrayUnit *mv_neighbor_array;

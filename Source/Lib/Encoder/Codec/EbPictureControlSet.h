@@ -151,11 +151,13 @@ typedef struct EbMdcLeafData {
 } EbMdcLeafData;
 
 typedef struct MdcSbData {
+#if !DEPTH_PART_CLEAN_UP
     // Rate Control
     uint8_t qp;
 
     // ME Results
     uint64_t      treeblock_variance;
+#endif
     uint32_t      leaf_count;
     EbMdcLeafData leaf_data_array[BLOCK_MAX_COUNT_SB_128];
 } MdcSbData;
@@ -261,8 +263,10 @@ typedef struct PictureControlSet {
     uint16_t rest_segments_total_count;
     uint8_t  rest_segments_column_count;
     uint8_t  rest_segments_row_count;
+#if !DEPTH_PART_CLEAN_UP
     // Mode Decision Config
     MdcSbData *mdc_sb_array;
+#endif
     // Slice Type
     EB_SLICE slice_type;
 
