@@ -107,7 +107,7 @@ extern "C" {
 #define FIX_MR_PD1                          1 // Disable PD1 refinement changes for MR.
 
 #define PME_SORT_REF    1 //add reference sorting of pme results
-#define OBMC_FAST       1 //faster obmc mode (3). cleaner obmc signalling. 
+#define OBMC_FAST       1 //faster obmc mode (3). cleaner obmc signalling.
 
 
 #endif

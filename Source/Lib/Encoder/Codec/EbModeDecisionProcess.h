@@ -139,7 +139,7 @@ struct InterPredictionContext;
 #if PME_SORT_REF
 typedef struct RefResults {
     uint8_t  list_i;   // list index of this ref
-    uint8_t  ref_i;    // ref list index of this ref        
+    uint8_t  ref_i;    // ref list index of this ref
     uint32_t dist;     // distortion
     uint8_t  do_ref;   // to process this ref  or not
 } RefResults;
@@ -149,7 +149,7 @@ typedef struct  ObmcControls {
     uint8_t enabled;
     uint8_t me_count;      //how many me candidates to consider injecting obmc
     uint8_t pme_best_ref;  //limit injection to best ref in pme
-    uint8_t mvp_ref_count; //closest references allowed in mvp 0:4 
+    uint8_t mvp_ref_count; //closest references allowed in mvp 0:4
     uint8_t near_count;    //how many near to consider injecting obmc 0..3
 }ObmcControls;
 #endif
@@ -426,7 +426,7 @@ typedef struct ModeDecisionContext {
     int16_t      pred_me_full_pel_search_width;
     int16_t      pred_me_full_pel_search_height;
 
-#if PME_SORT_REF    
+#if PME_SORT_REF
     RefResults    pme_res[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 #endif
 #if OBMC_FAST

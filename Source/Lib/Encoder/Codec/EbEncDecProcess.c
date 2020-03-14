@@ -1293,7 +1293,7 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
 void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
 
     ObmcControls*obmc_ctrls = &mdctxt->obmc_ctrls;
-    
+
     switch (obmc_mode)
     {
     case 0:
@@ -1328,7 +1328,7 @@ void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
         assert(0);
         break;
     }
-      
+
 
 }
 #endif

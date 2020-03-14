@@ -1656,7 +1656,7 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                 OBMC_CAUSAL;
 #if OBMC_FAST
             is_obmc_allowed = context_ptr->obmc_ctrls.mvp_ref_count == 0 ? 0 :
-                ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;            
+                ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;
 #endif
 
             tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
@@ -1774,7 +1774,7 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                 is_obmc_allowed = context_ptr->obmc_ctrls.mvp_ref_count == 0 ? 0 :
                     ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;
                 is_obmc_allowed = context_ptr->obmc_ctrls.near_count == 0 ? 0 :
-                    drli > context_ptr->obmc_ctrls.near_count - 1 ? 0 : is_obmc_allowed;  
+                    drli > context_ptr->obmc_ctrls.near_count - 1 ? 0 : is_obmc_allowed;
 #endif
 
                 tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
@@ -3286,7 +3286,7 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) ==
                     OBMC_CAUSAL;
 
-#if OBMC_FAST                   
+#if OBMC_FAST
                 is_obmc_allowed = context_ptr->obmc_ctrls.me_count == 0 ? 0 :
                     me_candidate_index > context_ptr->obmc_ctrls.me_count - 1 ? 0 :
                     is_obmc_allowed;
@@ -3430,11 +3430,11 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                     uint8_t is_obmc_allowed =
                         obmc_motion_mode_allowed(
                             pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
-#if OBMC_FAST                   
+#if OBMC_FAST
                     is_obmc_allowed =context_ptr->obmc_ctrls.me_count == 0 ? 0 :
                         me_candidate_index > context_ptr->obmc_ctrls.me_count - 1 ? 0 :
                         is_obmc_allowed;
-                    tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;                                     
+                    tot_inter_types = is_obmc_allowed ? tot_inter_types + 1 : tot_inter_types;
 #else
                     tot_inter_types = is_obmc_allowed && pcs_ptr->parent_pcs_ptr->pic_obmc_mode <= 2
                                           ? tot_inter_types + 1

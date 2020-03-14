@@ -4289,7 +4289,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 }
 
 
-#if PME_SORT_REF               
+#if PME_SORT_REF
                 context_ptr->pme_res[list_idx][ref_idx].dist = best_search_distortion;
 #endif
             }
