@@ -2684,11 +2684,8 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
 
     int8_t start_depth = sb_size == BLOCK_128X128 ? 0 : 1;
-#if DEPTH_PART_CLEAN_UP  // refinement rest
-    int8_t end_depth = pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 : 5;
-#else
     int8_t end_depth   = 5;
-#endif
+
     int8_t depth       = blk_geom->depth + start_depth;
 
     int8_t depthp1 = MIN(depth + 1, end_depth);
@@ -2803,7 +2800,8 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     else
         *e_depth = 0;
 #if DEPTH_PART_CLEAN_UP  // refinement rest
-    *e_depth = MIN(end_depth - depth, *e_depth);
+    *s_depth =  MAX((pcs_ptr->parent_pcs_ptr->sb_64x64_simulated ? 1 : 0) - blk_geom->depth, *s_depth);
+    *e_depth = MIN((pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 :5) - blk_geom->depth, *e_depth);
 #endif
 }
 
@@ -3086,7 +3084,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #else
                             if (context_ptr->md_blk_arr_nsq[blk_index].best_d1_blk == blk_index) {
 #endif
+#if DEPTH_PART_CLEAN_UP // refinement rest
+                            s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0 : -1;
+#else
                             s_depth = -1;
+#endif
                             e_depth = 0;
                         } else {
                             s_depth = 0;

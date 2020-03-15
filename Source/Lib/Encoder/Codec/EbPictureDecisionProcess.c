@@ -903,6 +903,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_TRUE;
     }
+    // Set disallow_all_non_hv_nsq_blocks_below_16x16
+    pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16 = EB_FALSE;
+
+    // Set disallow_all_h4_v4_blocks_below_16x16
+    pcs_ptr->disallow_all_h4_v4_blocks_below_16x16 = EB_FALSE;
 #else
     // Set pic_depth_mode
     if (sc_content_detected)
