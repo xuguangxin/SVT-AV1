@@ -1542,7 +1542,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->chroma_level =
             (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
+#if ADOPT_CHROMA_MODE1_CFL_OFF
+            ? CHROMA_MODE_1
+#else
             ? CHROMA_MODE_2
+#endif
             : CHROMA_MODE_3;
 
     }
@@ -1556,7 +1560,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1                    post last md_stage
     context_ptr->chroma_at_last_md_stage =
         MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#if ADDED_CFL_OFF
+    // Cfl level
+    // Level                Settings
+    // 0                    Allow cfl
+    // 1                    Disable cfl
+#if ADOPT_CHROMA_MODE1_CFL_OFF
+    if(pcs_ptr->enc_mode <= ENC_M5)
+        context_ptr->md_disable_cfl = EB_FALSE;
+    else if(!pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
+        context_ptr->md_disable_cfl = EB_TRUE;
 
+    if (sequence_control_set_ptr->static_config.disable_cfl_flag == 1 && context_ptr->md_disable_cfl == EB_TRUE)
+        context_ptr->chroma_at_last_md_stage = 0; // Indeprndent chroma search at last MD stage is not supported when CFL is off
+#endif
     // Set the full loop escape level
     // Level                Settings
     // 0                    Off

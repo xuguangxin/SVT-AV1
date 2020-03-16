@@ -439,6 +439,9 @@ typedef struct ModeDecisionContext {
 #endif
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;
+#if ADDED_CFL_OFF
+    EbBool        md_disable_cfl;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
