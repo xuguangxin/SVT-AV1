@@ -2109,10 +2109,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_1_cand_prune_th = 75;
     else
         if (pcs_ptr->enc_mode <= ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
-        context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+            context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+#if MAR16_M8_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+            context_ptr->md_stage_1_cand_prune_th =
+            sequence_control_set_ptr->static_config.md_stage_1_cand_prune_th;
+        else
+            context_ptr->md_stage_1_cand_prune_th = 45;
+#else
     else
         context_ptr->md_stage_1_cand_prune_th =
         sequence_control_set_ptr->static_config.md_stage_1_cand_prune_th;
+#endif
 
     // md_stage_1_class_prune_th (for class removal)
     // Remove class if deviation to the best higher than TH_C
