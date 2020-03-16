@@ -891,18 +891,19 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_4x4 = EB_FALSE;
 
     // Set disallow_all_nsq_blocks_below_8x8: 8x4, 4x8
-    pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
-
-    // Set disallow_all_nsq_blocks_below_16x16: 16x8, 8x16, 16x4, 4x16
     if (sc_content_detected) {
-        pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_FALSE;
+        pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
     else {
         if (pcs_ptr->enc_mode <= ENC_M7)
-            pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_FALSE;
+            pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
         else
-            pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_TRUE;
+            pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
     }
+
+    // Set disallow_all_nsq_blocks_below_16x16: 16x8, 8x16, 16x4, 4x16
+    pcs_ptr->disallow_all_nsq_blocks_below_16x16 = EB_FALSE;
+
     // Set disallow_all_non_hv_nsq_blocks_below_16x16
     pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16 = EB_FALSE;
 
