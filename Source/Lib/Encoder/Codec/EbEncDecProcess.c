@@ -1581,6 +1581,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1                    post last md_stage
     context_ptr->chroma_at_last_md_stage =
         MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#if M5_CHROMA_NICS
+    // Chroma independent modes nics
+    // Level                Settings
+    // 0                    All supported modes.
+    // 1                    All supported modes in  Intra picture and 4 in inter picture
+    context_ptr->independent_chroma_nics = pcs_ptr->enc_mode == ENC_M5 ? 1 : 0;
+#endif
 #if ADDED_CFL_OFF
     // Cfl level
     // Level                Settings

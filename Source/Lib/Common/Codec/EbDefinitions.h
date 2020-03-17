@@ -116,6 +116,7 @@ extern "C" {
 #define MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 1 // shut SQ vs. NSQ if MR (for multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3)
 #define ADD_SAD_AT_PME_SIGNAL      1 // Add signal for using SAD at PME
 #define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
+#define M5_CHROMA_NICS             1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

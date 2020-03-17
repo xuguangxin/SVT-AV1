@@ -310,6 +310,9 @@ typedef struct ModeDecisionContext {
     uint8_t              parent_sq_pred_mode[MAX_PARENT_SQ];
     uint8_t              chroma_level;
     uint8_t              chroma_at_last_md_stage;
+#if M5_CHROMA_NICS
+    uint8_t              independent_chroma_nics;
+#endif
     Part                 nsq_table[NSQ_TAB_SIZE];
     uint8_t              full_loop_escape;
     uint8_t              global_mv_injection;

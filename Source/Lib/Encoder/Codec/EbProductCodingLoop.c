@@ -7444,13 +7444,24 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
 
     // Derive uv_mode_nfl_count
     uint8_t uv_mode_nfl_count;
-    if (pcs_ptr->temporal_layer_index == 0)
-        uv_mode_nfl_count = uv_mode_total_count;
-    else if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
-        uv_mode_nfl_count = 16;
-    else
-        uv_mode_nfl_count = 8;
-
+#if M5_CHROMA_NICS
+    if (context_ptr->independent_chroma_nics) {
+        if (pcs_ptr->slice_type == I_SLICE)
+            uv_mode_nfl_count = uv_mode_total_count;
+        else
+            uv_mode_nfl_count = 4;
+    }
+    else {
+#endif
+        if (pcs_ptr->temporal_layer_index == 0)
+            uv_mode_nfl_count = uv_mode_total_count;
+        else if (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+            uv_mode_nfl_count = 16;
+        else
+            uv_mode_nfl_count = 8;
+#if M5_CHROMA_NICS
+    }
+#endif
     // Full-loop search uv_mode
     for (uint8_t uv_mode_count = 0; uv_mode_count < MIN(uv_mode_total_count, uv_mode_nfl_count);
          uv_mode_count++) {
