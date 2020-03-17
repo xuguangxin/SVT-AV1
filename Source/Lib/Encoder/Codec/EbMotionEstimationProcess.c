@@ -271,10 +271,14 @@ EbErrorType signal_derivation_me_kernel_oq(
     // 1: selective based on Full-Search SAD & MV.
     // 2: off
     if (context_ptr->me_context_ptr->use_subpel_flag == 1) {
+#if MAR17_ADOPTIONS
+        context_ptr->me_context_ptr->fractional_search_model = 0;
+#else
         if (enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->fractional_search_model = 0;
         else
             context_ptr->me_context_ptr->fractional_search_model = 1;
+#endif
     }
     else
         context_ptr->me_context_ptr->fractional_search_model = 2;
@@ -311,7 +315,11 @@ EbErrorType signal_derivation_me_kernel_oq(
                 context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
             else
                 context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+#if MAR17_ADOPTIONS
+        else if (enc_mode <= ENC_M7)
+#else
         else if (enc_mode <= ENC_M5)
+#endif
 #else
         if (enc_mode <= ENC_M3)
 #endif
@@ -368,7 +376,6 @@ void* tf_set_me_hme_params_oq(
 
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
 
     // HME/ME default settings
     me_context_ptr->number_hme_search_region_in_width = 2;
@@ -530,20 +537,28 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     // 1: selective based on Full-Search SAD & MV.
     // 2: off
     if (context_ptr->me_context_ptr->use_subpel_flag == 1) {
+#if MAR17_ADOPTIONS
+        context_ptr->me_context_ptr->fractional_search_model = 0;
+#else
         if (enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->fractional_search_model = 0;
         else
             context_ptr->me_context_ptr->fractional_search_model = 1;
+#endif
     }
     else
         context_ptr->me_context_ptr->fractional_search_model = 2;
 
     // HME Search Method
     if (pcs_ptr->sc_content_detected)
+#if MAR17_ADOPTIONS
+        context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
+#else
         if (enc_mode <= ENC_M6)
             context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
         else
             context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#endif
     else
         context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
     // ME Search Method

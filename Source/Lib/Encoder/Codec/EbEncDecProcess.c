@@ -1370,7 +1370,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
+#if MAR17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
 #if MAR2_M8_ADOPTIONS
     else {
@@ -1440,6 +1444,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->tx_search_reduced_set = 0;
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR17_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M8)
+            context_ptr->tx_search_reduced_set = 0;
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
             context_ptr->tx_search_reduced_set = 0;
         else if (pcs_ptr->enc_mode <= ENC_M6)
@@ -1447,6 +1455,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->tx_search_reduced_set = 0;
             else
                 context_ptr->tx_search_reduced_set = 1;
+#endif
 #if MAR2_M8_ADOPTIONS
         else
             context_ptr->tx_search_reduced_set = 1;
@@ -1535,6 +1544,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
                 ? CHROMA_MODE_2
                 : CHROMA_MODE_3;
+#if MAR17_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+            context_ptr->chroma_level = CHROMA_MODE_0;
+#else
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
@@ -1546,6 +1559,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->chroma_level = CHROMA_MODE_0;
         else if (pcs_ptr->enc_mode <= ENC_M5)
             context_ptr->chroma_level = CHROMA_MODE_1;
+#endif
         else
             context_ptr->chroma_level =
             (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
@@ -1573,7 +1587,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0                    Allow cfl
     // 1                    Disable cfl
 #if ADOPT_CHROMA_MODE1_CFL_OFF
+#if MAR17_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     if(pcs_ptr->enc_mode <= ENC_M5)
+#endif
         context_ptr->md_disable_cfl = EB_FALSE;
     else if(!pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #endif
@@ -1595,11 +1613,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-
+#if MAR17_ADOPTIONS
+            context_ptr->full_loop_escape = 0;
+#else
             if (pcs_ptr->enc_mode <= ENC_M5)
                 context_ptr->full_loop_escape = 0;
             else
                 context_ptr->full_loop_escape = 2;
+#endif
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M8)
@@ -1642,7 +1663,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->global_mv_injection = 1;
                 else
                     context_ptr->global_mv_injection = 0;
+#if MAR17_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
             else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1736,6 +1761,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->bipred3x3_injection = 1;
             else
                 context_ptr->bipred3x3_injection = 0;
+#if MAR17_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+            context_ptr->bipred3x3_injection = 1;
+#else
 #if MAR12_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M3)
 #else
@@ -1760,6 +1789,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #endif
             context_ptr->bipred3x3_injection = 2;
+#endif
         else
             context_ptr->bipred3x3_injection = 0;
 
@@ -1843,6 +1873,22 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->predictive_me_level = 0;
 
+#if ADD_SAD_AT_PME_SIGNAL
+    // Level                    Settings
+    // FALSE                    Use SSD at PME
+    // TRUE                     Use SAD at PME
+    if (context_ptr->pd_pass == PD_PASS_0)
+        context_ptr->use_sad_at_pme = EB_FALSE;
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->use_sad_at_pme = EB_FALSE;
+    else if (MR_MODE)
+        context_ptr->use_sad_at_pme = EB_FALSE;
+    else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        context_ptr->use_sad_at_pme = EB_TRUE;
+    else
+        context_ptr->use_sad_at_pme = EB_FALSE;
+#endif
+
     // Derive md_staging_mode
     //
     // MD_STAGING_MODE_1
@@ -1890,11 +1936,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_staging_mode = MD_STAGING_MODE_1;
     }
     else
-
+#if MAR17_ADOPTIONS
+        context_ptr->md_staging_mode = MD_STAGING_MODE_1;
+#else
         if (pcs_ptr->enc_mode <= ENC_M4)
             context_ptr->md_staging_mode = MD_STAGING_MODE_1;
         else
             context_ptr->md_staging_mode = MD_STAGING_MODE_0;
+#endif
 
     // Set md staging count level
     // Level 0              minimum count = 1
@@ -1936,6 +1985,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->interpolation_filter_search_blk_size = 0;
     }
     else
+#if MAR17_ADOPTIONS
+        context_ptr->interpolation_filter_search_blk_size = 0;
+#else
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M5)
 #else
@@ -1944,6 +1996,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->interpolation_filter_search_blk_size = 0;
         else
             context_ptr->interpolation_filter_search_blk_size = 1;
+#endif
 
     // Derive Spatial SSE Flag
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -1989,10 +2042,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         if (sequence_control_set_ptr->static_config.enable_rdoq == DEFAULT)
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR17_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M8)
+#else
 #if MAR4_M6_ADOPTIONS
                 if (pcs_ptr->enc_mode <= ENC_M5)
 #else
                 if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
                     context_ptr->enable_rdoq = EB_TRUE;
                 else
@@ -2266,10 +2323,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
         context_ptr->nsq_hv_level = 0;
+#if MAR17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7) {
+#else
 #if MAR4_M6_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3) {
+#endif
 #endif
         context_ptr->nsq_hv_level = 1;
         assert(context_ptr->sq_weight != (uint32_t)~0);
@@ -2321,10 +2382,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 1: If previous similar block is not compound, do not inject compound
     // 2: If previous similar block is not compound, do not inject compound else
     // consider the compound modes up the similar s one
+#if MAR17_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M7)
+#else
 #if MAR11_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
 #else
     if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
         context_ptr->comp_similar_mode = 1;
     else
@@ -2482,6 +2547,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->skip_depth = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
+        context_ptr->skip_depth = 0;
+    else if (MR_MODE)
         context_ptr->skip_depth = 0;
     else
         context_ptr->skip_depth =

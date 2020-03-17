@@ -1119,6 +1119,14 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 
     // Warped
     EbBool enable_wm;
+#if MAR17_ADOPTIONS
+    enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4 ||
+                    (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7 &&
+                    !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+                        (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
+        ? EB_TRUE
+        : EB_FALSE;
+#else
 #if MAR12_ADOPTIONS
     enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3 ||
         (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
@@ -1160,6 +1168,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #endif
 #endif
+#endif
 
     frm_hdr->allow_warped_motion =
         enable_wm &&
@@ -1177,10 +1186,14 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     if (scs_ptr->static_config.enable_obmc) {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR17_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#else
 #if MAR10_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
 #else
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
 #if OBMC_FAST
@@ -1189,7 +1202,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
             else
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
+#if MAR17_ADOPTIONS
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#else
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
 #endif

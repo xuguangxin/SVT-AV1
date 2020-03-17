@@ -320,6 +320,9 @@ typedef struct ModeDecisionContext {
     uint8_t              unipred3x3_injection;
     uint8_t              bipred3x3_injection;
     uint8_t              predictive_me_level;
+#if ADD_SAD_AT_PME_SIGNAL
+    uint8_t              use_sad_at_pme;
+#endif
     uint8_t              interpolation_filter_search_blk_size;
     uint8_t              redundant_blk;
     uint8_t              nic_level;

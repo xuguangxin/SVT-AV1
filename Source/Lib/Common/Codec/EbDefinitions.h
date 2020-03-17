@@ -114,6 +114,8 @@ extern "C" {
 #define ADOPT_CHROMA_MODE1_CFL_OFF 1
 #define PIC_BASED_RE_OFF           0
 #define MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 1 // shut SQ vs. NSQ if MR (for multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3)
+#define ADD_SAD_AT_PME_SIGNAL      1 // Add signal for using SAD at PME
+#define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -3236,6 +3238,17 @@ static const uint8_t enable_hme_level0_flag[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 
 static const uint16_t hme_level0_total_search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  64,   64,   48,   48,   48,    48,    48,   48,   48,   48,   48,   48,   48 },
+        {  96,   96,   96,   96,   96,    96,    96,   96,   96,   48,   48,   48,   48 },
+        { 128,  128,  128,  128,  128,   128,   128,  128,  128,   48,   48,   48,   48 },
+        { 192,  192,  128,  128,  128,   128,   128,  128,  128,   96,   96,   96,   96 }
+     } , {
+        {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
+        {  96,   96,   96,   96,   96,   96,   96,   96,   96,   96,   96,   96,   96 },
+        { 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128 },
+        { 192,  192,  192,  192,  128,  128,  128,  128,  128,  128,  128,  128,  128 }
+#else
 #if MAR12_ADOPTIONS
         {  64,   64,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48 },
         {  96,   96,   96,   96,   96,   48,   48,   48,   48,   48,   48,   48,   48 },
@@ -3257,11 +3270,24 @@ static const uint16_t hme_level0_total_search_area_width[SC_MAX_LEVEL][INPUT_SIZ
         { 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128 },
         { 128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128,  128 }
 #endif
+#endif
     }
 };
 
 static const uint16_t hme_level0_search_area_in_width_array_left[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        { 32,   32,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24 },
+        { 48,   48,   56,   56,   56,   56,   56,   56,   56,   24,   24,   24,   24 },
+        { 64,   64,   64,   64,   64,   64,   64,   64,   64,   24,   24,   24,   24 },
+        { 96,   96,   64,   64,   64,   64,   64,   64,   64,   48,   48,   48,   48 }
+
+    } , {
+        {  32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32 },
+        {  48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48 },
+        {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
+        {  96,   96,   96,   96,   64,   64,   64,   64,   64,   64,   64,   64,   64 }
+#else
 #if MAR12_ADOPTIONS
         { 32,   32,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24 },
         { 48,   48,   56,   56,   56,   24,   24,   24,   24,   24,   24,   24,   24 },
@@ -3284,11 +3310,24 @@ static const uint16_t hme_level0_search_area_in_width_array_left[SC_MAX_LEVEL][I
         {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
         {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
         {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 }
+#endif
 #endif
     }
 };
 static const uint16_t hme_level0_search_area_in_width_array_right[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        { 32,   32,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24 },
+        { 48,   48,   56,   56,   56,   56,   56,   56,   56,   24,   24,   24,   24 },
+        { 64,   64,   64,   64,   64,   64,   64,   64,   64,   24,   24,   24,   24 },
+        { 96,   96,   64,   64,   64,   64,   64,   64,   64,   48,   48,   48,   48 }
+
+    } , {
+        {  32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32 },
+        {  48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48,   48 },
+        {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
+        {  96,   96,   96,   96,   64,   64,   64,   64,   64,   64,   64,   64,   64 }
+#else
 #if MAR12_ADOPTIONS
         { 32,   32,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24,   24 },
         { 48,   48,   56,   56,   56,   24,   24,   24,   24,   24,   24,   24,   24 },
@@ -3312,10 +3351,22 @@ static const uint16_t hme_level0_search_area_in_width_array_right[SC_MAX_LEVEL][
         {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
         {  64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64,   64 }
 #endif
+#endif
     }
 };
 static const uint16_t hme_level0_total_search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {   32,    32,   40,   40,   40,   40,   40,   40,   40,   24,   24,   24,   24 },
+        {   64,    64,   64,   64,   64,   64,   64,   64,   64,   24,   24,   24,   24 },
+        {   80,    80,   80,   80,   80,   80,   80,   80,   80,   24,   24,   24,   24 },
+        {  128,   128,   80,   80,   80,   80,   80,   80,   80,   24,   24,   24,   24 }
+    } , {
+        {   32,    32,   32,    32,   32,   32,   32,   32,   32,   32,   32,   32,   32 },
+        {   64,    64,   64,    64,   64,   64,   64,   64,   64,   64,   64,   64,   64 },
+        {   80,    80,   80,    80,   80,   80,   80,   80,   80,   80,   80,   80,   80 },
+        {  128,   128,  128,   128,   80,   80,   80,   80,   80,   80,   80,   80,   80 }
+#else
 #if MAR12_ADOPTIONS
         {   32,    32,   40,   40,   40,   24,   24,   24,   24,   24,   24,   24,   24 },
         {   64,    64,   64,   64,   64,   24,   24,   24,   24,   24,   24,   24,   24 },
@@ -3337,10 +3388,22 @@ static const uint16_t hme_level0_total_search_area_height[SC_MAX_LEVEL][INPUT_SI
         {  80,   80,   80,   80,   80,   80,   80,   80,   80,   80,   80,   80,   80 },
         {  80,   80,   80,   80,   80,   80,   80,   80,   80,   80,   80,   80,   80 }
 #endif
+#endif
     }
 };
 static const uint16_t hme_level0_search_area_in_height_array_top[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  16,   16,   20,   20,   20,   20,   20,   20,   20,   12,   12,   12,   12 },
+        {  32,   32,   32,   32,   32,   32,   32,   32,   32,   12,   12,   12,   12 },
+        {  40,   40,   40,   40,   40,   40,   40,   40,   40,   12,   12,   12,   12 },
+        {  64,   64,   40,   40,   40,   40,   40,   40,   40,   12,   12,   12,   12 }
+    } , {
+        {  16,   16,  16,   16,   16,   16,   16,   16,   16,   16,   16,   16,   16 },
+        {  32,   32,  32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32 },
+        {  40,   40,  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 },
+        {  64,   64,  64,   64,   40,   40,   40,   40,   40,   40,   40,   40,   40 }
+#else
 #if MAR12_ADOPTIONS
         {  16,   16,   20,   20,   20,   12,   12,   12,   12,   12,   12,   12,   12 },
         {  32,   32,   32,   32,   32,   12,   12,   12,   12,   12,   12,   12,   12 },
@@ -3362,10 +3425,22 @@ static const uint16_t hme_level0_search_area_in_height_array_top[SC_MAX_LEVEL][I
         {  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 },
         {  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 }
 #endif
+#endif
     }
 };
 static const uint16_t hme_level0_search_area_in_height_array_bottom[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  16,   16,   20,   20,   20,   20,   20,   20,   20,   12,   12,   12,   12 },
+        {  32,   32,   32,   32,   32,   32,   32,   32,   32,   12,   12,   12,   12 },
+        {  40,   40,   40,   40,   40,   40,   40,   40,   40,   12,   12,   12,   12 },
+        {  64,   64,   40,   40,   40,   40,   40,   40,   40,   12,   12,   12,   12 }
+    }, {
+        {  16,   16,  16,   16,   16,   16,   16,   16,   16,   16,   16,   16,   16 },
+        {  32,   32,  32,   32,   32,   32,   32,   32,   32,   32,   32,   32,   32 },
+        {  40,   40,  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 },
+        {  64,   64,  64,   64,   40,   40,   40,   40,   40,   40,   40,   40,   40 }
+#else
 #if MAR12_ADOPTIONS
         {  16,   16,   20,   20,   20,   12,   12,   12,   12,   12,   12,   12,   12 },
         {  32,   32,   32,   32,   32,   12,   12,   12,   12,   12,   12,   12,   12 },
@@ -3386,6 +3461,7 @@ static const uint16_t hme_level0_search_area_in_height_array_bottom[SC_MAX_LEVEL
         {  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 },
         {  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 },
         {  40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40,   40 }
+#endif
 #endif
     }
 };
@@ -3414,6 +3490,18 @@ static const uint8_t enable_hme_level1_flag[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 };
 static const uint16_t hme_level1_search_area_in_width_array_left[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+    } , {
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+
+#else
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
@@ -3429,11 +3517,24 @@ static const uint16_t hme_level1_search_area_in_width_array_left[SC_MAX_LEVEL][I
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 }
+#endif
 #endif
     }
 };
 static const uint16_t hme_level1_search_area_in_width_array_right[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+    } , {
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+
+#else
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
@@ -3449,11 +3550,24 @@ static const uint16_t hme_level1_search_area_in_width_array_right[SC_MAX_LEVEL][
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 }
+#endif
 #endif
     }
 };
 static const uint16_t hme_level1_search_area_in_height_array_top[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+    } , {
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+
+#else
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
@@ -3470,10 +3584,23 @@ static const uint16_t hme_level1_search_area_in_height_array_top[SC_MAX_LEVEL][I
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 }
 #endif
+#endif
     }
 };
 static const uint16_t hme_level1_search_area_in_height_array_bottom[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+    } , {
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 },
+        {  16,   16,   16,   16,   16,    16,   16,   16,   16,    8,    8,    8,  8 }
+
+#else
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,    8,    8,    8,    8,     8 },
@@ -3489,6 +3616,7 @@ static const uint16_t hme_level1_search_area_in_height_array_bottom[SC_MAX_LEVEL
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 },
         {  16,   16,   16,   16,   16,    8,    8,    8,   32,    8,    8,    8,     8 }
+#endif
 #endif
     }
 };
@@ -3516,6 +3644,17 @@ static const uint8_t enable_hme_level2_flag[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 };
 static const uint16_t hme_level2_search_area_in_width_array_left[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+    } , {
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+#else
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
@@ -3525,10 +3664,22 @@ static const uint16_t hme_level2_search_area_in_width_array_left[SC_MAX_LEVEL][I
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 }
+#endif
     }
 };
 static const uint16_t hme_level2_search_area_in_width_array_right[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+    } , {
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+#else
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
@@ -3538,10 +3689,22 @@ static const uint16_t hme_level2_search_area_in_width_array_right[SC_MAX_LEVEL][
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 }
+#endif
     }
 };
 static const uint16_t hme_level2_search_area_in_height_array_top[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+    } , {
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+#else
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
@@ -3551,10 +3714,22 @@ static const uint16_t hme_level2_search_area_in_height_array_top[SC_MAX_LEVEL][I
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 }
+#endif
     }
 };
 static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+    } , {
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 },
+        {   8,    8,    8,    8,    8,    8,    8,    8,    8,    4,    4,     4,    4 }
+#else
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
@@ -3564,6 +3739,7 @@ static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 },
         {   8,    8,    8,    8,    8,    4,    4,    4,    4,    4,    4,     4,    4 }
+#endif
     }
 };
 /******************************************************************************
@@ -3572,6 +3748,19 @@ static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL
     //    M0      M1      M2      M3      M4    M5       M6      M7      M8      M9      M10      M11    M12
 static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        // NSC
+        { 256,    256,    256,    256,     96,     96,     96,     96,    32,    32,    32 ,   32,    32 },  // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 384,    384,    384,    384,    200,    200,    200,    200,    48,    48,    48,    48,    48 },  // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 480,    480,    480,    480,    296,    296,    296,    296,    64,    64,    64,    64,    64 },  // INPUT_SIZE_1080p_RANGE
+        { 720,    720,    720,    720,    296,    296,    296,    296,    96,    96,    96,    96,    96 }   // INPUT_SIZE_4K_RANGE
+    },{
+        // SC
+        { 512,    512,    512,    512,    368,    368,    368,    368,    184,    184,    184,   184,  184 },
+        { 800,    800,    800,    800,    368,    368,    368,    368,    280,    280,    280,   280,  280 },
+        { 1024,   1024,   1024,   1024,   784,    784,    784,    784,    400,    360,    360,   360,  360 },
+        { 1536,   1536,   1536,   1536,   784,    784,    784,    784,    540,    540,    540,   540,  540 }
+#else
 #if MAR12_ADOPTIONS
         // NSC
         { 256,    256,    256,    256,    96 ,    96,     72 ,    72,     32,     72,     72 ,    72,     72 },  // INPUT_SIZE_576p_RANGE_OR_LOWER
@@ -3611,10 +3800,24 @@ static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SU
         { 1536,   1536,   1536,   1024,   784,    784,    600,    600,    600,    600,    600,    600,    600 }
 #endif
 #endif
+#endif
     }
 };
 static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        // NSC
+        { 128,    128,    128,    128,     48,     48,     48,     48,    16,    16,   16,   16,   16 },
+        { 192,    192,    192,    192,     96,     96,     96,     96,    24,    24,   24,   24,   24 },
+        { 240,    240,    240,    240,    144,    144,    144,    144,    32,    32,   32,   32,   32 },
+        { 360,    360,    360,    360,    144,    144,    144,    144,    48,    48,   48,   48,   48 }
+    },{
+        // SC
+        { 512,    512,     512,     512,     368,    368,    368,    368,    184,    184,    184,   184,  184 },
+        { 800,    800,     800,     800,     368,    368,    368,    368,    280,    280,    280,   280,  280 },
+        { 1024,   1024,    1024,    1024,    784,    784,    784,    784,    400,    360,    360,   360,  360 },
+        { 1536,   1536,    1536,    1536,    784,    784,    784,    784,    540,    540,    540,   540,  540 }
+#else
 #if MAR12_ADOPTIONS
         // NSC
         { 128,    128,    128,    128,    48,    48,      40,     40,     16,     40,     40,     40,     40 },
@@ -3654,11 +3857,25 @@ static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
         { 1536,   1536,    1536,    1024,    784,    784,    600,    600,    600,    600,    600,    600,    600 }
 #endif
 #endif
+#endif
     }
 };
     //    M0      M1      M2      M3   M4     M5     M6     M7     M8     M9     M10    M11    M12
 static const uint16_t min_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        // NSC
+        { 128,  128,   128,     128,    24,    24,    24,    24,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 192,  192,   192,     192,    48,    48,    48,    48,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 240,  240,   240,     240,    72,    72,    72,    72,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
+        { 360,  360,   360,     360,    72,    72,    72,    72,    48,    48,    48,    48,    48 }  // INPUT_SIZE_4K_RANGE
+    } , {
+        // SC
+        { 168,   168,   168,    168,    72,    72,    72,   72,     56,    56,    56,    56,    56 },
+        { 256,   256,   256,    256,    88,    88,    88,   88,     88,    56,    56,    56,    56 },
+        { 320,   320,   320,    320,   112,   112,   112,  112,    112,    56,    56,    56,    56 },
+        { 480,   480,   480,    480,   168,   168,   168,  168,    168,    56,    56,    56,    56 }
+#else
 #if MAR12_ADOPTIONS
         // NSC
         { 128,  128,   128,     128,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
@@ -3698,10 +3915,24 @@ static const uint16_t min_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SU
         { 480,   480,   480,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
 #endif
 #endif
+#endif
     }
 };
 static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        // NSC
+        { 64,   64,    64,     64,     16,    16,   16,    16,     8,     8,     8,    8,     8 },
+        { 96,   96,    96,     96,     24,    24,   24,    24,    12,    12,    12,   12,    12 },
+        { 120,  120,   120,    120,    40,    40,   40,    40,    16,    16,    16,   16,    16 },
+        { 180,  180,   180,    180,    40,    40,   40,    40,    24,    24,    24,   24,    24 }
+    } , {
+        // SC
+        { 168,  168,   168,    168,    72,    72,    72,   72,    56,   16,    16,    16,    16 },
+        { 256,  256,   256,    256,    88,    88,    88,   88,    88,   40,    40,    40,    40 },
+        { 320,  320,   320,    320,   112,   112,   112,  112,   112,   56,    56,    56,    56 },
+        { 480,  480,   480,    480,   168,   168,   168,  168,   168,   56,    56,    56,    56 }
+#else
 #if MAR12_ADOPTIONS
         // NSC
         { 64,   64,    64,     64,     16,    16,    16,    16,    8,     16,    16,    16,    16 },
@@ -3741,6 +3972,7 @@ static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
         { 480,  480,   480,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
 #endif
 #endif
+#endif
     }
 };
 
@@ -3750,6 +3982,19 @@ static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
     //    M0      M1      M2      M3   M4     M5     M6    M7     M8     M9     M10   M11    M12
 static const uint16_t max_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        // NSC
+        { 64,    64,    64,    64,    24,    16,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 80,    80,    80,    80,    32,    24,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 96,    96,    96,    96,    40,    32,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
+        { 96,    96,    96,    96,    40,    32,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
+    } , {
+        // SC
+        { 60,    60,   60,     60,    48,    40,    40,    40,    40,    40,    40,    40,    40 },
+        { 60,    60,   60,     60,    48,    40,    40,    40,    40,    40,    40,    40,    40 },
+        { 128,   128,  128,    128,   96,    72,    72,    72,    72,    72,    72,    72,    72 },
+        { 128,   128,  128,    128,   96,    72,    72,    72,    72,    72,    72,    72,    72 }
+#else
 #if MAR12_ADOPTIONS
         // NSC
         { 64,    64,    64,    64,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
@@ -3775,10 +4020,24 @@ static const uint16_t max_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
         { 128,   128,  128,    128,   96,    96,    72,    72,    72,    72,    72,    72,    72 },
         { 128,   128,  128,    128,   96,    96,    72,    72,    72,    72,    72,    72,    72 }
 #endif
+#endif
     }
 };
 static const uint16_t max_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        //NSC
+        { 64,    64,    64,   64,    24,    16,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 80,    80,    80,   80,    32,    24,    24,    24,    24,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 96,    96,    96,   96,    40,    32,    32,    32,    32,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
+        { 96,    96,    96,   96,    40,    32,    32,    32,    32,    32,    32,    32,    32 }  // INPUT_SIZE_4K_RANGE
+    } , {
+        // SC
+        { 60,    60,    60,    60,    48,    40,    40,    40,    40,    40,    40,    40,    40 },
+        { 60,    60,    60,    60,    48,    40,    40,    40,    40,    40,    40,    40,    40 },
+        { 128,   128,   128,   128,   96,    72,    72,    72,    72,    72,    72,    72,    72 },
+        { 128,   128,   128,   128,   96,    72,    72,    72,    72,    72,    72,    72,    72 }
+#else
 #if MAR12_ADOPTIONS
         //NSC
         { 64,    64,    64,   64,    24,    24,    16,    16,    16,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
@@ -3804,11 +4063,25 @@ static const uint16_t max_metf_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX
         { 128,   128,   128,   128,   96,    96,    72,    72,    72,    72,    72,    72,    72 },
         { 128,   128,   128,   128,   96,    96,    72,    72,    72,    72,    72,    72,    72 }
 #endif
+#endif
     }
 };
     //    M0      M1      M2      M3   M4     M5     M6    M7     M8     M9     M10   M11    M12
 static const uint16_t min_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        // NSC
+        { 16,    16,    16,    16,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
+        { 24,    24,    24,    24,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
+        { 32,    32,    32,    32,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
+        { 32,    32,    32,    32,    16,    16,    16,    16,    16,    16,    16,    16,    16 }
+    } , {
+        // SC
+        { 16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
+        { 24,    24,    24,    24,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
+        { 32,    32,    32,    32,    24,    16,    16,    16,    16,    16,    16,    16,    16 },
+        { 32,    32,    32,    32,    24,    16,    16,    16,    16,    16,    16,    16,    16 }
+#else
 #if MAR12_ADOPTIONS
         // NSC
         { 16,    16,    16,    16,    8,     8,     8,     8,     8,     8,     8,     8,     8  },
@@ -3833,6 +4106,7 @@ static const uint16_t min_metf_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
         { 24,    24,    24,    24,    16,    16,    16,    16,    16,    16,    16,    16,    16 },
         { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 },
         { 32,    32,    32,    32,    24,    24,    16,    16,    16,    16,    16,    16,    16 }
+#endif
 #endif
     }
 };
@@ -3982,6 +4256,17 @@ static const uint16_t tf_hme_level0_search_area_in_height_array_bottom[SC_MAX_LE
    //      M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
 static const uint8_t tf_enable_hme_level1_flag[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if MAR17_ADOPTIONS
+        {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
+        {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 },      // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 },      // INPUT_SIZE_1080p_RANGE
+        {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 }       // INPUT_SIZE_4K_RANGE
+    }, {
+        {   1,    1,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,    0 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
+        {   1,    1,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,    0 },      // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        {   1,    1,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,    0 },      // INPUT_SIZE_1080p_RANGE
+        {   1,    1,    0,    0,    0,    0,    0,    0,    0,    0,    0,     0,    0 }       // INPUT_SIZE_4K_RANGE
+#else
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 },      // INPUT_SIZE_576p_RANGE_OR_LOWER
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 },      // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         {   1,    1,    1,    1,    1,    1,    1,    1,    1,    0,    0,     0,    0 },      // INPUT_SIZE_1080p_RANGE
@@ -3991,6 +4276,7 @@ static const uint8_t tf_enable_hme_level1_flag[SC_MAX_LEVEL][INPUT_SIZE_COUNT][M
         {   1,    1,    0,    0,    0,    0,    0,    0,    1,    0,    0,     0,    0 },      // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
         {   1,    1,    0,    0,    0,    0,    0,    0,    1,    0,    0,     0,    0 },      // INPUT_SIZE_1080p_RANGE
         {   1,    1,    0,    0,    0,    0,    0,    0,    1,    0,    0,     0,    0 }       // INPUT_SIZE_4K_RANGE
+#endif
     }
 };
 static const uint16_t tf_hme_level1_search_area_in_width_array_left[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
@@ -4113,6 +4399,7 @@ static const uint16_t tf_hme_level2_search_area_in_height_array_bottom[SC_MAX_LE
     }
 };
 
+#if !MAR17_ADOPTIONS
 static const uint16_t tf_search_area_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
         {  64,   64,   64,   64,   64,   64,   64,   64,   48,   16,   16,    16,   16 },
@@ -4141,7 +4428,7 @@ static const uint16_t tf_search_area_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_
 
     //     M0    M1    M2    M3    M4    M5    M6    M7    M8    M9    M10    M11    M12
 };
-
+#endif
 static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
     0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,
     1 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,

@@ -2013,10 +2013,14 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
         else
             scs_ptr->down_sampling_method_me_search = ME_DECIMATED_DOWNSAMPLED;
     else
+#if MAR17_ADOPTIONS
+        if (scs_ptr->static_config.enc_mode <= ENC_M8)
+#else
 #if MAR3_M6_ADOPTIONS
         if (scs_ptr->static_config.enc_mode <= ENC_M6)
 #else
         if (scs_ptr->static_config.enc_mode <= ENC_M4)
+#endif
 #endif
             scs_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
         else
@@ -2027,7 +2031,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     // 0                            0: not allowed
     // 1                            1: allowed
     if (scs_ptr->static_config.over_bndry_blk == DEFAULT)
+#if MAR17_ADOPTIONS
+        if (scs_ptr->static_config.enc_mode <= ENC_M7)
+#else
         if (scs_ptr->static_config.enc_mode <= ENC_M5)
+#endif
             scs_ptr->over_boundary_block_mode = 1;
         else
             scs_ptr->over_boundary_block_mode = 0;

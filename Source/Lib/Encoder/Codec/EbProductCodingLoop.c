@@ -3893,9 +3893,14 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                              EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
                              uint32_t blk_origin_index) {
     EbBool                    use_ssd           = EB_TRUE;
+#if ADD_SAD_AT_PME_SIGNAL
+    if (context_ptr->use_sad_at_pme)
+        use_ssd = EB_FALSE;
+#else
 #if !MR_MODE
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         use_ssd = EB_FALSE;
+#endif
 #endif
     uint8_t                   hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                     ? EB_8_BIT_MD

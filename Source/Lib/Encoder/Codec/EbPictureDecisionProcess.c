@@ -838,6 +838,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set the Multi-Pass PD level
     if (sc_content_detected)
+#if MAR17_ADOPTIONS
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+#else
         if (pcs_ptr->enc_mode <= ENC_M4)
             pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
         else
@@ -846,12 +849,17 @@ EbErrorType signal_derivation_multi_processes_oq(
             (pcs_ptr->slice_type == I_SLICE)
             ? MULTI_PASS_PD_OFF
             : MULTI_PASS_PD_LEVEL_2;
+#endif
     else if (MR_MODE)
         pcs_ptr->multi_pass_pd_level =
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_OFF
         : MULTI_PASS_PD_LEVEL_0;
+#if MAR17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
         // Use a single-stage PD if I_SLICE
         pcs_ptr->multi_pass_pd_level =
         (pcs_ptr->slice_type == I_SLICE)
@@ -1180,6 +1188,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 4                                            16 step refinement
     // 5                                            64 step refinement
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
+#if MAR17_ADOPTIONS
+        pcs_ptr->cdef_filter_mode = 5;
+#else
 #if MAR10_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
             pcs_ptr->cdef_filter_mode = 5;
@@ -1189,6 +1200,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->cdef_filter_mode = 5;
         else
             pcs_ptr->cdef_filter_mode = 2;
+#endif
     }
     else
         pcs_ptr->cdef_filter_mode = 0;
@@ -1209,6 +1221,9 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             cm->sg_filter_mode = 0;
 #endif
+#if MAR17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1217,6 +1232,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
         cm->sg_filter_mode = 4;
 #if MAR12_M8_ADOPTIONS
@@ -1248,7 +1264,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             cm->wn_filter_mode = 0;
 #endif
     else
+#if MAR17_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             cm->wn_filter_mode = 3;
 #if MAR12_M8_ADOPTIONS
         else
@@ -1300,6 +1320,13 @@ EbErrorType signal_derivation_multi_processes_oq(
                 else
                     pcs_ptr->intra_pred_mode = 2;
 #endif
+#if MAR17_ADOPTIONS
+            else
+                if (pcs_ptr->temporal_layer_index == 0)
+                    pcs_ptr->intra_pred_mode = 2;
+                else
+                    pcs_ptr->intra_pred_mode = 3;
+#else
             else if (pcs_ptr->enc_mode <= ENC_M6)
                 if (pcs_ptr->temporal_layer_index == 0)
                     pcs_ptr->intra_pred_mode = 2;
@@ -1307,6 +1334,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                     pcs_ptr->intra_pred_mode = 3;
             else
                 pcs_ptr->intra_pred_mode = 4;
+#endif
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
@@ -1344,6 +1372,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
         else
             pcs_ptr->tx_size_search_mode = 0;
+#if MAR17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1352,6 +1383,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
         pcs_ptr->tx_size_search_mode = 1;
 #else
@@ -1380,7 +1412,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->wedge_mode = 0;
         else
             pcs_ptr->wedge_mode = 1;
+#if MAR17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M2)
 #endif
@@ -1415,7 +1451,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 2                      ON: AVG/DIST/DIFF/WEDGE
     if (scs_ptr->static_config.compound_level == DEFAULT) {
         if (scs_ptr->compound_mode)
-
+#if MAR17_ADOPTIONS
+            pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M7 ? 2 : 1;
+#else
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M4 ? 2 : 1;
@@ -1425,6 +1463,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #else
             pcs_ptr->compound_mode =
             pcs_ptr->enc_mode <= ENC_M2 ? 2 : 1;
+#endif
 #endif
         else
             pcs_ptr->compound_mode = 0;
