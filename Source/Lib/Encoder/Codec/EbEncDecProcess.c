@@ -26,6 +26,13 @@
 //To fix warning C4013: 'convert_16bit_to_8bit' undefined; assuming extern returning int
 #include "common_dsp_rtcd.h"
 #include "EbRateDistortionCost.h"
+
+#if MR_MODE
+#define MR_MODE_MULTI_PASS_PD 1
+#else
+#define MR_MODE_MULTI_PASS_PD 0
+#endif
+
 void eb_av1_cdef_search(EncDecContext *context_ptr, SequenceControlSet *scs_ptr,
                         PictureControlSet *pcs_ptr);
 
@@ -2739,7 +2746,11 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     pth03 = pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                                   pcs_ptr->slice_type != I_SLICE][encode_mode][1][2];
 #if FIX_MR_PD1
+#if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
+    if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 || MR_MODE_MULTI_PASS_PD) {
+#else
     if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
+#endif
         mth01 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                                   pcs_ptr->slice_type != I_SLICE][encode_mode][0][0];
         mth02 = mr_pd_level_tab[!pcs_ptr->parent_pcs_ptr->sc_content_detected &&
@@ -2924,7 +2935,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             context_ptr,
                             sb_index);
 #if FIX_MR_PD1
+#if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
+                        if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0 && !MR_MODE_MULTI_PASS_PD) {
+#else
                         if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0) {
+#endif
 #else
                         if (best_part_cost < early_exit_th) {
 #endif
@@ -3105,6 +3120,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = 0;
                             e_depth = 0;
                         } else
+#if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
+                            if (MR_MODE_MULTI_PASS_PD) { // Active when multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3
+                                s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0 : -1;
+                                e_depth = (blk_geom->sq_size == 8 && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 0 : 1;
+                            }
+                            else
+#endif
 #if CLEAN_UP_SB_DATA_1
                             if (context_ptr->md_local_blk_unit[blk_index].best_d1_blk == blk_index) {
 #else

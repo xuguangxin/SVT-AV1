@@ -113,6 +113,7 @@ extern "C" {
 #define ADDED_CFL_OFF              1
 #define ADOPT_CHROMA_MODE1_CFL_OFF 1
 #define PIC_BASED_RE_OFF           1
+#define MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 1 // shut SQ vs. NSQ if MR (for multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3)
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -2847,7 +2848,7 @@ typedef enum MultiPassPdLevel
     MULTI_PASS_PD_LEVEL_0 = 1, // Multi-Pass PD Mode 0: PD0 | PD0_REFINEMENT
     MULTI_PASS_PD_LEVEL_1 = 2, // Multi-Pass PD Mode 1: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ only
     MULTI_PASS_PD_LEVEL_2 = 3, // Multi-Pass PD Mode 2: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ and SQ coeff info
-    MULTI_PASS_PD_LEVEL_3 = 4, // Multi-Pass PD Mode 3: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ and both SQ and NSQ coeff info
+    MULTI_PASS_PD_LEVEL_3 = 4, // reserved = MULTI_PASS_PD_LEVEL_2
     MULTI_PASS_PD_INVALID = 5, // Invalid Multi-Pass PD Mode
 } MultiPassPdLevel;
 
