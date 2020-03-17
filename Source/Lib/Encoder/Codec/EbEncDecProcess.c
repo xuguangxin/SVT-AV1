@@ -1648,7 +1648,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR12_ADOPTIONS
+#if MAR17_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M7)
+#else
                 if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #else
 #if MAR10_ADOPTIONS
 #if MAR11_ADOPTIONS
