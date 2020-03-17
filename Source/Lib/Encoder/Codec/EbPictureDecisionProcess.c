@@ -885,7 +885,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
 
     // Set sb_64x64_simulated
-    pcs_ptr->sb_64x64_simulated = EB_FALSE;
+    if (sc_content_detected) {
+        pcs_ptr->sb_64x64_simulated = EB_TRUE;
+    }
+    else {
+        pcs_ptr->sb_64x64_simulated = EB_FALSE;
+    }
 
     // Set disallow_4x4
     pcs_ptr->disallow_4x4 = EB_FALSE;
@@ -895,7 +900,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
     else {
-        if (pcs_ptr->enc_mode <= ENC_M7)
+        if (pcs_ptr->enc_mode <= ENC_M4)
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
         else
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;

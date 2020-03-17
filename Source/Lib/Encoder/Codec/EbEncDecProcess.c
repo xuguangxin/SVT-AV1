@@ -2826,7 +2826,7 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     else
         *e_depth = 0;
 #if DEPTH_PART_CLEAN_UP  // refinement rest
-    *s_depth =  MAX((pcs_ptr->parent_pcs_ptr->sb_64x64_simulated ? 1 : 0) - blk_geom->depth, *s_depth);
+    *s_depth =  MAX((sb_size == BLOCK_128X128 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated ? 1 : 0) - blk_geom->depth, *s_depth);
     *e_depth = MIN((pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 :5) - blk_geom->depth, *e_depth);
 #endif
 }
