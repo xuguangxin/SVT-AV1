@@ -1516,7 +1516,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
     // using ME MV.
 #if MAR17_ADOPTIONS
-    pcs_ptr->gm_level = GM_FULL;
+    if (pcs_ptr->enc_mode <= ENC_M7)
+        pcs_ptr->gm_level = GM_FULL;
+    else
+        pcs_ptr->gm_level = GM_DOWN;
 #else
 #if MAR12_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
