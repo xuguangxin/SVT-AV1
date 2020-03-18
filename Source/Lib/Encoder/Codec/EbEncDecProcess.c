@@ -3089,8 +3089,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if DEPTH_PART_CLEAN_UP
                         EbBool zero_coeff_present_flag =
                             context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff == 0;
-
+#if ADD_NEW_MPPD_LEVEL
+                        if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4)) {
+#else
                         if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3)) {
+#endif
 #else
                         EbBool zero_coeff_present_flag = EB_FALSE;
 
@@ -3248,8 +3251,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = 0;
                             e_depth = 0;
                         } else
-#if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
+#if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 || ADD_NEW_MPPD_LEVEL
+#if ADD_NEW_MPPD_LEVEL
+                            // This removes the SQ-versus-NSQ decision for the new MULTI_PASS_PD_LEVEL_1
+                            if (MR_MODE_MULTI_PASS_PD || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level <= MULTI_PASS_PD_LEVEL_1) { // Active when multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3 or PIC_MULTI_PASS_PD_MODE_4
+#else
                             if (MR_MODE_MULTI_PASS_PD) { // Active when multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3
+#endif
                                 s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0 : -1;
                                 e_depth = (blk_geom->sq_size == 8 && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 0 : 1;
                             }
@@ -3674,10 +3682,18 @@ void *enc_dec_kernel(void *input_ptr) {
                     // The PD1 predicted Partitioning Structure is also refined (up to Pred - 1 / Pred + 1 refinement) using the square (SQ) vs. non-square (NSQ) decision(s)
                     // inside the predicted depth and using coefficient information. The final set of blocks is evaluated in PD2 to output the final Partitioning Structure
 #if DEPTH_PART_CLEAN_UP
+#if ADD_NEW_MPPD_LEVEL
+                    if ((pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 ||
+                         pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4) &&
+#else
                     if ((pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 ||
                          pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
                          pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
                          pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3) &&
+#endif
 #else
                     if ((pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_0 ||
                          pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
@@ -3733,9 +3749,16 @@ void *enc_dec_kernel(void *input_ptr) {
                                               sb_origin_x,
                                               sb_origin_y);
 #if DEPTH_PART_CLEAN_UP
+#if ADD_NEW_MPPD_LEVEL
+                        if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
+                            pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
+                            pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 ||
+                            pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4) {
+#else
                         if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_1 ||
                             pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 ||
                             pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3) {
+#endif
 #else
                         if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_1 ||
                             pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_MULTI_PASS_PD_MODE_2 ||

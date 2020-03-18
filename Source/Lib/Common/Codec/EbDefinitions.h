@@ -121,6 +121,7 @@ extern "C" {
 #define MAR18_MR_TESTS_ADOPTIONS   1 // adoptions for MR, M0, and M2
 #define MAR18_ADOPTIONS            1 // adoptions in M5/M8
 #define REU_UPDATE                 1 // use top right instead of top SB for CDF calculation
+#define ADD_NEW_MPPD_LEVEL         1 // add a new MPPD level with PD0 | PD1 | PD2 w/o sq/nsq decision
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -2849,6 +2850,18 @@ typedef enum EbSaoMode
 // Multi-Pass Partitioning Depth(Multi - Pass PD) performs multiple PD stages for the same SB towards 1 final Partitioning Structure
 // As we go from PDn to PDn + 1, the prediction accuracy of the MD feature(s) increases while the number of block(s) decreases
 #if DEPTH_PART_CLEAN_UP
+#if ADD_NEW_MPPD_LEVEL
+typedef enum MultiPassPdLevel
+{
+    MULTI_PASS_PD_OFF     = 0, // Multi-Pass PD OFF = 1-single PD Pass (e.g. I_SLICE, SC)
+    MULTI_PASS_PD_LEVEL_0 = 1, // Multi-Pass PD Mode 0: PD0 | PD0_REFINEMENT
+    MULTI_PASS_PD_LEVEL_1 = 2, // Multi-Pass PD Mode 1: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT
+    MULTI_PASS_PD_LEVEL_2 = 3, // Multi-Pass PD Mode 1: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ only
+    MULTI_PASS_PD_LEVEL_3 = 4, // Multi-Pass PD Mode 2: PD0 | PD0_REFINEMENT | PD1 | PD1_REFINEMENT using SQ vs. NSQ and SQ coeff info
+    MULTI_PASS_PD_LEVEL_4 = 5, // reserved = MULTI_PASS_PD_LEVEL_3
+    MULTI_PASS_PD_INVALID = 6, // Invalid Multi-Pass PD Mode
+} MultiPassPdLevel;
+#else
 typedef enum MultiPassPdLevel
 {
     MULTI_PASS_PD_OFF = 0, // Multi-Pass PD OFF = 1-single PD Pass (e.g. I_SLICE, SC)
@@ -2858,6 +2871,7 @@ typedef enum MultiPassPdLevel
     MULTI_PASS_PD_LEVEL_3 = 4, // reserved = MULTI_PASS_PD_LEVEL_2
     MULTI_PASS_PD_INVALID = 5, // Invalid Multi-Pass PD Mode
 } MultiPassPdLevel;
+#endif
 
 typedef enum AdpLevel
 {

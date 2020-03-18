@@ -837,6 +837,36 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->adp_level = ADP_OFF;
 
     // Set the Multi-Pass PD level
+#if ADD_NEW_MPPD_LEVEL
+    if (sc_content_detected)
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : pcs_ptr->hierarchical_levels < 3
+        ? MULTI_PASS_PD_LEVEL_0
+        : MULTI_PASS_PD_LEVEL_1;
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : pcs_ptr->hierarchical_levels < 3
+        ? MULTI_PASS_PD_LEVEL_0
+        : MULTI_PASS_PD_LEVEL_2;
+    else
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : MULTI_PASS_PD_LEVEL_3;
+
+    // If ADP then set multi_pass_pd_level to INVALID
+    if(pcs_ptr->adp_level != ADP_OFF)
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
+#else
     if (sc_content_detected)
 #if MAR17_ADOPTIONS
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
@@ -876,6 +906,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     // If ADP then set multi_pass_pd_level to INVALID
     if(pcs_ptr->adp_level != ADP_OFF)
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
+#endif
 
 
     // Set disallow_nsq
