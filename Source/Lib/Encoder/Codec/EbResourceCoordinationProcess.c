@@ -851,6 +851,12 @@ void *resource_coordination_kernel(void *input_ptr) {
                 // 0                 OFF
                 // 1                 ON
                 scs_ptr->seq_header.enable_interintra_compound =
+#if MAR18_MR_TESTS_ADOPTIONS
+                    (scs_ptr->static_config.enc_mode <= ENC_M3 &&
+                    scs_ptr->static_config.screen_content_mode != 1)
+                    ? 1
+                    : 0;
+#else
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
                     MR_MODE || (scs_ptr->static_config.enc_mode <= ENC_M3 &&
@@ -863,6 +869,7 @@ void *resource_coordination_kernel(void *input_ptr) {
                                 scs_ptr->static_config.screen_content_mode != 1)
                         ? 1
                         : 0;
+#endif
 
             } else
                 scs_ptr->seq_header.enable_interintra_compound =

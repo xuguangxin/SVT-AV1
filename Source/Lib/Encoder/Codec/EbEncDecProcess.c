@@ -1406,10 +1406,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->tx_weight = MAX_MODE_COST;
 #if MAR12_ADOPTIONS
         else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR18_ADOPTIONS
+            context_ptr->tx_weight = MAX_MODE_COST;
+#else
             if (pcs_ptr->enc_mode <= ENC_M3)
                 context_ptr->tx_weight = MAX_MODE_COST;
             else
                 context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
+#endif
 #endif
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1771,7 +1775,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (pcs_ptr->enc_mode <= ENC_M4)
                 context_ptr->bipred3x3_injection = 1;
             else
+#if MAR18_ADOPTIONS
+                context_ptr->bipred3x3_injection = 2;
+#else
                 context_ptr->bipred3x3_injection = 0;
+#endif
+#if MAR18_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M4)
+            context_ptr->bipred3x3_injection = 1;
+        else
+            context_ptr->bipred3x3_injection = 2;
+#else
 #if MAR17_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M7)
             context_ptr->bipred3x3_injection = 1;
@@ -1803,6 +1817,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
             context_ptr->bipred3x3_injection = 0;
+#endif
 
     else
         context_ptr->bipred3x3_injection =
@@ -1892,8 +1907,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->use_sad_at_pme = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->use_sad_at_pme = EB_FALSE;
+#if !MAR18_MR_TESTS_ADOPTIONS // It was found that SAD is better than SSD for SC content
     else if (MR_MODE)
         context_ptr->use_sad_at_pme = EB_FALSE;
+#endif
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->use_sad_at_pme = EB_TRUE;
     else
@@ -2159,13 +2176,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if !INTER_COMP_REDESIGN
     // Derive INTER/INTER WEDGE variance TH
     // Phoenix: Active only when inter/inter compound is on
-#if MAR10_ADOPTIONS
+#if MAR10_ADOPTIONS && !MAR18_MR_TESTS_ADOPTIONS
     if (MR_MODE)
         context_ptr->inter_inter_wedge_variance_th = 0;
     else
 #endif
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->inter_inter_wedge_variance_th = 0;
+#if MAR18_MR_TESTS_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        context_ptr->inter_inter_wedge_variance_th = 0;
+#endif
     else
         context_ptr->inter_inter_wedge_variance_th = 100;
 #endif
@@ -2270,7 +2291,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_class_prune_th = 25;
     else
-#if MAR10_ADOPTIONS
+#if MAR10_ADOPTIONS && !MAR18_MR_TESTS_ADOPTIONS
         if (MR_MODE)
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
         else
@@ -2310,6 +2331,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR18_MR_TESTS_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M1)
+                    context_ptr->sq_weight =
+                    sequence_control_set_ptr->static_config.sq_weight + 15;
+                else
+#endif
                 if (pcs_ptr->enc_mode <= ENC_M3)
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 5;
@@ -2334,7 +2361,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+#if MAR18_MR_TESTS_ADOPTIONS
+    if (MR_MODE || context_ptr->pd_pass < PD_PASS_2 || (pcs_ptr->enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
     if (MR_MODE || context_ptr->pd_pass < PD_PASS_2)
+#endif
         context_ptr->nsq_hv_level = 0;
 #if MAR17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M7) {
@@ -2415,11 +2446,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+#if MAR18_MR_TESTS_ADOPTIONS
+    else if (MR_MODE &&
+        pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)
+#else
 #if MAR10_ADOPTIONS
     else if (MR_MODE)
 #else
     else if (MR_MODE &&
         pcs_ptr->parent_pcs_ptr->sc_content_detected == 0)
+#endif
 #endif
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
 
@@ -2563,11 +2599,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->skip_depth = 0;
     else if (context_ptr->pd_pass == PD_PASS_1)
         context_ptr->skip_depth = 0;
+#if MAR18_MR_TESTS_ADOPTIONS
+    else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M3)
+            context_ptr->skip_depth = 0;
+        else
+            context_ptr->skip_depth = 1;
+    else
+        context_ptr->skip_depth = 0;
+#else
     else if (MR_MODE)
         context_ptr->skip_depth = 0;
     else
         context_ptr->skip_depth =
         pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
+#endif
 
     // Set perform_me_mv_1_8_pel_ref
     if (context_ptr->pd_pass == PD_PASS_0)

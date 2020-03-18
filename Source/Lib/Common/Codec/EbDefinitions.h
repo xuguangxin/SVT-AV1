@@ -118,6 +118,8 @@ extern "C" {
 #define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
 #define M5_CHROMA_NICS             1
 #define INTER_COMP_REDESIGN        1 // new fast mode, cleaner signaling and code
+#define MAR18_MR_TESTS_ADOPTIONS   1 // adoptions for MR, M0, and M2
+#define MAR18_ADOPTIONS            1 // adoptions in M5/M8
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
