@@ -84,7 +84,7 @@ extern "C" {
 #define CLEAN_UP_SB_DATA_3   1
 #define CLEAN_UP_SB_DATA_4   1 // md only context
 #define CLEAN_UP_SB_DATA_5   1
-#define CLEAN_UP_SB_DATA_6   1
+#define CLEAN_UP_SB_DATA_6   0
 #define CLEAN_UP_SB_DATA_7   1
 #if CLEAN_UP_SB_DATA_7
 #define CLEAN_UP_SB_DATA_8   1 // tx_depth,  has_coef
