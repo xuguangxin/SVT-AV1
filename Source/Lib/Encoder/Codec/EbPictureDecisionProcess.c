@@ -1397,6 +1397,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->tx_size_search_mode = 0;
 
+#if !INTER_COMP_REDESIGN
     // Set Wedge mode      Settings
     // 0                 FULL: Full search
     // 1                 Fast: If two predictors are very similar, skip wedge compound mode search
@@ -1424,6 +1425,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->wedge_mode = 1;
 
+#if M8_NEW_REF
+    pcs_ptr->wedge_mode = 0;
+#endif
+#endif
     // inter intra pred                      Settings
     // 0                                     OFF
     // 1                                     ON
@@ -1447,12 +1452,19 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     // Set compound mode      Settings
     // 0                      OFF: No compond mode search : AVG only
-    // 1                      ON: compond mode search: AVG/DIST/DIFF
-    // 2                      ON: AVG/DIST/DIFF/WEDGE
+    // 1                      ON: Full
+    // 2                      ON: Fast : MRP pruning/ similar based disable
+
+
     if (scs_ptr->static_config.compound_level == DEFAULT) {
         if (scs_ptr->compound_mode)
 #if MAR17_ADOPTIONS
+#if INTER_COMP_REDESIGN
+            pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M4 ? 1 :
+                                     pcs_ptr->enc_mode <= ENC_M7 ? 2 : 0;
+#else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M7 ? 2 : 1;
+#endif
 #else
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS

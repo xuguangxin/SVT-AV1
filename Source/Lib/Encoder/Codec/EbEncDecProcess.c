@@ -2156,6 +2156,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->prune_ref_frame_for_rec_partitions =
             sequence_control_set_ptr->static_config.prune_ref_rec_part;
 
+#if !INTER_COMP_REDESIGN
     // Derive INTER/INTER WEDGE variance TH
     // Phoenix: Active only when inter/inter compound is on
 #if MAR10_ADOPTIONS
@@ -2167,6 +2168,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->inter_inter_wedge_variance_th = 0;
     else
         context_ptr->inter_inter_wedge_variance_th = 100;
+#endif
 #if !REMOVE_MD_EXIT
     // Derive MD Exit TH
     if (context_ptr->pd_pass == PD_PASS_0)
@@ -2388,6 +2390,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         }
     }
 
+#if !INTER_COMP_REDESIGN
     // comp_similar_mode
     // 0: OFF
     // 1: If previous similar block is not compound, do not inject compound
@@ -2406,6 +2409,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->comp_similar_mode = 2;
 
+#endif
     // Set coeff_based_nsq_cand_reduction
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;

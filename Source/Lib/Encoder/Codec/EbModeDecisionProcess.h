@@ -141,7 +141,9 @@ typedef struct RefResults {
     uint8_t  list_i;   // list index of this ref
     uint8_t  ref_i;    // ref list index of this ref
     uint32_t dist;     // distortion
+#if !INTER_COMP_REDESIGN
     uint8_t  do_ref;   // to process this ref  or not
+#endif
 } RefResults;
 #endif
 #if OBMC_FAST
@@ -153,6 +155,23 @@ typedef struct  ObmcControls {
     uint8_t near_count;    //how many near to consider injecting obmc 0..3
 }ObmcControls;
 #endif
+
+#if INTER_COMP_REDESIGN
+
+typedef struct  InterCompoundControls {
+    uint8_t enabled;
+    uint8_t similar_predictions;        // 0: OFF ; 1: Disable inter-compound based on prediction similarity
+    uint8_t similar_predictions_th;     // TH Disable inter-compound when predictions are similar
+    uint8_t mrp_pruning_w_distortion;   // 0: OFF ; 1: Prune number of references based on ME/PME distortion
+    uint8_t mrp_pruning_w_distance;     // 4: ALL ; 1: Prune number of references based on reference distance (Best 1)
+    uint8_t wedge_search_mode;          // 0: Fast search: estimate Wedge sign 1: full search
+    uint8_t wedge_variance_th;          // 0 : OFF ; 1: Disable inter-compound based on block variance
+    uint8_t similar_previous_blk;       // 0 : OFF ; 1: Disable inter-compound if previous similar block is not compound
+                                        //           2: 1 + consider up to the compound mode of the similar blk
+}InterCompoundControls;
+
+#endif
+
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
     EbFifo * mode_decision_configuration_input_fifo_ptr;
@@ -331,8 +350,10 @@ typedef struct ModeDecisionContext {
     uint8_t              nic_level;
     uint8_t              similar_blk_avail;
     uint16_t             similar_blk_mds;
+#if !INTER_COMP_REDESIGN
     uint8_t              comp_similar_mode;
     uint8_t              comp_mrp_dist_mode;
+#endif
     uint8_t              inject_inter_candidates;
     uint8_t              intra_similar_mode;
     uint8_t              skip_depth;
@@ -351,7 +372,9 @@ typedef struct ModeDecisionContext {
     DECLARE_ALIGNED(32, int16_t, residual1[MAX_SB_SQUARE]);
     DECLARE_ALIGNED(32, int16_t, diff10[MAX_SB_SQUARE]);
     unsigned int prediction_mse;
+#if !INTER_COMP_REDESIGN
     EbBool       variance_ready;
+#endif
     MdStage md_stage;
     uint32_t     cand_buff_indices[CAND_CLASS_TOTAL][MAX_NFL_BUFF];
     uint8_t      md_staging_mode;
@@ -394,7 +417,9 @@ typedef struct ModeDecisionContext {
     uint8_t      edge_based_skip_angle_intra;
     uint8_t      prune_ref_frame_for_rec_partitions;
     unsigned int source_variance; // input block variance
+#if !INTER_COMP_REDESIGN
     unsigned int inter_inter_wedge_variance_th;
+#endif
 #if !REMOVE_MD_EXIT
     uint64_t     md_exit_th;
 #endif
@@ -442,6 +467,9 @@ typedef struct ModeDecisionContext {
 #endif
 #if OBMC_FAST
     ObmcControls obmc_ctrls;
+#endif
+#if INTER_COMP_REDESIGN
+    InterCompoundControls inter_comp_ctrls;
 #endif
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;

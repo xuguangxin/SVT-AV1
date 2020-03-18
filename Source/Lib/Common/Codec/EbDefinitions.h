@@ -117,6 +117,7 @@ extern "C" {
 #define ADD_SAD_AT_PME_SIGNAL      1 // Add signal for using SAD at PME
 #define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
 #define M5_CHROMA_NICS             1
+#define INTER_COMP_REDESIGN        1 // new fast mode, cleaner signaling and code
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

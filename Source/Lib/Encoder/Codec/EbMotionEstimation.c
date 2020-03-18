@@ -9960,6 +9960,9 @@ void integer_search_sb(
 */
 void prune_references_fp(
     PictureParentControlSet   *pcs_ptr,
+#if INTER_COMP_REDESIGN
+    uint32_t                   sb_index,
+#endif
     MeContext                 *context_ptr)
 {
     HmeResults sorted[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
@@ -10029,8 +10032,21 @@ void prune_references_fp(
     uint8_t  BIGGER_THAN_TH = 30;
 #endif
     uint64_t best = sorted[0][0].hme_sad;//is this always the best?
+#if INTER_COMP_REDESIGN
+    uint8_t counter = 0;
+#define NUMBER_REF_INTER_COMP   2
+#endif
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++){
+#if INTER_COMP_REDESIGN
+            if (counter < NUMBER_REF_INTER_COMP)
+                pcs_ptr->me_results[sb_index]->
+                do_comp[sorted[0][counter].list_i][sorted[0][counter].ref_i] = 1;
+            else
+                pcs_ptr->me_results[sb_index]->
+                do_comp[sorted[0][counter].list_i][sorted[0][counter].ref_i] = 0;
+            counter ++;
+#endif
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
             if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp * best))
 #else
@@ -11569,6 +11585,9 @@ EbErrorType motion_estimate_sb(
     //init hme results buffer
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+#if INTER_COMP_REDESIGN
+            pcs_ptr->me_results[sb_index]->do_comp[li][ri] = 1;
+#endif
             context_ptr->hme_results[li][ri].list_i = li;
             context_ptr->hme_results[li][ri].ref_i = ri;
             context_ptr->hme_results[li][ri].do_ref = 1;
@@ -11611,6 +11630,9 @@ EbErrorType motion_estimate_sb(
     if (pcs_ptr->prune_ref_based_me && prune_ref)
         prune_references_fp(
             pcs_ptr,
+#if INTER_COMP_REDESIGN
+            sb_index,
+#endif
             context_ptr );
 
     if (context_ptr->me_alt_ref == EB_TRUE) num_of_list_to_search = 0;

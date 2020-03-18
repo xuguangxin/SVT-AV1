@@ -478,7 +478,9 @@ typedef struct PictureParentControlSet {
     EbBool           end_of_sequence_flag;
     uint8_t          picture_qp;
     uint64_t         picture_number;
+#if !INTER_COMP_REDESIGN
     uint8_t          wedge_mode;
+#endif
     uint32_t         cur_order_hint;
     uint32_t         ref_order_hint[7];
     EbPicnoiseClass  pic_noise_class;

@@ -7160,6 +7160,51 @@ void check_similar_block(const BlockGeom * blk_geom,
         }
     }
 }
+
+#if INTER_COMP_REDESIGN
+void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode) {
+
+    InterCompoundControls*inter_comp_ctrls = &mdctxt->inter_comp_ctrls;
+
+    switch (inter_comp_mode)
+    {
+    case 0://OFF
+        inter_comp_ctrls->enabled = 0;
+        inter_comp_ctrls->similar_predictions = 1;
+        inter_comp_ctrls->similar_predictions_th = 0;
+        inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
+        inter_comp_ctrls->mrp_pruning_w_distance = 1;
+        inter_comp_ctrls->wedge_search_mode = 1;
+        inter_comp_ctrls->wedge_variance_th = 100;
+        inter_comp_ctrls->similar_previous_blk=2;
+        break;
+    case 1://FULL
+        inter_comp_ctrls->enabled = 1;
+        inter_comp_ctrls->similar_predictions = 0;
+        inter_comp_ctrls->similar_predictions_th = 2;
+        inter_comp_ctrls->mrp_pruning_w_distortion  = 0;
+        inter_comp_ctrls->mrp_pruning_w_distance = 4;
+        inter_comp_ctrls->wedge_search_mode = 1;
+        inter_comp_ctrls->wedge_variance_th = MR_MODE ? 0 : 100;
+        inter_comp_ctrls->similar_previous_blk=1;
+        break;
+    case 2://FAST
+        inter_comp_ctrls->enabled = 1;
+        inter_comp_ctrls->similar_predictions = 1;
+        inter_comp_ctrls->similar_predictions_th = 0;
+        inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
+        inter_comp_ctrls->mrp_pruning_w_distance = 1;
+        inter_comp_ctrls->wedge_search_mode = 1;
+        inter_comp_ctrls->wedge_variance_th = 100;
+        inter_comp_ctrls->similar_previous_blk=2;
+        break;
+    default:
+        assert(0);
+        break;
+    }// AVG / DIT /DIFF/ WEDGE
+}
+#endif
+
 /******************************************************
 * Derive md Settings(feature signals) that could be
   changed  at the block level
@@ -7170,6 +7215,18 @@ EbErrorType signal_derivation_block(
 
     EbErrorType return_error = EB_ErrorNone;
 
+#if INTER_COMP_REDESIGN
+        // set compound_types_to_try
+    if (context_ptr->pd_pass == PD_PASS_0)
+        set_inter_comp_controls(context_ptr, 0);
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        set_inter_comp_controls(context_ptr,0);
+    else
+        set_inter_comp_controls(context_ptr,pcs->parent_pcs_ptr->compound_mode);
+
+    context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
+
+#else
     // set compound_types_to_try
     if (context_ptr->pd_pass == PD_PASS_0)
         context_ptr->compound_types_to_try = MD_COMP_AVG;
@@ -7182,17 +7239,30 @@ EbErrorType signal_derivation_block(
             context_ptr->compound_types_to_try = MD_COMP_AVG;
     }
 
+#endif
     BlkStruct *similar_cu = &context_ptr->md_blk_arr_nsq[context_ptr->similar_blk_mds];
     if (context_ptr->compound_types_to_try > MD_COMP_AVG && context_ptr->similar_blk_avail) {
         int32_t is_src_compound = similar_cu->pred_mode >= NEAREST_NEARESTMV;
+#if INTER_COMP_REDESIGN
+        if (context_ptr->inter_comp_ctrls.similar_previous_blk == 1) {
+#else
         if (context_ptr->comp_similar_mode == 1) {
+#endif
             context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : context_ptr->compound_types_to_try;
         }
+#if INTER_COMP_REDESIGN
+        else if (context_ptr->inter_comp_ctrls.similar_previous_blk == 2) {
+#else
         else if (context_ptr->comp_similar_mode == 2) {
+#endif
             context_ptr->compound_types_to_try = !is_src_compound ? MD_COMP_AVG : similar_cu->interinter_comp.type;
         }
     }
-
+#if INTER_COMP_REDESIGN
+    // Do not add MD_COMP_WEDGE  beyond this point
+    if (get_wedge_params_bits(context_ptr->blk_geom->bsize) == 0)
+        context_ptr->compound_types_to_try = MIN(context_ptr->compound_types_to_try,MD_COMP_DIFF0);
+#endif
     context_ptr->inject_inter_candidates = 1;
     if (context_ptr->pd_pass > PD_PASS_1 && context_ptr->similar_blk_avail) {
         int32_t is_src_intra = similar_cu->pred_mode <= PAETH_PRED;
@@ -7887,7 +7957,9 @@ void md_encode_block(PictureControlSet *pcs_ptr,
             context_ptr->pme_res[li][ri].dist = 0xFFFFFFFF;
             context_ptr->pme_res[li][ri].list_i = li;
             context_ptr->pme_res[li][ri].ref_i = ri;
+#if !INTER_COMP_REDESIGN
             context_ptr->pme_res[li][ri].do_ref = 1;
+#endif
         }
     }
 #endif

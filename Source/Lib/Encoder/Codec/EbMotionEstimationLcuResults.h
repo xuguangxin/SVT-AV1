@@ -60,6 +60,9 @@ typedef struct MeSbResults {
     // [PU][LAST, LAST2, BWD, ALT2] if MRP Mode 1,
     uint32_t max_number_of_pus_per_sb;
 
+#if INTER_COMP_REDESIGN
+    uint8_t do_comp[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
 } MeSbResults;
 #ifdef __cplusplus
 }
