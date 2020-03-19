@@ -5352,6 +5352,9 @@ void tx_update_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *
 }
 void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                               EbBool is_inter, uint8_t tx_depth) {
+#if R2R_FIX
+    int sb_size = pcs_ptr->parent_pcs_ptr->scs_ptr->static_config.super_block_size;
+#endif
     uint16_t tile_idx = context_ptr->tile_index;
     if (tx_depth) {
         if (!is_inter) {
@@ -5378,7 +5381,11 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
                         context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x,
                         context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y,
                         context_ptr->blk_geom->bwidth * 2,
+#if R2R_FIX
+                        MIN(context_ptr->blk_geom->bheight * 2, sb_size - context_ptr->blk_geom->origin_y),
+#else
                         context_ptr->blk_geom->bheight * 2,
+#endif
                         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
                 } else {
                     copy_neigh_arr(
@@ -5402,7 +5409,11 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
                         context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x,
                         context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y,
                         context_ptr->blk_geom->bwidth * 2,
+#if R2R_FIX
+                        MIN(context_ptr->blk_geom->bheight * 2, sb_size - context_ptr->blk_geom->origin_y),
+#else
                         context_ptr->blk_geom->bheight * 2,
+#endif
                         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
                 }
             } else {
@@ -5423,7 +5434,11 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
                         context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x,
                         context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y,
                         context_ptr->blk_geom->bwidth * 2,
+#if R2R_FIX
+                        MIN(context_ptr->blk_geom->bheight * 2, sb_size - context_ptr->blk_geom->origin_y),
+#else
                         context_ptr->blk_geom->bheight * 2,
+#endif
                         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
                 } else {
                     copy_neigh_arr(
@@ -5442,7 +5457,11 @@ void tx_reset_neighbor_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *c
                         context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x,
                         context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y,
                         context_ptr->blk_geom->bwidth * 2,
+#if R2R_FIX
+                        MIN(context_ptr->blk_geom->bheight * 2, sb_size - context_ptr->blk_geom->origin_y),
+#else
                         context_ptr->blk_geom->bheight * 2,
+#endif
                         NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
                 }
             }
