@@ -1611,6 +1611,24 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (sequence_control_set_ptr->static_config.disable_cfl_flag == 1 && context_ptr->md_disable_cfl == EB_TRUE)
         context_ptr->chroma_at_last_md_stage = 0; // Indeprndent chroma search at last MD stage is not supported when CFL is off
 #endif
+#if CFL_REDUCED_ALPHA
+    // libaom_short_cuts_ths
+    // 1                    faster than libaom
+    // 2                    libaom - default
+    if (pcs_ptr->enc_mode == ENC_M5)
+        context_ptr->libaom_short_cuts_ths = 1;
+    else
+        context_ptr->libaom_short_cuts_ths = 2;
+#endif
+#if UV_SEARCH_MODE_INJCECTION
+    // 0                    inject all supprted chroma mode
+    // 1                    follow the luma injection
+    context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
+     if (pcs_ptr->enc_mode == ENC_M5)
+        context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
+    else
+        context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+#endif
     // Set the full loop escape level
     // Level                Settings
     // 0                    Off

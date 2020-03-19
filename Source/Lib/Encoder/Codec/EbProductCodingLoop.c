@@ -4569,6 +4569,179 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
 #define PLANE_SIGN_TO_JOINT_SIGN(plane, a, b) \
     (plane == CFL_PRED_U ? a * CFL_SIGNS + b - 1 : b * CFL_SIGNS + a - 1)
 /*************************Pick the best alpha for cfl mode  or Choose DC******************************************************/
+#if MD_CFL
+void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
+                       SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
+                       EbPictureBufferDesc *input_picture_ptr, uint32_t input_cb_origin_in_index,
+                       uint32_t blk_chroma_origin_index) {
+    int64_t  best_rd = INT64_MAX;
+    uint64_t full_distortion[DIST_CALC_TOTAL];
+    uint64_t coeff_bits;
+
+    uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
+        context_ptr->full_lambda_md[EB_10_BIT_MD] :
+        context_ptr->full_lambda_md[EB_8_BIT_MD];
+
+    const int64_t mode_rd = RDCOST(
+         full_lambda,
+        (uint64_t)candidate_buffer->candidate_ptr->md_rate_estimation_ptr
+            ->intra_uv_mode_fac_bits[CFL_ALLOWED][candidate_buffer->candidate_ptr->intra_luma_mode]
+                                    [UV_CFL_PRED],
+        0);
+
+    int64_t best_rd_uv[CFL_JOINT_SIGNS][CFL_PRED_PLANES];
+    int32_t best_c[CFL_JOINT_SIGNS][CFL_PRED_PLANES];
+
+    for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
+        coeff_bits                          = 0;
+        full_distortion[DIST_CALC_RESIDUAL] = 0;
+        for (int32_t joint_sign = 0; joint_sign < CFL_JOINT_SIGNS; joint_sign++) {
+            best_rd_uv[joint_sign][plane] = INT64_MAX;
+            best_c[joint_sign][plane]     = 0;
+        }
+        // Collect RD stats for an alpha value of zero in this plane.
+        // Skip i == CFL_SIGN_ZERO as (0, 0) is invalid.
+        for (int32_t i = CFL_SIGN_NEG; i < CFL_SIGNS; i++) {
+            const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, CFL_SIGN_ZERO, i);
+            if (i == CFL_SIGN_NEG) {
+                candidate_buffer->candidate_ptr->cfl_alpha_idx   = 0;
+                candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
+
+                av1_cost_calc_cfl(pcs_ptr,
+                                  candidate_buffer,
+                                  sb_ptr,
+                                  context_ptr,
+                                  (plane == 0) ? COMPONENT_CHROMA_CB : COMPONENT_CHROMA_CR,
+                                  input_picture_ptr,
+                                  input_cb_origin_in_index,
+                                  blk_chroma_origin_index,
+                                  full_distortion,
+                                  &coeff_bits,
+                                  0);
+
+                if (coeff_bits == INT64_MAX) break;
+            }
+
+            const int32_t alpha_rate = candidate_buffer->candidate_ptr->md_rate_estimation_ptr
+                                           ->cfl_alpha_fac_bits[joint_sign][plane][0];
+
+            best_rd_uv[joint_sign][plane] = RDCOST(full_lambda,
+                                                   coeff_bits + alpha_rate,
+                                                   full_distortion[DIST_CALC_RESIDUAL]);
+        }
+    }
+
+    int32_t best_joint_sign = -1;
+
+    for (int32_t plane = 0; plane < CFL_PRED_PLANES; plane++) {
+        for (int32_t pn_sign = CFL_SIGN_NEG; pn_sign < CFL_SIGNS; pn_sign++) {
+            int32_t progress = 0;
+            for (int32_t c = 0; c < CFL_ALPHABET_SIZE; c++) {
+                int32_t flag = 0;
+
+#if CFL_REDUCED_ALPHA
+                uint8_t c_th = context_ptr->libaom_short_cuts_ths;
+                if (c > c_th && progress < c) break;
+#else
+                if (c > 2 && progress < c) break;
+#endif
+                coeff_bits                          = 0;
+                full_distortion[DIST_CALC_RESIDUAL] = 0;
+                for (int32_t i = 0; i < CFL_SIGNS; i++) {
+                    const int32_t joint_sign = PLANE_SIGN_TO_JOINT_SIGN(plane, pn_sign, i);
+                    if (i == 0) {
+                        candidate_buffer->candidate_ptr->cfl_alpha_idx =
+                            (c << CFL_ALPHABET_SIZE_LOG2) + c;
+                        candidate_buffer->candidate_ptr->cfl_alpha_signs = joint_sign;
+
+                        av1_cost_calc_cfl(pcs_ptr,
+                                          candidate_buffer,
+                                          sb_ptr,
+                                          context_ptr,
+                                          (plane == 0) ? COMPONENT_CHROMA_CB : COMPONENT_CHROMA_CR,
+                                          input_picture_ptr,
+                                          input_cb_origin_in_index,
+                                          blk_chroma_origin_index,
+                                          full_distortion,
+                                          &coeff_bits,
+                                          0);
+
+                        if (coeff_bits == INT64_MAX) break;
+                    }
+
+                    const int32_t alpha_rate =
+                        candidate_buffer->candidate_ptr->md_rate_estimation_ptr
+                            ->cfl_alpha_fac_bits[joint_sign][plane][c];
+
+                    int64_t this_rd = RDCOST(full_lambda,
+                                             coeff_bits + alpha_rate,
+                                             full_distortion[DIST_CALC_RESIDUAL]);
+                    if (this_rd >= best_rd_uv[joint_sign][plane]) continue;
+                    best_rd_uv[joint_sign][plane] = this_rd;
+                    best_c[joint_sign][plane]     = c;
+#if CFL_REDUCED_ALPHA
+                    flag = context_ptr->libaom_short_cuts_ths;
+#else
+                    flag = 2;
+#endif
+                    if (best_rd_uv[joint_sign][!plane] == INT64_MAX) continue;
+                    this_rd += mode_rd + best_rd_uv[joint_sign][!plane];
+                    if (this_rd >= best_rd) continue;
+                    best_rd         = this_rd;
+                    best_joint_sign = joint_sign;
+                }
+                progress += flag;
+            }
+        }
+    }
+
+    // Compare with DC Chroma
+    coeff_bits                          = 0;
+    full_distortion[DIST_CALC_RESIDUAL] = 0;
+
+    candidate_buffer->candidate_ptr->cfl_alpha_idx   = 0;
+    candidate_buffer->candidate_ptr->cfl_alpha_signs = 0;
+
+    const int64_t dc_mode_rd = RDCOST(
+        full_lambda,
+        candidate_buffer->candidate_ptr->md_rate_estimation_ptr
+            ->intra_uv_mode_fac_bits[CFL_ALLOWED][candidate_buffer->candidate_ptr->intra_luma_mode]
+                                    [UV_DC_PRED],
+        0);
+
+    av1_cost_calc_cfl(pcs_ptr,
+                      candidate_buffer,
+                      sb_ptr,
+                      context_ptr,
+                      COMPONENT_CHROMA,
+                      input_picture_ptr,
+                      input_cb_origin_in_index,
+                      blk_chroma_origin_index,
+                      full_distortion,
+                      &coeff_bits,
+                      1);
+
+    int64_t dc_rd =
+        RDCOST(full_lambda, coeff_bits, full_distortion[DIST_CALC_RESIDUAL]);
+    dc_rd += dc_mode_rd;
+    if (dc_rd <= best_rd || best_rd == INT64_MAX) {
+        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_DC_PRED;
+        candidate_buffer->candidate_ptr->cfl_alpha_idx     = 0;
+        candidate_buffer->candidate_ptr->cfl_alpha_signs   = 0;
+    } else {
+        candidate_buffer->candidate_ptr->intra_chroma_mode = UV_CFL_PRED;
+        int32_t ind                                        = 0;
+        if (best_joint_sign >= 0) {
+            const int32_t u = best_c[best_joint_sign][CFL_PRED_U];
+            const int32_t v = best_c[best_joint_sign][CFL_PRED_V];
+            ind             = (u << CFL_ALPHABET_SIZE_LOG2) + v;
+        } else
+            best_joint_sign = 0;
+        candidate_buffer->candidate_ptr->cfl_alpha_idx   = ind;
+        candidate_buffer->candidate_ptr->cfl_alpha_signs = best_joint_sign;
+    }
+}
+#endif
 void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                        SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                        EbPictureBufferDesc *input_picture_ptr, uint32_t input_cb_origin_in_index,
@@ -4786,7 +4959,11 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
                             LOG2F(chroma_width) + LOG2F(chroma_height));
 
         // 3: Loop over alphas and find the best or choose DC
+#if MD_CFL
+        md_cfl_rd_pick_alpha(pcs_ptr,
+#else
         cfl_rd_pick_alpha(pcs_ptr,
+#endif
                           candidate_buffer,
                           sb_ptr,
                           context_ptr,
@@ -4794,6 +4971,8 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
                           input_cb_origin_in_index,
                           blk_chroma_origin_index);
 
+        // NM: This assume that DC mode is the last mode tested in md_cfl_rd_pick_alpha()
+        // Otherwise, we need to re-denerate the residual for DC mode as well
         if (candidate_buffer->candidate_ptr->intra_chroma_mode == UV_CFL_PRED) {
             // 4: Recalculate the prediction and the residual
             int32_t alpha_q3_cb = cfl_idx_to_alpha(candidate_buffer->candidate_ptr->cfl_alpha_idx,
@@ -7467,57 +7646,147 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     }
     UvPredictionMode uv_mode_end = context_ptr->md_enable_paeth ? UV_PAETH_PRED :
                                    context_ptr->md_enable_smooth ? UV_SMOOTH_H_PRED : UV_D67_PRED;
+#if UV_SEARCH_MODE_INJCECTION
+    uint8_t                     angle_delta_candidate_count = use_angle_delta ? 7 : 1;
+    uint8_t                     uv_mode_start = UV_DC_PRED;
+    uint8_t                     disable_z2_prediction;
+    uint8_t                     disable_angle_refinement;
+    uint8_t                     disable_angle_prediction;
+    uint8_t directional_mode_skip_mask[INTRA_MODES] = { 0 };
+    if (!context_ptr->intra_chroma_search_follows_intra_luma_injection) {
+        disable_z2_prediction = 0;
+        disable_angle_refinement = 0;
+        disable_angle_prediction = 0;
+    }else{
+        if (context_ptr->edge_based_skip_angle_intra && use_angle_delta)
+        {
+            EbPictureBufferDesc   *src_pic = pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
+            uint8_t               *src_buf = src_pic->buffer_y + (context_ptr->blk_origin_x + src_pic->origin_x) + (context_ptr->blk_origin_y + src_pic->origin_y) * src_pic->stride_y;
+            const int rows = block_size_high[context_ptr->blk_geom->bsize];
+            const int cols = block_size_wide[context_ptr->blk_geom->bsize];
+            angle_estimation(src_buf, src_pic->stride_y, rows, cols, /*context_ptr->blk_geom->bsize,*/directional_mode_skip_mask);
+        }
+        uint8_t     angle_delta_shift = 1;
+        if (context_ptr->disable_angle_z2_intra_flag) {
+            disable_angle_prediction = 1;
+            angle_delta_candidate_count = 1;
+            angle_delta_shift = 1;
+            disable_z2_prediction = 1;
+        }
+        else
+            if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 4) {
+                if (pcs_ptr->slice_type == I_SLICE) {
+                    uv_mode_end = context_ptr->md_enable_paeth ? PAETH_PRED :
+                        context_ptr->md_enable_smooth ? SMOOTH_H_PRED : D67_PRED;
+                    angle_delta_candidate_count = use_angle_delta ? 5 : 1;
+                    disable_angle_prediction = 0;
+                    angle_delta_shift = 2;
+                    disable_z2_prediction = 0;
+                }
+                else {
+                    uv_mode_end = DC_PRED;
+                    disable_angle_prediction = 1;
+                    angle_delta_candidate_count = 1;
+                    angle_delta_shift = 1;
+                    disable_z2_prediction = 0;
+                }
+            }
+            else
+                if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 3) {
+                    disable_z2_prediction = 0;
+                    disable_angle_refinement = 0;
+                    disable_angle_prediction = 1;
+                    angle_delta_candidate_count = disable_angle_refinement ? 1 : angle_delta_candidate_count;
+                }
+                else if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 2) {
+                    disable_z2_prediction = 0;
+                    disable_angle_refinement = 0;
+                    disable_angle_prediction = (context_ptr->blk_geom->sq_size > 16 ||
+                        context_ptr->blk_geom->bwidth == 4 ||
+                        context_ptr->blk_geom->bheight == 4) ? 1 : 0;
+                    angle_delta_candidate_count = disable_angle_refinement ? 1 : angle_delta_candidate_count;
+                }
+                else if (pcs_ptr->parent_pcs_ptr->intra_pred_mode == 1) {
+                    disable_z2_prediction = (context_ptr->blk_geom->sq_size > 16 ||
+                        context_ptr->blk_geom->bwidth == 4 ||
+                        context_ptr->blk_geom->bheight == 4) ? 1 : 0;
+                    disable_angle_refinement = (context_ptr->blk_geom->sq_size > 16 ||
+                        context_ptr->blk_geom->bwidth == 4 ||
+                        context_ptr->blk_geom->bheight == 4) ? 1 : 0;
+                    disable_angle_prediction = 0;
+                    angle_delta_candidate_count = disable_angle_refinement ? 1 : angle_delta_candidate_count;
+                }
+                else {
+                    disable_z2_prediction = 0;
+                    disable_angle_refinement = 0;
+                    disable_angle_prediction = 0;
+                    angle_delta_candidate_count = disable_angle_refinement ? 1 : angle_delta_candidate_count;
+                }
+    }
 
+    for (uv_mode = uv_mode_start; uv_mode <= uv_mode_end; uv_mode++) {
+#else
     for (uv_mode = UV_DC_PRED; uv_mode <= uv_mode_end; uv_mode++) {
+#endif
         uint8_t uv_angle_delta_candidate_count =
             (use_angle_delta && av1_is_directional_mode((PredictionMode)uv_mode)) ? 7 : 1;
         uint8_t uv_angle_delta_shift = 1;
+#if UV_SEARCH_MODE_INJCECTION
+        if (!av1_is_directional_mode((PredictionMode)uv_mode) || (!disable_angle_prediction &&
+            directional_mode_skip_mask[(PredictionMode)uv_mode] == 0)) {
+#endif
+            for (uint8_t uv_angle_delta_counter = 0;
+                uv_angle_delta_counter < uv_angle_delta_candidate_count;
+                ++uv_angle_delta_counter) {
+                int32_t uv_angle_delta =
+                    CLIP(uv_angle_delta_shift *
+                    (uv_angle_delta_candidate_count == 1
+                        ? 0
+                        : uv_angle_delta_counter - (uv_angle_delta_candidate_count >> 1)),
+                        -MAX_ANGLE_DELTA,
+                        MAX_ANGLE_DELTA);
+#if UV_SEARCH_MODE_INJCECTION
+                int32_t  p_angle = mode_to_angle_map[(PredictionMode)uv_mode] + uv_angle_delta * ANGLE_STEP;
+                if (!disable_z2_prediction || (uv_angle_delta <= 1 && p_angle >= -1)) {
+#endif
+                    candidate_array[uv_mode_total_count].type = INTRA_MODE;
+                    candidate_array[uv_mode_total_count].distortion_ready = 0;
+                    candidate_array[uv_mode_total_count].use_intrabc = 0;
+                    candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = 0;
+                    candidate_array[uv_mode_total_count].pred_mode = DC_PRED;
+                    candidate_array[uv_mode_total_count].intra_chroma_mode = uv_mode;
+                    candidate_array[uv_mode_total_count].is_directional_chroma_mode_flag =
+                        (uint8_t)av1_is_directional_mode((PredictionMode)uv_mode);
+                    candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = uv_angle_delta;
+                    candidate_array[uv_mode_total_count].tx_depth = 0;
+                    candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[0] = 0;
+                    candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[1] = 0;
+                    candidate_array[uv_mode_total_count].filter_intra_mode = FILTER_INTRA_MODES;
+                    candidate_array[uv_mode_total_count].cfl_alpha_signs = 0;
+                    candidate_array[uv_mode_total_count].cfl_alpha_idx = 0;
+                    candidate_array[uv_mode_total_count].transform_type[0] = DCT_DCT;
+                    candidate_array[uv_mode_total_count].ref_frame_type = INTRA_FRAME;
+                    candidate_array[uv_mode_total_count].motion_mode = SIMPLE_TRANSLATION;
 
-        for (uint8_t uv_angle_delta_counter = 0;
-             uv_angle_delta_counter < uv_angle_delta_candidate_count;
-             ++uv_angle_delta_counter) {
-            int32_t uv_angle_delta =
-                CLIP(uv_angle_delta_shift *
-                         (uv_angle_delta_candidate_count == 1
-                              ? 0
-                              : uv_angle_delta_counter - (uv_angle_delta_candidate_count >> 1)),
-                     -MAX_ANGLE_DELTA,
-                     MAX_ANGLE_DELTA);
+                    candidate_array[uv_mode_total_count].transform_type_uv =
+                        av1_get_tx_type(context_ptr->blk_geom->bsize,
+                            0,
+                            (PredictionMode)NULL,
+                            (UvPredictionMode)uv_mode,
+                            PLANE_TYPE_UV,
+                            0,
+                            0,
+                            0,
+                            context_ptr->blk_geom->txsize_uv[0][0],
+                            frm_hdr->reduced_tx_set);
 
-            candidate_array[uv_mode_total_count].type                       = INTRA_MODE;
-            candidate_array[uv_mode_total_count].distortion_ready           = 0;
-            candidate_array[uv_mode_total_count].use_intrabc                = 0;
-            candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = 0;
-            candidate_array[uv_mode_total_count].pred_mode                  = DC_PRED;
-            candidate_array[uv_mode_total_count].intra_chroma_mode          = uv_mode;
-            candidate_array[uv_mode_total_count].is_directional_chroma_mode_flag =
-                (uint8_t)av1_is_directional_mode((PredictionMode)uv_mode);
-            candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV]       = uv_angle_delta;
-            candidate_array[uv_mode_total_count].tx_depth                         = 0;
-            candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[0] = 0;
-            candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[1] = 0;
-            candidate_array[uv_mode_total_count].filter_intra_mode = FILTER_INTRA_MODES;
-            candidate_array[uv_mode_total_count].cfl_alpha_signs   = 0;
-            candidate_array[uv_mode_total_count].cfl_alpha_idx     = 0;
-            candidate_array[uv_mode_total_count].transform_type[0] = DCT_DCT;
-            candidate_array[uv_mode_total_count].ref_frame_type    = INTRA_FRAME;
-            candidate_array[uv_mode_total_count].motion_mode       = SIMPLE_TRANSLATION;
-
-            candidate_array[uv_mode_total_count].transform_type_uv =
-                av1_get_tx_type(context_ptr->blk_geom->bsize,
-                                0,
-                                (PredictionMode)NULL,
-                                (UvPredictionMode)uv_mode,
-                                PLANE_TYPE_UV,
-                                0,
-                                0,
-                                0,
-                                context_ptr->blk_geom->txsize_uv[0][0],
-                                frm_hdr->reduced_tx_set);
-
-            uv_mode_total_count++;
+                    uv_mode_total_count++;
+                }
+            }
+#if UV_SEARCH_MODE_INJCECTION
         }
     }
+#endif
     uv_mode_total_count = uv_mode_total_count - start_fast_buffer_index;
     // Fast-loop search uv_mode
     for (uint8_t uv_mode_count = 0; uv_mode_count < uv_mode_total_count; uv_mode_count++) {

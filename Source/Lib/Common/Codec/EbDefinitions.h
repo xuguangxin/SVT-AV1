@@ -125,6 +125,11 @@ extern "C" {
 #define ADD_NEW_MPPD_LEVEL         1 // add a new MPPD level with PD0 | PD1 | PD2 w/o sq/nsq decision
 
 #define LOG_MV_VALIDITY            1 //report error message if MV is beyond av1 limits
+#define MD_CFL                     1 // Modified cfl search in MD
+#if MD_CFL
+#define CFL_REDUCED_ALPHA          1 // use faster libaom_short_cuts_ths
+#endif
+#define UV_SEARCH_MODE_INJCECTION  1 // use the luma mode ijection method in chroma independent mode search
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

@@ -5473,7 +5473,11 @@ void av1_get_gradient_hist_c(const uint8_t *src, int src_stride, int rows,
         src += src_stride;
     }
 }
+#if UV_SEARCH_MODE_INJCECTION
+ void angle_estimation(
+#else
 static void angle_estimation(
+#endif
     const uint8_t *src,
     int src_stride,
     int rows,

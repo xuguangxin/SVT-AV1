@@ -476,6 +476,12 @@ typedef struct ModeDecisionContext {
 #if ADDED_CFL_OFF
     EbBool        md_disable_cfl;
 #endif
+#if CFL_REDUCED_ALPHA
+    uint8_t       libaom_short_cuts_ths;
+#endif
+#if UV_SEARCH_MODE_INJCECTION
+    uint8_t       intra_chroma_search_follows_intra_luma_injection;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
@@ -531,7 +537,13 @@ extern void cfl_rd_pick_alpha(PictureControlSet *          pcs_ptr,
                               ModeDecisionContext *context_ptr,
                               EbPictureBufferDesc *input_picture_ptr,
                               uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index);
-
+#if MD_CFL
+extern void md_cfl_rd_pick_alpha(PictureControlSet *          pcs_ptr,
+                              ModeDecisionCandidateBuffer *candidate_buffer, SuperBlock *sb_ptr,
+                              ModeDecisionContext *context_ptr,
+                              EbPictureBufferDesc *input_picture_ptr,
+                              uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index);
+#endif
 #ifdef __cplusplus
 }
 #endif
