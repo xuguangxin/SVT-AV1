@@ -103,7 +103,11 @@ extern "C" {
         uint32_t   input_offset,
         uint32_t   input_stride,
         uint8_t   *recon,
+#if INT_RECON_OFFSET_FIX
+        int32_t    recon_offset,
+#else
         uint32_t   recon_offset,
+#endif
         uint32_t   recon_stride,
         uint32_t   area_width,
         uint32_t   area_height);

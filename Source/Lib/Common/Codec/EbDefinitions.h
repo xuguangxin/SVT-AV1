@@ -42,6 +42,7 @@ extern "C" {
 #define BEYOND_CS2        1 // BASED ON CS2 branch 3a19f29b789df30ef81d5bb263ce991617cbf30c
 
 #if BEYOND_CS2
+#define INT_RECON_OFFSET_FIX        1
 #define R2R_FIX                     1
 #define ALTREF_PACK_II              1 // add packing for the altref search
 #define FIXED_SQ_WEIGHT_PER_QP      1

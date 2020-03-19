@@ -1221,7 +1221,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
                                                               input_origin_index,
                                                               input_picture_ptr->stride_y,
                                                               prediction_ptr->buffer_y,
+#if INT_RECON_OFFSET_FIX
+                                                              (int32_t)cu_origin_index,
+#else
                                                               cu_origin_index,
+#endif
                                                               prediction_ptr->stride_y,
                                                               context_ptr->blk_geom->bwidth,
                                                               context_ptr->blk_geom->bheight));
@@ -1260,7 +1264,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
                                            input_cb_origin_in_index,
                                            input_picture_ptr->stride_cb,
                                            candidate_buffer->prediction_ptr->buffer_cb,
+#if INT_RECON_OFFSET_FIX
+                                           (int32_t)cu_chroma_origin_index,
+#else
                                            cu_chroma_origin_index,
+#endif
                                            prediction_ptr->stride_cb,
                                            context_ptr->blk_geom->bwidth_uv,
                                            context_ptr->blk_geom->bheight_uv);
@@ -1270,7 +1278,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
                                            input_cr_origin_in_index,
                                            input_picture_ptr->stride_cb,
                                            candidate_buffer->prediction_ptr->buffer_cr,
+#if INT_RECON_OFFSET_FIX
+                                           (int32_t)cu_chroma_origin_index,
+#else
                                            cu_chroma_origin_index,
+#endif
                                            prediction_ptr->stride_cr,
                                            context_ptr->blk_geom->bwidth_uv,
                                            context_ptr->blk_geom->bheight_uv);
@@ -3443,7 +3455,11 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                  refinement_pos_y <= search_position_end_y;
                  ++refinement_pos_y) {
 #endif
+#if INT_RECON_OFFSET_FIX
+                int32_t ref_origin_index =
+#else
                 uint32_t ref_origin_index =
+#endif
                     ref_pic->origin_x +
                     (context_ptr->blk_origin_x + (mvx >> 3) + refinement_pos_x) +
                     (context_ptr->blk_origin_y + (mvy >> 3) + ref_pic->origin_y +
@@ -3470,7 +3486,11 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
             }
         }
     } else {
+#if INT_RECON_OFFSET_FIX
+        int32_t ref_origin_index =
+#else
         uint32_t ref_origin_index =
+#endif
             ref_pic->origin_x + (context_ptr->blk_origin_x + (mvx >> 3) + search_position_start_x) +
             (context_ptr->blk_origin_y + (mvy >> 3) + ref_pic->origin_y + search_position_start_y) *
                 ref_pic->stride_y;
@@ -3611,7 +3631,11 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 
 void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                        EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
+#if INT_RECON_OFFSET_FIX
+                       int32_t blk_origin_index, EbBool use_ssd, uint8_t list_idx, int8_t ref_idx,
+#else
                        uint32_t blk_origin_index, EbBool use_ssd, uint8_t list_idx, int8_t ref_idx,
+#endif
                        int16_t mvx, int16_t mvy, int16_t search_position_start_x,
                        int16_t search_position_end_x, int16_t search_position_start_y,
                        int16_t search_position_end_y, int16_t search_step, int16_t *best_mvx,
@@ -3969,7 +3993,11 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                 EbPictureBufferDesc *ref_pic =
                     hbd_mode_decision ? ref_obj->reference_picture16bit : ref_obj->reference_picture;
 
+#if INT_RECON_OFFSET_FIX
+                int32_t ref_origin_index =
+#else
                 uint32_t ref_origin_index =
+#endif
                     ref_pic->origin_x + (context_ptr->blk_origin_x + (me_mv_x >> 3)) +
                     (context_ptr->blk_origin_y + (me_mv_y >> 3) + ref_pic->origin_y) *
                     ref_pic->stride_y;
@@ -4059,7 +4087,11 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                                        ? ref_obj->reference_picture16bit
                                                        : ref_obj->reference_picture;
 
+#if INT_RECON_OFFSET_FIX
+                    int32_t ref_origin_index =
+#else
                     uint32_t ref_origin_index =
+#endif
                         ref_pic->origin_x +
                         (context_ptr->blk_origin_x + (mvp_x_array[mvp_index] >> 3)) +
                         (context_ptr->blk_origin_y + (mvp_y_array[mvp_index] >> 3) +
@@ -5672,7 +5704,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             input_txb_origin_index,
             input_picture_ptr->stride_y,
             candidate_buffer->prediction_ptr->buffer_y,
+#if INT_RECON_OFFSET_FIX
+            (int32_t)txb_origin_index,
+#else
             txb_origin_index,
+#endif
             candidate_buffer->prediction_ptr->stride_y,
             context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr]);
@@ -5682,7 +5718,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             input_txb_origin_index,
             input_picture_ptr->stride_y,
             candidate_buffer->recon_ptr->buffer_y,
+#if INT_RECON_OFFSET_FIX
+            (int32_t)txb_origin_index,
+#else
             txb_origin_index,
+#endif
             candidate_buffer->recon_ptr->stride_y,
             context_ptr->blk_geom->tx_width[context_ptr->tx_depth][context_ptr->txb_itr],
             context_ptr->blk_geom->tx_height[context_ptr->tx_depth][context_ptr->txb_itr]);

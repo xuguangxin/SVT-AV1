@@ -2991,10 +2991,18 @@ extern void model_rd_for_sb(PictureControlSet *  picture_control_set_ptr,
              input_picture_ptr->stride_cb +
              (md_context_ptr->blk_origin_x + input_picture_ptr->origin_x)) /
             2;
+#if INT_RECON_OFFSET_FIX
+    const int32_t prediction_offset =
+#else
     const uint32_t prediction_offset =
+#endif
             prediction_ptr->origin_x + md_context_ptr->blk_geom->origin_x +
             (prediction_ptr->origin_y + md_context_ptr->blk_geom->origin_y) * prediction_ptr->stride_y;
+#if INT_RECON_OFFSET_FIX
+    const int32_t prediction_chroma_offset =
+#else
     const uint32_t prediction_chroma_offset =
+#endif
             (prediction_ptr->origin_x + md_context_ptr->blk_geom->origin_x +
              (prediction_ptr->origin_y + md_context_ptr->blk_geom->origin_y) *
              prediction_ptr->stride_cb) /
