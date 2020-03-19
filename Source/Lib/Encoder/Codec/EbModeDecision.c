@@ -43,6 +43,10 @@ int    av1_filter_intra_allowed_bsize(uint8_t enable_filter_intra, BlockSize bs)
 
 void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type);
 
+#if LOG_MV_VALIDITY
+void check_mv_validity(int16_t x_mv, int16_t y_mv, uint8_t need_shift);
+#endif
+
 static INLINE int is_interintra_allowed_bsize(const BlockSize bsize) {
     return (bsize >= BLOCK_8X8) && (bsize <= BLOCK_32X32);
 }
@@ -6112,6 +6116,30 @@ EbErrorType generate_md_stage_0_cand(
         fast_accum += context_ptr->md_stage_0_count[cand_class_it];
     }
     assert(fast_accum == cand_total_cnt);
+
+
+#if LOG_MV_VALIDITY
+
+    //check if final MV is within AV1 limits
+    for (cand_i = 0; cand_i < cand_total_cnt; cand_i++)
+    {
+        ModeDecisionCandidate * cand_ptr = &context_ptr->fast_candidate_array[cand_i];
+
+        if (cand_ptr->type == INTER_MODE) {
+            if (cand_ptr->prediction_direction[0] == UNI_PRED_LIST_0 ||
+                cand_ptr->prediction_direction[0] == BI_PRED)
+                check_mv_validity(cand_ptr->motion_vector_xl0,
+                    cand_ptr->motion_vector_yl0, 0);
+
+            if (cand_ptr->prediction_direction[0] == UNI_PRED_LIST_1 ||
+                cand_ptr->prediction_direction[0] == BI_PRED)
+                check_mv_validity(cand_ptr->motion_vector_xl1,
+                    cand_ptr->motion_vector_yl1, 0);
+
+        }
+    }
+#endif
+
 
     return EB_ErrorNone;
 }

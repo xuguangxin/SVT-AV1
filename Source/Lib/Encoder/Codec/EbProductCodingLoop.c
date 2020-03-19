@@ -32,6 +32,10 @@
 #include "EbLog.h"
 #include "EbCommonUtils.h"
 
+#if LOG_MV_VALIDITY
+void check_mv_validity(int16_t x_mv, int16_t y_mv, uint8_t need_shift);
+#endif
+
 #if FIXED_SQ_WEIGHT_PER_QP
 #if SQ_WEIGHT_PATCH_0
 // sq_weight
@@ -4320,6 +4324,13 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                           0,
                                           search_pattern);
                     }
+
+#if LOG_MV_VALIDITY
+                    //check if final MV is within AV1 limits
+                    check_mv_validity(best_search_mvx,
+                        best_search_mvy, 0);
+#endif
+
                     context_ptr->best_spatial_pred_mv[list_idx][ref_idx][0] = best_search_mvx;
                     context_ptr->best_spatial_pred_mv[list_idx][ref_idx][1] = best_search_mvy;
                     context_ptr->valid_refined_mv[list_idx][ref_idx]        = 1;

@@ -28,6 +28,29 @@
 /********************************************
  * Constants
  ********************************************/
+#if LOG_MV_VALIDITY
+static INLINE int32_t is_mv_valid(const MV *mv) {
+    return mv->row > MV_LOW && mv->row < MV_UPP && mv->col > MV_LOW && mv->col < MV_UPP;
+}
+void check_mv_validity(int16_t x_mv, int16_t y_mv, uint8_t need_shift) {
+    MV mv;
+    //go to 1/8th if input is 1/4pel
+    mv.row = y_mv << need_shift;
+    mv.col = x_mv << need_shift;
+    /* AV1 limits
+      -16384 < MV_x_in_1/8 or MV_y_in_1/8 < 16384
+      which means in full pel:
+      -2048 < MV_x_in_full_pel or MV_y_in_full_pel < 2048
+    */
+    if(! is_mv_valid(&mv))
+        printf("Corrupted-MV (%i %i) not in range  (%i %i) \n",
+            mv.col,
+            mv.row,
+            MV_LOW,
+            MV_UPP);
+
+}
+#endif
 
 #define MAX_INTRA_IN_MD 9
 #define REFERENCE_PIC_LIST_0 0
@@ -12242,6 +12265,15 @@ EbErrorType motion_estimate_sb(
                                                      : list_index ? 2 : 0) +
                                                 ref_pic_index]
                         .y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+
+#if LOG_MV_VALIDITY
+                    //check if final MV is within AV1 limits
+                    check_mv_validity(_MVXT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]),
+                        _MVYT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]), 1);
+#endif
+
+
+
                 }
             }
         }

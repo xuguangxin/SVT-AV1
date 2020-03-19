@@ -123,6 +123,8 @@ extern "C" {
 #define MAR18_ADOPTIONS            1 // adoptions in M5/M8
 #define REU_UPDATE                 1 // use top right instead of top SB for CDF calculation
 #define ADD_NEW_MPPD_LEVEL         1 // add a new MPPD level with PD0 | PD1 | PD2 w/o sq/nsq decision
+
+#define LOG_MV_VALIDITY            1 //report error message if MV is beyond av1 limits
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
