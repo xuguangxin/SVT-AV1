@@ -440,7 +440,7 @@ typedef struct MeContext {
     EbBool compute_global_motion;
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
     uint16_t prune_ref_if_hme_sad_dev_bigger_than_th;
-    uint16_t prune_ref_if_hme_sad_dev_bigger_than_th_fp;
+    uint16_t prune_ref_if_me_sad_dev_bigger_than_th;
 #endif
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
     uint8_t max_hme_sr_area_multipler;

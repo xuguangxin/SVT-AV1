@@ -10071,7 +10071,12 @@ void prune_references_fp(
             counter ++;
 #endif
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
-            if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp * best))
+#if MAR19_ADOPTIONS
+            // If th is infinite, the feature should be OFF; add check to avoid overflow errors with multiplication
+            if ((context_ptr->prune_ref_if_me_sad_dev_bigger_than_th != (uint16_t)~0) && (context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_me_sad_dev_bigger_than_th * best))
+#else
+            if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_me_sad_dev_bigger_than_th * best))
+#endif
 #else
            // uint32_t dev = ((context_ptr->hme_results[li][ri].hme_sad - best) * 100) / best;
             if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100  > BIGGER_THAN_TH*best)

@@ -349,15 +349,24 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
 
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
+#if MAR19_ADOPTIONS
+    if (enc_mode <= ENC_M4)
+#else
     if (enc_mode <= ENC_M7)
+#endif
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
     else
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
 
+#if MAR19_ADOPTIONS
+    // Turn this threshold off
+    context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+#else
     if (enc_mode <= ENC_M7)
-        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 30;
+        context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 30;
     else
-        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 15;
+        context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 15;
+#endif
 #endif
 
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
@@ -592,15 +601,24 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
 
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
+#if MAR19_ADOPTIONS
+    if (enc_mode <= ENC_M4)
+#else
     if (enc_mode <= ENC_M7)
+#endif
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
     else
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
 
+#if MAR19_ADOPTIONS
+    // Turn this threshold off
+    context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+#else
     if (enc_mode <= ENC_M7)
-        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 30;
+        context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 30;
     else
-        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th_fp = 15;
+        context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 15;
+#endif
 #endif
 
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL

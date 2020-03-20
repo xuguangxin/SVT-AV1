@@ -839,7 +839,15 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set the Multi-Pass PD level
 #if ADD_NEW_MPPD_LEVEL
     if (sc_content_detected)
+#if MAR19_ADOPTIONS
+        // Use a single-stage PD if I_SLICE
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_OFF
+        : MULTI_PASS_PD_LEVEL_1;
+#else
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M1)
         // Use a single-stage PD if I_SLICE
         pcs_ptr->multi_pass_pd_level =
@@ -939,7 +947,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
     else {
+#if MAR19_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
         else
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;

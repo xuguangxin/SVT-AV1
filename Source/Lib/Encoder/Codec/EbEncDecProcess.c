@@ -3080,9 +3080,19 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             pcs_ptr,
                             context_ptr,
                             sb_index);
+
 #if FIX_MR_PD1
 #if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
+#if MAR19_ADOPTIONS
+                        // Shut thresholds in MR_MODE
+                        if (MR_MODE_MULTI_PASS_PD) {
+                            s_depth = -3;
+                            e_depth = 3;
+                        }
+                        else if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0) {
+#else
                         if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0 && !MR_MODE_MULTI_PASS_PD) {
+#endif
 #else
                         if (best_part_cost < early_exit_th && pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_LEVEL_0) {
 #endif
