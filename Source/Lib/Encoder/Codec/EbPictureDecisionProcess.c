@@ -1378,10 +1378,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->intra_pred_mode = 4;
 #endif
+#if MAR20_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
 #if MAR10_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
         else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
             pcs_ptr->intra_pred_mode = 0;
 #if MAR2_M8_ADOPTIONS
@@ -1571,10 +1575,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // downsampling factor of 2 in each dimension GM_TRAN_ONLY Translation only
     // using ME MV.
 #if MAR17_ADOPTIONS
+#if MAR20_M4_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M3)
+#else
 #if MAR18_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
 #else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
         pcs_ptr->gm_level = GM_FULL;
     else
@@ -1606,10 +1614,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Prune reference and reduce ME SR based on HME/ME distortion
     // 0: OFF
     // 1: ON
+#if MAR20_ADOPTIONS
+    pcs_ptr->prune_ref_based_me = 1;
+#else
     if (pcs_ptr->sc_content_detected)
         pcs_ptr->prune_ref_based_me = 0;
     else
         pcs_ptr->prune_ref_based_me = 1;
+#endif
 
     return return_error;
 }

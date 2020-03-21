@@ -349,12 +349,21 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
 
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
+#if MAR20_ADOPTIONS
+    if (pcs_ptr->sc_content_detected)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 200;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
+#else
 #if MAR19_ADOPTIONS
     if (enc_mode <= ENC_M4)
 #else
     if (enc_mode <= ENC_M7)
 #endif
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+#endif
     else
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
 
@@ -601,12 +610,21 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
 
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
+#if MAR20_ADOPTIONS
+    if (pcs_ptr->sc_content_detected)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 200;
+    else if (enc_mode <= ENC_M1)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
+#else
 #if MAR19_ADOPTIONS
     if (enc_mode <= ENC_M4)
 #else
     if (enc_mode <= ENC_M7)
 #endif
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+#endif
     else
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
 

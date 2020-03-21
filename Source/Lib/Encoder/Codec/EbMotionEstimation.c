@@ -11516,6 +11516,7 @@ void prune_references(
             }
         }
     }
+#if !MR_MODE
 #if !ADD_ME_SIGNAL_FOR_PRUNING_TH
     uint8_t  BIGGER_THAN_TH = 80;
 #endif
@@ -11540,6 +11541,7 @@ void prune_references(
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
         }
     }
+#endif
 }
 
 void prune_references_sc(

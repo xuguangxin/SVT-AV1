@@ -131,6 +131,9 @@ extern "C" {
 #endif
 #define UV_SEARCH_MODE_INJCECTION  1 // use the luma mode ijection method in chroma independent mode search
 #define MAR19_ADOPTIONS            1 // Adoptions for all modes
+#define MAR20_M4_ADOPTIONS         1 // Adoptions in M4
+#define ADOPT_SQ_ME_SEARCH_AREA    1 // Adopt a square search area for ME (all modes)
+#define MAR20_ADOPTIONS            1 // Adoptions affecting all modes
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
@@ -3776,6 +3779,19 @@ static const uint16_t hme_level2_search_area_in_height_array_bottom[SC_MAX_LEVEL
     //    M0      M1      M2      M3      M4    M5       M6      M7      M8      M9      M10      M11    M12
 static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if ADOPT_SQ_ME_SEARCH_AREA
+        // NSC
+        { 226,    226,    114,    114,    114,    114,    114,    114,    114,    32,    32 ,   32,    32 },  // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 340,    340,    170,    170,    136,    136,    136,    136,    136,    48,    48,    48,    48 },  // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 424,    424,    212,    212,    186,    186,    186,    186,    186,    64,    64,    64,    64 },  // INPUT_SIZE_1080p_RANGE
+        { 510,    510,    256,    256,    186,    186,    186,    186,    186,    96,    96,    96,    96 }   // INPUT_SIZE_4K_RANGE
+    },{
+        // SC
+        { 600,    600,    600,     600,    368,    368,    368,    368,    336,    184,    184,   184,  184 },
+        { 900,    900,    900,     900,    368,    368,    368,    368,    408,    280,    280,   280,  280 },
+        { 1200,   1200,   1200,    1200,   784,    784,    784,    784,    504,    360,    360,   360,  360 },
+        { 1800,   1800,   1800,    1800,   784,    784,    784,    784,    540,    540,    540,   540,  540 }
+#else
 #if MAR19_ADOPTIONS
         // NSC
         { 320,    320,    256,    256,    160,    160,    160,    160,    160,    32,    32 ,   32,    32 },  // INPUT_SIZE_576p_RANGE_OR_LOWER
@@ -3843,10 +3859,24 @@ static const uint16_t max_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SU
 #endif
 #endif
 #endif
+#endif
     }
 };
 static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if ADOPT_SQ_ME_SEARCH_AREA
+        // NSC
+        { 226,    226,    114,    114,   114,    114,    114,    114,    114,    16,   16,   16,   16 },
+        { 340,    340,    170,    170,   136,    136,    136,    136,    136,    24,   24,   24,   24 },
+        { 424,    424,    212,    212,   186,    186,    186,    186,    170,    32,   32,   32,   32 },
+        { 510,    510,    256,    256,   186,    186,    186,    186,    170,    48,   48,   48,   48 }
+    },{
+        // SC
+        { 600,   600,     600,     600,     368,    368,    368,    368,    336,    184,    184,   184,  184 },
+        { 900,   900,     900,     900,     368,    368,    368,    368,    408,    280,    280,   280,  280 },
+        { 1200,  1200,    1200,    1200,    784,    784,    784,    784,    504,    360,    360,   360,  360 },
+        { 1800,  1800,    1800,    1800,    784,    784,    784,    784,    540,    540,    540,   540,  540 }
+#else
 #if MAR19_ADOPTIONS
         // NSC
         { 160,    160,    128,    128,     80,     80,     80,     80,    80,    16,   16,   16,   16 },
@@ -3914,11 +3944,25 @@ static const uint16_t max_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
 #endif
 #endif
 #endif
+#endif
     }
 };
     //    M0      M1      M2      M3   M4     M5     M6     M7     M8     M9     M10    M11    M12
 static const uint16_t min_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if ADOPT_SQ_ME_SEARCH_AREA
+        // NSC
+        { 114,  114,    58,     58,     56,    56,    56,    56,    56,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
+        { 170,  170,    86,     86,     68,    68,    68,    68,    68,    24,    24,    24,    24 }, // INPUT_SIZE_720P_RANGE/INPUT_SIZE_1080i_RANGE
+        { 212,  212,   106,    106,     86,    86,    86,    86,    86,    32,    32,    32,    32 }, // INPUT_SIZE_1080p_RANGE
+        { 256,  256,   128,    128,     86,    86,    86,    86,    86,    48,    48,    48,    48 }  // INPUT_SIZE_4K_RANGE
+    } , {
+        // SC
+        { 200,   200,   200,    200,   112,   112,   112,  112,     112,    56,    56,    56,    56 },
+        { 300,   300,   300,    300,   136,   136,   136,  136,     136,    56,    56,    56,    56 },
+        { 400,   400,   400,    400,   168,   168,   168,  168,     168,    56,    56,    56,    56 },
+        { 600,   600,   600,    600,   168,   168,   168,  168,     168,    56,    56,    56,    56 }
+#else
 #if MAR19_ADOPTIONS
         // NSC
         { 160,  160,   128,     128,    80,     80,     80,     80,     80,    16,    16,    16,    16 }, // INPUT_SIZE_576p_RANGE_OR_LOWER
@@ -3986,10 +4030,24 @@ static const uint16_t min_me_search_width[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SU
 #endif
 #endif
 #endif
+#endif
     }
 };
 static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_SUPPORTED_MODES] = {
     {
+#if ADOPT_SQ_ME_SEARCH_AREA
+        // NSC
+        { 114,  114,   58,    58,      56,    56,   56,    56,    56,     8,     8,    8,     8 },
+        { 170,  170,   86,    86,      68,    68,   68,    68,    68,    12,    12,   12,    12 },
+        { 212,  212,   106,   106,     86,    86,   86,    86,    86,    16,    16,   16,    16 },
+        { 256,  256,   128,   128,     86,    86,   86,    86,    86,    24,    24,   24,    24 }
+    } , {
+        // SC
+        { 200,  200,   200,    200,   112,   112,   112,  112,   112,   16,    16,    16,    16 },
+        { 300,  300,   300,    300,   136,   136,   136,  136,   136,   40,    40,    40,    40 },
+        { 400,  400,   400,    400,   168,   168,   168,  168,   168,   56,    56,    56,    56 },
+        { 600,  600,   600,    600,   168,   168,   168,  168,   168,   56,    56,    56,    56 }
+#else
 #if MAR19_ADOPTIONS
         // NSC
         { 80,   80,     64,     64,     40,    40,   40,    40,    40,     8,     8,    8,     8 },
@@ -4053,6 +4111,7 @@ static const uint16_t min_me_search_height[SC_MAX_LEVEL][INPUT_SIZE_COUNT][MAX_S
         { 256,  256,   256,    96,    48,    48,    40,    40,    40,    40,    40,    40,    40 },
         { 320,  256,   320,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 },
         { 480,  480,   480,    96,    72,    72,    56,    56,    56,    56,    56,    56,    56 }
+#endif
 #endif
 #endif
 #endif

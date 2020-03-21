@@ -1790,7 +1790,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.bipred_3x3_inject ==
         DEFAULT)
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR20_M4_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M3)
+#else
             if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
                 context_ptr->bipred3x3_injection = 1;
             else
 #if MAR18_ADOPTIONS
@@ -1799,7 +1803,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->bipred3x3_injection = 0;
 #endif
 #if MAR18_ADOPTIONS
+#if MAR20_M4_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
             context_ptr->bipred3x3_injection = 1;
         else
             context_ptr->bipred3x3_injection = 2;
@@ -2291,8 +2299,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR10_ADOPTIONS
         if (MR_MODE)
             context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+#if MAR20_M4_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M3 ||
+            pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
         else if (pcs_ptr->enc_mode <= ENC_M4 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M3 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
