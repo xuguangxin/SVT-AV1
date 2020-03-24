@@ -1599,7 +1599,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Level                Settings
     // 0                    All supported modes.
     // 1                    All supported modes in  Intra picture and 4 in inter picture
+#if MAR23_ADOPTIONS
+    context_ptr->independent_chroma_nics = enc_mode <= ENC_M4 ? 0 : 1;
+#else
     context_ptr->independent_chroma_nics = enc_mode == ENC_M5 ? 1 : 0;
+#endif
 #endif
 #if ADDED_CFL_OFF
     // Cfl level
@@ -1624,19 +1628,33 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // libaom_short_cuts_ths
     // 1                    faster than libaom
     // 2                    libaom - default
+#if MAR23_ADOPTIONS
+    if (enc_mode <= ENC_M4)
+        context_ptr->libaom_short_cuts_ths = 2;
+    else
+        context_ptr->libaom_short_cuts_ths = 1;
+#else
     if (enc_mode == ENC_M5)
         context_ptr->libaom_short_cuts_ths = 1;
     else
         context_ptr->libaom_short_cuts_ths = 2;
 #endif
+#endif
 #if UV_SEARCH_MODE_INJCECTION
     // 0                    inject all supprted chroma mode
     // 1                    follow the luma injection
+#if MAR23_ADOPTIONS
+    if (enc_mode <= ENC_M4)
+        context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+    else
+        context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
+#else
     context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
      if (enc_mode == ENC_M5)
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
     else
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+#endif
 #endif
     // Set the full loop escape level
     // Level                Settings
@@ -4456,7 +4474,15 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         EbBool zero_coeff_present_flag =
                             context_ptr->md_blk_arr_nsq[blk_index].block_has_coeff == 0;
 #if ADD_NEW_MPPD_LEVEL
+#if MAR23_ADOPTIONS
+                        if (pcs_ptr->slice_type == I_SLICE) {
+                            s_depth = -1;
+                            e_depth = 2;
+                        }
+                        else if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4)) {
+#else
                         if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4)) {
+#endif
 #else
                         if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_2 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3)) {
 #endif

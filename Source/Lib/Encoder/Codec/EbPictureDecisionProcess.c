@@ -838,6 +838,17 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set the Multi-Pass PD level
 #if ADD_NEW_MPPD_LEVEL
+#if MAR23_ADOPTIONS
+    if (sc_content_detected)
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+    else
+        pcs_ptr->multi_pass_pd_level =
+        (pcs_ptr->slice_type == I_SLICE)
+        ? MULTI_PASS_PD_LEVEL_1
+        : MULTI_PASS_PD_LEVEL_2;
+#else
     if (sc_content_detected)
 #if MAR19_ADOPTIONS
         // Use a single-stage PD if I_SLICE
@@ -870,6 +881,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_OFF
         : MULTI_PASS_PD_LEVEL_3;
+#endif
 
     // If ADP then set multi_pass_pd_level to INVALID
     if(pcs_ptr->adp_level != ADP_OFF)
@@ -931,13 +943,24 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
     }
 
-    // Set sb_64x64_simulated
+    // Set sb_64x64_simulated - only allow when SB size is not already 64x64
+#if MAR23_ADOPTIONS
+    if (scs_ptr->static_config.super_block_size != 64) {
+        if (sc_content_detected)
+            pcs_ptr->sb_64x64_simulated = EB_TRUE;
+        else
+            pcs_ptr->sb_64x64_simulated = EB_FALSE;
+    }
+    else
+        pcs_ptr->sb_64x64_simulated = EB_FALSE;
+#else
     if (sc_content_detected) {
         pcs_ptr->sb_64x64_simulated = EB_TRUE;
     }
     else {
         pcs_ptr->sb_64x64_simulated = EB_FALSE;
     }
+#endif
 
     // Set disallow_4x4
     pcs_ptr->disallow_4x4 = EB_FALSE;
