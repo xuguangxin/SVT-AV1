@@ -137,6 +137,17 @@ extern "C" {
 #define MD_CONFIG_SB               1
 #define USE_M8_IN_PD1              0
 #define MAR23_ADOPTIONS            1 // Adoptions for all modes.  Make ME/HME SR square for TF and normal
+#define CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL 1 // lossless
+#define MD_REFERENCE_MASKING 1 // ref pruning @ MD
+#if MD_REFERENCE_MASKING
+#define NEW_MV_REF_MASKING 1
+#define UNIPRED_3x3_REF_MASKING 1
+#define BIPRED_3x3_REF_MASKING 1
+#define NEW_NEAREST_NEW_NEAR_REF_MASKING 1
+#define WARP_REF_MASKING 1
+#define NEAREST_NEAR_REF_MASKING 1
+#define PRED_ME_REF_MASKING 1
+#endif
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

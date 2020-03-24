@@ -136,13 +136,16 @@ struct ModeDecisionCandidate;
 struct ModeDecisionCandidateBuffer;
 struct InterPredictionContext;
 
-#if PME_SORT_REF
+#if PME_SORT_REF || MD_REFERENCE_MASKING
 typedef struct RefResults {
     uint8_t  list_i;   // list index of this ref
     uint8_t  ref_i;    // ref list index of this ref
     uint32_t dist;     // distortion
-#if !INTER_COMP_REDESIGN
+#if !INTER_COMP_REDESIGN || MD_REFERENCE_MASKING
     uint8_t  do_ref;   // to process this ref  or not
+#endif
+#if MD_REFERENCE_MASKING
+    EbBool valid_ref;
 #endif
 } RefResults;
 #endif
@@ -171,7 +174,13 @@ typedef struct  InterCompoundControls {
 }InterCompoundControls;
 
 #endif
-
+#if MD_REFERENCE_MASKING
+typedef struct RefPruningControls {
+    uint8_t intra_to_inter_pruning_enabled;
+    uint8_t inter_to_inter_pruning_enabled;
+    uint8_t max_ref_to_tag;
+}RefPruningControls;
+#endif
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
     EbFifo * mode_decision_configuration_input_fifo_ptr;
@@ -399,8 +408,11 @@ typedef struct ModeDecisionContext {
     // fast_loop_core signals
     EbBool md_staging_use_bilinear;
     EbBool md_staging_skip_interpolation_search;
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+    EbBool md_staging_skip_chroma_pred;
+#else
     EbBool md_staging_skip_inter_chroma_pred;
-
+#endif
     // full_loop_core signals
     EbBool
            md_staging_skip_full_pred; // 0: perform luma & chroma prediction + interpolation search, 2: nothing (use information from previous stages)
@@ -457,6 +469,10 @@ typedef struct ModeDecisionContext {
     uint8_t      md_enable_inter_intra;
     uint8_t      md_filter_intra_mode;
     uint8_t      md_intra_angle_delta;
+#if MD_REFERENCE_MASKING
+    uint8_t      inter_inter_distortion_based_reference_pruning;
+    uint8_t      inter_intra_distortion_based_reference_pruning;
+#endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;
     int16_t      pred_me_full_pel_search_width;
@@ -470,6 +486,10 @@ typedef struct ModeDecisionContext {
 #endif
 #if INTER_COMP_REDESIGN
     InterCompoundControls inter_comp_ctrls;
+#endif
+#if MD_REFERENCE_MASKING
+    RefResults ref_filtering_res[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+    RefPruningControls ref_pruning_ctrls;
 #endif
     // Signal to control initial and final pass PD setting(s)
     PdPass pd_pass;

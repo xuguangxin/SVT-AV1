@@ -5516,7 +5516,11 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                 md_context_ptr->blk_geom->origin_x,
                 md_context_ptr->blk_geom->origin_y,
                 md_context_ptr->chroma_level <= CHROMA_MODE_1 &&
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+                md_context_ptr->md_staging_skip_chroma_pred == EB_FALSE,
+#else
                 md_context_ptr->md_staging_skip_inter_chroma_pred == EB_FALSE,
+#endif
                 hbd_mode_decision ? EB_10BIT : EB_8BIT);
 
         return return_error;
@@ -5593,7 +5597,11 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                                  &candidate_ptr->wm_params_l1,
                                  bit_depth,
                                  md_context_ptr->chroma_level <= CHROMA_MODE_1 &&
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+                                 md_context_ptr->md_staging_skip_chroma_pred == EB_FALSE);
+#else
                                  md_context_ptr->md_staging_skip_inter_chroma_pred == EB_FALSE);
+#endif
 
         return return_error;
     }
@@ -5695,7 +5703,11 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
             md_context_ptr->blk_geom->origin_x,
             md_context_ptr->blk_geom->origin_y,
             md_context_ptr->chroma_level <= CHROMA_MODE_1 &&
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+             md_context_ptr->md_staging_skip_chroma_pred == EB_FALSE,
+#else
             md_context_ptr->md_staging_skip_inter_chroma_pred == EB_FALSE,
+#endif
             hbd_mode_decision ? EB_10BIT : EB_8BIT);
 
     return return_error;

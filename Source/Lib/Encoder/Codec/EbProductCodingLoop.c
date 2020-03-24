@@ -1257,7 +1257,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     }
 
     if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1 &&
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+        context_ptr->md_staging_skip_chroma_pred == EB_FALSE) {
+#else
         context_ptr->md_staging_skip_inter_chroma_pred == EB_FALSE) {
+#endif
         if (use_ssd) {
             EbSpatialFullDistType spatial_full_dist_type_fun = context_ptr->hbd_mode_decision
                                                                    ? full_distortion_kernel16_bits
@@ -3279,8 +3283,11 @@ void md_stage_0(
             ? EB_TRUE
             : context_ptr->interpolation_search_level >= IT_SEARCH_FAST_LOOP_UV_BLIND ? EB_FALSE
                                                                                       : EB_TRUE;
-
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+    context_ptr->md_staging_skip_chroma_pred =
+#else
     context_ptr->md_staging_skip_inter_chroma_pred =
+#endif
         ((context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
           context_ptr->md_staging_mode == MD_STAGING_MODE_2) &&
          context_ptr->target_class != CAND_CLASS_0 && context_ptr->target_class != CAND_CLASS_6 &&
@@ -3706,7 +3713,11 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
 
             // Prediction
             context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+            context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
+#else
             context_ptr->md_staging_skip_inter_chroma_pred    = EB_TRUE;
+#endif
             product_prediction_fun_table[INTER_MODE](
                 hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
@@ -3917,6 +3928,397 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
         }
     }
 }
+#if MD_REFERENCE_MASKING
+uint32_t early_intra_evaluation(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
+                            EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
+                            int32_t blk_origin_index, EbBool use_ssd) {
+
+    uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
+        ? EB_8_BIT_MD
+        : context_ptr->hbd_mode_decision;
+
+    uint32_t distortion;
+    ModeDecisionCandidateBuffer *candidate_buffer =
+        &(context_ptr->candidate_buffer_ptr_array[0][0]);
+    candidate_buffer->candidate_ptr = &(context_ptr->fast_candidate_array[0]);
+
+    ModeDecisionCandidate *candidate_ptr = candidate_buffer->candidate_ptr;
+    EbPictureBufferDesc *prediction_ptr = candidate_buffer->prediction_ptr;
+
+    candidate_ptr->type = INTRA_MODE;
+    candidate_ptr->palette_info.pmi.palette_size[0] = 0;
+    candidate_ptr->palette_info.pmi.palette_size[1] = 0;
+    candidate_ptr->intra_luma_mode = DC_PRED;
+    candidate_ptr->distortion_ready = 0;
+    candidate_ptr->use_intrabc = 0;
+    candidate_ptr->filter_intra_mode = FILTER_INTRA_MODES;
+    candidate_ptr->is_directional_mode_flag = (uint8_t)av1_is_directional_mode((PredictionMode)candidate_ptr->intra_luma_mode);
+    candidate_ptr->angle_delta[PLANE_TYPE_Y] = 0;
+    candidate_ptr->ref_frame_type = INTRA_FRAME;
+    candidate_ptr->pred_mode = (PredictionMode)candidate_ptr->intra_luma_mode;
+    candidate_ptr->motion_mode = SIMPLE_TRANSLATION;
+    candidate_ptr->is_interintra_used = 0;
+
+    // Prediction
+    context_ptr->uv_search_path = 0;
+    context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
+    context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
+    product_prediction_fun_table[INTRA_MODE](
+        hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
+
+    // Distortion
+    if (use_ssd) {
+        EbSpatialFullDistType spatial_full_dist_type_fun =
+            hbd_mode_decision ? full_distortion_kernel16_bits
+            : spatial_full_distortion_kernel;
+
+        distortion = (uint32_t)spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
+            input_origin_index,
+            input_picture_ptr->stride_y,
+            prediction_ptr->buffer_y,
+            blk_origin_index,
+            prediction_ptr->stride_y,
+            context_ptr->blk_geom->bwidth,
+            context_ptr->blk_geom->bheight);
+    }
+    else {
+        assert((context_ptr->blk_geom->bwidth >> 3) < 17);
+
+        if (hbd_mode_decision) {
+            distortion = sad_16b_kernel(
+                ((uint16_t *)input_picture_ptr->buffer_y) + input_origin_index,
+                input_picture_ptr->stride_y,
+                ((uint16_t *)prediction_ptr->buffer_y) + blk_origin_index,
+                prediction_ptr->stride_y,
+                context_ptr->blk_geom->bheight,
+                context_ptr->blk_geom->bwidth);
+        }
+        else {
+            distortion =
+                nxm_sad_kernel_sub_sampled(input_picture_ptr->buffer_y + input_origin_index,
+                    input_picture_ptr->stride_y,
+                    prediction_ptr->buffer_y + blk_origin_index,
+                    prediction_ptr->stride_y,
+                    context_ptr->blk_geom->bheight,
+                    context_ptr->blk_geom->bwidth);
+        }
+    }
+    return distortion;
+}
+
+// Tag ref frame(s) as to_do or not
+#define MIN_REF_TO_TAG 2
+void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
+                         EbPictureBufferDesc *input_picture_ptr, uint32_t blk_origin_index) {
+
+    uint32_t early_inter_distortion_array[MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH];
+
+    // Reset ref_filtering_res
+    for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+        for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+            context_ptr->ref_filtering_res[li][ri].list_i = li;
+            context_ptr->ref_filtering_res[li][ri].ref_i = ri;
+            context_ptr->ref_filtering_res[li][ri].dist = (uint32_t)~0;
+            context_ptr->ref_filtering_res[li][ri].do_ref = 1;
+            early_inter_distortion_array[li * REF_LIST_MAX_DEPTH + ri] = (uint32_t)~0;
+            context_ptr->ref_filtering_res[li][ri].valid_ref = EB_FALSE;
+        }
+    }
+
+    if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
+        return;
+
+    // Distortion measure 
+    EbBool use_ssd = EB_FALSE;
+
+    uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
+        ? EB_8_BIT_MD
+        : context_ptr->hbd_mode_decision;
+
+    input_picture_ptr = hbd_mode_decision ? pcs_ptr->input_frame16bit
+        : pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
+
+    // Update input origin
+    uint32_t input_origin_index =
+        (context_ptr->blk_origin_y + input_picture_ptr->origin_y) * input_picture_ptr->stride_y +
+        (context_ptr->blk_origin_x + input_picture_ptr->origin_x);
+
+    uint32_t early_intra_distortion = (uint32_t)~0;
+    // INTRA not supported if sq_size > 64
+    if (context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled && context_ptr->blk_geom->sq_size <= 64) {
+        early_intra_distortion = early_intra_evaluation(pcs_ptr,
+            context_ptr,
+            input_picture_ptr,
+            input_origin_index,
+            blk_origin_index,
+            use_ssd);
+    }
+
+    for (uint32_t ref_it = 0; ref_it < pcs_ptr->parent_pcs_ptr->tot_ref_frame_types; ++ref_it) {
+        MvReferenceFrame ref_pair = pcs_ptr->parent_pcs_ptr->ref_frame_type_arr[ref_it];
+
+        MacroBlockD *xd = context_ptr->blk_ptr->av1xd;
+        uint8_t      drli, max_drl_index;
+        IntMv        nearestmv[2], nearmv[2], ref_mv[2];
+
+        MvReferenceFrame rf[2];
+        av1_set_ref_frame(rf, ref_pair);
+
+        uint32_t best_mvp_distortion = (int32_t)~0;
+        uint32_t mvp_distortion;
+
+        if (rf[1] == NONE_FRAME) {
+
+            MvReferenceFrame frame_type = rf[0];
+            uint8_t list_idx = get_list_idx(rf[0]);
+            uint8_t ref_idx = get_ref_frame_idx(rf[0]);
+
+            // Evaluate MVP (if available)
+            int16_t mvp_x_array[PRED_ME_MAX_MVP_CANIDATES];
+            int16_t mvp_y_array[PRED_ME_MAX_MVP_CANIDATES];
+            int8_t  mvp_count = 0;
+            //NEAREST
+            mvp_x_array[mvp_count] =
+                (context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                     .ref_mvs[frame_type][0]
+                     .as_mv.col +
+                 4) &
+                ~0x07;
+            mvp_y_array[mvp_count] =
+                (context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
+                     .ref_mvs[frame_type][0]
+                     .as_mv.row +
+                 4) &
+                ~0x07;
+            mvp_count++;
+
+            //NEAR
+            max_drl_index = get_max_drl_index(xd->ref_mv_count[frame_type], NEARMV);
+
+            for (drli = 0; drli < max_drl_index; drli++) {
+                get_av1_mv_pred_drl(context_ptr,
+                                    context_ptr->blk_ptr,
+                                    frame_type,
+                                    0,
+                                    NEARMV,
+                                    drli,
+                                    nearestmv,
+                                    nearmv,
+                                    ref_mv);
+
+                if (((nearmv[0].as_mv.col + 4) & ~0x07) != mvp_x_array[0] &&
+                    ((nearmv[0].as_mv.row + 4) & ~0x07) != mvp_y_array[0]) {
+                    mvp_x_array[mvp_count] = (nearmv[0].as_mv.col + 4) & ~0x07;
+                    mvp_y_array[mvp_count] = (nearmv[0].as_mv.row + 4) & ~0x07;
+                    mvp_count++;
+                }
+            }
+            // Step 1: derive the best MVP in term of distortion
+            int16_t best_mvp_x = 0;
+            int16_t best_mvp_y = 0;
+
+            for (int8_t mvp_index = 0; mvp_index < mvp_count; mvp_index++) {
+                // MVP Distortion
+                EbReferenceObject *ref_obj =
+                    pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+                EbPictureBufferDesc *ref_pic = hbd_mode_decision ? ref_obj->reference_picture16bit
+                                                                 : ref_obj->reference_picture;
+
+                int32_t ref_origin_index =
+                    ref_pic->origin_x +
+                    (context_ptr->blk_origin_x + (mvp_x_array[mvp_index] >> 3)) +
+                    (context_ptr->blk_origin_y + (mvp_y_array[mvp_index] >> 3) +
+                     ref_pic->origin_y) *
+                        ref_pic->stride_y;
+                if (use_ssd) {
+                    EbSpatialFullDistType spatial_full_dist_type_fun =
+                        hbd_mode_decision ? full_distortion_kernel16_bits
+                                          : spatial_full_distortion_kernel;
+
+                    mvp_distortion =
+                        (uint32_t)spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
+                                                             input_origin_index,
+                                                             input_picture_ptr->stride_y,
+                                                             ref_pic->buffer_y,
+                                                             ref_origin_index,
+                                                             ref_pic->stride_y,
+                                                             context_ptr->blk_geom->bwidth,
+                                                             context_ptr->blk_geom->bheight);
+                } else {
+                    assert((context_ptr->blk_geom->bwidth >> 3) < 17);
+
+                    if (hbd_mode_decision) {
+                        mvp_distortion = sad_16b_kernel(
+                            ((uint16_t *)input_picture_ptr->buffer_y) + input_origin_index,
+                            input_picture_ptr->stride_y,
+                            ((uint16_t *)ref_pic->buffer_y) + ref_origin_index,
+                            ref_pic->stride_y,
+                            context_ptr->blk_geom->bheight,
+                            context_ptr->blk_geom->bwidth);
+                    } else {
+                        mvp_distortion = nxm_sad_kernel_sub_sampled(
+                            input_picture_ptr->buffer_y + input_origin_index,
+                            input_picture_ptr->stride_y,
+                            ref_pic->buffer_y + ref_origin_index,
+                            ref_pic->stride_y,
+                            context_ptr->blk_geom->bheight,
+                            context_ptr->blk_geom->bwidth);
+                    }
+                }
+
+                if (mvp_distortion < best_mvp_distortion) {
+                    best_mvp_distortion = mvp_distortion;
+                    best_mvp_x          = mvp_x_array[mvp_index];
+                    best_mvp_y          = mvp_y_array[mvp_index];
+                }
+            }
+
+            // Evaluate the PA_ME MVs (if available)
+            const MeSbResults *me_results =
+                pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
+            uint32_t pa_me_distortion = (uint32_t)~0;//any non zero value
+            if (is_me_data_present(context_ptr, me_results, list_idx, ref_idx)) {
+                int16_t me_mv_x;
+                int16_t me_mv_y;
+                if (list_idx == 0) {
+                    me_mv_x = context_ptr
+                        ->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx][0];
+                    me_mv_y = context_ptr
+                        ->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx][1];
+                }
+                else {
+                    me_mv_x = context_ptr
+                        ->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][ref_idx][0];
+                    me_mv_y = context_ptr
+                        ->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_1][ref_idx][1];
+                }
+                // Round-up to the closest integer the ME MV
+                me_mv_x = (me_mv_x + 4) & ~0x07;
+                me_mv_y = (me_mv_y + 4) & ~0x07;
+                EbReferenceObject *ref_obj = pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
+                EbPictureBufferDesc *ref_pic =
+                    hbd_mode_decision ? ref_obj->reference_picture16bit : ref_obj->reference_picture;
+
+                uint32_t ref_origin_index =
+                    ref_pic->origin_x + (context_ptr->blk_origin_x + (me_mv_x >> 3)) +
+                    (context_ptr->blk_origin_y + (me_mv_y >> 3) + ref_pic->origin_y) *
+                    ref_pic->stride_y;
+                if (use_ssd) {
+                    EbSpatialFullDistType spatial_full_dist_type_fun =
+                        hbd_mode_decision ? full_distortion_kernel16_bits
+                        : spatial_full_distortion_kernel;
+
+                    pa_me_distortion =
+                        (uint32_t)spatial_full_dist_type_fun(input_picture_ptr->buffer_y,
+                            input_origin_index,
+                            input_picture_ptr->stride_y,
+                            ref_pic->buffer_y,
+                            ref_origin_index,
+                            ref_pic->stride_y,
+                            context_ptr->blk_geom->bwidth,
+                            context_ptr->blk_geom->bheight);
+                }
+                else {
+                    assert((context_ptr->blk_geom->bwidth >> 3) < 17);
+
+                    if (hbd_mode_decision) {
+                        pa_me_distortion = sad_16b_kernel(
+                            ((uint16_t *)input_picture_ptr->buffer_y) + input_origin_index,
+                            input_picture_ptr->stride_y,
+                            ((uint16_t *)ref_pic->buffer_y) + ref_origin_index,
+                            ref_pic->stride_y,
+                            context_ptr->blk_geom->bheight,
+                            context_ptr->blk_geom->bwidth);
+                    }
+                    else {
+                        pa_me_distortion =
+                            nxm_sad_kernel_sub_sampled(input_picture_ptr->buffer_y + input_origin_index,
+                                input_picture_ptr->stride_y,
+                                ref_pic->buffer_y + ref_origin_index,
+                                ref_pic->stride_y,
+                                context_ptr->blk_geom->bheight,
+                                context_ptr->blk_geom->bwidth);
+                    }
+                }
+            }
+
+            // early_inter_distortion_array
+            context_ptr->ref_filtering_res[list_idx][ref_idx].valid_ref = EB_TRUE;
+            context_ptr->ref_filtering_res[list_idx][ref_idx].dist = MIN(pa_me_distortion, best_mvp_distortion);
+            early_inter_distortion_array[list_idx * REF_LIST_MAX_DEPTH + ref_idx] = MIN(pa_me_distortion, best_mvp_distortion);
+
+        }
+    }
+
+    uint32_t num_of_cand_to_sort;
+
+    // Sort early_inter_distortion_array
+    num_of_cand_to_sort = MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH;
+    for (uint32_t i = 0; i < num_of_cand_to_sort - 1; ++i) {
+        for (uint32_t j = i + 1; j < num_of_cand_to_sort; ++j) {
+            if (early_inter_distortion_array[j] < early_inter_distortion_array[i]) {
+                uint32_t temp = early_inter_distortion_array[i];
+                early_inter_distortion_array[i] = early_inter_distortion_array[j];
+                early_inter_distortion_array[j] = temp;
+            }
+        }
+    }
+
+    // Tag ref: do_red or not
+    // tag to_do the best ?
+    uint8_t min_ref_to_tag = MIN_REF_TO_TAG;
+    uint8_t max_ref_to_tag = context_ptr->ref_pruning_ctrls.max_ref_to_tag;
+    uint8_t total_tagged_ref;
+
+    // inter-to-inter distortion based ref masking
+    if (context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled) {
+        total_tagged_ref = 0;
+        for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+            for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+                if (context_ptr->ref_filtering_res[li][ri].valid_ref) {
+                    context_ptr->ref_filtering_res[li][ri].do_ref = 0;
+                    if (context_ptr->ref_filtering_res[li][ri].dist <= early_inter_distortion_array[max_ref_to_tag - 1] && total_tagged_ref < max_ref_to_tag) {
+                        context_ptr->ref_filtering_res[li][ri].do_ref = 1;
+                        total_tagged_ref++;
+                    }
+                }
+            }
+        }
+    }
+
+    // intra-to-inter distortion based ref masking
+    if (context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled) {
+        total_tagged_ref = 0;
+        for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+            for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+                if (context_ptr->ref_filtering_res[li][ri].valid_ref) {
+                    if (context_ptr->ref_filtering_res[li][ri].dist > early_intra_distortion) {
+                        context_ptr->ref_filtering_res[li][ri].do_ref = 0;
+                    }
+                    else {
+                        total_tagged_ref++;
+                    }
+                }
+            }
+        }
+    }
+
+    // if after intra-to-inter distortion check, less than min_ref_to_tag ref are tagged, then tag the best min_ref_to_tag ref 
+    if (total_tagged_ref < min_ref_to_tag) {
+        total_tagged_ref = 0;
+        for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
+            for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {
+                context_ptr->ref_filtering_res[li][ri].do_ref = 0;
+                if (context_ptr->ref_filtering_res[li][ri].dist <= early_inter_distortion_array[min_ref_to_tag - 1] && total_tagged_ref < min_ref_to_tag) {
+                    context_ptr->ref_filtering_res[li][ri].do_ref = 1;
+                    total_tagged_ref++;
+                }
+            }
+        }
+    }
+}
+#endif
+
 void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                              EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
                              uint32_t blk_origin_index) {
@@ -3969,6 +4371,13 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             MvReferenceFrame frame_type = rf[0];
             uint8_t          list_idx   = get_list_idx(rf[0]);
             uint8_t          ref_idx    = get_ref_frame_idx(rf[0]);
+#if PRED_ME_REF_MASKING
+            if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref) continue;
+#if 0
+            if (!context_ptr->ref_filtering_res[list_idx][ref_idx].do_ref && ref_idx) continue;
+            if (context_ptr->pd_pass == PD_PASS_2) if (ref_idx > 0) continue;
+#endif
+#endif
             if (ref_idx > 1 && context_ptr->predictive_me_level <= 5) continue;
             if (ref_idx > context_ptr->md_max_ref_count - 1) continue;
             // Get the ME MV
@@ -5216,7 +5625,11 @@ void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *
         *cr_coeff_bits = 0;
 
         uint32_t count_non_zero_coeffs[3][MAX_NUM_OF_TU_PER_CU];
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+        context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
+#else
         context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
+#endif
         product_prediction_fun_table[candidate_buffer->candidate_ptr->type](
             context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
@@ -6953,7 +7366,11 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #else
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #endif
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+        context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
+#else
         context_ptr->md_staging_skip_inter_chroma_pred    = EB_TRUE;
+#endif
         candidate_buffer->candidate_ptr->interp_filters   = 0;
         full_loop_core(pcs_ptr,
                        sb_ptr,
@@ -7005,7 +7422,11 @@ void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         context_ptr->md_staging_skip_full_chroma          = EB_TRUE;
         context_ptr->md_staging_skip_full_pred            = EB_TRUE;
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+        context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
+#else
         context_ptr->md_staging_skip_inter_chroma_pred    = EB_TRUE;
+#endif
 #if ENHANCED_MULTI_PASS_PD_MD_STAGING_SETTINGS
         context_ptr->md_staging_spatial_sse_full_loop = EB_FALSE;
 #else
@@ -7060,7 +7481,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
             (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
              context_ptr->md_staging_mode == MD_STAGING_MODE_2);
 #endif
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+        context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
+#else
         context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
+#endif
 #if MR_MODE
         context_ptr->md_staging_tx_size_mode = EB_TRUE;
 #else
@@ -7792,8 +8217,11 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
     for (uint8_t uv_mode_count = 0; uv_mode_count < uv_mode_total_count; uv_mode_count++) {
         ModeDecisionCandidateBuffer   *candidate_buffer = context_ptr->candidate_buffer_ptr_array[uv_mode_count + start_full_buffer_index];
         candidate_buffer->candidate_ptr = &context_ptr->fast_candidate_array[uv_mode_count + start_fast_buffer_index];
-
+#if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
+        context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
+#else
         context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
+#endif
         product_prediction_fun_table[candidate_buffer->candidate_ptr->type](
             context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
@@ -8302,7 +8730,11 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         }
     }
 #endif
-
+#if MD_REFERENCE_MASKING 
+    // Perform md reference pruning
+    perform_md_reference_pruning(
+        pcs_ptr, context_ptr, input_picture_ptr, blk_origin_index);
+#endif
     // Perform ME search around the best MVP
     if (context_ptr->predictive_me_level)
         predictive_me_search(

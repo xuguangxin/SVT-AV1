@@ -1339,6 +1339,66 @@ void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
 
 }
 #endif
+#if MD_REFERENCE_MASKING
+void set_inter_inter_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_inter_distortion_based_reference_pruning_mode) {
+
+    RefPruningControls *ref_pruning_ctrls = &mdctxt->ref_pruning_ctrls;
+
+    switch (inter_inter_distortion_based_reference_pruning_mode)
+    {
+    case 0:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 0;
+        ref_pruning_ctrls->max_ref_to_tag = 7;
+        break;
+    case 1:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+        ref_pruning_ctrls->max_ref_to_tag = 6;
+        break;
+    case 2:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+        ref_pruning_ctrls->max_ref_to_tag = 5;
+        break;
+    case 3:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+        ref_pruning_ctrls->max_ref_to_tag = 4;
+        break;
+    case 4:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+        ref_pruning_ctrls->max_ref_to_tag = 3;
+        break;
+    case 5:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+        ref_pruning_ctrls->max_ref_to_tag = 2;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_intra_distortion_based_reference_pruning_mode) {
+
+    RefPruningControls *ref_pruning_ctrls = &mdctxt->ref_pruning_ctrls;
+
+    switch (inter_intra_distortion_based_reference_pruning_mode)
+    {
+    case 0:
+        ref_pruning_ctrls->intra_to_inter_pruning_enabled = 0;
+        break;
+    case 1:
+        ref_pruning_ctrls->intra_to_inter_pruning_enabled = 1;
+        break;
+    case 2:
+        ref_pruning_ctrls->intra_to_inter_pruning_enabled = 1;
+        break;
+    case 3:
+        ref_pruning_ctrls->intra_to_inter_pruning_enabled = 1;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -2585,6 +2645,36 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
     context_ptr->intra_similar_mode = 1;
+
+#if MD_REFERENCE_MASKING
+    // Set inter_inter_distortion_based_reference_pruning
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0; // 3 as default mode
+    }
+    else {
+        context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+    }
+    set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
+
+    // Set inter_intra_distortion_based_reference_pruning
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_intra_distortion_based_reference_pruning = 0;  // 1 as default mode
+    }
+    else {
+        context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+    }
+    set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
+#endif
 
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
@@ -3900,6 +3990,36 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
     context_ptr->intra_similar_mode = 1;
+
+#if MD_REFERENCE_MASKING
+    // Set inter_inter_distortion_based_reference_pruning
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0; // 3 as default mode
+    }
+    else {
+        context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+    }
+    set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
+
+    // Set inter_intra_distortion_based_reference_pruning
+    if (pcs_ptr->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_intra_distortion_based_reference_pruning = 0;  // 1 as default mode
+    }
+    else {
+        context_ptr->inter_intra_distortion_based_reference_pruning = 0;
+    }
+    set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
+#endif
 
     // Set max_ref_count @ MD
     if (context_ptr->pd_pass == PD_PASS_0)
