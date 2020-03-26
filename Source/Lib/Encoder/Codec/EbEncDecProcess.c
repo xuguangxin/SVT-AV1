@@ -1439,10 +1439,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
+#if MAR25_ADOPTIONS
+    else if (enc_mode <= ENC_M8)
+#else
 #if MAR17_ADOPTIONS
     else if (enc_mode <= ENC_M7)
 #else
     else if (enc_mode <= ENC_M4)
+#endif
 #endif
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
 #if MAR2_M8_ADOPTIONS
@@ -2485,6 +2489,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (MR_MODE || pd_pass < PD_PASS_2)
 #endif
         context_ptr->nsq_hv_level = 0;
+#if MAR25_ADOPTIONS
+    else if (enc_mode <= ENC_M8) {
+#else
 #if MAR17_ADOPTIONS
     else if (enc_mode <= ENC_M7) {
 #else
@@ -2492,6 +2499,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (enc_mode <= ENC_M5) {
 #else
     else if (enc_mode <= ENC_M3) {
+#endif
 #endif
 #endif
         context_ptr->nsq_hv_level = 1;
@@ -2653,8 +2661,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
         else if (context_ptr->pd_pass == PD_PASS_1)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#if MAR25_ADOPTIONS
+        else if (enc_mode <= ENC_M3 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#else
         else
             context_ptr->inter_inter_distortion_based_reference_pruning = 0; // 3 as default mode
+#endif
     }
     else {
         context_ptr->inter_inter_distortion_based_reference_pruning = 0;
@@ -4596,8 +4611,16 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if ADD_NEW_MPPD_LEVEL
 #if MAR23_ADOPTIONS
                         if (pcs_ptr->slice_type == I_SLICE) {
+#if MAR25_ADOPTIONS
+                            s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0 : -1;
+                            e_depth = (blk_geom->sq_size == 8  && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 0
+                                    : (blk_geom->sq_size == 16 && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 1
+                                    : (blk_geom->sq_size == 32 && pcs_ptr->parent_pcs_ptr->disallow_4x4) ? 2
+                                    : (MR_MODE_MULTI_PASS_PD || pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 3 : 2;
+#else
                             s_depth = -1;
                             e_depth = 2;
+#endif
                         }
                         else if (zero_coeff_present_flag && (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_3 || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_4)) {
 #else

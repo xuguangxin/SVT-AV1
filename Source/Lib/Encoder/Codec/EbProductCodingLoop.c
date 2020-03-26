@@ -1803,7 +1803,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_num = 1;
                     intra_scaling_denom = 1;
                 }
+#if MAR25_ADOPTIONS
+                else if (pcs_ptr->enc_mode <= ENC_M8) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
                     // INTER
                     inter_scaling_num = 7;
                     inter_scaling_denom = 8;
@@ -1860,7 +1864,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_num = 1;
                     intra_scaling_denom = 1;
                 }
+#if MAR25_ADOPTIONS
+                else if (pcs_ptr->enc_mode <= ENC_M8) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
                     // INTER
                     inter_scaling_num = 3;
                     inter_scaling_denom = 4;
