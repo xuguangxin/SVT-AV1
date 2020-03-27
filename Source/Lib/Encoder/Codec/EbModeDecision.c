@@ -2289,7 +2289,10 @@ void inject_new_nearest_new_comb_candidates(const SequenceControlSet *  scs_ptr,
 #if NEW_NEAREST_NEW_NEAR_REF_MASKING
         uint8_t list_idx_0 = get_list_idx(rf[0]);
         uint8_t list_idx_1 = get_list_idx(rf[1]);
-        if (!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref || !context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref) return;
+        if (list_idx_0 != INVALID_REF)
+            if (!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref) return;
+        if (list_idx_1 != INVALID_REF)
+            if (!context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref) return;
 #endif
         if (ref_idx_0 > context_ptr->md_max_ref_count - 1 ||
             ref_idx_1 > context_ptr->md_max_ref_count - 1)
