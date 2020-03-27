@@ -5454,13 +5454,6 @@ void *rate_control_kernel(void *input_ptr) {
                     pcs_ptr->parent_pcs_ptr->qp_on_the_fly == EB_FALSE) {
                     const int32_t qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                     // if there are need enough pictures in the LAD/SlidingWindow, the adaptive QP scaling is not used
-#if QPS_UPDATE
-                    if (pcs_ptr->temporal_layer_index == 0)
-                        SVT_LOG("POC:%d\t%d\t%d\n",
-                            pcs_ptr->picture_number,
-                            pcs_ptr->parent_pcs_ptr->referenced_area_avg,
-                            pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity);
-#endif
                     int32_t new_qindex;
                     if (!scs_ptr->use_output_stat_file &&
                         pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH) {
