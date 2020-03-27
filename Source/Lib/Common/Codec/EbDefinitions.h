@@ -153,6 +153,7 @@ extern "C" {
 
 #define PASS1_FIX               1 // Fix bugs related to pass 1
 #define QPS_UPDATE              1 // 2 PASS QPS improvement
+#define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
