@@ -4036,7 +4036,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
     if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
         return;
 
-    // Distortion measure 
+    // Distortion measure
     EbBool use_ssd = EB_FALSE;
 
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
@@ -4311,7 +4311,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
         }
     }
 
-    // if after intra-to-inter distortion check, less than min_ref_to_tag ref are tagged, then tag the best min_ref_to_tag ref 
+    // if after intra-to-inter distortion check, less than min_ref_to_tag ref are tagged, then tag the best min_ref_to_tag ref
     if (total_tagged_ref < min_ref_to_tag) {
         total_tagged_ref = 0;
         for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
@@ -8738,7 +8738,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         }
     }
 #endif
-#if MD_REFERENCE_MASKING 
+#if MD_REFERENCE_MASKING
     // Perform md reference pruning
     perform_md_reference_pruning(
         pcs_ptr, context_ptr, input_picture_ptr, blk_origin_index);

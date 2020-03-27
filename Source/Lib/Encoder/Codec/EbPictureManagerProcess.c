@@ -1348,6 +1348,7 @@ void *picture_manager_kernel(void *input_ptr) {
                     (reference_entry_ptr->release_enable) &&
                     (reference_entry_ptr->reference_object_ptr)) {
                     // Release the nominal live_count value
+#if !PASS1_FIX
                     if (scs_ptr->use_output_stat_file &&
                         reference_entry_ptr->reference_object_ptr->live_count == 1)
                         write_stat_to_file(
@@ -1358,6 +1359,7 @@ void *picture_manager_kernel(void *input_ptr) {
                             ((EbReferenceObject *)
                                  reference_entry_ptr->reference_object_ptr->object_ptr)
                                 ->ref_poc);
+#endif
                     eb_release_object(reference_entry_ptr->reference_object_ptr);
                     reference_entry_ptr->reference_object_ptr      = (EbObjectWrapper *)EB_NULL;
                     reference_entry_ptr->reference_available       = EB_FALSE;

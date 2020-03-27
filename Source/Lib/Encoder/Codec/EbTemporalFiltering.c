@@ -2434,6 +2434,19 @@ static EbErrorType produce_temporally_filtered_pic(
                                      INPUT_SIZE_576p_RANGE_OR_LOWER)
                                         ? 3
                                         : 4;
+#if QPS_UPDATE
+                if (picture_control_set_ptr_central->scs_ptr->use_input_stat_file &&
+                    picture_control_set_ptr_central->temporal_layer_index == 0 &&
+                    noise_levels[0] > 0.5 &&
+                    picture_control_set_ptr_central->sc_content_detected == 0) {
+                    if ((picture_control_set_ptr_central->referenced_area_avg < 20 &&
+                         picture_control_set_ptr_central->slice_type == 2) ||
+                        (picture_control_set_ptr_central->referenced_area_avg < 30 &&
+                         picture_control_set_ptr_central->slice_type != 2)) {
+                        decay_control--;
+                    }
+                }
+#endif
                 // Decrease the filter strength for low QPs
                 if (picture_control_set_ptr_central->scs_ptr->static_config.qp <= ALT_REF_QP_THRESH)
                     decay_control--;

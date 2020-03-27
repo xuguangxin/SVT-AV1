@@ -1952,7 +1952,7 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
 
         if ((!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref || !context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref) && (ref_idx_0 || ref_idx_1)) return;
 
-#if 0  
+#if 0
         if ((!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref || !context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref)) return;
         if ((!context_ptr->ref_filtering_res[list_idx_0][ref_idx_0].do_ref || !context_ptr->ref_filtering_res[list_idx_1][ref_idx_1].do_ref) && (ref_idx_0 || ref_idx_1)) return;
 

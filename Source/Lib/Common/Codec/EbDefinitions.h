@@ -150,6 +150,9 @@ extern "C" {
 #endif
 #define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
 #define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
+
+#define PASS1_FIX               1 // Fix bugs related to pass 1
+#define QPS_UPDATE              1 // 2 PASS QPS improvement
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

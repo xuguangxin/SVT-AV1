@@ -4909,6 +4909,12 @@ static int adaptive_qindex_calc_two_pass(PictureControlSet *pcs_ptr, RATE_CONTRO
             (int)((referenced_area_avg * (kf_high - kf_low)) / referenced_area_max) + kf_low;
         // Baseline value derived from cpi->active_worst_quality and kf boost.
         active_best_quality = get_kf_active_quality(rc, active_worst_quality, bit_depth);
+#if QPS_UPDATE
+        // Allow somewhat lower kf minq with small image formats.
+        if ((pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width *
+             pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height) <= (352 * 288))
+            q_adj_factor -= 0.25;
+#endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
             0.05 - (0.001 * (double)pcs_ptr->parent_pcs_ptr
@@ -4929,7 +4935,12 @@ static int adaptive_qindex_calc_two_pass(PictureControlSet *pcs_ptr, RATE_CONTRO
                                         : MAX_REF_AREA_NONI;
 
         // Clip the complexity of highly complex pictures to maximum.
+#if QPS_UPDATE
+        if (pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity > HIGH_QPS_COMP_THRESHOLD &&
+            referenced_area_avg < 20)
+#else
         if (pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity > HIGH_QPS_COMP_THRESHOLD)
+#endif
             referenced_area_avg = 0;
 
         rc->arf_boost_factor =
@@ -5038,7 +5049,15 @@ static int cqp_qindex_calc(
             q_val * delta_rate_new[pcs_ptr->parent_pcs_ptr->hierarchical_levels]
             [pcs_ptr->parent_pcs_ptr->temporal_layer_index],
             bit_depth);
+#if QPS_UPDATE
+        if (scs_ptr->use_input_stat_file && pcs_ptr->parent_pcs_ptr->frames_in_sw < QPS_SW_THRESH)
+            active_best_quality =
+                MAX((int32_t)(qindex + delta_qindex), (pcs_ptr->ref_pic_qp_array[0][0] << 2) + 2);
+        else
+            active_best_quality = (int32_t)(qindex + delta_qindex);
+#else
         active_best_quality = (int32_t)(qindex + delta_qindex);
+#endif
     }
     q = active_best_quality;
     clamp(q, active_best_quality, active_worst_quality);
@@ -5435,6 +5454,13 @@ void *rate_control_kernel(void *input_ptr) {
                     pcs_ptr->parent_pcs_ptr->qp_on_the_fly == EB_FALSE) {
                     const int32_t qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                     // if there are need enough pictures in the LAD/SlidingWindow, the adaptive QP scaling is not used
+#if QPS_UPDATE
+                    if (pcs_ptr->temporal_layer_index == 0)
+                        SVT_LOG("POC:%d\t%d\t%d\n",
+                            pcs_ptr->picture_number,
+                            pcs_ptr->parent_pcs_ptr->referenced_area_avg,
+                            pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity);
+#endif
                     int32_t new_qindex;
                     if (!scs_ptr->use_output_stat_file &&
                         pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH) {

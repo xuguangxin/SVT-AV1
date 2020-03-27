@@ -12282,6 +12282,22 @@ EbErrorType motion_estimate_sb(
                 }
             }
         }
+#if QPS_UPDATE
+        pcs_ptr->rc_me_distortion[sb_index] = 0;
+        // Compute the sum of the distortion of all 16 16x16 (720 and above) and
+        // 64 8x8 (for lower resolutions) blocks in the SB
+        if (scs_ptr->input_resolution < INPUT_SIZE_1080i_RANGE) {
+            for (i = 0; i < 64; i++) {
+                me_candidate = &(context_ptr->me_candidate[0].pu[21 + i]);
+                pcs_ptr->rc_me_distortion[sb_index] += me_candidate->distortion;
+            }
+        } else {
+            for (i = 0; i < 16; i++) {
+                me_candidate = &(context_ptr->me_candidate[0].pu[5 + i]);
+                pcs_ptr->rc_me_distortion[sb_index] += me_candidate->distortion;
+            }
+        }
+#else
         {
             // Compute the sum of the distortion of all 16 16x16 (best) blocks
             // in the SB
@@ -12289,8 +12305,7 @@ EbErrorType motion_estimate_sb(
 #if SHUT_ME_DISTORTION
             for (i = 0; i < 16; i++) {
                 me_candidate = &(context_ptr->me_candidate[0].pu[5 + i]);
-                pcs_ptr->rc_me_distortion[sb_index] +=
-                    me_candidate->distortion;
+                pcs_ptr->rc_me_distortion[sb_index] += me_candidate->distortion;
             }
 #else
             for (i = 0; i < 16; i++)
@@ -12298,6 +12313,7 @@ EbErrorType motion_estimate_sb(
                     pcs_ptr->me_results[sb_index]->me_candidate[5 + i][0].distortion;
 #endif
         }
+#endif
     }
 
     return return_error;
