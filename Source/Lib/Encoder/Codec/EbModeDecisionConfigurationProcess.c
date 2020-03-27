@@ -1722,13 +1722,10 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         av1_estimate_coefficients_rate(md_rate_estimation_array,
                                        pcs_ptr->coeff_est_entropy_coder_ptr->fc);
 
-#if DEPTH_PART_CLEAN_UP
-        if (pcs_ptr->parent_pcs_ptr->adp_level != ADP_OFF)
-#else
-        if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_DEPTH_MODE) {
-#endif
-            derive_sb_md_mode(scs_ptr, pcs_ptr, context_ptr);
 #if !DEPTH_PART_CLEAN_UP
+        if (pcs_ptr->parent_pcs_ptr->pic_depth_mode == PIC_SB_SWITCH_DEPTH_MODE) {
+            derive_sb_md_mode(scs_ptr, pcs_ptr, context_ptr);
+
             for (int sb_index = 0; sb_index < pcs_ptr->sb_total_count; ++sb_index) {
                 if (pcs_ptr->parent_pcs_ptr->sb_depth_mode_array[sb_index] ==
                     SB_SQ_BLOCKS_DEPTH_MODE) {

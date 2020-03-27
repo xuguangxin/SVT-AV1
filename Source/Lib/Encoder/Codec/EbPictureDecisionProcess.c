@@ -833,9 +833,6 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 
 #if DEPTH_PART_CLEAN_UP
-    // Set Adp level
-    pcs_ptr->adp_level = ADP_OFF;
-
     // Set the Multi-Pass PD level
 #if ADD_NEW_MPPD_LEVEL
 #if MAR23_ADOPTIONS
@@ -882,10 +879,6 @@ EbErrorType signal_derivation_multi_processes_oq(
         ? MULTI_PASS_PD_OFF
         : MULTI_PASS_PD_LEVEL_3;
 #endif
-
-    // If ADP then set multi_pass_pd_level to INVALID
-    if(pcs_ptr->adp_level != ADP_OFF)
-        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_INVALID;
 #else
     if (sc_content_detected)
 #if MAR17_ADOPTIONS
@@ -937,11 +930,6 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_nsq
         ? SQUARE_PU_COUNT
         : MAX_ME_PU_COUNT;
-    // If disallow_nsq then shut ADP, and shut Multi-Pass PD
-    if (pcs_ptr->disallow_nsq) {
-        pcs_ptr->adp_level = ADP_OFF;
-        pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_OFF;
-    }
 
     // Set sb_64x64_simulated - only allow when SB size is not already 64x64
 #if MAR23_ADOPTIONS

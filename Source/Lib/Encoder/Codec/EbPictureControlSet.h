@@ -610,7 +610,6 @@ typedef struct PictureParentControlSet {
 
     // Multi-modes signal(s)
 #if DEPTH_PART_CLEAN_UP
-    AdpLevel adp_level;
     MultiPassPdLevel multi_pass_pd_level;
     EbBool sb_64x64_simulated;
     EbBool disallow_4x4;
