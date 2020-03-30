@@ -44,6 +44,7 @@ extern "C" {
 #if BEYOND_CS2
 #define INT_RECON_OFFSET_FIX        1
 #define R2R_FIX                     1
+#define OVERLAY_R2R_FIX             1
 #define ALTREF_PACK_II              1 // add packing for the altref search
 #define FIXED_SQ_WEIGHT_PER_QP      1
 #if FIXED_SQ_WEIGHT_PER_QP

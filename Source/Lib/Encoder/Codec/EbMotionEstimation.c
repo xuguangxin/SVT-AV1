@@ -3719,7 +3719,7 @@ static void full_pel_search_sb(MeContext *context_ptr, uint32_t list_index, uint
     }
 }
 /*******************************************
- * pu_half_pel_refinement
+ * half_pel_refinement_block
  *   performs Half Pel refinement for one PU
  *******************************************/
 static void half_pel_refinement_block(
@@ -4878,8 +4878,13 @@ static void pu_half_pel_refinement(
 
     int16_t x_mv           = _MVXT(*p_best_MV);
     int16_t y_mv           = _MVYT(*p_best_MV);
+#if OVERLAY_R2R_FIX
+    int32_t x_search_index = (x_mv >> 2) - x_search_area_origin;
+    int32_t y_search_index = (y_mv >> 2) - y_search_area_origin;
+#else
     int16_t x_search_index = (x_mv >> 2) - x_search_area_origin;
     int16_t y_search_index = (y_mv >> 2) - y_search_area_origin;
+#endif
 
     (void)scs_ptr;
     (void)encode_context_ptr;
@@ -4911,7 +4916,11 @@ static void pu_half_pel_refinement(
                                                      blk_sb_buffer_index,
                                                      context_ptr->sb_src_stride,
                                                      refBuffer,
+#if OVERLAY_R2R_FIX
+                                                     y_search_index * (int32_t)ref_stride + x_search_index,
+#else
                                                      y_search_index * ref_stride + x_search_index,
+#endif
                                                      ref_stride,
                                                      pu_width,
                                                      pu_height);
@@ -4923,7 +4932,11 @@ static void pu_half_pel_refinement(
     {
         // L position
         search_region_index =
+#if OVERLAY_R2R_FIX
+            x_search_index + (int32_t)context_ptr->interpolated_stride * y_search_index;
+#else
             x_search_index + (int16_t)context_ptr->interpolated_stride * y_search_index;
+#endif
         distortion_left_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -5012,7 +5025,11 @@ static void pu_half_pel_refinement(
         }
         // T position
         search_region_index =
+#if OVERLAY_R2R_FIX
+            x_search_index + (int32_t)context_ptr->interpolated_stride * y_search_index;
+#else
             x_search_index + (int16_t)context_ptr->interpolated_stride * y_search_index;
+#endif
         distortion_top_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -5057,7 +5074,11 @@ static void pu_half_pel_refinement(
         }
 
         // b position
+#if OVERLAY_R2R_FIX
+        search_region_index += (int32_t)context_ptr->interpolated_stride;
+#else
         search_region_index += (int16_t)context_ptr->interpolated_stride;
+#endif
         distortion_bottom_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -5103,7 +5124,11 @@ static void pu_half_pel_refinement(
 
         // TL position
         search_region_index =
+#if OVERLAY_R2R_FIX
+            x_search_index + (int32_t)context_ptr->interpolated_stride * y_search_index;
+#else
             x_search_index + (int16_t)context_ptr->interpolated_stride * y_search_index;
+#endif
         distortion_top_left_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -5194,7 +5219,11 @@ static void pu_half_pel_refinement(
         }
 
         // BR position
+#if OVERLAY_R2R_FIX
+        search_region_index += (int32_t)context_ptr->interpolated_stride;
+#else
         search_region_index += (int16_t)context_ptr->interpolated_stride;
+#endif
         distortion_bottom_right_pos =
             (context_ptr->fractional_search_method == SSD_SEARCH)
                 ? spatial_full_distortion_kernel(context_ptr->sb_src_ptr,
@@ -11624,6 +11653,12 @@ EbErrorType motion_estimate_sb(
             context_ptr->local_hp_mode[li][ri] =
                 context_ptr->half_pel_mode == SWITCHABLE_HP_MODE ? EX_HP_MODE :
                 context_ptr->half_pel_mode;
+#if OVERLAY_R2R_FIX
+            // R2R FIX: no winner integer MV is set in special case like initial p_sb_best_mv for overlay case,
+            // then it sends dirty p_sb_best_mv to MD, initializing it is necessary
+            for(uint32_t pi = 0; pi < MAX_ME_PU_COUNT; pi++)
+                context_ptr->p_sb_best_mv[li][ri][pi] = 0;
+#endif
 #if PRUNE_HME_L0
             context_ptr->adjust_hme_l1_factor[li][ri] = 100;
 #endif
@@ -11864,8 +11899,13 @@ EbErrorType motion_estimate_sb(
                                      context_ptr
                                          ->interpolated_full_stride[list_index][ref_pic_index]),
                                 context_ptr->interpolated_full_stride[list_index][ref_pic_index],
+#if OVERLAY_R2R_FIX
+                                MAX(1, (uint32_t)context_ptr->sa_width[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
+                                MAX(1, (uint32_t)context_ptr->sa_height[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
+#else
                                 (uint32_t)context_ptr->sa_width[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
                                 (uint32_t)context_ptr->sa_height[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
+#endif
                                 8);
 
                             initialize_buffer_32bits(
@@ -12024,8 +12064,13 @@ EbErrorType motion_estimate_sb(
                                 ((ME_FILTER_TAP >> 1) *
                                  context_ptr->interpolated_full_stride[list_index][ref_pic_index]),
                             context_ptr->interpolated_full_stride[list_index][ref_pic_index],
+#if OVERLAY_R2R_FIX
+                            MAX(1, (uint32_t)context_ptr->sa_width[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
+                            MAX(1, (uint32_t)context_ptr->sa_height[list_index][ref_pic_index]) + (BLOCK_SIZE_64 - 1),
+#else
                             (uint32_t)context_ptr->sa_width[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
                             (uint32_t)context_ptr->sa_height[list_index][ref_pic_index] + (BLOCK_SIZE_64 - 1),
+#endif
                             8);
 
                         // Half-Pel Refinement [8 search positions]
