@@ -536,7 +536,7 @@ EbErrorType sb_geom_init(SequenceControlSet *scs_ptr) {
                       scs_ptr->seq_header.max_frame_height))
                         ? EB_TRUE
                         : EB_FALSE;
-
+#if !INCOMPLETE_SB_FIX
                 // Temporary if the cropped width is not 4, 8, 16, 32, 64 and 128, the block is not allowed. To be removed after intrinsic functions for NxM spatial_full_distortion_kernel_func_ptr_array are added
                 int32_t cropped_width =
                     MIN(blk_geom->bwidth,
@@ -545,7 +545,7 @@ EbErrorType sb_geom_init(SequenceControlSet *scs_ptr) {
                 if (cropped_width != 4 && cropped_width != 8 && cropped_width != 16 &&
                     cropped_width != 32 && cropped_width != 64 && cropped_width != 128)
                     scs_ptr->sb_geom[sb_index].block_is_allowed[md_scan_block_index] = EB_FALSE;
-
+#endif
                 if (blk_geom->shape != PART_N) blk_geom = get_blk_geom_mds(blk_geom->sqi_mds);
                 scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[md_scan_block_index] =
                     ((scs_ptr->sb_geom[sb_index].origin_x >= scs_ptr->seq_header.max_frame_width) ||

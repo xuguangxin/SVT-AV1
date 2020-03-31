@@ -44,7 +44,6 @@ extern "C" {
 #if BEYOND_CS2
 #define INT_RECON_OFFSET_FIX        1
 #define R2R_FIX                     1
-#define OVERLAY_R2R_FIX             1
 #define ALTREF_PACK_II              1 // add packing for the altref search
 #define FIXED_SQ_WEIGHT_PER_QP      1
 #if FIXED_SQ_WEIGHT_PER_QP
@@ -155,6 +154,9 @@ extern "C" {
 #define PASS1_FIX               1 // Fix bugs related to pass 1
 #define QPS_UPDATE              1 // 2 PASS QPS improvement
 #define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
+#define OVERLAY_R2R_FIX         1
+#define INCOMPLETE_SB_FIX       1 // Enable the block_is_allowed for some block sizes,
+                                    //which were removed due to lack of intrinsics
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
