@@ -1489,11 +1489,17 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     // inter intra pred                      Settings
     // 0                                     OFF
-    // 1                                     ON
+    // 1                                     FULL
+    // 2                                     FAST 1 : Do not inject for non basic inter
+    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
 #if  CLEANUP_INTER_INTRA
     //picture level switch,  has to follow the sequence level.
     if (pcs_ptr->slice_type != I_SLICE && scs_ptr->seq_header.enable_interintra_compound) {
+#if INTRA_COMPOUND_OPT
+        pcs_ptr->enable_inter_intra= pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#else
         pcs_ptr->enable_inter_intra = 1;//shut for sc , if needed.
+#endif
     }
     else {
         pcs_ptr->enable_inter_intra = 0;

@@ -1993,6 +1993,21 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
             }
         }
+#if INTRA_COMPOUND_OPT
+        if (context_ptr->md_enable_inter_intra > 2 ){
+            uint8_t division_factor_num   = 7;
+            uint8_t division_factor_denum = 8;
+            uint8_t i = CAND_CLASS_4 ;
+            context_ptr->md_stage_1_count[i] =
+                (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_1_count[i])) /
+                        division_factor_denum);
+            context_ptr->md_stage_1_count[i] = MAX(context_ptr->md_stage_1_count[i], 1);
+            context_ptr->md_stage_2_count[i] =
+                (uint32_t) round((division_factor_num * ((float)context_ptr->md_stage_2_count[i])) /
+                        division_factor_denum);
+            context_ptr->md_stage_2_count[i] = MAX(context_ptr->md_stage_2_count[i], 1);
+        }
+#endif
 #if !REMOVE_OLD_NICS
         else if (nics_level == NIC_S8) { // S8
             // Step 2: set md_stage count

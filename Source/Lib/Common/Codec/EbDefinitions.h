@@ -157,6 +157,7 @@ extern "C" {
 #define OVERLAY_R2R_FIX         1
 #define INCOMPLETE_SB_FIX       1 // Enable the block_is_allowed for some block sizes,
                                     //which were removed due to lack of intrinsics
+#define INTRA_COMPOUND_OPT      1  // new fast mode
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

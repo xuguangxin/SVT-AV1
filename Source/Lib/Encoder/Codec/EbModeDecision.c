@@ -917,6 +917,12 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                                                           mi_row,
                                                           context_ptr->blk_geom->bsize);
                 skip_cand = skip_cand || (!inside_tile);
+
+#if INTRA_COMPOUND_OPT
+                    MvReferenceFrame rf[2];
+                    rf[0] = to_inject_ref_type;
+                    rf[1] = -1;
+#endif
                 if (!skip_cand &&
                     (context_ptr->injected_mv_count_l0 == 0 ||
                      mrp_is_already_injected_mv_l0(
@@ -924,7 +930,16 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                          EB_FALSE)) {
                     uint8_t inter_type;
                     uint8_t is_ii_allowed =
+#if INTRA_COMPOUND_OPT
+                        svt_is_interintra_allowed(context_ptr->md_enable_inter_intra == 1 , context_ptr->blk_geom->bsize, NEWMV, rf);
+#else
                         0; //svt_is_interintra_allowed(pcs_ptr->parent_pcs_ptr->enable_inter_intra, bsize, NEWMV, rf);
+#endif
+#if INTRA_COMPOUND_OPT
+                    if (context_ptr->md_enable_inter_intra > 2)
+                        if  (pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr]->do_comp[0][list0_ref_index] == 0 )
+                            is_ii_allowed = 0;
+#endif
                     uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                     //uint8_t is_obmc_allowed =  obmc_motion_mode_allowed(pcs_ptr, context_ptr->blk_ptr, bsize, rf[0], rf[1], NEWMV) == OBMC_CAUSAL;
                     //tot_inter_types = is_obmc_allowed ? tot_inter_types+1 : tot_inter_types;
@@ -1071,13 +1086,29 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
                                                               mi_row,
                                                               context_ptr->blk_geom->bsize);
                     skip_cand = skip_cand || (!inside_tile);
+
+#if INTRA_COMPOUND_OPT
+                    MvReferenceFrame rf[2];
+                    rf[0] = to_inject_ref_type;
+                    rf[1] = -1;
+#endif
                     if (!skip_cand &&
                         (context_ptr->injected_mv_count_l1 == 0 ||
                          mrp_is_already_injected_mv_l1(
                              context_ptr, to_inject_mv_x, to_inject_mv_y, to_inject_ref_type) ==
                              EB_FALSE)) {
                         uint8_t inter_type;
+#if INTRA_COMPOUND_OPT
+                        uint8_t is_ii_allowed   = svt_is_interintra_allowed(context_ptr->md_enable_inter_intra == 1,
+                            context_ptr->blk_geom->bsize, NEWMV, rf);
+#else
                         uint8_t is_ii_allowed   = 0;
+#endif
+#if INTRA_COMPOUND_OPT
+                    if (context_ptr->md_enable_inter_intra > 2)
+                        if  ( pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr]->do_comp[1][list1_ref_index] == 0)
+                                is_ii_allowed = 0;
+#endif
                         uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                         for (inter_type = 0; inter_type < tot_inter_types; inter_type++) {
                             cand_array[cand_total_cnt].type                    = INTER_MODE;
@@ -1738,6 +1769,13 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
             uint8_t inter_type;
             uint8_t is_ii_allowed =
                 svt_is_interintra_allowed(context_ptr->md_enable_inter_intra, bsize, NEARESTMV, rf);
+#if INTRA_COMPOUND_OPT
+            uint8_t ref_idx_0 = get_ref_frame_idx(rf[0]);
+
+            if (context_ptr->md_enable_inter_intra > 2)
+                if (ref_idx_0 > context_ptr->inter_comp_ctrls.mrp_pruning_w_distance - 1)
+                    is_ii_allowed = 0;
+#endif
             uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
             uint8_t is_obmc_allowed =
                 obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARESTMV) ==
@@ -1854,6 +1892,13 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                 uint8_t inter_type;
                 uint8_t is_ii_allowed = svt_is_interintra_allowed(
                     context_ptr->md_enable_inter_intra, bsize, NEARMV, rf);
+#if INTRA_COMPOUND_OPT
+            uint8_t ref_idx_0 = get_ref_frame_idx(rf[0]);
+
+            if (context_ptr->md_enable_inter_intra > 2)
+                if (ref_idx_0 > context_ptr->inter_comp_ctrls.mrp_pruning_w_distance - 1)
+                    is_ii_allowed = 0;
+#endif
                 uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                 uint8_t is_obmc_allowed =
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARMV) ==
@@ -3583,6 +3628,11 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                 uint8_t inter_type;
                 uint8_t is_ii_allowed =
                     svt_is_interintra_allowed(context_ptr->md_enable_inter_intra, bsize, NEWMV, rf);
+#if INTRA_COMPOUND_OPT
+                if (context_ptr->md_enable_inter_intra > 2)
+                    if  (pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr]->do_comp[0][list0_ref_index] == 0 )
+                        is_ii_allowed = 0;
+#endif
                 uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                 uint8_t is_obmc_allowed =
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEWMV) ==
@@ -3732,6 +3782,11 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
                     uint8_t inter_type;
                     uint8_t is_ii_allowed = svt_is_interintra_allowed(
                         context_ptr->md_enable_inter_intra, bsize, NEWMV, rf);
+#if INTRA_COMPOUND_OPT
+                    if (context_ptr->md_enable_inter_intra > 2)
+                        if  ( pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr]->do_comp[1][list1_ref_index] == 0)
+                                is_ii_allowed = 0;
+#endif
                     uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                     uint8_t is_obmc_allowed =
                         obmc_motion_mode_allowed(
@@ -4087,7 +4142,16 @@ void inject_predictive_me_candidates(
                     rf[1] = -1;
                     uint8_t inter_type;
                     uint8_t is_ii_allowed =
+#if INTRA_COMPOUND_OPT
+                        svt_is_interintra_allowed(context_ptr->md_enable_inter_intra == 1, bsize, NEWMV, rf);
+#else
                         0; // svt_is_interintra_allowed(pcs_ptr->parent_pcs_ptr->enable_inter_intra, bsize, NEWMV, rf);
+#endif
+#if INTRA_COMPOUND_OPT
+                    if (context_ptr->md_enable_inter_intra > 2)
+                        if (is_reference_best_pme(context_ptr , 0 ,ref_pic_index ,1)  == 0)
+                            is_ii_allowed = 0;
+#endif
                     uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                     uint8_t is_obmc_allowed =
                         obmc_motion_mode_allowed(
@@ -4194,7 +4258,16 @@ void inject_predictive_me_candidates(
                         rf[1] = -1;
                         uint8_t inter_type;
                         uint8_t is_ii_allowed =
+#if INTRA_COMPOUND_OPT
+                            svt_is_interintra_allowed(context_ptr->md_enable_inter_intra == 1, bsize, NEWMV, rf);
+#else
                             0; // svt_is_interintra_allowed(pcs_ptr->parent_pcs_ptr->enable_inter_intra, bsize, NEWMV, rf);
+#endif
+#if INTRA_COMPOUND_OPT
+                        if (context_ptr->md_enable_inter_intra > 2)
+                            if (is_reference_best_pme(context_ptr , 1 ,ref_pic_index ,1)  == 0)
+                                is_ii_allowed = 0;
+#endif
                         uint8_t tot_inter_types = is_ii_allowed ? II_COUNT : 1;
                         uint8_t is_obmc_allowed =
                             obmc_motion_mode_allowed(
