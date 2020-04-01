@@ -118,12 +118,21 @@ void* set_me_hme_params_oq(
 #if REFACTOR_ME_HME
     // Set the minimum ME search area
     if (sc_content_detected)
+#if MAR30_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M1)
+            me_context_ptr->search_area_width = me_context_ptr->search_area_height = 500;
+        else
+#endif
         if (pcs_ptr->enc_mode <= ENC_M3)
             me_context_ptr->search_area_width = me_context_ptr->search_area_height = 390;
         else
             me_context_ptr->search_area_width = me_context_ptr->search_area_height = 225;
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#if MAR30_ADOPTIONS
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 120;
+#else
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 150;
+#endif
     else
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
 
@@ -149,7 +158,16 @@ void* set_me_hme_params_oq(
         me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
 
 #if ADD_HME_DECIMATION_SIGNAL
+#if MAR30_ADOPTIONS
+    if (pcs_ptr->sc_content_detected)
+        me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+    else if (input_resolution <= INPUT_SIZE_720p_RANGE)
+        me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M3 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+    else
+        me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#else
     me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#endif
 #endif
 
     // Scale up the MIN ME area if low frame rate
@@ -389,10 +407,14 @@ EbErrorType signal_derivation_me_kernel_oq(
     // 1: perform me nsq_search only for the best refrenece picture.
     // 2: perform me nsq_search only for the nearest refrenece pictures.
     // 3: me nsq_search off.
+#if MAR30_ADOPTIONS
+    if (enc_mode <= ENC_M0)
+#else
 #if MAR10_ADOPTIONS
     if (enc_mode <= ENC_M1 && pcs_ptr->sc_content_detected == 0)
 #else
     if (MR_MODE && pcs_ptr->sc_content_detected == 0)
+#endif
 #endif
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
     else
@@ -401,7 +423,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
 #if MAR20_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
+#if MAR30_ADOPTIONS
+        context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 300;
+#else
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 200;
+#endif
     else if (enc_mode <= ENC_M1)
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
     else if (enc_mode <= ENC_M3)

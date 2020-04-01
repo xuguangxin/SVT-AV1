@@ -874,8 +874,19 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if ADD_NEW_MPPD_LEVEL
 #if MAR23_ADOPTIONS
     if (sc_content_detected)
+#if MAR30_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M3)
+            pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
+        else
+            pcs_ptr->multi_pass_pd_level =
+            (pcs_ptr->slice_type == I_SLICE)
+            ? MULTI_PASS_PD_LEVEL_1
+            : MULTI_PASS_PD_LEVEL_2;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+#else
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
     else if (pcs_ptr->enc_mode <= ENC_M1)
+#endif
         pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_1;
     else
         pcs_ptr->multi_pass_pd_level =
@@ -1533,7 +1544,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     //picture level switch,  has to follow the sequence level.
     if (pcs_ptr->slice_type != I_SLICE && scs_ptr->seq_header.enable_interintra_compound) {
 #if INTRA_COMPOUND_OPT
+#if MAR30_ADOPTIONS
+        pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M3 ? 2 : 3;
+#else
         pcs_ptr->enable_inter_intra= pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#endif
 #else
         pcs_ptr->enable_inter_intra = 1;//shut for sc , if needed.
 #endif
@@ -1630,7 +1645,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // using ME MV.
 #if MAR17_ADOPTIONS
 #if MAR20_M4_ADOPTIONS
+#if MAR30_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M3 || (pcs_ptr->enc_mode <= ENC_M7 && pcs_ptr->sc_content_detected))
+#else
     if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #else
 #if MAR18_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1668,6 +1687,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Prune reference and reduce ME SR based on HME/ME distortion
     // 0: OFF
     // 1: ON
+#if MAR30_ADOPTIONS
+    if (MR_MODE || pcs_ptr->sc_content_detected)
+        pcs_ptr->prune_ref_based_me = 0;
+    else
+        pcs_ptr->prune_ref_based_me = 1;
+#else
 #if MAR20_ADOPTIONS
     if (MR_MODE)
         pcs_ptr->prune_ref_based_me = 0;
@@ -1678,6 +1703,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->prune_ref_based_me = 0;
     else
         pcs_ptr->prune_ref_based_me = 1;
+#endif
 #endif
 
     return return_error;

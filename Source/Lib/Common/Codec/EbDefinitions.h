@@ -164,6 +164,7 @@ extern "C" {
 #define ADD_HME_DECIMATION_SIGNAL 1 // Add a signal to control the number of HME levels used
 #define NEW_RESOLUTION_RANGES     1 // Make new resolution ranges
 #endif
+#define MAR30_ADOPTIONS           1 // Adoptions in all modes; create a new M1
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

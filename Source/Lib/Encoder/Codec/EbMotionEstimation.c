@@ -9637,8 +9637,13 @@ void integer_search_sb(
             // Get hme results
             if (context_ptr->hme_results[list_index][ref_pic_index].do_ref == 0)
                 continue;  //so will not get ME results for those references.
+#if MAR30_ADOPTIONS
+            x_search_center = pcs_ptr->input_resolution <= INPUT_SIZE_360p_RANGE ? 0 : context_ptr->hme_results[list_index][ref_pic_index].hme_sc_x;
+            y_search_center = pcs_ptr->input_resolution <= INPUT_SIZE_360p_RANGE ? 0 : context_ptr->hme_results[list_index][ref_pic_index].hme_sc_y;
+#else
             x_search_center = context_ptr->hme_results[list_index][ref_pic_index].hme_sc_x;
             y_search_center = context_ptr->hme_results[list_index][ref_pic_index].hme_sc_y;
+#endif
             search_area_width = context_ptr->search_area_width;
             search_area_height = context_ptr->search_area_height;
 
