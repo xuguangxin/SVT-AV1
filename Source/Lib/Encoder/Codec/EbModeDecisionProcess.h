@@ -158,7 +158,14 @@ typedef struct  ObmcControls {
     uint8_t near_count;    //how many near to consider injecting obmc 0..3
 }ObmcControls;
 #endif
-
+#if REDUCE_COMPLEX_CLIP_CYCLES
+typedef struct PicComplexControls {
+    uint8_t intra_th; // Theshold on the area that is intra coded
+    uint8_t coef_th;  // Theshold on the area that is intra coded
+    uint8_t block_size_th;  // Theshold on the area that is intra coded
+    uint8_t use_th_qp_offset;
+} PicComplexControls;
+#endif
 #if INTER_COMP_REDESIGN
 
 typedef struct  InterCompoundControls {
@@ -501,6 +508,14 @@ typedef struct ModeDecisionContext {
 #endif
 #if UV_SEARCH_MODE_INJCECTION
     uint8_t       intra_chroma_search_follows_intra_luma_injection;
+#endif
+#if REDUCE_COMPLEX_CLIP_CYCLES
+    uint8_t pic_class;
+    uint8_t reduce_complex_clip_cycles_level;
+    PicComplexControls pic_complexity_ctrls;
+#endif
+#if NSQ_MD_SIGNAL
+    uint8_t       md_disallow_nsq;
 #endif
 } ModeDecisionContext;
 

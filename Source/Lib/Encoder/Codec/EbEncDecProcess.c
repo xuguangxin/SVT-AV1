@@ -1262,11 +1262,27 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
     pcs_ptr->intra_coded_area =
         (100 * pcs_ptr->intra_coded_area) /
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
+#if REDUCE_COMPLEX_CLIP_CYCLES
+    pcs_ptr->coef_coded_area =
+        (100 * pcs_ptr->coef_coded_area) /
+        (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
+    pcs_ptr->below32_coded_area =
+        (100 * pcs_ptr->below32_coded_area) /
+        (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
-
+#if REDUCE_COMPLEX_CLIP_CYCLES
+    if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
+    if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->below32_coded_area = 0;
+#endif
     ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
         ->intra_coded_area = (uint8_t)(pcs_ptr->intra_coded_area);
-
+#if REDUCE_COMPLEX_CLIP_CYCLES
+    ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+        ->coef_coded_area = (uint8_t)(pcs_ptr->coef_coded_area);
+    ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+        ->below32_coded_area = (uint8_t)(pcs_ptr->below32_coded_area);
+#endif
     uint32_t sb_index;
     for (sb_index = 0; sb_index < pcs_ptr->sb_total_count; ++sb_index)
         ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
@@ -1732,6 +1748,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
 #endif
 #endif
+
+#if REDUCE_COMPLEX_CLIP_CYCLES
+     context_ptr->md_disallow_nsq = context_ptr->pic_class == 2 ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
+
     // Set the full loop escape level
     // Level                Settings
     // 0                    Off
@@ -4953,6 +4974,115 @@ void build_starting_cand_block_array(SequenceControlSet *scs_ptr, PictureControl
     pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
 }
 #endif
+
+#if REDUCE_COMPLEX_CLIP_CYCLES
+static uint8_t th_qp_offset[64] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+    30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
+    40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40
+};
+uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_ptr,
+    SequenceControlSet *scs_ptr)
+{
+    uint8_t pic_class = 0;
+    EbBool high_intra_ref = EB_FALSE;
+    EbBool high_coef_ref = EB_FALSE;
+    EbBool high_below32_ref = EB_FALSE;
+    PicComplexControls *pic_complexity_ctrl = &context_ptr->pic_complexity_ctrls;
+    uint8_t const use_th_qp_offset = pic_complexity_ctrl->use_th_qp_offset;
+    uint8_t const offset = use_th_qp_offset ? th_qp_offset[scs_ptr->static_config.qp] : 0;
+    int8_t base_layer_l0_ref_idx = -1;
+    int8_t base_layer_l1_ref_idx = -1;
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE) {
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
+            base_layer_l0_ref_idx = ref_obj_l0->tmp_layer_idx == 0 && ref_obj_l0->frame_type != I_SLICE ? ref_idx : base_layer_l0_ref_idx;
+        }
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l1 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
+            base_layer_l1_ref_idx = ref_obj_l1->tmp_layer_idx == 0 && ref_obj_l1->frame_type != I_SLICE ? ref_idx : base_layer_l1_ref_idx;
+        }
+        if (base_layer_l0_ref_idx > -1) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;
+            uint32_t const intra_thresh = pic_complexity_ctrl->intra_th + offset;
+            high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;
+            uint32_t const coef_thresh = pic_complexity_ctrl->coef_th + offset;
+            high_coef_ref = ref_obj_l0->coef_coded_area > coef_thresh ? EB_TRUE : EB_FALSE;
+            uint32_t const below32_thresh = pic_complexity_ctrl->block_size_th + offset;
+            high_below32_ref = ref_obj_l0->below32_coded_area > below32_thresh ? EB_TRUE : EB_FALSE;
+        }
+        if (base_layer_l1_ref_idx > -1) {
+            EbReferenceObject *ref_obj_l1 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][base_layer_l1_ref_idx]->object_ptr;
+            uint32_t const intra_thresh = pic_complexity_ctrl->intra_th + offset;
+            high_intra_ref = ref_obj_l1->intra_coded_area > intra_thresh ? EB_TRUE : high_intra_ref;
+            uint32_t const coef_thresh = pic_complexity_ctrl->coef_th + offset;
+            high_coef_ref = ref_obj_l1->coef_coded_area > coef_thresh ? EB_TRUE : high_coef_ref;
+            uint32_t const below32_thresh = pic_complexity_ctrl->block_size_th + offset;
+            high_below32_ref = ref_obj_l1->below32_coded_area > below32_thresh ? EB_TRUE : high_below32_ref;
+        }
+        if (high_intra_ref && high_coef_ref && high_below32_ref)
+            pic_class = 2;
+        else
+            pic_class = 0;
+    }
+     //printf("pic_class %d\t%d\t%d\t%d\t%d\n", scs_ptr->static_config.qp, high_intra_ref, high_coef_ref, high_below32_ref, pic_class);
+    return pic_class;
+}
+void set_pic_complexity_controls(ModeDecisionContext *mdctxt) {
+    PicComplexControls *pic_complexity_ctrl = &mdctxt->pic_complexity_ctrls;
+    // Reduce complexity level:
+    // 0:                     OFF
+    // 1:                     Safe threshold + qp_offset ON
+    // 2:                     Safe threshold + qp_offset OFF
+    // 3:                     Medium threshold + qp_offset OFF
+    // 4:                     Agressive threshold + qp_offset OFF
+    mdctxt->reduce_complex_clip_cycles_level = 1;
+
+    uint8_t pic_complexity_mode = mdctxt->reduce_complex_clip_cycles_level;
+    switch (pic_complexity_mode)
+    {
+    case 0:
+         pic_complexity_ctrl->intra_th = 101;
+         pic_complexity_ctrl->coef_th  = 101;
+         pic_complexity_ctrl->intra_th = 101;
+         pic_complexity_ctrl->use_th_qp_offset = 0;
+        break;
+    case 1:
+         pic_complexity_ctrl->intra_th = 50;
+         pic_complexity_ctrl->coef_th  = 90;
+         pic_complexity_ctrl->intra_th = 80;
+         pic_complexity_ctrl->use_th_qp_offset = 1;
+        break;
+    case 2:
+         pic_complexity_ctrl->intra_th = 50;
+         pic_complexity_ctrl->coef_th  = 90;
+         pic_complexity_ctrl->intra_th = 80;
+         pic_complexity_ctrl->use_th_qp_offset = 0;
+        break;
+    case 3:
+         pic_complexity_ctrl->intra_th = 40;
+         pic_complexity_ctrl->coef_th  = 80;
+         pic_complexity_ctrl->intra_th = 70;
+         pic_complexity_ctrl->use_th_qp_offset = 0;
+        break;
+    case 4:
+         pic_complexity_ctrl->intra_th = 30;
+         pic_complexity_ctrl->coef_th  = 70;
+         pic_complexity_ctrl->intra_th = 60;
+         pic_complexity_ctrl->use_th_qp_offset = 0;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 /* EncDec (Encode Decode) Kernel */
 /*********************************************************************************
 *
@@ -5065,6 +5195,15 @@ void *enc_dec_kernel(void *input_ptr) {
         end_of_row_flag    = EB_FALSE;
         sb_row_index_start = sb_row_index_count = 0;
         context_ptr->tot_intra_coded_area       = 0;
+
+#if REDUCE_COMPLEX_CLIP_CYCLES
+        context_ptr->tot_coef_coded_area = 0;
+        context_ptr->tot_below32_coded_area = 0;
+        set_pic_complexity_controls(context_ptr->md_context);
+        context_ptr->md_context->pic_class = context_ptr->md_context->reduce_complex_clip_cycles_level ?
+            get_pic_class(context_ptr->md_context, pcs_ptr,
+            scs_ptr) : 0;
+#endif
 
         // Segment-loop
         while (assign_enc_dec_segments(segments_ptr,
@@ -5462,6 +5601,10 @@ void *enc_dec_kernel(void *input_ptr) {
 
         eb_block_on_mutex(pcs_ptr->intra_mutex);
         pcs_ptr->intra_coded_area += (uint32_t)context_ptr->tot_intra_coded_area;
+#if REDUCE_COMPLEX_CLIP_CYCLES
+        pcs_ptr->coef_coded_area += (uint32_t)context_ptr->tot_coef_coded_area;
+        pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
+#endif
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);
         eb_release_mutex(pcs_ptr->intra_mutex);
