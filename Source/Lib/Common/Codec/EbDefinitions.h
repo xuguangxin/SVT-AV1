@@ -171,6 +171,9 @@ extern "C" {
 #if  REDUCE_COMPLEX_CLIP_CYCLES
 #define NSQ_MD_SIGNAL                    1 // Add signal to shut md_nsq
 #endif
+
+#define BLOCK_REDUCTION_ALGORITHM_1 1 // block_based_depth_reduction (1)
+#define BLOCK_REDUCTION_ALGORITHM_2 1 // block_based_depth_reduction (2)
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////

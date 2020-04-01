@@ -188,6 +188,18 @@ typedef struct RefPruningControls {
     uint8_t max_ref_to_tag;
 }RefPruningControls;
 #endif
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+typedef struct BlockbasedDepthReductionCtrls {
+
+    int64_t nsq_based_estimation_sq_to_4_sq_children_th;
+    int64_t nsq_based_estimation_h_v_to_h4_v4_th;
+    int64_t current_to_parent_deviation_th;
+    int64_t sq_to_best_nsq_deviation_th;
+
+    uint8_t use_coeff_info;
+
+}BlockbasedDepthReductionCtrls;
+#endif
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
     EbFifo * mode_decision_configuration_input_fifo_ptr;
@@ -480,6 +492,10 @@ typedef struct ModeDecisionContext {
     uint8_t      inter_inter_distortion_based_reference_pruning;
     uint8_t      inter_intra_distortion_based_reference_pruning;
 #endif
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+    uint8_t      block_based_depth_reduction;
+    BlockbasedDepthReductionCtrls block_based_depth_reduction_ctrls;
+#endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;
     int16_t      pred_me_full_pel_search_width;
@@ -516,6 +532,10 @@ typedef struct ModeDecisionContext {
 #endif
 #if NSQ_MD_SIGNAL
     uint8_t       md_disallow_nsq;
+#endif
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2   
+    uint64_t best_nsq_default_cost;
+    uint64_t default_cost_per_shape[NUMBER_OF_SHAPES];
 #endif
 } ModeDecisionContext;
 

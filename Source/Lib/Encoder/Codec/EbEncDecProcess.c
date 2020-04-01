@@ -1415,6 +1415,40 @@ void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionCon
     }
 }
 #endif
+
+
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t nsq_based_estimation_level) {
+
+    BlockbasedDepthReductionCtrls *block_based_depth_reduction_ctrls = &mdctxt->block_based_depth_reduction_ctrls;
+
+    switch (nsq_based_estimation_level)
+    {
+    case 0:
+        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = MAX_SIGNED_VALUE;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = MAX_SIGNED_VALUE;
+
+        block_based_depth_reduction_ctrls->current_to_parent_deviation_th = MAX_SIGNED_VALUE;
+        block_based_depth_reduction_ctrls->sq_to_best_nsq_deviation_th = MAX_SIGNED_VALUE;
+
+        block_based_depth_reduction_ctrls->use_coeff_info = 0;
+        break;
+    case 1:
+        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = 0;
+        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = 0;
+
+        block_based_depth_reduction_ctrls->current_to_parent_deviation_th = 0;
+        block_based_depth_reduction_ctrls->sq_to_best_nsq_deviation_th = 0;
+
+        block_based_depth_reduction_ctrls->use_coeff_info = 1;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
+
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -2731,9 +2765,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MD_REFERENCE_MASKING
     // Set inter_inter_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
-        if (context_ptr->pd_pass == PD_PASS_0)
+        if (pd_pass == PD_PASS_0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
-        else if (context_ptr->pd_pass == PD_PASS_1)
+        else if (pd_pass == PD_PASS_1)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
 #if MAR25_ADOPTIONS
         else if (enc_mode <= ENC_M3 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -2752,9 +2786,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     // Set inter_intra_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
-        if (context_ptr->pd_pass == PD_PASS_0)
+        if (pd_pass == PD_PASS_0)
             context_ptr->inter_intra_distortion_based_reference_pruning = 0;
-        else if (context_ptr->pd_pass == PD_PASS_1)
+        else if (pd_pass == PD_PASS_1)
             context_ptr->inter_intra_distortion_based_reference_pruning = 0;
         else
             context_ptr->inter_intra_distortion_based_reference_pruning = 0;  // 1 as default mode
@@ -2764,7 +2798,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
     set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
 #endif
-
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
+    if (pd_pass == PD_PASS_0)
+        context_ptr->block_based_depth_reduction = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->block_based_depth_reduction = 0;
+    else
+        context_ptr->block_based_depth_reduction = 1;
+    set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction);
+#endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
         context_ptr->md_max_ref_count = 4;
