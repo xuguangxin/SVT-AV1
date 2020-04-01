@@ -143,6 +143,14 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
         scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
     // Derive HME Flag
     if (scs_ptr->static_config.use_default_me_hme) {
+#if REFACTOR_ME_HME
+        // Set here to allocate resources for the downsampled pictures used in HME (generated in PictureAnalysis)
+        // Will be later updated for SC/NSC in PictureDecisionProcess
+        pcs_ptr->enable_hme_flag        = 1;
+        pcs_ptr->enable_hme_level0_flag = 1;
+        pcs_ptr->enable_hme_level1_flag = 1;
+        pcs_ptr->enable_hme_level2_flag = 1;
+#else
         pcs_ptr->enable_hme_flag = enable_hme_flag[0][input_resolution][hme_me_level] ||
                                    enable_hme_flag[1][input_resolution][hme_me_level];
         pcs_ptr->enable_hme_level0_flag =
@@ -154,12 +162,21 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
         pcs_ptr->enable_hme_level2_flag =
             enable_hme_level2_flag[0][input_resolution][hme_me_level] ||
             enable_hme_level2_flag[1][input_resolution][hme_me_level];
+#endif
     } else {
         pcs_ptr->enable_hme_flag        = scs_ptr->static_config.enable_hme_flag;
         pcs_ptr->enable_hme_level0_flag = scs_ptr->static_config.enable_hme_level0_flag;
         pcs_ptr->enable_hme_level1_flag = scs_ptr->static_config.enable_hme_level1_flag;
         pcs_ptr->enable_hme_level2_flag = scs_ptr->static_config.enable_hme_level2_flag;
     }
+#if REFACTOR_ME_HME
+    // Set here to allocate resources for the downsampled pictures used in HME (generated in PictureAnalysis)
+    // Will be later updated for SC/NSC in PictureDecisionProcess
+    pcs_ptr->tf_enable_hme_flag        = 1;
+    pcs_ptr->tf_enable_hme_level0_flag = 1;
+    pcs_ptr->tf_enable_hme_level1_flag = 1;
+    pcs_ptr->tf_enable_hme_level2_flag = 1;
+#else
     pcs_ptr->tf_enable_hme_flag = tf_enable_hme_flag[0][input_resolution][hme_me_level] ||
                                   tf_enable_hme_flag[1][input_resolution][hme_me_level];
     pcs_ptr->tf_enable_hme_level0_flag =
@@ -171,6 +188,7 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
     pcs_ptr->tf_enable_hme_level2_flag =
         tf_enable_hme_level2_flag[0][input_resolution][hme_me_level] ||
         tf_enable_hme_level2_flag[1][input_resolution][hme_me_level];
+#endif
 
     if (scs_ptr->static_config.enable_intra_edge_filter == DEFAULT)
         scs_ptr->seq_header.enable_intra_edge_filter = 1;

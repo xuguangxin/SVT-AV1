@@ -2430,10 +2430,14 @@ static EbErrorType produce_temporally_filtered_pic(
                 // plane wise filtering not supported for highbd
                 int use_planewise_strategy = is_highbd ? 1 : 1;
                 // Hyper-parameter for filter weight adjustment.
+#if NEW_RESOLUTION_RANGES
+                int decay_control = (picture_control_set_ptr_central->scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) ? 3 : 4;
+#else
                 int decay_control = (picture_control_set_ptr_central->scs_ptr->input_resolution ==
                                      INPUT_SIZE_576p_RANGE_OR_LOWER)
                                         ? 3
                                         : 4;
+#endif
 #if QPS_UPDATE
                 if (picture_control_set_ptr_central->scs_ptr->use_input_stat_file &&
                     picture_control_set_ptr_central->temporal_layer_index == 0 &&

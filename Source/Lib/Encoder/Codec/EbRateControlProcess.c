@@ -4926,7 +4926,11 @@ static int adaptive_qindex_calc_two_pass(PictureControlSet *pcs_ptr, RATE_CONTRO
         active_best_quality += eb_av1_compute_qdelta(q_val, q_val * q_adj_factor, bit_depth);
     } else if (!is_src_frame_alt_ref &&
                (refresh_golden_frame || is_intrl_arf_boost || refresh_alt_ref_frame)) {
+#if NEW_RESOLUTION_RANGES
+        referenced_area_max = scs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE
+#else
         referenced_area_max = scs_ptr->input_resolution < 2
+#endif
                                   ? MAX_REF_AREA_NONI_LOW_RES
                                   : ((int)referenced_area_avg -
                                          (int)pcs_ptr->ref_pic_referenced_area_avg_array[0][0] >=

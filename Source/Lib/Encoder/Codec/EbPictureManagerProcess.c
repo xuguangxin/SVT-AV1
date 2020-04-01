@@ -1071,8 +1071,13 @@ void *picture_manager_kernel(void *input_ptr) {
                                          ->positive_ref_pics_total_count == 0);
 
                         // Rate Control
+#if NEW_RESOLUTION_RANGES
+                        child_pcs_ptr->dif_blk_delta_qp_depth =
+                            (uint8_t)entry_scs_ptr->input_resolution <= INPUT_SIZE_1080p_RANGE ? 2 : 3;
+#else
                         child_pcs_ptr->dif_blk_delta_qp_depth =
                             (uint8_t)entry_scs_ptr->input_resolution == INPUT_SIZE_4K_RANGE ? 3 : 2;
+#endif
 
                         // Reset the Reference Lists
                         EB_MEMSET(child_pcs_ptr->ref_pic_ptr_array[REF_LIST_0],

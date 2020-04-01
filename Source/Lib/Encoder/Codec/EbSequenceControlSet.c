@@ -375,6 +375,22 @@ EbErrorType copy_sequence_control_set(SequenceControlSet *dst, SequenceControlSe
 extern EbErrorType derive_input_resolution(EbInputResolution *input_resolution, uint32_t inputSize) {
     EbErrorType return_error = EB_ErrorNone;
 
+#if NEW_RESOLUTION_RANGES
+    if (inputSize < INPUT_SIZE_240p_TH)
+        *input_resolution = INPUT_SIZE_240p_RANGE;
+    else if (inputSize < INPUT_SIZE_360p_TH)
+        *input_resolution = INPUT_SIZE_360p_RANGE;
+    else if (inputSize < INPUT_SIZE_480p_TH)
+        *input_resolution = INPUT_SIZE_480p_RANGE;
+    else if (inputSize < INPUT_SIZE_720p_TH)
+        *input_resolution = INPUT_SIZE_720p_RANGE;
+    else if (inputSize < INPUT_SIZE_1080p_TH)
+        *input_resolution = INPUT_SIZE_1080p_RANGE;
+    else if (inputSize < INPUT_SIZE_4K_TH)
+        *input_resolution = INPUT_SIZE_4K_RANGE;
+    else
+        *input_resolution = INPUT_SIZE_8K_RANGE;
+#else
     if(inputSize < INPUT_SIZE_1080i_TH)
         *input_resolution = INPUT_SIZE_576p_RANGE_OR_LOWER;
     else if(inputSize < INPUT_SIZE_1080p_TH)
@@ -383,6 +399,7 @@ extern EbErrorType derive_input_resolution(EbInputResolution *input_resolution, 
         *input_resolution = INPUT_SIZE_1080p_RANGE;
     else
         *input_resolution = INPUT_SIZE_4K_RANGE;
+#endif
 
     return return_error;
 }

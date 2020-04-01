@@ -797,6 +797,43 @@ EbErrorType signal_derivation_multi_processes_oq(
     uint8_t enc_mode_hme = scs_ptr->use_output_stat_file
         ? pcs_ptr->snd_pass_enc_mode
         : pcs_ptr->enc_mode;
+#if REFACTOR_ME_HME
+    // If enabled here, the hme enable flags should also be enabled in ResourceCoordinationProcess
+    // to ensure that resources are allocated for the downsampled pictures used in HME
+    pcs_ptr->enable_hme_flag        = 1;
+    pcs_ptr->enable_hme_level0_flag = 1;
+
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M3) {
+            pcs_ptr->enable_hme_level1_flag = 1;
+            pcs_ptr->enable_hme_level2_flag = 1;
+        }
+        else {
+            pcs_ptr->enable_hme_level1_flag = 0;
+            pcs_ptr->enable_hme_level2_flag = 0;
+        }
+    else {
+        pcs_ptr->enable_hme_level1_flag = 1;
+        pcs_ptr->enable_hme_level2_flag = 1;
+    }
+
+    pcs_ptr->tf_enable_hme_flag = 1;
+    pcs_ptr->tf_enable_hme_level0_flag = 1;
+
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M3) {
+            pcs_ptr->tf_enable_hme_level1_flag = 1;
+            pcs_ptr->tf_enable_hme_level2_flag = 1;
+        }
+        else {
+            pcs_ptr->tf_enable_hme_level1_flag = 0;
+            pcs_ptr->tf_enable_hme_level2_flag = 0;
+        }
+    else {
+        pcs_ptr->tf_enable_hme_level1_flag = 1;
+        pcs_ptr->tf_enable_hme_level2_flag = 1;
+    }
+#else
     pcs_ptr->enable_hme_flag =
         enable_hme_flag[pcs_ptr->sc_content_detected]
         [scs_ptr->input_resolution][enc_mode_hme];
@@ -830,7 +867,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         tf_enable_hme_level2_flag[pcs_ptr->sc_content_detected]
         [scs_ptr->input_resolution]
     [enc_mode_hme];
-
+#endif
 
 #if DEPTH_PART_CLEAN_UP
     // Set the Multi-Pass PD level

@@ -115,7 +115,51 @@ void* set_me_hme_params_oq(
 
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
 
+#if REFACTOR_ME_HME
+    // Set the minimum ME search area
+    if (sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M3)
+            me_context_ptr->search_area_width = me_context_ptr->search_area_height = 390;
+        else
+            me_context_ptr->search_area_width = me_context_ptr->search_area_height = 225;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 150;
+    else
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
 
+    me_context_ptr->max_me_search_width = me_context_ptr->search_area_width * 2;
+    me_context_ptr->max_me_search_height = me_context_ptr->search_area_height * 2;
+
+    me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = me_context_ptr->max_me_search_height;
+    me_context_ptr->hme_level0_search_area_in_width_array[0] =
+        me_context_ptr->hme_level0_search_area_in_width_array[1] =
+        me_context_ptr->hme_level0_total_search_area_width / me_context_ptr->number_hme_search_region_in_width;
+    me_context_ptr->hme_level0_search_area_in_height_array[0] =
+        me_context_ptr->hme_level0_search_area_in_height_array[1] =
+        me_context_ptr->hme_level0_total_search_area_height / me_context_ptr->number_hme_search_region_in_height;
+
+    me_context_ptr->hme_level1_search_area_in_width_array[0] =
+        me_context_ptr->hme_level1_search_area_in_width_array[1] =
+        me_context_ptr->hme_level1_search_area_in_height_array[0] =
+        me_context_ptr->hme_level1_search_area_in_height_array[1] = 16;
+
+    me_context_ptr->hme_level2_search_area_in_width_array[0] =
+        me_context_ptr->hme_level2_search_area_in_width_array[1] =
+        me_context_ptr->hme_level2_search_area_in_height_array[0] =
+        me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
+
+#if ADD_HME_DECIMATION_SIGNAL
+    me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#endif
+
+    // Scale up the MIN ME area if low frame rate
+    uint8_t  low_frame_rate_flag = sc_content_detected ? 0 :
+        (scs_ptr->static_config.frame_rate >> 16) < 50 ? 1 : 0;
+    if (low_frame_rate_flag) {
+        me_context_ptr->search_area_width = (me_context_ptr->search_area_width * 3) / 2;
+        me_context_ptr->search_area_height = (me_context_ptr->search_area_height * 3) / 2;
+    }
+#else
     uint8_t  low_frame_rate_flag = sc_content_detected ? 0 :
         (scs_ptr->static_config.frame_rate >> 16) < 50 ? 1 : 0;
 
@@ -164,13 +208,18 @@ void* set_me_hme_params_oq(
         me_context_ptr->search_area_height =
             min_me_search_height[sc_content_detected][input_resolution][hmeMeLevel] ;
     }
+#endif
 
     assert(me_context_ptr->search_area_width  <= MAX_SEARCH_AREA_WIDTH  && "increase MAX_SEARCH_AREA_WIDTH" );
     assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
 
     me_context_ptr->update_hme_search_center_flag = 1;
 
+#if NEW_RESOLUTION_RANGES
+    if (input_resolution <= INPUT_SIZE_480p_RANGE)
+#else
     if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
         me_context_ptr->update_hme_search_center_flag = 0;
 
     return EB_NULL;
@@ -204,11 +253,12 @@ EbErrorType signal_derivation_me_kernel_oq(
             scs_ptr,
             context_ptr->me_context_ptr);
 
+#if !REFACTOR_ME_HME
     context_ptr->me_context_ptr->max_me_search_width=
         max_me_search_width[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
     context_ptr->me_context_ptr->max_me_search_height =
         max_me_search_height[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
-
+#endif
 
     if (pcs_ptr->sc_content_detected)
 #if MAR11_ADOPTIONS
@@ -409,7 +459,35 @@ void* tf_set_me_hme_params_oq(
     if (pcs_ptr->enc_mode <= ENC_M2)
         hmeMeLevel = ENC_M0;
 #endif
+#if REFACTOR_ME_HME
+    // Set the minimum ME search area
+    me_context_ptr->search_area_width = me_context_ptr->search_area_height = 16;
 
+    me_context_ptr->max_me_search_width = me_context_ptr->search_area_width * 2;
+    me_context_ptr->max_me_search_height = me_context_ptr->search_area_height * 2;
+
+    me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = me_context_ptr->max_me_search_height;
+    me_context_ptr->hme_level0_search_area_in_width_array[0] =
+        me_context_ptr->hme_level0_search_area_in_width_array[1] =
+        me_context_ptr->hme_level0_total_search_area_width / me_context_ptr->number_hme_search_region_in_width;
+    me_context_ptr->hme_level0_search_area_in_height_array[0] =
+        me_context_ptr->hme_level0_search_area_in_height_array[1] =
+        me_context_ptr->hme_level0_total_search_area_height / me_context_ptr->number_hme_search_region_in_height;
+
+    me_context_ptr->hme_level1_search_area_in_width_array[0] =
+        me_context_ptr->hme_level1_search_area_in_width_array[1] =
+        me_context_ptr->hme_level1_search_area_in_height_array[0] =
+        me_context_ptr->hme_level1_search_area_in_height_array[1] = 16;
+
+    me_context_ptr->hme_level2_search_area_in_width_array[0] =
+        me_context_ptr->hme_level2_search_area_in_width_array[1] =
+        me_context_ptr->hme_level2_search_area_in_height_array[0] =
+        me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
+
+#if ADD_HME_DECIMATION_SIGNAL
+    me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#endif
+#else
     // HME Level0
     me_context_ptr->hme_level0_total_search_area_width =
         tf_hme_level0_total_search_area_width[sc_content_detected][input_resolution][hmeMeLevel];
@@ -447,13 +525,18 @@ void* tf_set_me_hme_params_oq(
         min_metf_search_width[sc_content_detected][input_resolution][hmeMeLevel] ;
     me_context_ptr->search_area_height =
         min_metf_search_height[sc_content_detected][input_resolution][hmeMeLevel];
+#endif
 
     assert(me_context_ptr->search_area_width <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
     assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
 
     me_context_ptr->update_hme_search_center_flag = 1;
 
+#if NEW_RESOLUTION_RANGES
+    if (input_resolution <= INPUT_SIZE_480p_RANGE)
+#else
     if (input_resolution <= INPUT_SIZE_576p_RANGE_OR_LOWER)
+#endif
         me_context_ptr->update_hme_search_center_flag = 0;
 
     return EB_NULL;
@@ -481,10 +564,12 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         scs_ptr,
         scs_ptr->input_resolution);
 
+#if !REFACTOR_ME_HME
     context_ptr->me_context_ptr->max_me_search_width =
         max_metf_search_width[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
     context_ptr->me_context_ptr->max_me_search_height =
         max_metf_search_height[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
+#endif
 
     if (pcs_ptr->sc_content_detected)
 #if MAR11_ADOPTIONS

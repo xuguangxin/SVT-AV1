@@ -83,7 +83,11 @@
 #define EB_OUTPUTRECONBUFFERSIZE                                        (MAX_PICTURE_WIDTH_SIZE*MAX_PICTURE_HEIGHT_SIZE*2)   // Recon Slice Size
 #define EB_OUTPUTSTATISTICSBUFFERSIZE                                   0x30            // 6X8 (8 Bytes for Y, U, V, number of bits, picture number, QP)
 #define EOS_NAL_BUFFER_SIZE                                             0x0010 // Bitstream used to code EOS NAL
+#if NEW_RESOLUTION_RANGES
+#define EB_OUTPUTSTREAMBUFFERSIZE_MACRO(ResolutionSize)                ((ResolutionSize) < (INPUT_SIZE_720p_TH) ? 0x1E8480 : (ResolutionSize) < (INPUT_SIZE_1080p_TH) ? 0x2DC6C0 : (ResolutionSize) < (INPUT_SIZE_4K_TH) ? 0x2DC6C0 : 0x2DC6C0  )
+#else
 #define EB_OUTPUTSTREAMBUFFERSIZE_MACRO(ResolutionSize)                ((ResolutionSize) < (INPUT_SIZE_1080i_TH) ? 0x1E8480 : (ResolutionSize) < (INPUT_SIZE_1080p_TH) ? 0x2DC6C0 : (ResolutionSize) < (INPUT_SIZE_4K_TH) ? 0x2DC6C0 : 0x2DC6C0  )
+#endif
 
 #define ENCDEC_INPUT_PORT_MDC                                0
 #define ENCDEC_INPUT_PORT_ENCDEC                             1
@@ -337,7 +341,11 @@ int32_t set_parent_pcs(EbSvtAv1EncConfiguration*   config, uint32_t core_count, 
         if (core_count <= SINGLE_CORE_COUNT)
             ppcs_count = min_ppcs_count;
         else{
+#if NEW_RESOLUTION_RANGES
+            if (res_class <= INPUT_SIZE_480p_RANGE) {
+#else
             if (res_class < INPUT_SIZE_1080i_RANGE){
+#endif
                 if (core_count < CONS_CORE_COUNT)
                     ppcs_count = ppcs_count * 1;                // 1 sec
                 else if (core_count < LOW_SERVER_CORE_COUNT)
