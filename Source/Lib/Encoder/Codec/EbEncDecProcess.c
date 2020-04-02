@@ -5040,64 +5040,67 @@ void build_starting_cand_block_array(SequenceControlSet *scs_ptr, PictureControl
 #endif
 
 #if REDUCE_COMPLEX_CLIP_CYCLES
-static uint8_t th_qp_offset[64] = {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20,
-    30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30, 30,
-    40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, 40
-};
+#define MAX_CX_PERCENTAGE_TH  100
 uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_ptr,
     SequenceControlSet *scs_ptr)
 {
     uint8_t pic_class = 0;
     EbBool high_intra_ref = EB_FALSE;
-    EbBool high_coef_ref = EB_FALSE;
-    EbBool high_below32_ref = EB_FALSE;
+    EbBool high_coeff_ref = EB_FALSE;
+    EbBool high_small_block_ref  = EB_FALSE;
     PicComplexControls *pic_complexity_ctrl = &context_ptr->pic_complexity_ctrls;
     uint8_t const use_th_qp_offset = pic_complexity_ctrl->use_th_qp_offset;
-    uint8_t const offset = use_th_qp_offset ? th_qp_offset[scs_ptr->static_config.qp] : 0;
+    uint8_t const qp_based_offset  = use_th_qp_offset ? scs_ptr->static_config.qp : 0;
+    uint32_t const intra_thresh = MIN(MAX_CX_PERCENTAGE_TH,pic_complexity_ctrl->base_intra_th + qp_based_offset);
+    uint32_t const coeff_thresh = MIN(MAX_CX_PERCENTAGE_TH,pic_complexity_ctrl->base_coeff_th + qp_based_offset);
+    uint32_t const small_block_thresh = MIN(MAX_CX_PERCENTAGE_TH,pic_complexity_ctrl->base_small_block_size_th + qp_based_offset);
+
     int8_t base_layer_l0_ref_idx = -1;
     int8_t base_layer_l1_ref_idx = -1;
     if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE) {
+        // Fetch a reference index (base_layer_l0_ref_idx) of a base_layer non-intra picture from the available list 0 references
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
             EbReferenceObject *ref_obj_l0 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
             base_layer_l0_ref_idx = ref_obj_l0->tmp_layer_idx == 0 && ref_obj_l0->frame_type != I_SLICE ? ref_idx : base_layer_l0_ref_idx;
+        } 
+        if (base_layer_l0_ref_idx > -1) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;         
+            high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;   
+            high_coeff_ref = ref_obj_l0->coef_coded_area > coeff_thresh ? EB_TRUE : EB_FALSE;
+            high_small_block_ref = ref_obj_l0->below32_coded_area > small_block_thresh ? EB_TRUE : EB_FALSE;
         }
+        // Fetch a reference index (base_layer_l1_ref_idx) of a base_layer non-intra picture from the available list 1 references     
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
             base_layer_l1_ref_idx = ref_obj_l1->tmp_layer_idx == 0 && ref_obj_l1->frame_type != I_SLICE ? ref_idx : base_layer_l1_ref_idx;
         }
-        if (base_layer_l0_ref_idx > -1) {
-            EbReferenceObject *ref_obj_l0 =
-                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;
-            uint32_t const intra_thresh = pic_complexity_ctrl->intra_th + offset;
-            high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;
-            uint32_t const coef_thresh = pic_complexity_ctrl->coef_th + offset;
-            high_coef_ref = ref_obj_l0->coef_coded_area > coef_thresh ? EB_TRUE : EB_FALSE;
-            uint32_t const below32_thresh = pic_complexity_ctrl->block_size_th + offset;
-            high_below32_ref = ref_obj_l0->below32_coded_area > below32_thresh ? EB_TRUE : EB_FALSE;
-        }
         if (base_layer_l1_ref_idx > -1) {
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][base_layer_l1_ref_idx]->object_ptr;
-            uint32_t const intra_thresh = pic_complexity_ctrl->intra_th + offset;
             high_intra_ref = ref_obj_l1->intra_coded_area > intra_thresh ? EB_TRUE : high_intra_ref;
-            uint32_t const coef_thresh = pic_complexity_ctrl->coef_th + offset;
-            high_coef_ref = ref_obj_l1->coef_coded_area > coef_thresh ? EB_TRUE : high_coef_ref;
-            uint32_t const below32_thresh = pic_complexity_ctrl->block_size_th + offset;
-            high_below32_ref = ref_obj_l1->below32_coded_area > below32_thresh ? EB_TRUE : high_below32_ref;
+            high_coeff_ref = ref_obj_l1->coef_coded_area > coeff_thresh ? EB_TRUE : high_coeff_ref; 
+            high_small_block_ref = ref_obj_l1->below32_coded_area > small_block_thresh ? EB_TRUE : high_small_block_ref;
         }
-        if (high_intra_ref && high_coef_ref && high_below32_ref)
+        if (high_intra_ref && high_coeff_ref && high_small_block_ref)
             pic_class = 2;
         else
             pic_class = 0;
     }
-     //printf("pic_class %d\t%d\t%d\t%d\t%d\n", scs_ptr->static_config.qp, high_intra_ref, high_coef_ref, high_below32_ref, pic_class);
+    /*printf("pic_class %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", 
+        scs_ptr->static_config.qp, 
+        high_intra_ref,
+        high_coeff_ref,
+        high_small_block_ref,
+        intra_thresh,
+        coeff_thresh,
+        small_block_thresh,
+        pic_class);*/
     return pic_class;
 }
+
 void set_pic_complexity_controls(ModeDecisionContext *mdctxt) {
     PicComplexControls *pic_complexity_ctrl = &mdctxt->pic_complexity_ctrls;
     // Reduce complexity level:
@@ -5106,39 +5109,39 @@ void set_pic_complexity_controls(ModeDecisionContext *mdctxt) {
     // 2:                     Safe threshold + qp_offset OFF
     // 3:                     Medium threshold + qp_offset OFF
     // 4:                     Agressive threshold + qp_offset OFF
-    mdctxt->reduce_complex_clip_cycles_level = 1;
+    mdctxt->reduce_complex_clip_cycles_level = 0;
 
     uint8_t pic_complexity_mode = mdctxt->reduce_complex_clip_cycles_level;
     switch (pic_complexity_mode)
     {
     case 0:
-         pic_complexity_ctrl->intra_th = 101;
-         pic_complexity_ctrl->coef_th  = 101;
-         pic_complexity_ctrl->intra_th = 101;
+         pic_complexity_ctrl->base_intra_th = MAX_CX_PERCENTAGE_TH;
+         pic_complexity_ctrl->base_coeff_th = MAX_CX_PERCENTAGE_TH;
+         pic_complexity_ctrl->base_small_block_size_th = MAX_CX_PERCENTAGE_TH;
          pic_complexity_ctrl->use_th_qp_offset = 0;
         break;
     case 1:
-         pic_complexity_ctrl->intra_th = 50;
-         pic_complexity_ctrl->coef_th  = 90;
-         pic_complexity_ctrl->intra_th = 80;
+         pic_complexity_ctrl->base_intra_th = 30;
+         pic_complexity_ctrl->base_coeff_th = 70;
+         pic_complexity_ctrl->base_small_block_size_th = 60;
          pic_complexity_ctrl->use_th_qp_offset = 1;
         break;
     case 2:
-         pic_complexity_ctrl->intra_th = 50;
-         pic_complexity_ctrl->coef_th  = 90;
-         pic_complexity_ctrl->intra_th = 80;
+         pic_complexity_ctrl->base_intra_th = 50;
+         pic_complexity_ctrl->base_coeff_th = 90;
+         pic_complexity_ctrl->base_small_block_size_th = 80;
          pic_complexity_ctrl->use_th_qp_offset = 0;
         break;
     case 3:
-         pic_complexity_ctrl->intra_th = 40;
-         pic_complexity_ctrl->coef_th  = 80;
-         pic_complexity_ctrl->intra_th = 70;
+         pic_complexity_ctrl->base_intra_th = 40;
+         pic_complexity_ctrl->base_coeff_th = 80;
+         pic_complexity_ctrl->base_small_block_size_th = 70;
          pic_complexity_ctrl->use_th_qp_offset = 0;
         break;
     case 4:
-         pic_complexity_ctrl->intra_th = 30;
-         pic_complexity_ctrl->coef_th  = 70;
-         pic_complexity_ctrl->intra_th = 60;
+         pic_complexity_ctrl->base_intra_th = 30;
+         pic_complexity_ctrl->base_coeff_th = 70;
+         pic_complexity_ctrl->base_small_block_size_th = 60;
          pic_complexity_ctrl->use_th_qp_offset = 0;
         break;
     default:

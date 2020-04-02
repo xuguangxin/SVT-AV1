@@ -165,10 +165,10 @@ typedef struct  ObmcControls {
 #endif
 #if REDUCE_COMPLEX_CLIP_CYCLES
 typedef struct PicComplexControls {
-    uint8_t intra_th; // Theshold on the area that is intra coded
-    uint8_t coef_th;  // Theshold on the area that is intra coded
-    uint8_t block_size_th;  // Theshold on the area that is intra coded
-    uint8_t use_th_qp_offset;
+    uint8_t base_intra_th;// Threshold for intra coded area
+    uint8_t base_coeff_th;// Threshold for coeff coded area
+    uint8_t base_small_block_size_th;// Threshold for small block coded area
+    uint8_t use_th_qp_offset;// Flag to indicate whether a qp-based offset will be added to the base_threshold
 } PicComplexControls;
 #endif
 #if INTER_COMP_REDESIGN
@@ -538,7 +538,7 @@ typedef struct ModeDecisionContext {
     uint8_t reduce_complex_clip_cycles_level;
     PicComplexControls pic_complexity_ctrls;
 #endif
-#if NSQ_MD_SIGNAL
+#if REDUCE_COMPLEX_CLIP_CYCLES
     uint8_t       md_disallow_nsq;
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2   

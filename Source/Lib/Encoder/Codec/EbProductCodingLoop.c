@@ -8631,7 +8631,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
-#if NSQ_MD_SIGNAL
+#if REDUCE_COMPLEX_CLIP_CYCLES
        (context_ptr->blk_geom->shape != PART_N && context_ptr->md_disallow_nsq) ||
 #else
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq) ||
@@ -10065,7 +10065,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
 #if DEPTH_PART_CLEAN_UP
-#if NSQ_MD_SIGNAL
+#if REDUCE_COMPLEX_CLIP_CYCLES
         if (!context_ptr->md_disallow_nsq)
 #else
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
@@ -10077,7 +10077,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         context_ptr->similar_blk_avail = 0;
 #if DEPTH_PART_CLEAN_UP
-#if NSQ_MD_SIGNAL
+#if REDUCE_COMPLEX_CLIP_CYCLES
         if (!context_ptr->md_disallow_nsq)
 #else
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
