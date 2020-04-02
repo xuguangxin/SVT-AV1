@@ -35,7 +35,7 @@
 #if LOG_MV_VALIDITY
 void check_mv_validity(int16_t x_mv, int16_t y_mv, uint8_t need_shift);
 #endif
-
+#if !REMOVE_SQ_WEIGHT_QP_CHECK
 #if FIXED_SQ_WEIGHT_PER_QP
 #if SQ_WEIGHT_PATCH_0
 // sq_weight
@@ -102,6 +102,7 @@ static int32_t nsq_weight_per_qp[64] = { -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5, 
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
                                           0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0 };
+#endif
 #endif
 #endif
 EbErrorType generate_md_stage_0_cand(SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
@@ -9333,7 +9334,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
     // return immediately if the skip nsq threshold is infinite
     if (sq_weight == (uint32_t)~0) return skip_nsq;
-
+#if !REMOVE_SQ_WEIGHT_QP_CHECK
 #if FIXED_SQ_WEIGHT_PER_QP
     // use an aggressive threshold for low QPs
 #if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
@@ -9345,9 +9346,12 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
     // use an aggressive threshold for QP 20
     if (scs_ptr->static_config.qp <= QP_20) sq_weight += AGGRESSIVE_OFFSET_1;
 #endif
+#endif
+#if !SHUT_SQ_WEIGHT_H4_V4_FILTER
     // use a conservative threshold for H4, V4 blocks
     if (context_ptr->blk_geom->shape == PART_H4 || context_ptr->blk_geom->shape == PART_V4)
         sq_weight += CONSERVATIVE_OFFSET_0;
+#endif
 
 
 
@@ -9359,6 +9363,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 1].avail_blk_flag &&
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 2].avail_blk_flag) {
 
+#if !SHUT_SQ_WEIGHT_INTRA_FILTER
             // Use aggressive thresholds for inter blocks
             if (pcs_ptr->slice_type != I_SLICE) {
                 if (context_ptr->blk_geom->shape == PART_HA) {
@@ -9370,7 +9375,8 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                         sq_weight += CONSERVATIVE_OFFSET_0;
                 }
             }
-
+#endif
+#if !SHUT_SQ_WEIGHT_COEFF_FILTER
             // Use aggressive thresholds for blocks without coeffs
             if (context_ptr->blk_geom->shape == PART_HA) {
                 if (!context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds + 1].block_has_coeff)
@@ -9380,7 +9386,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                 if (!context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds + 2].block_has_coeff)
                     sq_weight += AGGRESSIVE_OFFSET_1;
             }
-
+#endif
             // compute the cost of the SQ block and H block
             uint64_t sq_cost =
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost;
@@ -9398,6 +9404,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                     uint32_t offset = 10;
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_H4)
                         offset = 5;
+#if !REMOVE_SQ_WEIGHT_QP_CHECK
 #if FIXED_SQ_WEIGHT_PER_QP
 #if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
@@ -9409,6 +9416,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
                         offset -= 5;
+#endif
 #endif
                     uint32_t v_weight = 100 + offset;
                     skip_nsq = (h_cost > ((v_cost * v_weight) / 100));
@@ -9422,7 +9430,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
         if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag &&
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 3].avail_blk_flag &&
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 4].avail_blk_flag) {
-
+#if !SHUT_SQ_WEIGHT_INTRA_FILTER
             // Use aggressive thresholds for inter blocks
             if (pcs_ptr->slice_type != I_SLICE) {
                 if (context_ptr->blk_geom->shape == PART_VA) {
@@ -9434,7 +9442,8 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                         sq_weight += CONSERVATIVE_OFFSET_0;
                 }
             }
-
+#endif
+#if !SHUT_SQ_WEIGHT_COEFF_FILTER
             // Use aggressive thresholds for blocks without coeffs
             if (context_ptr->blk_geom->shape == PART_VA) {
                 if (!context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds + 3].block_has_coeff)
@@ -9444,7 +9453,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
                 if (!context_ptr->md_blk_arr_nsq[context_ptr->blk_geom->sqi_mds + 4].block_has_coeff)
                     sq_weight += AGGRESSIVE_OFFSET_1;
             }
-
+#endif
             // compute the cost of the SQ block and V block
             uint64_t sq_cost =
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost;
@@ -9461,6 +9470,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 
                     if (context_ptr->nsq_hv_level == 2 && context_ptr->blk_geom->shape == PART_V4)
                         offset = 5;
+#if !REMOVE_SQ_WEIGHT_QP_CHECK
 #if FIXED_SQ_WEIGHT_PER_QP
 #if SQ_WEIGHT_PATCH_0 || SQ_WEIGHT_PATCH_1 || SQ_WEIGHT_PATCH_2 || SQ_WEIGHT_PATCH_3
                     if (offset >= (uint32_t)-nsq_weight_per_qp[scs_ptr->static_config.qp])
@@ -9472,6 +9482,7 @@ uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *p
 #else
                     if (offset >= 5 && scs_ptr->static_config.qp <= 20)
                         offset -= 5;
+#endif
 #endif
                     uint32_t h_weight = 100 + offset;
                     skip_nsq = (v_cost > ((h_cost * h_weight) / 100));

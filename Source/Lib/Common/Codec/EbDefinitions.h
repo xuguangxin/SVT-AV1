@@ -171,6 +171,13 @@ extern "C" {
 
 #define BLOCK_REDUCTION_ALGORITHM_1 1 // block_based_depth_reduction (1)
 #define BLOCK_REDUCTION_ALGORITHM_2 1 // block_based_depth_reduction (2)
+
+#define REMOVE_SQ_WEIGHT_QP_CHECK 1
+
+#define SHUT_SQ_WEIGHT_COEFF_FILTER 0
+#define SHUT_SQ_WEIGHT_INTRA_FILTER 0
+#define SHUT_SQ_WEIGHT_H4_V4_FILTER 0
+
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
