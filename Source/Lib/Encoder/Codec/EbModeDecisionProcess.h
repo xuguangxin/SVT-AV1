@@ -130,6 +130,11 @@ typedef struct MdBlkStruct {
 #if CLEAN_UP_SB_DATA_7
     uint8_t merge_flag;
 #endif
+#if BLOCK_REDUCTION_ALGORITHM_1
+    uint64_t luma_quant_coeff_energy;
+    uint64_t cb_quant_coeff_energy;
+    uint64_t cr_quant_coeff_energy;
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;
@@ -189,16 +194,19 @@ typedef struct RefPruningControls {
 }RefPruningControls;
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
-typedef struct BlockbasedDepthReductionCtrls {
+typedef struct DepthReductionCtrls {
+    uint8_t enabled;
 
-    int64_t nsq_based_estimation_sq_to_4_sq_children_th;
-    int64_t nsq_based_estimation_h_v_to_h4_v4_th;
-    int64_t current_to_parent_deviation_th;
-    int64_t sq_to_best_nsq_deviation_th;
+    uint8_t cost_sq_vs_nsq_energy_based_depth_reduction_enabled; // to enable the 1st evaluation
+    int64_t current_to_parent_deviation_th; // decrease towards a more agressive level
+    int64_t sq_to_best_nsq_deviation_th; // increase towards a more agressive level
+    uint64_t quant_coeff_energy_th;// increase towards a more agressive level
 
-    uint8_t use_coeff_info;
+    uint8_t nsq_data_based_depth_reduction_enabled; // to enable the 2nd evaluation
+    int64_t sq_to_4_sq_children_th; // increase towards a more agressive level
+    int64_t h_v_to_h4_v4_th; // increase towards a more agressive level
 
-}BlockbasedDepthReductionCtrls;
+}DepthReductionCtrls;
 #endif
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
@@ -493,8 +501,8 @@ typedef struct ModeDecisionContext {
     uint8_t      inter_intra_distortion_based_reference_pruning;
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
-    uint8_t      block_based_depth_reduction;
-    BlockbasedDepthReductionCtrls block_based_depth_reduction_ctrls;
+    uint8_t      block_based_depth_reduction_level;
+    DepthReductionCtrls depth_reduction_ctrls;
 #endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;

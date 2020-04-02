@@ -9000,6 +9000,41 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         &best_intra_mode);
     candidate_buffer = candidate_buffer_ptr_array[candidate_index];
 
+#if BLOCK_REDUCTION_ALGORITHM_1
+#if 0
+    uint64_t distortion[DIST_CALC_TOTAL];
+
+    full_distortion_kernel_cbf_zero32_bits(
+        (int32_t *)&candidate_buffer->residual_quant_coeff_ptr->buffer_y[0],
+        context_ptr->blk_geom->bwidth,
+        (int32_t *) NULL,
+        NOT_USED_VALUE,
+        distortion,
+        context_ptr->blk_geom->bwidth,
+        context_ptr->blk_geom->bheight);
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].luma_quant_coeff_energy = distortion[DIST_CALC_PREDICTION];
+
+    full_distortion_kernel_cbf_zero32_bits(
+        &(((int32_t *)candidate_buffer->residual_quant_coeff_ptr->buffer_cb)[0]),
+        context_ptr->blk_geom->bwidth_uv,
+        (int32_t *)NULL,
+        NOT_USED_VALUE,
+        distortion,
+        context_ptr->blk_geom->bwidth_uv,
+        context_ptr->blk_geom->bwidth_uv);
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cb_quant_coeff_energy = distortion[DIST_CALC_PREDICTION];
+
+    full_distortion_kernel_cbf_zero32_bits(
+        &(((int32_t *)candidate_buffer->residual_quant_coeff_ptr->buffer_cr)[0]),
+        context_ptr->blk_geom->bwidth_uv,
+        (int32_t *)NULL,
+        NOT_USED_VALUE,
+        distortion,
+        context_ptr->blk_geom->bwidth_uv,
+        context_ptr->blk_geom->bwidth_uv);
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cr_quant_coeff_energy = distortion[DIST_CALC_PREDICTION];
+#endif
+#endif
     bestcandidate_buffers[0] = candidate_buffer;
     uint8_t sq_index         = LOG2F(context_ptr->blk_geom->sq_size) - 2;
     if (context_ptr->blk_geom->shape == PART_N) {
@@ -9693,95 +9728,109 @@ void derive_shape_default_cost(
     }
 }
 
-void perform_block_based_depth_reduction(
+void block_based_depth_reduction(
     SequenceControlSet *scs_ptr,
     ModeDecisionContext *context_ptr) {
 #if BLOCK_REDUCTION_ALGORITHM_1
-    // Get the current depth coeff info
-    uint32_t current_depth_best_d1_blk_mds = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].best_d1_blk;
-    BlkStruct *current_depth_best_d1_blk_ptr = &(context_ptr->md_blk_arr_nsq[current_depth_best_d1_blk_mds]);
-    EbBool current_depth_has_coeff = EB_FALSE;
-    if (context_ptr->block_based_depth_reduction_ctrls.use_coeff_info)
-    {
-        for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
-            current_depth_has_coeff |= (current_depth_best_d1_blk_ptr[d1_itr].block_has_coeff);
+    if (context_ptr->depth_reduction_ctrls.cost_sq_vs_nsq_energy_based_depth_reduction_enabled) {
+        if (context_ptr->blk_geom->sq_size <= 64) {
+            // Get the current_depth_block_energy (normalized)
+            uint64_t current_depth_block_energy = 0;
+            uint32_t current_depth_best_d1_blk_mds = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].best_d1_blk;
+            BlkStruct *current_depth_best_d1_blk_ptr = &(context_ptr->md_blk_arr_nsq[current_depth_best_d1_blk_mds]);
+            for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
+                current_depth_block_energy += context_ptr->md_local_blk_unit[current_depth_best_d1_blk_mds + d1_itr].luma_quant_coeff_energy;
+                current_depth_block_energy += context_ptr->md_local_blk_unit[current_depth_best_d1_blk_mds + d1_itr].cb_quant_coeff_energy;
+                current_depth_block_energy += context_ptr->md_local_blk_unit[current_depth_best_d1_blk_mds + d1_itr].cr_quant_coeff_energy;
+            }
+            current_depth_block_energy = (current_depth_block_energy * ((MAX_SB_SIZE * MAX_SB_SIZE) + (MAX_SB_SIZE * MAX_SB_SIZE))) / // to do not loose precision
+                ((context_ptr->blk_geom->bwidth * context_ptr->blk_geom->bheight) + (context_ptr->blk_geom->bwidth_uv * context_ptr->blk_geom->bheight_uv));
+
+
+#if 1
+            EbBool current_depth_has_coeff = EB_FALSE;
+            for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
+                current_depth_has_coeff |= (current_depth_best_d1_blk_ptr[d1_itr].block_has_coeff);
+            }
+#endif
+            // Get current_to_parent_deviation
+            uint32_t parent_depth_sqi_mds =
+                (context_ptr->blk_geom->sqi_mds -
+                (context_ptr->blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]) -
+                parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
+            int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
+            if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
+                current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost;
+            }
+
+            // Get sq_to_best_nsq_deviation
+            int64_t sq_to_best_nsq_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost - (int64_t)context_ptr->best_nsq_default_cost) * 100) / (int64_t)context_ptr->best_nsq_default_cost;
+
+            if (current_depth_has_coeff == EB_FALSE && //current_depth_block_energy <= context_ptr->depth_reduction_ctrls.quant_coeff_energy_th &&
+                sq_to_best_nsq_deviation <= context_ptr->depth_reduction_ctrls.sq_to_best_nsq_deviation_th &&
+                current_to_parent_deviation >= context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th) {
+                set_child_to_be_skipped(
+                    context_ptr,
+                    context_ptr->blk_geom->sqi_mds,
+                    scs_ptr->seq_header.sb_size,
+                    scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
+            }
         }
-    }
-
-    // Get current_to_parent_deviation
-    uint32_t parent_depth_sqi_mds =
-        (context_ptr->blk_geom->sqi_mds -
-        (context_ptr->blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]) -
-        parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
-    int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
-    if (context_ptr->blk_geom->depth && context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
-        current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost;
-    }
-
-    // Get sq_to_best_nsq_deviation
-    int64_t sq_to_best_nsq_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost - (int64_t)context_ptr->best_nsq_default_cost) * 100) / (int64_t)context_ptr->best_nsq_default_cost;
-
-    if (current_depth_has_coeff == EB_FALSE &&
-        sq_to_best_nsq_deviation <= context_ptr->block_based_depth_reduction_ctrls.sq_to_best_nsq_deviation_th &&
-        current_to_parent_deviation >= context_ptr->block_based_depth_reduction_ctrls.current_to_parent_deviation_th) {
-        set_child_to_be_skipped(
-            context_ptr,
-            context_ptr->blk_geom->sqi_mds,
-            scs_ptr->seq_header.sb_size,
-            scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
     }
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_2
-    if (context_ptr->blk_geom->sq_size <= 64 && context_ptr->blk_geom->sq_size >= 16) {
-        if (context_ptr->default_cost_per_shape[PART_H] != MAX_MODE_COST && context_ptr->default_cost_per_shape[PART_H4] != MAX_MODE_COST && context_ptr->default_cost_per_shape[PART_V] != MAX_MODE_COST && context_ptr->default_cost_per_shape[PART_V4] != MAX_MODE_COST) {
-            // Derive sub_group_0_cost (if nsq_5, nsq_6, nsq_9, nsq_10 are available)
-            uint64_t sub_group_0_cost = MAX_MODE_COST;
-            if (
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 5].avail_blk_flag  &&
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 6].avail_blk_flag  &&
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 9].avail_blk_flag  &&
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].avail_blk_flag) {
+    if (context_ptr->depth_reduction_ctrls.nsq_data_based_depth_reduction_enabled) {
+        if (context_ptr->blk_geom->sq_size <= 64 && context_ptr->blk_geom->sq_size >= 16) {
+            if (context_ptr->default_cost_per_shape[PART_H] != MAX_MODE_COST && context_ptr->default_cost_per_shape[PART_H4] != MAX_MODE_COST && context_ptr->default_cost_per_shape[PART_V] != MAX_MODE_COST && context_ptr->default_cost_per_shape[PART_V4] != MAX_MODE_COST) {
+                // Derive sub_group_0_cost (if nsq_5, nsq_6, nsq_9, nsq_10 are available)
+                uint64_t sub_group_0_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 5].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 6].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 9].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].avail_blk_flag) {
 
-                sub_group_0_cost =
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 5].default_cost +
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 6].default_cost +
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 9].default_cost +
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].default_cost;
-            }
+                    sub_group_0_cost =
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 5].default_cost +
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 6].default_cost +
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 9].default_cost +
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 10].default_cost;
+                }
 
-            // Derive sub_group_1_cost (if nsq_11, nsq_12, nsq_15, nsq_16 are available)
-            uint64_t sub_group_1_cost = MAX_MODE_COST;
-            if (
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 11].avail_blk_flag  &&
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].avail_blk_flag  &&
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 15].avail_blk_flag  &&
-                context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].avail_blk_flag) {
+                // Derive sub_group_1_cost (if nsq_11, nsq_12, nsq_15, nsq_16 are available)
+                uint64_t sub_group_1_cost = MAX_MODE_COST;
+                if (
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 11].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 15].avail_blk_flag  &&
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].avail_blk_flag) {
 
-                sub_group_1_cost =
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 11].default_cost +
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].default_cost +
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 15].default_cost +
-                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].default_cost;
-            }
+                    sub_group_1_cost =
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 11].default_cost +
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 12].default_cost +
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 15].default_cost +
+                        context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds + 16].default_cost;
+                }
 
-            uint64_t best_sub_cost = MIN(sub_group_0_cost, sub_group_1_cost);
+                uint64_t best_sub_cost = MIN(sub_group_0_cost, sub_group_1_cost);
 
-            if (best_sub_cost != MAX_MODE_COST)
-            {
-                int64_t sq_cost_to_best_sub_cost_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost - (int64_t)best_sub_cost) * 100) / (int64_t)best_sub_cost;
-                int64_t h_cost_to_h4_cost = (int64_t)(((int64_t)context_ptr->default_cost_per_shape[PART_H] - (int64_t)context_ptr->default_cost_per_shape[PART_H4]) * 100) / (int64_t)context_ptr->default_cost_per_shape[PART_H4];
-                int64_t v_cost_to_v4_cost = (int64_t)(((int64_t)context_ptr->default_cost_per_shape[PART_V] - (int64_t)context_ptr->default_cost_per_shape[PART_V4]) * 100) / (int64_t)context_ptr->default_cost_per_shape[PART_V4];
+                if (best_sub_cost != MAX_MODE_COST)
+                {
+                    int64_t sq_cost_to_best_sub_cost_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost - (int64_t)best_sub_cost) * 100) / (int64_t)best_sub_cost;
+                    int64_t h_cost_to_h4_cost = (int64_t)(((int64_t)context_ptr->default_cost_per_shape[PART_H] - (int64_t)context_ptr->default_cost_per_shape[PART_H4]) * 100) / (int64_t)context_ptr->default_cost_per_shape[PART_H4];
+                    int64_t v_cost_to_v4_cost = (int64_t)(((int64_t)context_ptr->default_cost_per_shape[PART_V] - (int64_t)context_ptr->default_cost_per_shape[PART_V4]) * 100) / (int64_t)context_ptr->default_cost_per_shape[PART_V4];
 
-                if (h_cost_to_h4_cost <= context_ptr->block_based_depth_reduction_ctrls.nsq_based_estimation_h_v_to_h4_v4_th &&
-                    v_cost_to_v4_cost <= context_ptr->block_based_depth_reduction_ctrls.nsq_based_estimation_h_v_to_h4_v4_th)
+                    if (h_cost_to_h4_cost <= context_ptr->depth_reduction_ctrls.h_v_to_h4_v4_th &&
+                        v_cost_to_v4_cost <= context_ptr->depth_reduction_ctrls.h_v_to_h4_v4_th)
 
-                    if (sq_cost_to_best_sub_cost_deviation <= context_ptr->block_based_depth_reduction_ctrls.nsq_based_estimation_sq_to_4_sq_children_th)
+                        if (sq_cost_to_best_sub_cost_deviation <= context_ptr->depth_reduction_ctrls.sq_to_4_sq_children_th)
 
-                        set_child_to_be_skipped(
-                            context_ptr,
-                            context_ptr->blk_geom->sqi_mds,
-                            scs_ptr->seq_header.sb_size,
-                            scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
+                            set_child_to_be_skipped(
+                                context_ptr,
+                                context_ptr->blk_geom->sqi_mds,
+                                scs_ptr->seq_header.sb_size,
+                                scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 6 : 5);
+                }
             }
         }
     }
@@ -10310,11 +10359,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             derive_shape_default_cost(context_ptr);
 
             // Here d1 is already performed but not d2
-            if (context_ptr->block_based_depth_reduction &&
+            if (context_ptr->depth_reduction_ctrls.enabled &&
                 context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag == EB_TRUE &&  // could be further splitted
                 context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag) { // valid block
 
-                perform_block_based_depth_reduction(
+                block_based_depth_reduction(
                     scs_ptr,
                     context_ptr);
             }

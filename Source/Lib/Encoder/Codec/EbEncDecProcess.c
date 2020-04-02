@@ -1418,30 +1418,47 @@ void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionCon
 
 
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
-void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t nsq_based_estimation_level) {
+void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_reduction_level) {
 
-    BlockbasedDepthReductionCtrls *block_based_depth_reduction_ctrls = &mdctxt->block_based_depth_reduction_ctrls;
+    DepthReductionCtrls *depth_reduction_ctrls = &mdctxt->depth_reduction_ctrls;
 
-    switch (nsq_based_estimation_level)
+    switch (block_based_depth_reduction_level)
     {
     case 0:
-        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = MAX_SIGNED_VALUE;
-        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = MAX_SIGNED_VALUE;
 
-        block_based_depth_reduction_ctrls->current_to_parent_deviation_th = MAX_SIGNED_VALUE;
-        block_based_depth_reduction_ctrls->sq_to_best_nsq_deviation_th = MAX_SIGNED_VALUE;
-
-        block_based_depth_reduction_ctrls->use_coeff_info = 0;
+        depth_reduction_ctrls->enabled = 0;
         break;
+
     case 1:
-        block_based_depth_reduction_ctrls->nsq_based_estimation_sq_to_4_sq_children_th = 0;
-        block_based_depth_reduction_ctrls->nsq_based_estimation_h_v_to_h4_v4_th = 0;
 
-        block_based_depth_reduction_ctrls->current_to_parent_deviation_th = 0;
-        block_based_depth_reduction_ctrls->sq_to_best_nsq_deviation_th = 0;
+        depth_reduction_ctrls->enabled = 1;
 
-        block_based_depth_reduction_ctrls->use_coeff_info = 1;
+        depth_reduction_ctrls->cost_sq_vs_nsq_energy_based_depth_reduction_enabled = 1;
+        depth_reduction_ctrls->current_to_parent_deviation_th = 0;
+        depth_reduction_ctrls->sq_to_best_nsq_deviation_th = 0;
+        depth_reduction_ctrls->quant_coeff_energy_th = 0;
+
+        depth_reduction_ctrls->nsq_data_based_depth_reduction_enabled = 0;
+        depth_reduction_ctrls->sq_to_4_sq_children_th = 0;
+        depth_reduction_ctrls->h_v_to_h4_v4_th = 0;
+
         break;
+
+    case 2:
+
+        depth_reduction_ctrls->enabled = 1;
+
+        depth_reduction_ctrls->cost_sq_vs_nsq_energy_based_depth_reduction_enabled = 1;
+        depth_reduction_ctrls->current_to_parent_deviation_th = 0;
+        depth_reduction_ctrls->sq_to_best_nsq_deviation_th = 0;
+        depth_reduction_ctrls->quant_coeff_energy_th = 0;
+
+        depth_reduction_ctrls->nsq_data_based_depth_reduction_enabled = 1;
+        depth_reduction_ctrls->sq_to_4_sq_children_th = 0;
+        depth_reduction_ctrls->h_v_to_h4_v4_th = 0;
+
+        break;
+
     default:
         assert(0);
         break;
@@ -2800,12 +2817,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
     if (pd_pass == PD_PASS_0)
-        context_ptr->block_based_depth_reduction = 0;
+        context_ptr->block_based_depth_reduction_level = 0;
     else if (pd_pass == PD_PASS_1)
-        context_ptr->block_based_depth_reduction = 0;
+        context_ptr->block_based_depth_reduction_level = 0;
     else
-        context_ptr->block_based_depth_reduction = 1;
-    set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction);
+        if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->block_based_depth_reduction_level = 0;
+        else if (enc_mode <= ENC_M1)
+            context_ptr->block_based_depth_reduction_level = 1;
+        else 
+            context_ptr->block_based_depth_reduction_level = 2;
+    set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
 #endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
