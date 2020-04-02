@@ -2825,7 +2825,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->block_based_depth_reduction_level = 0;
         else if (enc_mode <= ENC_M1)
             context_ptr->block_based_depth_reduction_level = 1;
-        else 
+        else
             context_ptr->block_based_depth_reduction_level = 2;
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
 #endif
@@ -5063,15 +5063,15 @@ uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_
             EbReferenceObject *ref_obj_l0 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
             base_layer_l0_ref_idx = ref_obj_l0->tmp_layer_idx == 0 && ref_obj_l0->frame_type != I_SLICE ? ref_idx : base_layer_l0_ref_idx;
-        } 
+        }
         if (base_layer_l0_ref_idx > -1) {
             EbReferenceObject *ref_obj_l0 =
-                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;         
-            high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;   
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][base_layer_l0_ref_idx]->object_ptr;
+            high_intra_ref = ref_obj_l0->intra_coded_area > intra_thresh ? EB_TRUE : EB_FALSE;
             high_coeff_ref = ref_obj_l0->coef_coded_area > coeff_thresh ? EB_TRUE : EB_FALSE;
             high_small_block_ref = ref_obj_l0->below32_coded_area > small_block_thresh ? EB_TRUE : EB_FALSE;
         }
-        // Fetch a reference index (base_layer_l1_ref_idx) of a base_layer non-intra picture from the available list 1 references     
+        // Fetch a reference index (base_layer_l1_ref_idx) of a base_layer non-intra picture from the available list 1 references
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
@@ -5081,7 +5081,7 @@ uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][base_layer_l1_ref_idx]->object_ptr;
             high_intra_ref = ref_obj_l1->intra_coded_area > intra_thresh ? EB_TRUE : high_intra_ref;
-            high_coeff_ref = ref_obj_l1->coef_coded_area > coeff_thresh ? EB_TRUE : high_coeff_ref; 
+            high_coeff_ref = ref_obj_l1->coef_coded_area > coeff_thresh ? EB_TRUE : high_coeff_ref;
             high_small_block_ref = ref_obj_l1->below32_coded_area > small_block_thresh ? EB_TRUE : high_small_block_ref;
         }
         if (high_intra_ref && high_coeff_ref && high_small_block_ref)
@@ -5089,8 +5089,8 @@ uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_
         else
             pic_class = 0;
     }
-    /*printf("pic_class %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", 
-        scs_ptr->static_config.qp, 
+    /*printf("pic_class %d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+        scs_ptr->static_config.qp,
         high_intra_ref,
         high_coeff_ref,
         high_small_block_ref,
@@ -5101,7 +5101,7 @@ uint8_t get_pic_class(ModeDecisionContext *context_ptr, PictureControlSet * pcs_
     return pic_class;
 }
 
-void set_pic_complexity_controls(ModeDecisionContext *mdctxt) {
+void set_pic_complexity_controls(PictureControlSet * pcs_ptr, ModeDecisionContext *mdctxt) {
     PicComplexControls *pic_complexity_ctrl = &mdctxt->pic_complexity_ctrls;
     // Reduce complexity level:
     // 0:                     OFF
@@ -5109,7 +5109,7 @@ void set_pic_complexity_controls(ModeDecisionContext *mdctxt) {
     // 2:                     Safe threshold + qp_offset OFF
     // 3:                     Medium threshold + qp_offset OFF
     // 4:                     Agressive threshold + qp_offset OFF
-    mdctxt->reduce_complex_clip_cycles_level = 0;
+    mdctxt->reduce_complex_clip_cycles_level = MR_MODE ? 0 : 1;
 
     uint8_t pic_complexity_mode = mdctxt->reduce_complex_clip_cycles_level;
     switch (pic_complexity_mode)
@@ -5122,13 +5122,13 @@ void set_pic_complexity_controls(ModeDecisionContext *mdctxt) {
         break;
     case 1:
          pic_complexity_ctrl->base_intra_th = 30;
-         pic_complexity_ctrl->base_coeff_th = 70;
+         pic_complexity_ctrl->base_coeff_th = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 60 :70;
          pic_complexity_ctrl->base_small_block_size_th = 60;
          pic_complexity_ctrl->use_th_qp_offset = 1;
         break;
     case 2:
          pic_complexity_ctrl->base_intra_th = 50;
-         pic_complexity_ctrl->base_coeff_th = 90;
+         pic_complexity_ctrl->base_coeff_th = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 80 : 90;
          pic_complexity_ctrl->base_small_block_size_th = 80;
          pic_complexity_ctrl->use_th_qp_offset = 0;
         break;
@@ -5266,7 +5266,7 @@ void *enc_dec_kernel(void *input_ptr) {
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
         context_ptr->tot_below32_coded_area = 0;
-        set_pic_complexity_controls(context_ptr->md_context);
+        set_pic_complexity_controls(pcs_ptr, context_ptr->md_context);
         context_ptr->md_context->pic_class = context_ptr->md_context->reduce_complex_clip_cycles_level ?
             get_pic_class(context_ptr->md_context, pcs_ptr,
             scs_ptr) : 0;

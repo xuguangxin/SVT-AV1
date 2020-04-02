@@ -10365,7 +10365,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     sb_origin_x,
                     sb_origin_y);
             }
-#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2     
+#if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
             // To call derive_shape_default_cost() before sq_weight() to take advantage of the default cost derivation(s)
             derive_shape_default_cost(context_ptr);
 
