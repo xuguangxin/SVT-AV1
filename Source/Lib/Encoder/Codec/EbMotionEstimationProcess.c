@@ -118,10 +118,12 @@ void* set_me_hme_params_oq(
 #if REFACTOR_ME_HME
     // Set the minimum ME search area
     if (sc_content_detected)
+#if !APR02_ADOPTIONS
 #if MAR30_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M1)
             me_context_ptr->search_area_width = me_context_ptr->search_area_height = 500;
         else
+#endif
 #endif
         if (pcs_ptr->enc_mode <= ENC_M3)
             me_context_ptr->search_area_width = me_context_ptr->search_area_height = 390;
@@ -160,7 +162,11 @@ void* set_me_hme_params_oq(
 #if ADD_HME_DECIMATION_SIGNAL
 #if MAR30_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
+#if APR02_ADOPTIONS
+        me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#endif
     else if (input_resolution <= INPUT_SIZE_720p_RANGE)
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M3 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
     else

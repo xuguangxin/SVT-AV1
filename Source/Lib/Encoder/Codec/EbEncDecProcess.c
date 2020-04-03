@@ -1555,6 +1555,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->tx_weight = FC_SKIP_TX_SR_TH010;
 #endif
 #endif
+#if APR02_ADOPTIONS
+        else if (enc_mode <= ENC_M4)
+#else
 #if MAR10_ADOPTIONS
         else if (enc_mode <= ENC_M1)
 #else
@@ -1562,10 +1565,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
         else if (enc_mode <= ENC_M0)
 #endif
+#endif
             context_ptr->tx_weight = MAX_MODE_COST;
 #if MAR30_ADOPTIONS
+#if !APR02_ADOPTIONS
         else if (enc_mode <= ENC_M4)
             context_ptr->tx_weight = pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_720p_RANGE ? MAX_MODE_COST : FC_SKIP_TX_SR_TH025;
+#endif
         else
             context_ptr->tx_weight = FC_SKIP_TX_SR_TH025;
 #else
@@ -2353,10 +2359,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->edge_based_skip_angle_intra = 1;
             else
 #endif
+#if APR02_ADOPTIONS
+            if (MR_MODE)
+#else
 #if MAR10_ADOPTIONS
             if (enc_mode <= ENC_M1)
 #else
             if (MR_MODE)
+#endif
 #endif
                 context_ptr->edge_based_skip_angle_intra = 0;
             else
@@ -2582,7 +2592,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if MAR10_ADOPTIONS
 #if MAR30_ADOPTIONS
+#if APR02_ADOPTIONS
+                if (enc_mode <= ENC_M1)
+#else
                 if (enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_720p_RANGE)
+#endif
 #else
             if (enc_mode <= ENC_M1)
 #endif
@@ -2821,9 +2835,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->block_based_depth_reduction_level = 0;
     else
+#if APR02_ADOPTIONS
+        if (enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->block_based_depth_reduction_level = 0;
+        else if (enc_mode <= ENC_M3)
+#else
         if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
             context_ptr->block_based_depth_reduction_level = 0;
         else if (enc_mode <= ENC_M1)
+#endif
             context_ptr->block_based_depth_reduction_level = 1;
         else
             context_ptr->block_based_depth_reduction_level = 2;

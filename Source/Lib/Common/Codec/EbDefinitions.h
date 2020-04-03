@@ -175,8 +175,10 @@ extern "C" {
 #define REMOVE_SQ_WEIGHT_QP_CHECK 1
 
 #define SHUT_SQ_WEIGHT_COEFF_FILTER 0
-#define SHUT_SQ_WEIGHT_INTRA_FILTER 0
+#define SHUT_SQ_WEIGHT_INTRA_FILTER 1
 #define SHUT_SQ_WEIGHT_H4_V4_FILTER 0
+
+#define APR02_ADOPTIONS 1 // adoptions in all modes
 
 #endif
 
