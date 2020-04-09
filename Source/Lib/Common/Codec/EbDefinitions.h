@@ -183,6 +183,14 @@ extern "C" {
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
 
+// START  MAY2020 /////////////////////////////////////////////////////////
+
+#define MAY2020        1 // BASED ON apr2020 branch 62c1da44c258c973d668744b5aabfd1214cd8b22
+
+#if MAY2020
+#endif
+// END  MAY2020 /////////////////////////////////////////////////////////
+
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3
