@@ -2449,10 +2449,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_stage_1_cand_prune_th = 75;
     else
+#if APR08_ADOPTIONS
+        if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
 #if MAR30_ADOPTIONS
         if (enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #else
         if (enc_mode <= ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #endif
             context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
 #if MAR16_M8_ADOPTIONS
@@ -2921,6 +2925,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->skip_depth = 0;
 #if MAR18_MR_TESTS_ADOPTIONS
+#if !APR08_ADOPTIONS
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR30_ADOPTIONS
         if (enc_mode <= ENC_M7)
@@ -2930,6 +2935,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->skip_depth = 0;
         else
             context_ptr->skip_depth = 1;
+#endif
     else
         context_ptr->skip_depth = 0;
 #else

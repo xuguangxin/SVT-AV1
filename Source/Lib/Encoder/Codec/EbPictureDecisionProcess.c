@@ -983,7 +983,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR23_ADOPTIONS
     if (scs_ptr->static_config.super_block_size != 64) {
         if (sc_content_detected)
+#if APR08_ADOPTIONS
+            pcs_ptr->sb_64x64_simulated = EB_FALSE;
+#else
             pcs_ptr->sb_64x64_simulated = EB_TRUE;
+#endif
         else
             pcs_ptr->sb_64x64_simulated = EB_FALSE;
     }
@@ -1646,7 +1650,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR17_ADOPTIONS
 #if MAR20_M4_ADOPTIONS
 #if MAR30_ADOPTIONS
+#if APR08_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M7 && pcs_ptr->sc_content_detected))
+#else
     if (pcs_ptr->enc_mode <= ENC_M3 || (pcs_ptr->enc_mode <= ENC_M7 && pcs_ptr->sc_content_detected))
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M3)
 #endif

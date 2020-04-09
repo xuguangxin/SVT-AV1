@@ -449,6 +449,12 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
 
+#if APR08_ADOPTIONS
+    if (MR_MODE)
+        context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+    else
+        context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+#else
 #if MAR19_ADOPTIONS
     // Turn this threshold off
     context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
@@ -457,6 +463,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 30;
     else
         context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 15;
+#endif
 #endif
 #endif
 
