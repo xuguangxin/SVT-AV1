@@ -42,16 +42,13 @@ extern "C" {
 #define BEYOND_CS2        1 // BASED ON CS2 branch 3a19f29b789df30ef81d5bb263ce991617cbf30c
 
 #if BEYOND_CS2
-#define INT_RECON_OFFSET_FIX        1
-#define R2R_FIX                     1
+
+
+
+
+
 #define ALTREF_PACK_II              1 // add packing for the altref search
 #define FIXED_SQ_WEIGHT_PER_QP      1
-#if FIXED_SQ_WEIGHT_PER_QP
-#define SQ_WEIGHT_PATCH_0 1
-#define SQ_WEIGHT_PATCH_1 0
-#define SQ_WEIGHT_PATCH_2 0
-#define SQ_WEIGHT_PATCH_3 0
-#endif
 #define MAR2_M8_ADOPTIONS           1
 #define MAR2_M7_ADOPTIONS           1
 #define MAR3_M2_ADOPTIONS           1
@@ -65,6 +62,79 @@ extern "C" {
 #define SHUT_ME_DISTORTION          1 //Removed the ME distortions (209 elements), and the HEVC-legacy early inter-depth decision.
 #define REST_MEM_OPT                1 //lossless memory optimization of restoration buffer (move from parent to child pcs)
 #define MULTI_STAGE_HME                   1
+#define HME_PRUNE_BUG_FIX                 1
+#define RATE_MEM_OPT                      0 //lossless memory optimization of rate estimation
+#define MAR10_ADOPTIONS                   1 // Adoptions for all presets
+#define CLEAN_UP_SB_DATA                  1
+#define R2R_FIX                           1
+#define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
+
+#define DEPTH_PART_CLEAN_UP               1 // sb_128x128 if NSC, sb_64x64 if SC, and multi-pass PD till M8
+#define REMOVE_COMBINE_CLASS12            1 // remove code associated with combine_class12 feature
+#define REMOVE_OLD_NICS                   1 // Remove code for old NICS levels
+#define ADD_ME_SIGNAL_FOR_PRUNING_TH      1 // Add signals for mode-dependent ME thresholds
+#define ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL 1 // Add ME signal for the max HME search area multiplier
+#define MAR12_M8_ADOPTIONS                1
+#define MAR12_ADOPTIONS                   1 // Adoptions for all modes
+#define REMOVED_MEM_OPT_CDF               1
+#define M8_CAP_NUMBER_OF_REF_IN_MD        0 // CAP the number of used reference in MD
+#define FIX_MR_PD1                        1 // Disable PD1 refinement changes for MR.
+#define PME_SORT_REF                      1 //add reference sorting of pme results
+#define OBMC_FAST                         1 //faster obmc mode (3). cleaner obmc signalling.
+#define REMOVE_MD_EXIT                    1 // remove md_exit
+#define MAR16_M8_ADOPTIONS                1 // M8 adoption for TH value
+#define ADDED_CFL_OFF                     1
+#define ADOPT_CHROMA_MODE1_CFL_OFF        1
+#define PIC_BASED_RE_OFF                  1
+#define MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 1 // shut SQ vs. NSQ if MR (for multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3)
+#define ADD_SAD_AT_PME_SIGNAL      1 // Add signal for using SAD at PME
+#define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
+#define M5_CHROMA_NICS             1
+#define INTER_COMP_REDESIGN        1 // new fast mode, cleaner signaling and code
+#define MAR18_MR_TESTS_ADOPTIONS   1 // adoptions for MR, M0, and M2
+#define MAR18_ADOPTIONS            1 // adoptions in M5/M8
+#define REU_UPDATE                 1 // use top right instead of top SB for CDF calculation
+#define ADD_NEW_MPPD_LEVEL         1 // add a new MPPD level with PD0 | PD1 | PD2 w/o sq/nsq decision
+#define INT_RECON_OFFSET_FIX       1
+#define LOG_MV_VALIDITY            1 //report error message if MV is beyond av1 limits
+#define MD_CFL                     1 // Modified cfl search in MD
+#define UV_SEARCH_MODE_INJCECTION  1 // use the luma mode ijection method in chroma independent mode search
+#define MAR19_ADOPTIONS            1 // Adoptions for all modes
+#define MAR20_M4_ADOPTIONS         1 // Adoptions in M4
+#define ADOPT_SQ_ME_SEARCH_AREA    1 // Adopt a square search area for ME (all modes)
+#define MAR20_ADOPTIONS            1 // Adoptions affecting all modes
+#define MD_CONFIG_SB               1
+#define USE_M8_IN_PD1              0
+#define MAR23_ADOPTIONS            1 // Adoptions for all modes.  Make ME/HME SR square for TF and normal
+#define CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL 1 // lossless
+#define MD_REFERENCE_MASKING       1 // ref pruning @ MD
+#define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
+#define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
+#define PASS1_FIX                  1 // Fix bugs related to pass 1
+#define QPS_UPDATE                 1 // 2 PASS QPS improvement
+#define BUG_FIX_INV_TRANSFORM      1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
+#define OVERLAY_R2R_FIX            1
+#define INCOMPLETE_SB_FIX          1 // Enable the block_is_allowed for some block sizes,//which were removed due to lack of intrinsics
+#define INTRA_COMPOUND_OPT         1  // new fast mode
+#define ME_REFACTOR_FOR_CLEANUP    1 // refactor HME/ME code and improve resolution granularity for future cleanup and features
+#define MAR30_ADOPTIONS            1 // Adoptions in all modes; create a new M1
+#define REDUCE_COMPLEX_CLIP_CYCLES    1 // Add picture classifier
+#define BLOCK_REDUCTION_ALGORITHM_1   1 // block_based_depth_reduction (1)
+#define BLOCK_REDUCTION_ALGORITHM_2   1 // block_based_depth_reduction (2)
+#define REMOVE_SQ_WEIGHT_QP_CHECK     1
+#define SHUT_SQ_WEIGHT_COEFF_FILTER   0
+#define SHUT_SQ_WEIGHT_INTRA_FILTER   1
+#define SHUT_SQ_WEIGHT_H4_V4_FILTER   0
+#define APR02_ADOPTIONS               1 // adoptions in all modes
+#define MULTI_PASS_PD_FOR_INCOMPLETE  0
+
+
+#if FIXED_SQ_WEIGHT_PER_QP
+#define SQ_WEIGHT_PATCH_0 1
+#define SQ_WEIGHT_PATCH_1 0
+#define SQ_WEIGHT_PATCH_2 0
+#define SQ_WEIGHT_PATCH_3 0
+#endif
 #if MULTI_STAGE_HME
 #define DISABLE_HME_PRE_CHECK             1
 #define ENABLE_HME_AT_INC_SB              1
@@ -74,10 +144,6 @@ extern "C" {
 #define PRUNE_HME_L0                      0
 #define PRUNE_HME_L1                      0
 #endif
-#define HME_PRUNE_BUG_FIX                 1
-#define RATE_MEM_OPT                      0 //lossless memory optimization of rate estimation
-#define MAR10_ADOPTIONS                   1 // Adoptions for all presets
-#define CLEAN_UP_SB_DATA     1
 #if CLEAN_UP_SB_DATA
 #define CLEAN_UP_SB_DATA_0   1 // ref_mvs
 #define CLEAN_UP_SB_DATA_1   1
@@ -95,50 +161,9 @@ extern "C" {
 #define CLEAN_UP_SB_DATA_11  1 // mb
 #define CLEAN_UP_SB_DATA_12  1 // mds index
 #endif
-#define MAR11_ADOPTIONS                   1 // Adoptions for M2, M3, M4, M5
-#define DEPTH_PART_CLEAN_UP  1 // sb_128x128 if NSC, sb_64x64 if SC, and multi-pass PD till M8
-#define REMOVE_COMBINE_CLASS12  1 // remove code associated with combine_class12 feature
-#define REMOVE_OLD_NICS         1 // Remove code for old NICS levels
-#define ADD_ME_SIGNAL_FOR_PRUNING_TH    1 // Add signals for mode-dependent ME thresholds
-#define ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL   1 // Add ME signal for the max HME search area multiplier
-#define MAR12_M8_ADOPTIONS                  1
-#define MAR12_ADOPTIONS                     1 // Adoptions for all modes
-#define REMOVED_MEM_OPT_CDF                 1
-#define M8_CAP_NUMBER_OF_REF_IN_MD             0 // CAP the number of used reference in MD
-#define FIX_MR_PD1                          1 // Disable PD1 refinement changes for MR.
-
-#define PME_SORT_REF    1 //add reference sorting of pme results
-#define OBMC_FAST       1 //faster obmc mode (3). cleaner obmc signalling.
-#define REMOVE_MD_EXIT 1 // remove md_exit
-#define MAR16_M8_ADOPTIONS  1 // M8 adoption for TH value
-#define ADDED_CFL_OFF              1
-#define ADOPT_CHROMA_MODE1_CFL_OFF 1
-#define PIC_BASED_RE_OFF           1
-#define MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 1 // shut SQ vs. NSQ if MR (for multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3)
-#define ADD_SAD_AT_PME_SIGNAL      1 // Add signal for using SAD at PME
-#define MAR17_ADOPTIONS            1 // Push features with bad slope to M8 & beyond.
-#define M5_CHROMA_NICS             1
-#define INTER_COMP_REDESIGN        1 // new fast mode, cleaner signaling and code
-#define MAR18_MR_TESTS_ADOPTIONS   1 // adoptions for MR, M0, and M2
-#define MAR18_ADOPTIONS            1 // adoptions in M5/M8
-#define REU_UPDATE                 1 // use top right instead of top SB for CDF calculation
-#define ADD_NEW_MPPD_LEVEL         1 // add a new MPPD level with PD0 | PD1 | PD2 w/o sq/nsq decision
-
-#define LOG_MV_VALIDITY            1 //report error message if MV is beyond av1 limits
-#define MD_CFL                     1 // Modified cfl search in MD
 #if MD_CFL
-#define CFL_REDUCED_ALPHA          1 // use faster libaom_short_cuts_ths
+#define CFL_REDUCED_ALPHA    1 // use faster libaom_short_cuts_ths
 #endif
-#define UV_SEARCH_MODE_INJCECTION  1 // use the luma mode ijection method in chroma independent mode search
-#define MAR19_ADOPTIONS            1 // Adoptions for all modes
-#define MAR20_M4_ADOPTIONS         1 // Adoptions in M4
-#define ADOPT_SQ_ME_SEARCH_AREA    1 // Adopt a square search area for ME (all modes)
-#define MAR20_ADOPTIONS            1 // Adoptions affecting all modes
-#define MD_CONFIG_SB               1
-#define USE_M8_IN_PD1              0
-#define MAR23_ADOPTIONS            1 // Adoptions for all modes.  Make ME/HME SR square for TF and normal
-#define CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL 1 // lossless
-#define MD_REFERENCE_MASKING 1 // ref pruning @ MD
 #if MD_REFERENCE_MASKING
 #define NEW_MV_REF_MASKING 1
 #define UNIPRED_3x3_REF_MASKING 1
@@ -148,40 +173,11 @@ extern "C" {
 #define NEAREST_NEAR_REF_MASKING 1
 #define PRED_ME_REF_MASKING 1
 #endif
-#define MAR25_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform HME/ME sizes (non-TF)
-#define MAR26_ADOPTIONS            1 // Adoptions for all modes. Adopt uniform TF HME/ME sizes
-
-#define PASS1_FIX               1 // Fix bugs related to pass 1
-#define QPS_UPDATE              1 // 2 PASS QPS improvement
-#define BUG_FIX_INV_TRANSFORM   1 // Ported PR 1124 : Bug fix in common inv_transform sse3 functions and decoder LF-MT
-#define OVERLAY_R2R_FIX         1
-#define INCOMPLETE_SB_FIX       1 // Enable the block_is_allowed for some block sizes,
-                                    //which were removed due to lack of intrinsics
-
-#define INTRA_COMPOUND_OPT      1  // new fast mode
-#define ME_REFACTOR_FOR_CLEANUP 1 // refactor HME/ME code and improve resolution granularity for future cleanup and features
 #if ME_REFACTOR_FOR_CLEANUP
 #define REFACTOR_ME_HME           1 // Refactor the HME/ME search code
 #define ADD_HME_DECIMATION_SIGNAL 1 // Add a signal to control the number of HME levels used
 #define NEW_RESOLUTION_RANGES     1 // Make new resolution ranges
 #endif
-#define MAR30_ADOPTIONS           1 // Adoptions in all modes; create a new M1
-
-#define REDUCE_COMPLEX_CLIP_CYCLES       1 // Add picture classifier
-
-#define BLOCK_REDUCTION_ALGORITHM_1 1 // block_based_depth_reduction (1)
-#define BLOCK_REDUCTION_ALGORITHM_2 1 // block_based_depth_reduction (2)
-
-#define REMOVE_SQ_WEIGHT_QP_CHECK 1
-
-#define SHUT_SQ_WEIGHT_COEFF_FILTER 0
-#define SHUT_SQ_WEIGHT_INTRA_FILTER 1
-#define SHUT_SQ_WEIGHT_H4_V4_FILTER 0
-
-#define APR02_ADOPTIONS 1 // adoptions in all modes
-
-#define MULTI_PASS_PD_FOR_INCOMPLETE 0
-
 #endif
 
 // END  BEYOND_CS2 /////////////////////////////////////////////////////////
