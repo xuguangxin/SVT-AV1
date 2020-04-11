@@ -208,6 +208,15 @@ typedef struct DepthReductionCtrls {
 
 }DepthReductionCtrls;
 #endif
+#if TXT_CONTROL
+typedef struct TxTSearchCtrls {
+    uint64_t txt_weight[3]; // Used to classify the md candidates
+    int8_t txt_allow_rdoq; // Allow disabling of rdoq in tx_type_search
+    int8_t txt_allow_ssse; // Allow disabling of spatial-SSE in tx_type_search
+    uint8_t txt_table_idx; // Table of pre_allowed tx_type to be searched
+    uint8_t txt_allow_skip; // Allow the skipping of tx_type_search
+}TxTSearchCtrls;
+#endif
 typedef struct ModeDecisionContext {
     EbDctor  dctor;
     EbFifo * mode_decision_configuration_input_fifo_ptr;
@@ -486,8 +495,10 @@ typedef struct ModeDecisionContext {
     uint8_t      full_cost_shut_fast_rate_flag;
     EbBool       coeff_based_nsq_cand_reduction;
     uint8_t      tx_search_level;
+#if !TXT_CONTROL
     uint64_t     tx_weight;
     uint8_t      tx_search_reduced_set;
+#endif
     uint8_t      interpolation_search_level;
     uint8_t      md_tx_size_search_mode;
     uint8_t      md_pic_obmc_mode;
@@ -548,6 +559,12 @@ typedef struct ModeDecisionContext {
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
     uint64_t best_nsq_default_cost;
     uint64_t default_cost_per_shape[NUMBER_OF_SHAPES];
+#endif
+#if TXT_CONTROL
+    uint8_t md_txt_search_level;
+    TxTSearchCtrls txt_search_ctrls;
+    EbBool txt_rdoq;
+    EbBool txt_ssse;
 #endif
 } ModeDecisionContext;
 
