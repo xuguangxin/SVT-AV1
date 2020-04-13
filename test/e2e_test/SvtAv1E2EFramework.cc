@@ -495,7 +495,8 @@ void SvtAv1E2ETestFramework::run_test() {
                   << std::endl;
         init_test(test_vector);
         EXPECT_NO_FATAL_FAILURE(run_encode_process())
-            << "Fatal Error on running test case " << enc_setting.to_string(fn);
+            << "Fatal Error on running test case " << enc_setting.to_string(fn)
+            << "\ncli command: " << enc_setting.to_cli(test_vector);
         post_process();
         deinit_test();
     }
@@ -521,7 +522,8 @@ void SvtAv1E2ETestFramework::run_death_test() {
             },
             ::testing::ExitedWithCode(0),
             ".*")
-            << "Fatal Error on running test case " << enc_setting.to_string(fn);
+            << "Fatal Error on running test case " << enc_setting.to_string(fn)
+            << "\ncli command: " << enc_setting.to_cli(test_vector);
     }
 }
 
