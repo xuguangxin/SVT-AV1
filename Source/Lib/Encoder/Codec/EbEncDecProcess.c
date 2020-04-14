@@ -1542,7 +1542,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 2                                              Tx_weight 2
     // 3                                              Tx_weight 1 + disabling rdoq and sssse
     // 4                                              Tx_weight 1 + disabling rdoq and sssse + reduced set
-    // 5+                                             screen_content mode level
     if (pd_pass == PD_PASS_0)
         context_ptr->md_txt_search_level = 1;
     else if (pd_pass == PD_PASS_1)
@@ -1558,9 +1557,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_txt_search_level = 3;
         else
             context_ptr->md_txt_search_level = 4;
-        
-        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-            context_ptr->md_txt_search_level = 5;// 1 + 4;
     }
 #else
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)

@@ -5605,9 +5605,9 @@ void init_txt_search_ctrls(ModeDecisionContext *context_ptr) {
     TxTSearchCtrls* txt_search_ctrls = &context_ptr->txt_search_ctrls;
     txt_search_ctrls->txt_allow_rdoq = 1;
     txt_search_ctrls->txt_allow_ssse = 1;
-    txt_search_ctrls->txt_weight[0] = MAX_MODE_COST;
-    txt_search_ctrls->txt_weight[1] = MAX_MODE_COST;
-    txt_search_ctrls->txt_weight[2] = MAX_MODE_COST;
+    txt_search_ctrls->txt_weight[0] = MAX_TX_WEIGHT;
+    txt_search_ctrls->txt_weight[1] = MAX_TX_WEIGHT;
+    txt_search_ctrls->txt_weight[2] = MAX_TX_WEIGHT;
     txt_search_ctrls->txt_table_idx = 0;
     txt_search_ctrls->txt_allow_skip = 0;
     context_ptr->txt_rdoq = 0;
@@ -5615,21 +5615,17 @@ void init_txt_search_ctrls(ModeDecisionContext *context_ptr) {
 }
 void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
     TxTSearchCtrls* txt_search_ctrls = &context_ptr->txt_search_ctrls;
-#if TXL
-    context_ptr->md_txt_search_level = TXL;
-#endif
-
     switch (context_ptr->md_txt_search_level) {
     case 0:
         txt_search_ctrls->txt_allow_rdoq = 1;
         txt_search_ctrls->txt_allow_ssse = 1;
-        txt_search_ctrls->txt_weight[0] = MAX_MODE_COST;
-        txt_search_ctrls->txt_weight[1] = MAX_MODE_COST;
-        txt_search_ctrls->txt_weight[2] = MAX_MODE_COST;
+        txt_search_ctrls->txt_weight[0] = MAX_TX_WEIGHT;
+        txt_search_ctrls->txt_weight[1] = MAX_TX_WEIGHT;
+        txt_search_ctrls->txt_weight[2] = MAX_TX_WEIGHT;
         txt_search_ctrls->txt_table_idx = 0;
         txt_search_ctrls->txt_allow_skip = 0;
         break;
-    case 1: 
+    case 1:
         txt_search_ctrls->txt_allow_rdoq = 0;
         txt_search_ctrls->txt_allow_ssse = 0;
         txt_search_ctrls->txt_weight[0] = 125;
@@ -5665,12 +5661,12 @@ void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
         txt_search_ctrls->txt_table_idx = 4;
         txt_search_ctrls->txt_allow_skip = 0;
         break;
-    case 5: //SC
-        txt_search_ctrls->txt_allow_rdoq = 1;
-        txt_search_ctrls->txt_allow_ssse = 1;
-        txt_search_ctrls->txt_weight[0] = MAX_MODE_COST;
-        txt_search_ctrls->txt_weight[1] = MAX_MODE_COST;
-        txt_search_ctrls->txt_weight[2] = MAX_MODE_COST;
+    case 5:
+        txt_search_ctrls->txt_allow_rdoq = 0;
+        txt_search_ctrls->txt_allow_ssse = 0;
+        txt_search_ctrls->txt_weight[0] = 0;
+        txt_search_ctrls->txt_weight[1] = 0;
+        txt_search_ctrls->txt_weight[2] = 0;
         txt_search_ctrls->txt_table_idx = 5;
         txt_search_ctrls->txt_allow_skip = 0;
         break;
@@ -5686,6 +5682,7 @@ uint8_t get_tx_search_config(ModeDecisionContext *context_ptr,
     uint8_t bwidth = context_ptr->blk_geom->bwidth;
     uint8_t bheight = context_ptr->blk_geom->bwidth;
     uint8_t bclass = 0;
+    uint8_t level = 0;
     if (bwidth <= 8 && bheight <= 8)
         bclass = 0;
     else if (bwidth <= 16 && bheight <= 16)
@@ -5693,7 +5690,8 @@ uint8_t get_tx_search_config(ModeDecisionContext *context_ptr,
     else
         bclass = 2;
     set_txt_search_ctrls(context_ptr);
-    uint8_t level = cu_cost >= ((ref_fast_cost * txt_search_ctrls->txt_weight[bclass]) / 100) ? 1 : 0;
+    if(txt_search_ctrls->txt_weight[bclass] < MAX_TX_WEIGHT)
+        level = cu_cost >= ((ref_fast_cost * txt_search_ctrls->txt_weight[bclass]) / 100) ? 1 : 0;
     if (level && !txt_search_ctrls->txt_allow_rdoq)
         context_ptr->txt_rdoq = 1;
     if (level && !txt_search_ctrls->txt_allow_ssse)
