@@ -1965,7 +1965,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
 #endif
+#if FIX_RC_SB_SIZE
+	scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 0) ? 64 : scs_ptr->static_config.super_block_size;
+#else
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 1) ? 64 : scs_ptr->static_config.super_block_size;
+#endif
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
     // Configure the padding
     scs_ptr->left_padding = BLOCK_SIZE_64 + 4;
@@ -2236,9 +2240,6 @@ void copy_api_from_app(
     // Rate Control
     scs_ptr->static_config.scene_change_detection = ((EbSvtAv1EncConfiguration*)config_struct)->scene_change_detection;
     scs_ptr->static_config.rate_control_mode = ((EbSvtAv1EncConfiguration*)config_struct)->rate_control_mode;
-#if RC_OFF
-    scs_ptr->static_config.rate_control_mode = 0;
-#endif
     scs_ptr->static_config.look_ahead_distance = ((EbSvtAv1EncConfiguration*)config_struct)->look_ahead_distance;
     scs_ptr->static_config.frame_rate = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate;
     scs_ptr->static_config.frame_rate_denominator = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate_denominator;
