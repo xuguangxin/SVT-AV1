@@ -188,6 +188,7 @@ extern "C" {
 #define MAY2020        1 // BASED ON apr2020 branch 62c1da44c258c973d668744b5aabfd1214cd8b22
 
 #if MAY2020
+#define RC_OFF 1	// Force rate control mode to 0 to address CI failures
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
