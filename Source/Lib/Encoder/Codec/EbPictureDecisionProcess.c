@@ -872,6 +872,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if DEPTH_PART_CLEAN_UP
     // Set the Multi-Pass PD level
 #if ADD_NEW_MPPD_LEVEL
+#if ADOPT_SKIPPING_PD1
+    pcs_ptr->multi_pass_pd_level = MULTI_PASS_PD_LEVEL_0;
+#else
 #if MAR23_ADOPTIONS
     if (sc_content_detected)
 #if MAR30_ADOPTIONS
@@ -926,6 +929,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         (pcs_ptr->slice_type == I_SLICE)
         ? MULTI_PASS_PD_OFF
         : MULTI_PASS_PD_LEVEL_3;
+#endif
 #endif
 #else
     if (sc_content_detected)

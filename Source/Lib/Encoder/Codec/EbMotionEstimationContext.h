@@ -461,6 +461,12 @@ typedef struct MeContext {
     uint16_t hme_level0_total_search_area_height;
     uint16_t hme_level0_search_area_in_width_array[EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT];
     uint16_t hme_level0_search_area_in_height_array[EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+#if ADD_MAX_HME_SIGNAL
+    uint16_t hme_level0_max_total_search_area_width;
+    uint16_t hme_level0_max_total_search_area_height;
+    uint16_t hme_level0_max_search_area_in_width_array[EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT];
+    uint16_t hme_level0_max_search_area_in_height_array[EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
+#endif
     uint16_t hme_level1_search_area_in_width_array[EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT];
     uint16_t hme_level1_search_area_in_height_array[EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
     uint16_t hme_level2_search_area_in_width_array[EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT];

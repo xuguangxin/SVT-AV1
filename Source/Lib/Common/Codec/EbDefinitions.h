@@ -189,6 +189,9 @@ extern "C" {
 
 #if MAY2020
 #define FIX_RC_SB_SIZE 1 // Force SB size to 64x64 when rate control is on
+#define ADOPT_SKIPPING_PD1 1 // Skip PD1 for all modes; remove the PD0 thresholds
+#define ADD_MAX_HME_SIGNAL 1 // Add a signal for MAX HME size
+#define NEW_HME_ME_SIZES 1 // New HME/ME size adoptions
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

@@ -4787,6 +4787,12 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = -3;
                             e_depth = 3;
                         }
+#if ADOPT_SKIPPING_PD1
+                        else if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
+                            s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                            e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+                        }
+#endif
 #if MAR30_ADOPTIONS
                         else if ((pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M1)) {
                             s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0
@@ -5038,6 +5044,22 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         }
                     }
 
+#if ADOPT_SKIPPING_PD1
+                    // Check that the start and end depth are in allowed range, given other features
+                    // which restrict allowable depths
+                    if (pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) {
+                        s_depth = (blk_geom->sq_size == 64) ? 0
+                                : (blk_geom->sq_size == 32) ? MAX(-1, s_depth)
+                                : (blk_geom->sq_size == 16) ? MAX(-2, s_depth)
+                                : s_depth;
+                    }
+                    if (pcs_ptr->parent_pcs_ptr->disallow_4x4) {
+                        e_depth = (blk_geom->sq_size == 8) ? 0
+                                : (blk_geom->sq_size == 16) ? MIN(1, e_depth)
+                                : (blk_geom->sq_size == 32) ? MIN(2, e_depth)
+                                : e_depth;
+                    }
+#endif
                     // Add current pred depth block(s)
                     for (block_1d_idx = 0; block_1d_idx < tot_d1_blocks; block_1d_idx++) {
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].consider_block = 1;
