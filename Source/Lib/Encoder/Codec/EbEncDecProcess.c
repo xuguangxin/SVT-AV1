@@ -1473,7 +1473,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
     for (uint8_t sb_class_idx = 0; sb_class_idx < NUMBER_OF_SB_CLASS; sb_class_idx++)
         sb_class_ctrls->sb_class_th[sb_class_idx] = 20;
-    switch (context_ptr->sb_class_level) {
+    switch (context_ptr->coeffcients_area_based_cycles_allocation_level) {
     case 0:
         sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 20;
         sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 20;
@@ -1890,51 +1890,51 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 4                    TH 50%
     // 5                    TH 40%
     if (pd_pass == PD_PASS_0)
-        context_ptr->sb_class_level = 0;
+        context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
     else if (pd_pass == PD_PASS_1)
-        context_ptr->sb_class_level = 0;
+        context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
     else {
         if (pcs_ptr->slice_type == I_SLICE)
-            context_ptr->sb_class_level = 0;
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
         else if (MR_MODE) {
             if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
-                context_ptr->sb_class_level = 2;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
-                context_ptr->sb_class_level = 1;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
-                context_ptr->sb_class_level = 0;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
             else
-                context_ptr->sb_class_level = 0;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
         }
         else if (enc_mode == ENC_M0) {
             if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
-                context_ptr->sb_class_level = 3;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
-                context_ptr->sb_class_level = 2;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
-                context_ptr->sb_class_level = 1;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
             else
-                context_ptr->sb_class_level = 0;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
         }
         else if (enc_mode == ENC_M1) {
             if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
-                context_ptr->sb_class_level = 4;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
-                context_ptr->sb_class_level = 3;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
-                context_ptr->sb_class_level = 2;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
             else
-                context_ptr->sb_class_level = 1;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
         }
         else {
             if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
-                context_ptr->sb_class_level = 5;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 5;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
-                context_ptr->sb_class_level = 4;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
             else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
-                context_ptr->sb_class_level = 3;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
             else
-                context_ptr->sb_class_level = 2;
+                context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
         }
     }
     set_sb_class_controls(context_ptr);

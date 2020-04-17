@@ -572,7 +572,7 @@ typedef struct ModeDecisionContext {
     EbBool txt_ssse;
 #endif
 #if SB_CLASSIFIER
-    uint8_t sb_class_level;
+    uint8_t coeffcients_area_based_cycles_allocation_level;
     uint8_t sb_class;
     SbClassControls sb_class_ctrls;
 #endif
