@@ -4394,7 +4394,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
     // tag to_do the best ?
     uint8_t min_ref_to_tag = MIN_REF_TO_TAG;
     uint8_t max_ref_to_tag = context_ptr->ref_pruning_ctrls.max_ref_to_tag;
-    uint8_t total_tagged_ref;
+    uint8_t total_tagged_ref = 0;
 
     // inter-to-inter distortion based ref masking
     if (context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled) {

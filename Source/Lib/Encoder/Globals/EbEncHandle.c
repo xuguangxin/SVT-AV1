@@ -2047,6 +2047,9 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     // 0                            0: not allowed
     // 1                            1: allowed
     if (scs_ptr->static_config.over_bndry_blk == DEFAULT)
+#if OVER_BOUNDARY_BLOCK_MODE_1_FOR_ALL
+        scs_ptr->over_boundary_block_mode = 1;
+#else
 #if MAR17_ADOPTIONS
         if (scs_ptr->static_config.enc_mode <= ENC_M7)
 #else
@@ -2055,6 +2058,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
             scs_ptr->over_boundary_block_mode = 1;
         else
             scs_ptr->over_boundary_block_mode = 0;
+#endif
     else
         scs_ptr->over_boundary_block_mode = scs_ptr->static_config.over_bndry_blk;
     if (scs_ptr->static_config.enable_mfmv == DEFAULT)

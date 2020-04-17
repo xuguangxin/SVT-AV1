@@ -496,6 +496,10 @@ typedef struct ModeDecisionContext {
     uint8_t      md_enable_inter_intra;
     uint8_t      md_filter_intra_mode;
     uint8_t      md_intra_angle_delta;
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    uint8_t      md_allow_intrabc;
+    uint8_t      md_palette_mode;
+#endif
 #if MD_REFERENCE_MASKING
     uint8_t      inter_inter_distortion_based_reference_pruning;
     uint8_t      inter_intra_distortion_based_reference_pruning;

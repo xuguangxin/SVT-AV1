@@ -2791,7 +2791,23 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_filter_intra_mode =
         pcs_ptr->pic_filter_intra_mode;
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    // Set md_allow_intrabc @ MD
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_allow_intrabc = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_allow_intrabc = 0;
+    else
+        context_ptr->md_allow_intrabc = pcs_ptr->parent_pcs_ptr->frm_hdr.allow_intrabc;
 
+    // Set md_palette_mode @ MD
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_palette_mode = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_palette_mode = 0;
+    else
+        context_ptr->md_palette_mode = pcs_ptr->parent_pcs_ptr->palette_mode;
+#endif
     // intra_similar_mode
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter

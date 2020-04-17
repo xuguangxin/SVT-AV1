@@ -126,7 +126,6 @@ extern "C" {
 #define SHUT_SQ_WEIGHT_INTRA_FILTER   1
 #define SHUT_SQ_WEIGHT_H4_V4_FILTER   0
 #define APR02_ADOPTIONS               1 // adoptions in all modes
-#define MULTI_PASS_PD_FOR_INCOMPLETE  0
 #define APR08_ADOPTIONS               1 // adoptions in all modes
 
 
@@ -193,6 +192,10 @@ extern "C" {
 #define ADD_MAX_HME_SIGNAL 1 // Add a signal for MAX HME size
 #define NEW_HME_ME_SIZES 1 // New HME/ME size adoptions
 #define CLASS_MERGING       1 // merge classes into class 0 to 4
+#define INJECT_BACKUP_CANDIDATE 1 // handle the case of no candidate(s) @ md_stage_0()
+#define MULTI_PASS_PD_FOR_INCOMPLETE 1 // add the ability to perform MPPD for incomplete SB
+#define SHUT_PALETTE_BC_PD_PASS_0_1 1 // shut Palette/BlockCopy @ PD0/PD1
+#define OVER_BOUNDARY_BLOCK_MODE_1_FOR_ALL 1 // over_boundary_block_mode=1 for all presets
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

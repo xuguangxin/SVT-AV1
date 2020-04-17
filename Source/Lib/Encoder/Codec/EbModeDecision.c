@@ -5978,6 +5978,67 @@ void  inject_filter_intra_candidates(
 
     return;
 }
+
+#if INJECT_BACKUP_CANDIDATE
+void inject_zz_backup_candidate(const SequenceControlSet *  scs_ptr,
+    struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
+    uint32_t *candidate_total_cnt) {
+    ModeDecisionCandidate *cand_array = context_ptr->fast_candidate_array;
+    IntMv                  best_pred_mv[2] = { {0}, {0} };
+    uint32_t               cand_total_cnt = (*candidate_total_cnt);
+
+    MacroBlockD *xd = context_ptr->blk_ptr->av1xd;
+
+    cand_array[cand_total_cnt].type = INTER_MODE;
+    cand_array[cand_total_cnt].distortion_ready = 0;
+    cand_array[cand_total_cnt].use_intrabc = 0;
+    cand_array[cand_total_cnt].merge_flag = EB_FALSE;
+    cand_array[cand_total_cnt].prediction_direction[0] = (EbPredDirection)0;
+    cand_array[cand_total_cnt].inter_mode = NEWMV;
+    cand_array[cand_total_cnt].pred_mode = NEWMV;
+    cand_array[cand_total_cnt].motion_mode = SIMPLE_TRANSLATION;
+    cand_array[cand_total_cnt].is_compound = 0;
+    cand_array[cand_total_cnt].is_new_mv = 1;
+    cand_array[cand_total_cnt].drl_index = 0;
+
+    // zz
+    cand_array[cand_total_cnt].motion_vector_xl0 = 0;
+    cand_array[cand_total_cnt].motion_vector_yl0 = 0;
+
+    // will be needed later by the rate estimation
+    cand_array[cand_total_cnt].ref_mv_index = 0;
+    cand_array[cand_total_cnt].ref_frame_type = svt_get_ref_frame_type(REF_LIST_0, 0);
+    cand_array[cand_total_cnt].ref_frame_index_l0 = 0;
+    cand_array[cand_total_cnt].ref_frame_index_l1 = -1;
+
+    cand_array[cand_total_cnt].transform_type[0] = DCT_DCT;
+    cand_array[cand_total_cnt].transform_type_uv = DCT_DCT;
+
+    choose_best_av1_mv_pred(context_ptr,
+        cand_array[cand_total_cnt].md_rate_estimation_ptr,
+        context_ptr->blk_ptr,
+        cand_array[cand_total_cnt].ref_frame_type,
+        cand_array[cand_total_cnt].is_compound,
+        cand_array[cand_total_cnt].pred_mode,
+        cand_array[cand_total_cnt].motion_vector_xl0,
+        cand_array[cand_total_cnt].motion_vector_yl0,
+        0,
+        0,
+        &cand_array[cand_total_cnt].drl_index,
+        best_pred_mv);
+
+    cand_array[cand_total_cnt].motion_vector_pred_x[REF_LIST_0] = best_pred_mv[0].as_mv.col;
+    cand_array[cand_total_cnt].motion_vector_pred_y[REF_LIST_0] = best_pred_mv[0].as_mv.row;
+
+    cand_array[cand_total_cnt].is_interintra_used = 0;
+    cand_array[cand_total_cnt].motion_mode = SIMPLE_TRANSLATION;
+
+    INCRMENT_CAND_TOTAL_COUNT(cand_total_cnt);
+
+    // update the total number of candidates injected
+    (*candidate_total_cnt) = cand_total_cnt;
+}
+#endif
 int svt_av1_allow_palette(int allow_palette,
     BlockSize sb_type) {
     assert(sb_type < BlockSizeS_ALL);
@@ -6145,8 +6206,11 @@ EbErrorType generate_md_stage_0_cand(
                 pcs_ptr,
                 context_ptr,
                 &cand_total_cnt);
-
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    if (context_ptr->md_allow_intrabc)
+#else
     if (frm_hdr->allow_intrabc)
+#endif
         inject_intra_bc_candidates(
             pcs_ptr,
             context_ptr,
@@ -6154,13 +6218,19 @@ EbErrorType generate_md_stage_0_cand(
             context_ptr->blk_ptr,
             &cand_total_cnt
         );
-
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    if (context_ptr->md_palette_mode) {
+#endif
     //can be removed later if need be
     for (uint16_t i = 0; i < cand_total_cnt; i++) {
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[0] == 0);
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[1] == 0);
     }
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    if (svt_av1_allow_palette(context_ptr->md_palette_mode, context_ptr->blk_geom->bsize)) {
+#else
     if (svt_av1_allow_palette(pcs_ptr->parent_pcs_ptr->palette_mode, context_ptr->blk_geom->bsize)) {
+#endif
         inject_palette_candidates(
             pcs_ptr,
             context_ptr,
@@ -6170,7 +6240,9 @@ EbErrorType generate_md_stage_0_cand(
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[0] < 9);
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[1] == 0);
     }
-
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+    }
+#endif
     if (slice_type != I_SLICE && context_ptr->inject_inter_candidates) {
             inject_inter_candidates(
                 pcs_ptr,
@@ -6180,6 +6252,17 @@ EbErrorType generate_md_stage_0_cand(
                 coeff_based_nsq_cand_reduction,
                 &cand_total_cnt);
     }
+
+#if INJECT_BACKUP_CANDIDATE
+    // For I_SLICE, DC is always injected, and therefore there is no a risk of no candidates @ md_syage_0()
+    // For non I_SLICE, there is a risk of no candidates @ md_stage_0() because of the INTER candidates pruning techniques
+    if (slice_type != I_SLICE && cand_total_cnt == 0) {
+        inject_zz_backup_candidate(scs_ptr,
+            context_ptr,
+            pcs_ptr,
+            &cand_total_cnt);
+    }
+#endif
 
     *candidate_total_count_ptr = cand_total_cnt;
     CandClass  cand_class_it;
@@ -6457,7 +6540,11 @@ uint32_t product_full_mode_decision(
         if (blk_ptr->prediction_mode_flag == INTRA_MODE)
         {
             memcpy(&blk_ptr->palette_info.pmi, &candidate_ptr->palette_info.pmi, sizeof(PaletteModeInfo));
+#if SHUT_PALETTE_BC_PD_PASS_0_1
+            if (svt_av1_allow_palette(context_ptr->md_palette_mode, context_ptr->blk_geom->bsize))
+#else
             if(svt_av1_allow_palette(context_ptr->sb_ptr->pcs_ptr->parent_pcs_ptr->palette_mode, context_ptr->blk_geom->bsize))
+#endif
                memcpy(blk_ptr->palette_info.color_idx_map, candidate_ptr->palette_info.color_idx_map, MAX_PALETTE_SQUARE);
         }
         else {
