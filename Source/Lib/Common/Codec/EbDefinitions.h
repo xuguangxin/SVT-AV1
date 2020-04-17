@@ -192,6 +192,7 @@ extern "C" {
 #define ADOPT_SKIPPING_PD1 1 // Skip PD1 for all modes; remove the PD0 thresholds
 #define ADD_MAX_HME_SIGNAL 1 // Add a signal for MAX HME size
 #define NEW_HME_ME_SIZES 1 // New HME/ME size adoptions
+#define CLASS_MERGING       1 // merge classes into class 0 to 4
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
@@ -647,11 +648,13 @@ typedef enum CandClass {
     CAND_CLASS_1,
     CAND_CLASS_2,
     CAND_CLASS_3,
+#if !CLASS_MERGING
     CAND_CLASS_4,
     CAND_CLASS_5,
     CAND_CLASS_6,
     CAND_CLASS_7,
     CAND_CLASS_8,
+#endif
     CAND_CLASS_TOTAL
 } CandClass;
 

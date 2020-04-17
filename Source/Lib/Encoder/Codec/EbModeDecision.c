@@ -6192,22 +6192,47 @@ EbErrorType generate_md_stage_0_cand(
 
         if (cand_ptr->type == INTRA_MODE) {
             // Intra prediction
+#if !CLASS_MERGING
                 if (cand_ptr->filter_intra_mode == FILTER_INTRA_MODES) {
+#endif
                   if (cand_ptr->palette_info.pmi.palette_size[0] == 0) {
                     cand_ptr->cand_class = CAND_CLASS_0;
                     context_ptr->md_stage_0_count[CAND_CLASS_0]++;
                   }
                   else {
+#if CLASS_MERGING
+                      // Palette Prediction
+                     cand_ptr->cand_class = CAND_CLASS_3;
+                     context_ptr->md_stage_0_count[CAND_CLASS_3]++;
+#else
                      cand_ptr->cand_class = CAND_CLASS_7;
                      context_ptr->md_stage_0_count[CAND_CLASS_7]++;
+#endif
                   }
+#if !CLASS_MERGING
                 }
                 else {
                     cand_ptr->cand_class = CAND_CLASS_6;
                     context_ptr->md_stage_0_count[CAND_CLASS_6]++;
                 }
+#endif
+        }
+#if CLASS_MERGING
 
-        } else if (cand_ptr->inter_mode == GLOBALMV || cand_ptr->inter_mode == GLOBAL_GLOBALMV) {
+        else  if (cand_ptr->is_new_mv) {
+            // MV Prediction
+            cand_ptr->cand_class = CAND_CLASS_1;
+            context_ptr->md_stage_0_count[CAND_CLASS_1]++;
+        }
+        else {
+            //MVP Prediction
+            cand_ptr->cand_class = CAND_CLASS_2;
+            context_ptr->md_stage_0_count[CAND_CLASS_2]++;
+        }
+    }
+
+#else
+        else if (cand_ptr->inter_mode == GLOBALMV || cand_ptr->inter_mode == GLOBAL_GLOBALMV) {
             cand_ptr->cand_class = CAND_CLASS_8;
             context_ptr->md_stage_0_count[CAND_CLASS_8]++;
         }
@@ -6253,6 +6278,7 @@ EbErrorType generate_md_stage_0_cand(
             }
         }
     }
+#endif
     uint32_t fast_accum = 0;
     for (cand_class_it = CAND_CLASS_0; cand_class_it < CAND_CLASS_TOTAL; cand_class_it++) {
         fast_accum += context_ptr->md_stage_0_count[cand_class_it];
