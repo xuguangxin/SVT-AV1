@@ -199,6 +199,7 @@ extern "C" {
 #define TXT_CONTROL 1 // Add TXT search optimizations
 #if TXT_CONTROL
 #define MAX_TX_WEIGHT 500
+#define SB_CLASSIFIER       1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
 #endif
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
@@ -5538,6 +5539,15 @@ static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
     83,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,
     84,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
 };
+#if SB_CLASSIFIER
+typedef enum ATTRIBUTE_PACKED {
+    NONE_CLASS, // Do nothing class
+    LOW_COMPLEX_CLASS, // Low complex SB Class
+    MEDIUM_COMPLEX_CLASS, // Meduim complex SB Class
+    HIGH_COMPLEX_CLASS, // High complex SB Class
+    NUMBER_OF_SB_CLASS, // Total number of SB classes
+} SB_CLASS;
+#endif
 typedef struct _EbEncHandle EbEncHandle;
 typedef struct _EbThreadContext EbThreadContext;
 #ifdef __cplusplus

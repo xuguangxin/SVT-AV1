@@ -1786,7 +1786,14 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         context_ptr->md_stage_1_count[CAND_CLASS_0] = MAX(context_ptr->md_stage_1_count[CAND_CLASS_0], 1);
 
 #endif
-
+#if SB_CLASSIFIER
+        if (context_ptr->sb_class == LOW_COMPLEX_CLASS && context_ptr->sb_class_level) {
+            for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
+                context_ptr->md_stage_1_count[cidx] = (context_ptr->md_stage_1_count[cidx] + 1) / 2;
+                context_ptr->md_stage_2_count[cidx] = (context_ptr->md_stage_2_count[cidx] + 1) / 2;
+            }
+        }
+#endif
             ////MULT
 #if APR02_ADOPTIONS
             if ((((pcs_ptr->enc_mode <= ENC_M1) || (pcs_ptr->enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
@@ -7595,6 +7602,12 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
                                                               &cb_coeff_bits,
                                                               &cr_coeff_bits,
                                                               context_ptr->blk_geom->bsize);
+#if SB_CLASSIFIER
+        uint16_t txb_count = context_ptr->blk_geom->txb_count[candidate_buffer->candidate_ptr->tx_depth];
+        candidate_ptr->count_non_zero_coeffs = 0;
+        for (uint8_t txb_itr = 0; txb_itr < txb_count; txb_itr++)
+            candidate_ptr->count_non_zero_coeffs += count_non_zero_coeffs[0][txb_itr];
+#endif
 }
 void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_ptr,
                 ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
@@ -8883,7 +8896,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
-#if REDUCE_COMPLEX_CLIP_CYCLES
+#if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER
        (context_ptr->blk_geom->shape != PART_N && context_ptr->md_disallow_nsq) ||
 #else
        (context_ptr->blk_geom->shape != PART_N  && pcs_ptr->parent_pcs_ptr->disallow_nsq) ||
@@ -10258,6 +10271,18 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     Part     nsq_shape_table[NUMBER_OF_SHAPES] = {
         PART_N, PART_H, PART_V, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4, PART_S};
     uint8_t skip_next_depth = 0;
+#if SB_CLASSIFIER
+    // Store defalut settings
+    uint8_t default_md_tx_size_search_mode = context_ptr->md_tx_size_search_mode;
+    uint8_t default_md_disallow_nsq = context_ptr->md_disallow_nsq;
+    // Update nsq and txs settings based on the sb_class
+    if (context_ptr->sb_class_level) {
+        if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
+            context_ptr->md_tx_size_search_mode = 0;
+        if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
+            context_ptr->md_disallow_nsq = 1;
+    }
+#endif
     do {
         blk_idx_mds = leaf_data_array[blk_index].mds_idx;
 
@@ -10327,7 +10352,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
 #if DEPTH_PART_CLEAN_UP
-#if REDUCE_COMPLEX_CLIP_CYCLES
+#if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER
         if (!context_ptr->md_disallow_nsq)
 #else
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
@@ -10339,7 +10364,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 
         context_ptr->similar_blk_avail = 0;
 #if DEPTH_PART_CLEAN_UP
-#if REDUCE_COMPLEX_CLIP_CYCLES
+#if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER
         if (!context_ptr->md_disallow_nsq)
 #else
         if (!pcs_ptr->parent_pcs_ptr->disallow_nsq)
@@ -10564,7 +10589,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 depth_cost[scs_ptr->static_config.super_block_size == 128
                                ? context_ptr->blk_geom->depth
                                : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
+#if SB_CLASSIFIER
                 if (context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
+#else
+                if (context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
+#endif
                     if (context_ptr->pd_pass > PD_PASS_1) {
                         uint64_t sq_cost = nsq_cost[0]; // sq cost
                         uint64_t best_nsq_cost = MAX_CU_COST;
@@ -10634,7 +10663,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             d1_first_block = 0;
         blk_index++;
     } while (blk_index < leaf_count); // End of CU loop
-
+#if SB_CLASSIFIER
+    // Restor the default settings
+    context_ptr->md_tx_size_search_mode = default_md_tx_size_search_mode;
+    context_ptr->md_disallow_nsq = default_md_disallow_nsq;
+#endif
     if (scs_ptr->seq_header.sb_size == BLOCK_64X64) depth_cost[0] = MAX_CU_COST;
 
     for (uint8_t depth_idx = 0; depth_idx < NUMBER_OF_DEPTH; depth_idx++) {

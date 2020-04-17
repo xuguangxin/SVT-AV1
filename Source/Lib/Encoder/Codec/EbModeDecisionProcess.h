@@ -171,6 +171,11 @@ typedef struct PicComplexControls {
     uint8_t use_th_qp_offset;// Flag to indicate whether a qp-based offset will be added to the base_threshold
 } PicComplexControls;
 #endif
+#if SB_CLASSIFIER
+typedef struct SbClassControls {
+    uint8_t sb_class_th[NUMBER_OF_SB_CLASS -1]; // treshold for sb classification
+} SbClassControls;
+#endif
 #if INTER_COMP_REDESIGN
 
 typedef struct  InterCompoundControls {
@@ -553,7 +558,7 @@ typedef struct ModeDecisionContext {
     uint8_t reduce_complex_clip_cycles_level;
     PicComplexControls pic_complexity_ctrls;
 #endif
-#if REDUCE_COMPLEX_CLIP_CYCLES
+#if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER
     uint8_t       md_disallow_nsq;
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
@@ -565,6 +570,11 @@ typedef struct ModeDecisionContext {
     TxTSearchCtrls txt_search_ctrls;
     EbBool txt_rdoq;
     EbBool txt_ssse;
+#endif
+#if SB_CLASSIFIER
+    uint8_t sb_class_level;
+    uint8_t sb_class;
+    SbClassControls sb_class_ctrls;
 #endif
 } ModeDecisionContext;
 

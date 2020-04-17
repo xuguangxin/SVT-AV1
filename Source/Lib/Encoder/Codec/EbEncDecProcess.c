@@ -1465,7 +1465,51 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
     }
 }
 #endif
-
+#if SB_CLASSIFIER
+/******************************************************
+* Derive SB classifier thresholds
+******************************************************/
+void set_sb_class_controls(ModeDecisionContext *context_ptr) {
+    SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
+    for (uint8_t sb_class_idx = 0; sb_class_idx < NUMBER_OF_SB_CLASS; sb_class_idx++)
+        sb_class_ctrls->sb_class_th[sb_class_idx] = 20;
+    switch (context_ptr->sb_class_level) {
+    case 0:
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 20;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 20;
+        break;
+    case 1: // TH 80%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 16;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 14;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 12;
+        break;
+    case 2: // TH 70%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 14;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 12;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 10;
+        break;
+    case 3: // TH 60%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 12;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 8;
+        break;
+    case 4: // TH 50%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 10;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 6;
+        break;
+    case 5: // TH 40%
+        sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS] = 8;
+        sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS] = 6;
+        sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS] = 4;
+        break;
+    default: 
+        printf("Error - Invalid sb_class_level");
+        break;
+    }
+}
+#endif
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -1831,8 +1875,69 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 
-#if REDUCE_COMPLEX_CLIP_CYCLES
+#if SB_CLASSIFIER
+     context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#elif REDUCE_COMPLEX_CLIP_CYCLES
      context_ptr->md_disallow_nsq = context_ptr->pic_class == 2 ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
+#if SB_CLASSIFIER
+    // sb_classifier levels
+    // Level                Settings
+    // 0                    Off
+    // 1                    TH 80%
+    // 2                    TH 70%
+    // 3                    TH 60%
+    // 4                    TH 50%
+    // 5                    TH 40%
+    if (pd_pass == PD_PASS_0)
+        context_ptr->sb_class_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->sb_class_level = 0;
+    else {
+        if (pcs_ptr->slice_type == I_SLICE)
+            context_ptr->sb_class_level = 0;
+        else if (MR_MODE) {
+            if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+                context_ptr->sb_class_level = 2;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+                context_ptr->sb_class_level = 1;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+                context_ptr->sb_class_level = 0;
+            else
+                context_ptr->sb_class_level = 0;
+        }
+        else if (enc_mode == ENC_M0) {
+            if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+                context_ptr->sb_class_level = 3;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+                context_ptr->sb_class_level = 2;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+                context_ptr->sb_class_level = 1;
+            else
+                context_ptr->sb_class_level = 0;
+        }
+        else if (enc_mode == ENC_M1) {
+            if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+                context_ptr->sb_class_level = 4;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+                context_ptr->sb_class_level = 3;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+                context_ptr->sb_class_level = 2;
+            else
+                context_ptr->sb_class_level = 1;
+        }
+        else {
+            if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+                context_ptr->sb_class_level = 5;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+                context_ptr->sb_class_level = 4;
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+                context_ptr->sb_class_level = 3;
+            else
+                context_ptr->sb_class_level = 2;
+        }
+    }
+    set_sb_class_controls(context_ptr);
 #endif
 
     // Set the full loop escape level
@@ -4755,6 +4860,45 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+#if SB_CLASSIFIER
+static uint8_t determine_sb_class(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t blk_index = 0;
+    uint64_t total_samples = 0;
+    uint64_t count_non_zero_coeffs = 0;
+    uint8_t sb_class = NONE_CLASS;
+    SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    count_non_zero_coeffs += context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+                    total_samples += (blk_geom->bwidth*blk_geom->bheight);
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+    if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS]) / 20))
+        sb_class = HIGH_COMPLEX_CLASS;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[MEDIUM_COMPLEX_CLASS]) / 20))
+        sb_class = MEDIUM_COMPLEX_CLASS;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[LOW_COMPLEX_CLASS]) / 20))
+        sb_class = LOW_COMPLEX_CLASS;
+    return sb_class;
+}
+#endif
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
 #if DEPTH_PART_CLEAN_UP
@@ -5481,7 +5625,9 @@ void *enc_dec_kernel(void *input_ptr) {
                     mdc_ptr               = &pcs_ptr->mdc_sb_array[sb_index];
 #endif
                     context_ptr->sb_index = sb_index;
-
+#if SB_CLASSIFIER
+                    context_ptr->md_context->sb_class = NONE_CLASS;
+#endif
                     if (pcs_ptr->update_cdf) {
 
 #if !RATE_MEM_OPT
@@ -5678,7 +5824,11 @@ void *enc_dec_kernel(void *input_ptr) {
                                          sb_origin_y,
                                          sb_index,
                                          context_ptr->md_context);
-
+#if SB_CLASSIFIER
+                        if(pcs_ptr->slice_type != I_SLICE)
+                            context_ptr->md_context->sb_class = determine_sb_class(
+                                scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
                         // Perform Pred_0 depth refinement - Add blocks to be considered in the next stage(s) of PD based on depth cost.
                         perform_pred_depth_refinement(
                             scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
