@@ -1787,7 +1787,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 
 #endif
 #if SB_CLASSIFIER
-        if (context_ptr->sb_class == LOW_COMPLEX_CLASS && context_ptr->coeffcients_area_based_cycles_allocation_level) {
+        if (context_ptr->sb_class == LOW_COMPLEX_CLASS && context_ptr->enable_area_based_cycles_allocation) {
             for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
                 context_ptr->md_stage_1_count[cidx] = (context_ptr->md_stage_1_count[cidx] + 1) / 2;
                 context_ptr->md_stage_2_count[cidx] = (context_ptr->md_stage_2_count[cidx] + 1) / 2;
@@ -10276,7 +10276,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     uint8_t default_md_tx_size_search_mode = context_ptr->md_tx_size_search_mode;
     uint8_t default_md_disallow_nsq = context_ptr->md_disallow_nsq;
     // Update nsq and txs settings based on the sb_class
-    if (context_ptr->coeffcients_area_based_cycles_allocation_level) {
+    if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
             context_ptr->md_tx_size_search_mode = 0;
         if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
