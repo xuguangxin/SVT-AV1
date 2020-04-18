@@ -1187,7 +1187,11 @@ void *motion_estimation_kernel(void *input_ptr) {
                                     }
                                 } else {
 #if ENABLE_HME_AT_INC_SB
+#if FIX_HME_LOAD
+                                    for (sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row += 2) {
+#else
                                     for (sb_row = 0; sb_row < (BLOCK_SIZE_64 >> 2); sb_row++) {
+#endif
 #else
                                     for (sb_row = 0; sb_row < (sb_height >> 2); sb_row += 2) {
 #endif

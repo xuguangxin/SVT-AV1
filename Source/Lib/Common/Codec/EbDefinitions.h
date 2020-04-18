@@ -197,6 +197,8 @@ extern "C" {
 #define SHUT_PALETTE_BC_PD_PASS_0_1 1 // shut Palette/BlockCopy @ PD0/PD1
 #define OVER_BOUNDARY_BLOCK_MODE_1_FOR_ALL 1 // over_boundary_block_mode=1 for all presets
 #define TXT_CONTROL 1 // Add TXT search optimizations
+#define FIX_HME_LOAD    1 //fix to ENABLE_HME_AT_INC_SB
+
 #if TXT_CONTROL
 #define MAX_TX_WEIGHT 500
 #define SB_CLASSIFIER       1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
