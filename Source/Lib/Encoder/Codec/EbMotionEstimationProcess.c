@@ -126,7 +126,11 @@ void* set_me_hme_params_oq(
 #endif
 #endif
 #if NEW_HME_ME_SIZES
+#if PRESETS_SHIFT
+            if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M3) {
+#endif
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 200;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 800;
             }
@@ -134,7 +138,11 @@ void* set_me_hme_params_oq(
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 225;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 450;
             }
+#if PRESETS_SHIFT
+    else if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
     else if (pcs_ptr->enc_mode <= ENC_M3) {
+#endif
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 120;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = input_resolution <= INPUT_SIZE_480p_RANGE ? 240 : 360;
     }
@@ -210,7 +218,11 @@ void* set_me_hme_params_oq(
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
 #endif
     else if (input_resolution <= INPUT_SIZE_720p_RANGE)
+#if PRESETS_SHIFT
+        me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M2 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M3 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#endif
     else
         me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
 #else
@@ -415,6 +427,9 @@ EbErrorType signal_derivation_me_kernel_oq(
     {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
+#if PRESETS_SHIFT
+            if (enc_mode <= ENC_M4)
+#else
 #if MAR12_ADOPTIONS
 #if MAR17_ADOPTIONS
             if (enc_mode <= ENC_M7)
@@ -432,13 +447,18 @@ EbErrorType signal_derivation_me_kernel_oq(
             if (enc_mode <= ENC_M3)
 #endif
 #endif
+#endif
                 context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
             else
                 context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+#if PRESETS_SHIFT
+        else if (enc_mode <= ENC_M4)
+#else
 #if MAR17_ADOPTIONS
         else if (enc_mode <= ENC_M7)
 #else
         else if (enc_mode <= ENC_M5)
+#endif
 #endif
 #else
         if (enc_mode <= ENC_M3)
@@ -478,7 +498,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
     else if (enc_mode <= ENC_M1)
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+#if PRESETS_SHIFT
+    else if (enc_mode <= ENC_M2)
+#else
     else if (enc_mode <= ENC_M3)
+#endif
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
 #else
 #if MAR19_ADOPTIONS
@@ -796,7 +820,11 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 200;
     else if (enc_mode <= ENC_M1)
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+#if PRESETS_SHIFT
+    else if (enc_mode <= ENC_M2)
+#else
     else if (enc_mode <= ENC_M3)
+#endif
         context_ptr->me_context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
 #else
 #if MAR19_ADOPTIONS

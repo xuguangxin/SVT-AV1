@@ -804,7 +804,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->enable_hme_level0_flag = 1;
 
     if (sc_content_detected)
+#if PRESETS_SHIFT
+        if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
         if (pcs_ptr->enc_mode <= ENC_M3) {
+#endif
             pcs_ptr->enable_hme_level1_flag = 1;
             pcs_ptr->enable_hme_level2_flag = 1;
         }
@@ -819,7 +823,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     pcs_ptr->tf_enable_hme_flag = 1;
     pcs_ptr->tf_enable_hme_level0_flag = 1;
-
+#if PRESETS_SHIFT
+    // Can enable everywhere b/c TF is off for SC anyway; remove fake diff
+    pcs_ptr->tf_enable_hme_level1_flag = 1;
+    pcs_ptr->tf_enable_hme_level2_flag = 1;
+#else
     if (sc_content_detected)
         if (pcs_ptr->enc_mode <= ENC_M3) {
             pcs_ptr->tf_enable_hme_level1_flag = 1;
@@ -833,6 +841,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->tf_enable_hme_level1_flag = 1;
         pcs_ptr->tf_enable_hme_level2_flag = 1;
     }
+#endif
 #else
     pcs_ptr->enable_hme_flag =
         enable_hme_flag[pcs_ptr->sc_content_detected]
@@ -1014,10 +1023,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
     else {
+#if PRESETS_SHIFT
+        if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if MAR19_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M7)
 #else
         if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
 #endif
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
         else
@@ -1331,6 +1344,9 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             cm->sg_filter_mode = 0;
 #endif
+#if PRESETS_SHIFT
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if MAR17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M7)
 #else
@@ -1342,6 +1358,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
         cm->sg_filter_mode = 4;
@@ -1374,10 +1391,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             cm->wn_filter_mode = 0;
 #endif
     else
+#if PRESETS_SHIFT
+        if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if MAR17_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M7)
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #endif
             cm->wn_filter_mode = 3;
 #if MAR12_M8_ADOPTIONS
@@ -1413,6 +1434,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
         if (sc_content_detected)
+#if PRESETS_SHIFT
+            if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if MAR12_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M3)
 #else
@@ -1420,6 +1444,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
                 pcs_ptr->intra_pred_mode = 0;
@@ -1445,6 +1470,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->intra_pred_mode = 4;
 #endif
+#if PRESETS_SHIFT
+        else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if MAR20_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M7)
 #else
@@ -1452,6 +1480,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
         else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
             pcs_ptr->intra_pred_mode = 0;
@@ -1486,6 +1515,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
         else
             pcs_ptr->tx_size_search_mode = 0;
+#if PRESETS_SHIFT
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if MAR17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M7)
 #else
@@ -1497,6 +1529,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
         pcs_ptr->tx_size_search_mode = 1;
@@ -1552,10 +1585,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     //picture level switch,  has to follow the sequence level.
     if (pcs_ptr->slice_type != I_SLICE && scs_ptr->seq_header.enable_interintra_compound) {
 #if INTRA_COMPOUND_OPT
+#if PRESETS_SHIFT
+        pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#else
 #if MAR30_ADOPTIONS
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M3 ? 2 : 3;
 #else
         pcs_ptr->enable_inter_intra= pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#endif
 #endif
 #else
         pcs_ptr->enable_inter_intra = 1;//shut for sc , if needed.
@@ -1584,8 +1621,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (scs_ptr->compound_mode)
 #if MAR17_ADOPTIONS
 #if INTER_COMP_REDESIGN
+#if PRESETS_SHIFT
+            pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M3 ? 1 :
+                                     pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M4 ? 1 :
                                      pcs_ptr->enc_mode <= ENC_M7 ? 2 : 0;
+#endif
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M7 ? 2 : 1;
 #endif
@@ -1655,7 +1697,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR20_M4_ADOPTIONS
 #if MAR30_ADOPTIONS
 #if APR08_ADOPTIONS
+#if PRESETS_SHIFT
+    if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->sc_content_detected))
+#else
     if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M7 && pcs_ptr->sc_content_detected))
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M3 || (pcs_ptr->enc_mode <= ENC_M7 && pcs_ptr->sc_content_detected))
 #endif

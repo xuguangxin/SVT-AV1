@@ -203,6 +203,7 @@ extern "C" {
 #define MAX_TX_WEIGHT 500
 #define SB_CLASSIFIER       1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
 #endif
+#define PRESETS_SHIFT 1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

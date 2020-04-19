@@ -1795,6 +1795,10 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
 #endif
             ////MULT
+#if PRESETS_SHIFT
+        if ((((pcs_ptr->enc_mode <= ENC_M1) || (pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+            ((pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
+#else
 #if APR02_ADOPTIONS
             if ((((pcs_ptr->enc_mode <= ENC_M1) || (pcs_ptr->enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 ((pcs_ptr->enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
@@ -1813,6 +1817,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #else
             if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 ((pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected)) && context_ptr->blk_geom->shape == PART_N)) {
+#endif
 #endif
 #endif
 #endif
@@ -1872,10 +1877,14 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint32_t inter_scaling_denom = 1;
                 uint32_t intra_scaling_num = 1;
                 uint32_t intra_scaling_denom = 1;
+#if PRESETS_SHIFT
+                if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
 #if MAR12_ADOPTIONS
                 if (pcs_ptr->enc_mode <= ENC_M3) {
 #else
                 if (pcs_ptr->enc_mode <= ENC_M1) {
+#endif
 #endif
                     // INTER
                     inter_scaling_num = 1;
@@ -1941,7 +1950,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_denom = 1;
                 } else
 #endif
+#if PRESETS_SHIFT
+                if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
                 if (pcs_ptr->enc_mode <= ENC_M3) {
+#endif
                     // INTER
                     inter_scaling_num = 1;
                     inter_scaling_denom = 1;
@@ -2047,6 +2060,9 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
             }
 #endif
+#if PRESETS_SHIFT
+            if ((pcs_ptr->enc_mode > ENC_M1 && pcs_ptr->parent_pcs_ptr->input_resolution > INPUT_SIZE_480p_RANGE) || pcs_ptr->enc_mode > ENC_M2 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#else
 #if APR02_ADOPTIONS
             if ((pcs_ptr->enc_mode > ENC_M1 && pcs_ptr->parent_pcs_ptr->input_resolution > INPUT_SIZE_480p_RANGE) || pcs_ptr->enc_mode > ENC_M3 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
 #else
@@ -2058,6 +2074,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             if (pcs_ptr->enc_mode > ENC_M1 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
 #else
             if (pcs_ptr->enc_mode > ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
 #endif
 #endif
 #endif
