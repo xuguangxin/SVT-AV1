@@ -1749,6 +1749,7 @@ int32_t av1_quantize_inv_quantize(
     EbBool is_inter     = (pred_mode >= NEARESTMV);
     EbBool perform_rdoq = ((md_context->md_staging_skip_rdoq == EB_FALSE || is_encode_pass) &&
         md_context->enable_rdoq);
+
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     if (perform_rdoq) {
         if (bit_increment || (is_encode_pass && scs_ptr->static_config.encoder_16bit_pipeline)) {

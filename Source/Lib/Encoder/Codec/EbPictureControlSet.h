@@ -144,7 +144,9 @@ struct PredictionUnit;
 typedef struct EbMdcLeafData {
     uint32_t mds_idx;
     uint32_t tot_d1_blocks; //how many d1 bloks every parent square would have
+#if !OPT_BLOCK_INDICES_GEN_0
     uint8_t  leaf_index;
+#endif
     EbBool   split_flag;
     uint8_t  consider_block;
     uint8_t  refined_split_flag;
@@ -616,8 +618,9 @@ typedef struct PictureParentControlSet {
 #if DEPTH_PART_CLEAN_UP
     MultiPassPdLevel multi_pass_pd_level;
     EbBool sb_64x64_simulated;
+#if !M8_4x4
     EbBool disallow_4x4;
-
+#endif
     EbBool disallow_nsq;
     EbBool disallow_all_nsq_blocks_below_8x8;
     EbBool disallow_all_nsq_blocks_below_16x16;

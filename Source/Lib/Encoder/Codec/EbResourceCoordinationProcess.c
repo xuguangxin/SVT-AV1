@@ -210,7 +210,11 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
             scs_ptr->seq_header.enable_restoration = 0;
         else
 #endif
+#if M8_RESTORATION
+            scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+#else
             scs_ptr->seq_header.enable_restoration = 1;
+#endif
     } else
         scs_ptr->seq_header.enable_restoration =
             (uint8_t)scs_ptr->static_config.enable_restoration_filtering;
@@ -224,6 +228,7 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
     scs_ptr->seq_header.enable_restoration = 0;
     scs_ptr->seq_header.enable_cdef = 0;
 #endif
+#if !M8_CDF
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
     scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M8) ? 0 : 1;
@@ -233,7 +238,7 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
 #else
     scs_ptr->cdf_mode = (pcs_ptr->enc_mode <= ENC_M6) ? 0 : 1;
 #endif
-
+#endif
     if (scs_ptr->static_config.enable_warped_motion == DEFAULT) {
         scs_ptr->seq_header.enable_warped_motion = 1;
     } else

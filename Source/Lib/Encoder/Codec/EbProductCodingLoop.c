@@ -1894,7 +1894,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_denom = 1;
                 }
 #if MAR25_ADOPTIONS
+#if M8_NIC
+                else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M8) {
+#endif
 #else
                 else if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
@@ -1906,12 +1910,21 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_denom = 1;
                 }
                 else {
+#if M8_NIC
+                    // INTER
+                    inter_scaling_num = 1;
+                    inter_scaling_denom = 5;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 5;
+#else
                     // INTER
                     inter_scaling_num = 3;
                     inter_scaling_denom = 8;
                     // INTRA
                     intra_scaling_num = 4;
                     intra_scaling_denom = 8;
+#endif
                 }
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -1963,7 +1976,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_denom = 1;
                 }
 #if MAR25_ADOPTIONS
+#if M8_NIC
+                else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M8) {
+#endif
 #else
                 else if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
@@ -1975,12 +1992,21 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     intra_scaling_denom = 1;
                 }
                 else {
+#if M8_NIC
+                    // INTER
+                    inter_scaling_num = 1;
+                    inter_scaling_denom = 5;
+                    // INTRA
+                    intra_scaling_num = 1;
+                    intra_scaling_denom = 5;
+#else
                     // INTER
                     inter_scaling_num = 1;
                     inter_scaling_denom = 4;
                     // INTRA
                     intra_scaling_num = 1;
                     intra_scaling_denom = 4;
+#endif
                 }
 
                 for (uint8_t i = 0; i < CAND_CLASS_TOTAL; ++i) {
@@ -4174,8 +4200,11 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
             context_ptr->ref_filtering_res[li][ri].valid_ref = EB_FALSE;
         }
     }
-
+#if M8_CLEAN_UP
+    if ((!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled) || (pcs_ptr->parent_pcs_ptr->ref_list0_count_try == 1 && pcs_ptr->parent_pcs_ptr->ref_list1_count_try == 1))
+#else
     if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
+#endif
         return;
 
     // Distortion measure
@@ -7761,17 +7790,22 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         &(candidate_buffer_ptr_array_base[0]);
     ModeDecisionCandidateBuffer *candidate_buffer;
     ModeDecisionCandidate *      candidate_ptr;
-
+#if !M8_CLEAN_UP
     uint32_t best_inter_luma_zero_coeff = 1;
     uint64_t best_full_cost             = 0xFFFFFFFFull;
+#endif
     uint32_t full_loop_candidate_index;
     uint32_t cand_index;
 
     for (full_loop_candidate_index = 0; full_loop_candidate_index < fullCandidateTotalCount;
          ++full_loop_candidate_index) {
+#if M8_CLEAN_UP
+        cand_index = context_ptr->best_candidate_index_array[full_loop_candidate_index];
+#else
         cand_index = (context_ptr->full_loop_escape == 2)
                          ? context_ptr->sorted_candidate_index_array[full_loop_candidate_index]
                          : context_ptr->best_candidate_index_array[full_loop_candidate_index];
+#endif
         candidate_buffer = candidate_buffer_ptr_array[cand_index];
         candidate_ptr    = candidate_buffer->candidate_ptr;
 
@@ -7811,7 +7845,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 
         context_ptr->md_staging_skip_rdoq = EB_FALSE;
         context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
-
+#if !M8_CLEAN_UP
         if (pcs_ptr->slice_type != I_SLICE) {
             if ((candidate_ptr->type == INTRA_MODE || context_ptr->full_loop_escape == 2) &&
                 best_inter_luma_zero_coeff == 0) {
@@ -7819,7 +7853,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                 return;
             }
         }
-
+#endif
         if (context_ptr->chroma_at_last_md_stage) {
             if (context_ptr->blk_geom->sq_size < 128) {
                 if (context_ptr->blk_geom->has_uv) {
@@ -7889,7 +7923,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                        blk_origin_index,
                        blk_chroma_origin_index,
                        ref_fast_cost);
-
+#if !M8_CLEAN_UP
         if (context_ptr->full_loop_escape) {
             if (pcs_ptr->slice_type != I_SLICE) {
                 if (candidate_ptr->type == INTER_MODE) {
@@ -7900,6 +7934,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
                 }
             }
         }
+#endif
     }
 }
 
@@ -8909,7 +8944,7 @@ void interintra_class_pruning_3(ModeDecisionContext *context_ptr, uint64_t best_
     }
 }
 
-#if DEPTH_PART_CLEAN_UP
+#if DEPTH_PART_CLEAN_UP && !OPT_BLOCK_INDICES_GEN_2
 EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     if((context_ptr->blk_geom->sq_size <=  8 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
        (context_ptr->blk_geom->sq_size <= 16 && context_ptr->blk_geom->shape != PART_N && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ||
@@ -8958,7 +8993,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     for (uint8_t ref_idx = 0; ref_idx < MAX_REF_TYPE_CAND; ref_idx++)
         context_ptr->ref_best_cost_sq_table[ref_idx] = MAX_CU_COST;
 
-#if DEPTH_PART_CLEAN_UP
+#if DEPTH_PART_CLEAN_UP && !OPT_BLOCK_INDICES_GEN_2
     if (is_block_allowed(pcs_ptr, context_ptr)) {
 #endif
     const AomVarianceFnPtr *fn_ptr = &mefn_ptr[context_ptr->blk_geom->bsize];
@@ -9276,8 +9311,12 @@ void md_encode_block(PictureControlSet *pcs_ptr,
         blk_ptr,
         candidate_buffer_ptr_array,
         context_ptr->md_stage_3_total_count,
+#if M8_CLEAN_UP
+        context_ptr->best_candidate_index_array,
+#else
         (context_ptr->full_loop_escape == 2) ? context_ptr->sorted_candidate_index_array
                                                 : context_ptr->best_candidate_index_array,
+#endif
         context_ptr->prune_ref_frame_for_rec_partitions,
         &best_intra_mode);
     candidate_buffer = candidate_buffer_ptr_array[candidate_index];
@@ -9588,7 +9627,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
 
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].avail_blk_flag = EB_TRUE;
-#if DEPTH_PART_CLEAN_UP
+#if DEPTH_PART_CLEAN_UP && !OPT_BLOCK_INDICES_GEN_2
     } else {
         context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost         = MAX_MODE_COST;
         context_ptr->md_local_blk_unit[blk_ptr->mds_idx].default_cost = MAX_MODE_COST;
@@ -10026,10 +10065,18 @@ void block_based_depth_reduction(
 #if BLOCK_REDUCTION_ALGORITHM_1
     if (context_ptr->depth_reduction_ctrls.cost_sq_vs_nsq_energy_based_depth_reduction_enabled) {
         if (context_ptr->blk_geom->sq_size <= 64) {
+#if !M8_CLEAN_UP
             // Get the current_depth_block_energy (normalized)
             uint64_t current_depth_block_energy = 0;
+#endif
             uint32_t current_depth_best_d1_blk_mds = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].best_d1_blk;
             BlkStruct *current_depth_best_d1_blk_ptr = &(context_ptr->md_blk_arr_nsq[current_depth_best_d1_blk_mds]);
+#if M8_CLEAN_UP
+            EbBool current_depth_has_coeff = EB_FALSE;
+            for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
+                current_depth_has_coeff |= (current_depth_best_d1_blk_ptr[d1_itr].block_has_coeff);
+            }
+#else
             for (int32_t d1_itr = 0; d1_itr < get_blk_geom_mds(current_depth_best_d1_blk_mds)->totns; d1_itr++) {
                 current_depth_block_energy += context_ptr->md_local_blk_unit[current_depth_best_d1_blk_mds + d1_itr].luma_quant_coeff_energy;
                 current_depth_block_energy += context_ptr->md_local_blk_unit[current_depth_best_d1_blk_mds + d1_itr].cb_quant_coeff_energy;
@@ -10045,6 +10092,7 @@ void block_based_depth_reduction(
                 current_depth_has_coeff |= (current_depth_best_d1_blk_ptr[d1_itr].block_has_coeff);
             }
 #endif
+#endif
             // Get current_to_parent_deviation
             uint32_t parent_depth_sqi_mds =
                 (context_ptr->blk_geom->sqi_mds -
@@ -10059,6 +10107,7 @@ void block_based_depth_reduction(
             int64_t sq_to_best_nsq_deviation = (int64_t)(((int64_t)context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].default_cost - (int64_t)context_ptr->best_nsq_default_cost) * 100) / (int64_t)context_ptr->best_nsq_default_cost;
 
             if (current_depth_has_coeff == EB_FALSE && //current_depth_block_energy <= context_ptr->depth_reduction_ctrls.quant_coeff_energy_th &&
+
                 sq_to_best_nsq_deviation <= context_ptr->depth_reduction_ctrls.sq_to_best_nsq_deviation_th &&
                 current_to_parent_deviation >= context_ptr->depth_reduction_ctrls.current_to_parent_deviation_th) {
                 set_child_to_be_skipped(
@@ -10288,17 +10337,23 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     Part     nsq_shape_table[NUMBER_OF_SHAPES] = {
         PART_N, PART_H, PART_V, PART_HA, PART_HB, PART_VA, PART_VB, PART_H4, PART_V4, PART_S};
     uint8_t skip_next_depth = 0;
+#if !OPT_BLOCK_INDICES_GEN_2
 #if SB_CLASSIFIER
     // Store defalut settings
     uint8_t default_md_tx_size_search_mode = context_ptr->md_tx_size_search_mode;
+
     uint8_t default_md_disallow_nsq = context_ptr->md_disallow_nsq;
+
     // Update nsq and txs settings based on the sb_class
     if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == MEDIUM_COMPLEX_CLASS)
             context_ptr->md_tx_size_search_mode = 0;
+
         if (context_ptr->sb_class == HIGH_COMPLEX_CLASS)
             context_ptr->md_disallow_nsq = 1;
+
     }
+#endif
 #endif
     do {
         blk_idx_mds = leaf_data_array[blk_index].mds_idx;
@@ -10680,10 +10735,12 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             d1_first_block = 0;
         blk_index++;
     } while (blk_index < leaf_count); // End of CU loop
+#if !OPT_BLOCK_INDICES_GEN_2
 #if SB_CLASSIFIER
     // Restor the default settings
     context_ptr->md_tx_size_search_mode = default_md_tx_size_search_mode;
     context_ptr->md_disallow_nsq = default_md_disallow_nsq;
+#endif
 #endif
     if (scs_ptr->seq_header.sb_size == BLOCK_64X64) depth_cost[0] = MAX_CU_COST;
 

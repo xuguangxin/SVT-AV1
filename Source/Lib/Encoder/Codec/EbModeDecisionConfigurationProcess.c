@@ -1072,6 +1072,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     context_ptr->adp_level = pcs_ptr->parent_pcs_ptr->enc_mode;
 
     // CDF
+#if M8_CDF
+    pcs_ptr->update_cdf = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+#else
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
@@ -1100,6 +1103,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     if (pcs_ptr->update_cdf)
         assert(scs_ptr->cdf_mode == 0 && "use cdf_mode 0");
 #endif
+#endif
     // Filter INTRA
     if (scs_ptr->seq_header.enable_filter_intra)
         pcs_ptr->pic_filter_intra_mode = 1;
@@ -1124,10 +1128,20 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Warped
     EbBool enable_wm;
 #if PRESETS_SHIFT
+#if M8_WM
+    if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
+        enable_wm = EB_TRUE;
+    } else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) {
+        enable_wm = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? EB_TRUE : EB_FALSE;
+    } else {
+        enable_wm = EB_FALSE;
+    }
+#else
     enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4 ||
         (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0))
         ? EB_TRUE
         : EB_FALSE;
+#endif
 #else
 #if MAR30_ADOPTIONS
     enable_wm = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7 ||
@@ -1228,7 +1242,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
 #if OBMC_FAST
+#if M8_OBMC
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#else
             else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
+#endif
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
 #endif
             else
@@ -1247,7 +1265,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
 #if OBMC_FAST
+#if M8_OBMC
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#else
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
+#endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
 #endif
         else

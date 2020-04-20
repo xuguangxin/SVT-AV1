@@ -134,10 +134,21 @@ void* set_me_hme_params_oq(
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 200;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 800;
             }
+#if M8_HME_ME
+            else if (pcs_ptr->enc_mode <= ENC_M5) {
+                me_context_ptr->search_area_width = me_context_ptr->search_area_height = 225;
+                me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 450;
+            }
+            else {
+                me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
+                me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;
+            }
+#else
             else {
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 225;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 450;
             }
+#endif
 #if PRESETS_SHIFT
     else if (pcs_ptr->enc_mode <= ENC_M2) {
 #else
@@ -146,10 +157,21 @@ void* set_me_hme_params_oq(
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 120;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = input_resolution <= INPUT_SIZE_480p_RANGE ? 240 : 360;
     }
+#if M8_HME_ME
+    else if (pcs_ptr->enc_mode <= ENC_M5) {
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
+        me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;
+    }
+    else {
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 25;
+        me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 50;
+    }
+#else
     else {
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;
     }
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M3)
             me_context_ptr->search_area_width = me_context_ptr->search_area_height = 390;

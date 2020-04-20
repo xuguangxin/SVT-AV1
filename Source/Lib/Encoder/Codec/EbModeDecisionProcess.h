@@ -130,10 +130,12 @@ typedef struct MdBlkStruct {
 #if CLEAN_UP_SB_DATA_7
     uint8_t merge_flag;
 #endif
+#if !M8_CLEAN_UP
 #if BLOCK_REDUCTION_ALGORITHM_1
     uint64_t luma_quant_coeff_energy;
     uint64_t cb_quant_coeff_energy;
     uint64_t cr_quant_coeff_energy;
+#endif
 #endif
 } MdBlkStruct;
 
@@ -205,8 +207,11 @@ typedef struct DepthReductionCtrls {
     uint8_t cost_sq_vs_nsq_energy_based_depth_reduction_enabled; // to enable the 1st evaluation
     int64_t current_to_parent_deviation_th; // decrease towards a more agressive level
     int64_t sq_to_best_nsq_deviation_th; // increase towards a more agressive level
+#if M8_CLEAN_UP
+    // TODO: add percentage_non_zero_coeff_th;// increase towards a more agressive level
+#else
     uint64_t quant_coeff_energy_th;// increase towards a more agressive level
-
+#endif
     uint8_t nsq_data_based_depth_reduction_enabled; // to enable the 2nd evaluation
     int64_t sq_to_4_sq_children_th; // increase towards a more agressive level
     int64_t h_v_to_h4_v4_th; // increase towards a more agressive level
@@ -383,7 +388,9 @@ typedef struct ModeDecisionContext {
     uint8_t              independent_chroma_nics;
 #endif
     Part                 nsq_table[NSQ_TAB_SIZE];
+#if !M8_CLEAN_UP
     uint8_t              full_loop_escape;
+#endif
     uint8_t              global_mv_injection;
     uint8_t              perform_me_mv_1_8_pel_ref;
     uint8_t              new_nearest_injection;
@@ -557,6 +564,9 @@ typedef struct ModeDecisionContext {
     uint8_t pic_class;
     uint8_t reduce_complex_clip_cycles_level;
     PicComplexControls pic_complexity_ctrls;
+#endif
+#if M8_4x4
+    uint8_t disallow_4x4;
 #endif
 #if REDUCE_COMPLEX_CLIP_CYCLES || SB_CLASSIFIER
     uint8_t       md_disallow_nsq;

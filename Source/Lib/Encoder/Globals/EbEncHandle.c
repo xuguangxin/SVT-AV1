@@ -1945,7 +1945,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
         if (scs_ptr->static_config.screen_content_mode == 1)
 #if DEPTH_PART_CLEAN_UP
 #if APR08_ADOPTIONS
+#if M8_SB_SIZE
+            scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M5) ? 128 : 64;
+#else
             scs_ptr->static_config.super_block_size = 128;
+#endif
 #else
             scs_ptr->static_config.super_block_size = 64;
 #endif
@@ -1958,7 +1962,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
         else
 #if DEPTH_PART_CLEAN_UP
+#if M8_SB_SIZE
+            scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M5) ? 128 : 64;
+#else
             scs_ptr->static_config.super_block_size = 128;
+#endif
 #else
             scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 128 : 64;
 #endif

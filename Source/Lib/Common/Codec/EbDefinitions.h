@@ -204,6 +204,46 @@ extern "C" {
 #define SB_CLASSIFIER       1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
 #endif
 #define PRESETS_SHIFT 1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
+#define OPT_BLOCK_INDICES_GEN 1 // Optimized block indices derivation towards less overhead when looping over a subset of blocks (e.g. when enabling disallow_nsq)
+#if OPT_BLOCK_INDICES_GEN
+#define OPT_BLOCK_INDICES_GEN_0 1 // refactor block indices derivation
+#define OPT_BLOCK_INDICES_GEN_1 1 // removed useless checks
+#define OPT_BLOCK_INDICES_GEN_2 1 // unify the action(s) of disallow_nsq and complex sb
+#define OPT_BLOCK_INDICES_GEN_3 1 // apply disallow_all_nsq_blocks_below_8x8, disallow_all_nsq_blocks_below_16x16, ..
+#endif
+#define TF_LEVELS 1 // Defined levels for temporal filtering based on the filtering window size
+#define TF_X86_KERNEL_FIX 1 // call x86 instead of C
+#define M8_SETTINGS 1 // M8 settings
+#if M8_SETTINGS
+// Part
+#define M8_4x4 1
+#define M8_NSQ 1
+#define M8_SB_SIZE 1
+// MRP
+#define M8_MRP 1
+//MD
+#define M8_BIPRED_3x3 1
+#define M8_PRED_ME 1
+#define M8_CDF 1
+#define M8_WM 1
+#define M8_OBMC 1
+#define M8_INTRA_MODE 1
+#define M8_RDOQ 1
+// Filtering
+#define M8_SG 1
+#define M8_RESTORATION 1
+#define M8_LOOP_FILTER 1
+#define M8_CDEF 1
+// SC
+#define M8_PALETTE 1
+#define M8_IBC 1
+// NIC
+#define M8_NIC 1
+// HME/ME
+#define M8_HME_ME 1
+#define M8_MPPD 1
+#endif
+#define M8_CLEAN_UP 1 // remove useless code: energy, full loop escape
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
