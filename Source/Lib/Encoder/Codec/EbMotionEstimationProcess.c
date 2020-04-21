@@ -325,6 +325,73 @@ void* set_me_hme_params_oq(
     return EB_NULL;
 };
 
+#if ME_HME_PRUNING_CLEANUP
+void set_me_hme_ref_prune_ctrls(MeContext* context_ptr, uint8_t prune_level) {
+    MeHmeRefPruneCtrls* me_hme_prune_ctrls = &context_ptr->me_hme_prune_ctrls;
+
+    switch (prune_level)
+    {
+    case 0:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 0;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = (uint16_t)~0;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+        break;
+    case 1:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 160;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+        break;
+    case 2:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+        break;
+    case 3:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+        break;
+    case 4:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+
+void set_me_sr_adjustment_ctrls(MeContext* context_ptr, uint8_t sr_adjustment_level) {
+    MeSrCtrls* me_sr_adjustment_ctrls = &context_ptr->me_sr_adjustment_ctrls;
+
+    switch (sr_adjustment_level)
+    {
+    case 0:
+        me_sr_adjustment_ctrls->enable_me_sr_adjustment = 0;
+        break;
+    case 1:
+        me_sr_adjustment_ctrls->enable_me_sr_adjustment = 1;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_mv_length_th = 0;
+        me_sr_adjustment_ctrls->stationary_hme_sad_abs_th = 100;
+        me_sr_adjustment_ctrls->stationary_me_sr_divisor = 16;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_hme_sad_abs_th = 100;
+        me_sr_adjustment_ctrls->me_sr_divisor_for_low_hme_sad = 8;
+        break;
+    case 2:
+        me_sr_adjustment_ctrls->enable_me_sr_adjustment = 1;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_mv_length_th = 4;
+        me_sr_adjustment_ctrls->stationary_hme_sad_abs_th = 12000;
+        me_sr_adjustment_ctrls->stationary_me_sr_divisor = 8;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_hme_sad_abs_th = 6000;
+        me_sr_adjustment_ctrls->me_sr_divisor_for_low_hme_sad = 8;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 /******************************************************
 * Derive ME Settings for OQ
   Input   : encoder mode and tune
@@ -510,6 +577,32 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
 
+#if ME_HME_PRUNING_CLEANUP
+
+    // Set hme/me based reference pruning level (0-4)
+    if (MR_MODE)
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
+    else if (pcs_ptr->sc_content_detected)
+#if ADOPT_SC_HME_PRUNING
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 1);
+#else
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
+#endif
+    else if (enc_mode <= ENC_M1)
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 2);
+    else if (enc_mode <= ENC_M2)
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 3);
+    else
+        set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 4);
+
+    // Set hme-based me sr adjustment level
+    if (MR_MODE)
+        set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
+    else if (pcs_ptr->sc_content_detected)
+        set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 1);
+    else
+        set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 2);
+#else
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
 #if MAR20_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
@@ -551,6 +644,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 30;
     else
         context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 15;
+#endif
 #endif
 #endif
 #endif
@@ -683,6 +777,74 @@ void* tf_set_me_hme_params_oq(
 
     return EB_NULL;
 };
+
+#if ME_HME_PRUNING_CLEANUP
+void tf_set_me_hme_ref_prune_ctrls(MeContext* context_ptr, uint8_t prune_level) {
+    MeHmeRefPruneCtrls* me_hme_prune_ctrls = &context_ptr->me_hme_prune_ctrls;
+
+    switch (prune_level)
+    {
+    case 0:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 0;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = (uint16_t)~0;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+        break;
+    case 1:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 160;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
+        break;
+    case 2:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+        break;
+    case 3:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+        break;
+    case 4:
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+        me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
+        me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+
+void tf_set_me_sr_adjustment_ctrls(MeContext* context_ptr, uint8_t sr_adjustment_level) {
+    MeSrCtrls* me_sr_adjustment_ctrls = &context_ptr->me_sr_adjustment_ctrls;
+
+    switch (sr_adjustment_level)
+    {
+    case 0:
+        me_sr_adjustment_ctrls->enable_me_sr_adjustment = 0;
+        break;
+    case 1:
+        me_sr_adjustment_ctrls->enable_me_sr_adjustment = 1;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_mv_length_th = 0;
+        me_sr_adjustment_ctrls->stationary_hme_sad_abs_th = 100;
+        me_sr_adjustment_ctrls->stationary_me_sr_divisor = 16;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_hme_sad_abs_th = 100;
+        me_sr_adjustment_ctrls->me_sr_divisor_for_low_hme_sad = 8;
+        break;
+    case 2:
+        me_sr_adjustment_ctrls->enable_me_sr_adjustment = 1;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_mv_length_th = 4;
+        me_sr_adjustment_ctrls->stationary_hme_sad_abs_th = 12000;
+        me_sr_adjustment_ctrls->stationary_me_sr_divisor = 8;
+        me_sr_adjustment_ctrls->reduce_me_sr_based_on_hme_sad_abs_th = 6000;
+        me_sr_adjustment_ctrls->me_sr_divisor_for_low_hme_sad = 8;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 
 EbErrorType tf_signal_derivation_me_kernel_oq(
     SequenceControlSet        *scs_ptr,
@@ -836,6 +998,16 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     // 3: me nsq_search off.
     context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
 
+#if ME_HME_PRUNING_CLEANUP
+
+    // Set hme/me based reference pruning level (0-4)
+    // Ref pruning is disallowed for TF in motion_estimate_sb()
+    tf_set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
+
+    // Set hme-based me sr adjustment level
+    // ME SR adjustment is disallowed for TF in motion_estimate_sb()
+    tf_set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
+#else
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
 #if MAR20_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
@@ -867,6 +1039,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 30;
     else
         context_ptr->me_context_ptr->prune_ref_if_me_sad_dev_bigger_than_th = 15;
+#endif
 #endif
 #endif
 

@@ -244,6 +244,8 @@ extern "C" {
 #define M8_MPPD 1
 #endif
 #define M8_CLEAN_UP 1 // remove useless code: energy, full loop escape
+#define ME_HME_PRUNING_CLEANUP 1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
+#define ADOPT_SC_HME_PRUNING 1 // Adopt HME-based ref pruning in SC
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

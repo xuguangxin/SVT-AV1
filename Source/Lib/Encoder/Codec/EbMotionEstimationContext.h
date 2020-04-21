@@ -287,6 +287,22 @@ typedef struct MePredUnit {
 typedef struct MotionEstimationTierZero {
     MePredUnit pu[MAX_ME_PU_COUNT];
 } MotionEstimationTierZero;
+#if ME_HME_PRUNING_CLEANUP
+typedef struct MeHmeRefPruneCtrls {
+    EbBool   enable_me_hme_ref_pruning;
+    uint16_t prune_ref_if_hme_sad_dev_bigger_than_th;   // TH used to prune references based on hme sad deviation
+    uint16_t prune_ref_if_me_sad_dev_bigger_than_th;    // TH used to prune references based on me sad deviation
+} MeHmeRefPruneCtrls;
+
+typedef struct MeSrCtrls {
+    EbBool   enable_me_sr_adjustment;
+    uint16_t reduce_me_sr_based_on_mv_length_th;    // reduce the ME search region if HME MVs and HME sad are small
+    uint16_t stationary_hme_sad_abs_th;             // reduce the ME search region if HME MVs and HME sad are small
+    uint16_t stationary_me_sr_divisor;              // Reduction factor for the ME search region if HME MVs and HME sad are small
+    uint16_t reduce_me_sr_based_on_hme_sad_abs_th;  // reduce the ME search region if HME sad is small
+    uint16_t me_sr_divisor_for_low_hme_sad;         // Reduction factor for the ME search region if HME sad is small
+} MeSrCtrls;
+#endif
 typedef struct HmeResults {
     uint8_t  list_i;   // list index of this ref
     uint8_t  ref_i;    // ref list index of this ref
@@ -438,9 +454,14 @@ typedef struct MeContext {
     EbBool half_pel_mode;
 
     EbBool compute_global_motion;
+#if ME_HME_PRUNING_CLEANUP
+    MeHmeRefPruneCtrls me_hme_prune_ctrls;
+    MeSrCtrls me_sr_adjustment_ctrls;
+#else
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
     uint16_t prune_ref_if_hme_sad_dev_bigger_than_th;
     uint16_t prune_ref_if_me_sad_dev_bigger_than_th;
+#endif
 #endif
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
     uint8_t max_hme_sr_area_multipler;
@@ -476,7 +497,11 @@ typedef struct MeContext {
 #endif
     uint8_t  update_hme_search_center_flag;
     HmeResults hme_results[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#if ME_HME_PRUNING_CLEANUP
+    uint32_t reduce_me_sr_divisor[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#else
     uint32_t reduce_me_sr_flag[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
     EbBool local_hp_mode[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 #if MULTI_STAGE_HME
     int16_t x_hme_level0_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT][EB_HME_SEARCH_AREA_ROW_MAX_COUNT];

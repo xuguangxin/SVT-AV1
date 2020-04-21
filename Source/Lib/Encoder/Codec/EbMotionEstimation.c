@@ -9720,6 +9720,10 @@ void integer_search_sb(
 
             // Constrain x_ME to be a multiple of 8 (round up)
             // Update ME search reagion size based on hme-data
+#if ME_HME_PRUNING_CLEANUP
+            search_area_width = ((search_area_width / context_ptr->reduce_me_sr_divisor[list_index][ref_pic_index]) + 7) & ~0x07;
+            search_area_height = MAX(1, (search_area_height / context_ptr->reduce_me_sr_divisor[list_index][ref_pic_index]));
+#else
             if (context_ptr->reduce_me_sr_flag[list_index][ref_pic_index] == SC_HME_TH_STILL) {
                 search_area_width = ((search_area_width / SC_SR_DENOM_STILL) + 7) & ~0x07;
                 search_area_height = MAX(1,(search_area_height / SC_SR_DENOM_STILL));
@@ -9735,6 +9739,7 @@ void integer_search_sb(
             else {
                 search_area_width = (search_area_width + 7) & ~0x07;
             }
+#endif
 
             if ((x_search_center != 0 || y_search_center != 0) &&
                 (pcs_ptr->is_used_as_reference_flag == EB_TRUE)) {
@@ -10102,7 +10107,11 @@ void integer_search_sb(
   using previous stage ME results (Integer Search) for each reference
   frame. keep only the references that are close to the best reference.
 */
+#if ME_HME_PRUNING_CLEANUP
+void me_prune_ref_and_adjust_subpel_refinement(
+#else
 void prune_references_fp(
+#endif
     PictureParentControlSet   *pcs_ptr,
 #if INTER_COMP_REDESIGN
     uint32_t                   sb_index,
@@ -10191,6 +10200,16 @@ void prune_references_fp(
                 do_comp[sorted[0][counter].list_i][sorted[0][counter].ref_i] = 0;
             counter ++;
 #endif
+#if ME_HME_PRUNING_CLEANUP
+            // Prune references based on ME sad
+            uint16_t prune_ref_th = context_ptr->me_hme_prune_ctrls.prune_ref_if_me_sad_dev_bigger_than_th;
+            if (context_ptr->me_hme_prune_ctrls.enable_me_hme_ref_pruning &&
+                (prune_ref_th != (uint16_t)~0) &&
+                (context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (prune_ref_th * best))
+            {
+                context_ptr->hme_results[li][ri].do_ref = 0;
+            }
+#else
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
 #if MAR19_ADOPTIONS
             // If th is infinite, the feature should be OFF; add check to avoid overflow errors with multiplication
@@ -10203,6 +10222,7 @@ void prune_references_fp(
             if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100  > BIGGER_THAN_TH*best)
 #endif
                 context_ptr->hme_results[li][ri].do_ref = 0;
+#endif
             if (context_ptr->half_pel_mode == SWITCHABLE_HP_MODE)
                 if (context_ptr->hme_results[li][ri].hme_sad > sorted[0][1].hme_sad)
                     context_ptr->local_hp_mode[li][ri] = REFINEMENT_HP_MODE;
@@ -11740,9 +11760,13 @@ void hme_sb(
     }
 #endif
 }
+#if ME_HME_PRUNING_CLEANUP
+void hme_prune_ref_and_adjust_sr(MeContext* context_ptr) {
+#else
 void prune_references(
     MeContext                 *context_ptr)
 {
+#endif
     HmeResults    sorted[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     uint32_t      num_of_cand_to_sort = MAX_NUM_OF_REF_PIC_LIST * REF_LIST_MAX_DEPTH;
     memcpy(sorted, context_ptr->hme_results, sizeof(HmeResults)*MAX_NUM_OF_REF_PIC_LIST*REF_LIST_MAX_DEPTH);
@@ -11761,10 +11785,39 @@ void prune_references(
     uint8_t  BIGGER_THAN_TH = 80;
 #endif
     uint64_t best = sorted[0][0].hme_sad;//is this always the best?
+#if ME_HME_PRUNING_CLEANUP
+    uint16_t prune_ref_th = context_ptr->me_hme_prune_ctrls.prune_ref_if_hme_sad_dev_bigger_than_th;
+    uint16_t mv_length_th = context_ptr->me_sr_adjustment_ctrls.reduce_me_sr_based_on_mv_length_th;
+    uint16_t stationary_hme_sad_abs_th = context_ptr->me_sr_adjustment_ctrls.stationary_hme_sad_abs_th;
+    uint16_t reduce_me_sr_based_on_hme_sad_abs_th = context_ptr->me_sr_adjustment_ctrls.reduce_me_sr_based_on_hme_sad_abs_th;
+#else
     uint64_t REDUCE_SR_TH = 6000;
     int16_t  displacement_th = 4;
+#endif
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++){
+#if ME_HME_PRUNING_CLEANUP
+            // Prune references based on HME sad
+            if (context_ptr->me_hme_prune_ctrls.enable_me_hme_ref_pruning &&
+                (prune_ref_th != (uint16_t)~0) &&
+                ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (prune_ref_th * best)))
+            {
+                context_ptr->hme_results[li][ri].do_ref = 0;
+            }
+
+            // Reduce the ME search region if the hme sad is low
+            if (context_ptr->me_sr_adjustment_ctrls.enable_me_sr_adjustment) {
+                if (ABS(context_ptr->hme_results[li][ri].hme_sc_x) <= mv_length_th &&
+                    ABS(context_ptr->hme_results[li][ri].hme_sc_y) <= mv_length_th &&
+                    context_ptr->hme_results[li][ri].hme_sad < stationary_hme_sad_abs_th)
+                {
+                    context_ptr->reduce_me_sr_divisor[li][ri] = context_ptr->me_sr_adjustment_ctrls.stationary_me_sr_divisor;
+                }
+                else if (context_ptr->hme_results[li][ri].hme_sad < reduce_me_sr_based_on_hme_sad_abs_th) {
+                    context_ptr->reduce_me_sr_divisor[li][ri] = context_ptr->me_sr_adjustment_ctrls.me_sr_divisor_for_low_hme_sad;
+                }
+            }
+#else
 #if ADD_ME_SIGNAL_FOR_PRUNING_TH
             if ((context_ptr->hme_results[li][ri].hme_sad - best) * 100 > (context_ptr->prune_ref_if_hme_sad_dev_bigger_than_th * best))
 #else
@@ -11779,10 +11832,12 @@ void prune_references(
             if (context_ptr->hme_results[li][ri].hme_sc_x <= displacement_th && context_ptr->hme_results[li][ri].hme_sc_y <= displacement_th && context_ptr->hme_results[li][ri].hme_sad < (2*REDUCE_SR_TH))
 #endif
                 context_ptr->reduce_me_sr_flag[li][ri] = 1;
+#endif
         }
     }
 }
 
+#if !ME_HME_PRUNING_CLEANUP
 void prune_references_sc(
     MeContext *context_ptr)
 {
@@ -11799,6 +11854,7 @@ void prune_references_sc(
         }
     }
 }
+#endif
 /*******************************************
  * motion_estimate_sb
  *   performs ME (SB)
@@ -11861,7 +11917,11 @@ EbErrorType motion_estimate_sb(
             context_ptr->hme_results[li][ri].ref_i = ri;
             context_ptr->hme_results[li][ri].do_ref = 1;
             context_ptr->hme_results[li][ri].hme_sad = 0xFFFFFFFF;
+#if ME_HME_PRUNING_CLEANUP
+            context_ptr->reduce_me_sr_divisor[li][ri] = 1;
+#else
             context_ptr->reduce_me_sr_flag[li][ri] = 0;
+#endif
             context_ptr->local_hp_mode[li][ri] =
                 context_ptr->half_pel_mode == SWITCHABLE_HP_MODE ? EX_HP_MODE :
                 context_ptr->half_pel_mode;
@@ -11886,6 +11946,15 @@ EbErrorType motion_estimate_sb(
         sb_origin_y,
         context_ptr,
         input_ptr);
+#if ME_HME_PRUNING_CLEANUP
+    // prune the refrence frames based on the HME outputs.
+    if (prune_ref &&
+        (context_ptr->me_sr_adjustment_ctrls.enable_me_sr_adjustment ||
+            context_ptr->me_hme_prune_ctrls.enable_me_hme_ref_pruning))
+    {
+        hme_prune_ref_and_adjust_sr(context_ptr);
+    }
+#else
     // prune the refrence frames based on the HME outputs.
     if (pcs_ptr->prune_ref_based_me && prune_ref)
         prune_references(
@@ -11893,6 +11962,7 @@ EbErrorType motion_estimate_sb(
     else if (pcs_ptr->sc_content_detected && prune_ref)
         prune_references_sc(
             context_ptr);
+#endif
     // Full pel: Perform the Integer Motion Estimation on the allowed refrence frames.
     integer_search_sb(
         pcs_ptr,
@@ -11901,6 +11971,20 @@ EbErrorType motion_estimate_sb(
         sb_origin_y,
         context_ptr,
         input_ptr);
+#if ME_HME_PRUNING_CLEANUP
+    // prune the refrence frames and adjust half-pel refinement based on the Full pel outputs.
+    if (prune_ref &&
+        (context_ptr->me_hme_prune_ctrls.enable_me_hme_ref_pruning ||
+            context_ptr->half_pel_mode == SWITCHABLE_HP_MODE))
+    {
+        me_prune_ref_and_adjust_subpel_refinement(
+            pcs_ptr,
+#if INTER_COMP_REDESIGN
+            sb_index,
+#endif
+            context_ptr);
+    }
+#else
     // prune the refrence frames based on the Full pel outputs.
     if (pcs_ptr->prune_ref_based_me && prune_ref)
         prune_references_fp(
@@ -11909,6 +11993,7 @@ EbErrorType motion_estimate_sb(
             sb_index,
 #endif
             context_ptr );
+#endif
 
     if (context_ptr->me_alt_ref == EB_TRUE) num_of_list_to_search = 0;
 

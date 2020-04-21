@@ -1841,6 +1841,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 1: ON
     pcs_ptr->tx_size_early_exit = 1;
 
+#if !ME_HME_PRUNING_CLEANUP
     // Prune reference and reduce ME SR based on HME/ME distortion
     // 0: OFF
     // 1: ON
@@ -1860,6 +1861,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->prune_ref_based_me = 0;
     else
         pcs_ptr->prune_ref_based_me = 1;
+#endif
 #endif
 #endif
 #if TF_LEVELS
