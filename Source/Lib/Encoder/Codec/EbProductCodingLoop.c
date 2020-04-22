@@ -1877,6 +1877,17 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 uint32_t inter_scaling_denom = 1;
                 uint32_t intra_scaling_num = 1;
                 uint32_t intra_scaling_denom = 1;
+#if APR22_ADOPTIONS
+                if (MR_MODE) {
+                    // INTER
+                    inter_scaling_num = 3;
+                    inter_scaling_denom = 2;
+                    // INTRA
+                    intra_scaling_num = 2;
+                    intra_scaling_denom = 1;
+                }
+                else
+#endif
 #if PRESETS_SHIFT
                 if (pcs_ptr->enc_mode <= ENC_M2) {
 #else
@@ -7827,7 +7838,14 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         context_ptr->md_staging_tx_size_mode = EB_TRUE;
 #else
 #if CLASS_MERGING
+#if APR22_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->txs_in_inter_classes)
+            context_ptr->md_staging_tx_size_mode = 1;
+        else
+            context_ptr->md_staging_tx_size_mode = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_3) ? 1 : 0;
+#else
         context_ptr->md_staging_tx_size_mode = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_3) ? 1 : 0;
+#endif
 #else
         context_ptr->md_staging_tx_size_mode = (candidate_ptr->cand_class == CAND_CLASS_0 || candidate_ptr->cand_class == CAND_CLASS_6 || candidate_ptr->cand_class == CAND_CLASS_7) ? 1 : 0;
 #endif
@@ -8205,7 +8223,11 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->mrp_pruning_w_distortion  = 0;
         inter_comp_ctrls->mrp_pruning_w_distance = 4;
         inter_comp_ctrls->wedge_search_mode = 1;
+#if APR22_ADOPTIONS
+        inter_comp_ctrls->wedge_variance_th = 100;
+#else
         inter_comp_ctrls->wedge_variance_th = MR_MODE ? 0 : 100;
+#endif
         inter_comp_ctrls->similar_previous_blk=1;
         break;
     case 2://FAST
@@ -8245,6 +8267,10 @@ EbErrorType signal_derivation_block(
         set_inter_comp_controls(context_ptr,pcs->parent_pcs_ptr->compound_mode);
 
     context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
+#if APR22_ADOPTIONS
+    if (pcs->enc_mode <= ENC_M2)
+        context_ptr->inter_comp_ctrls.wedge_variance_th = 0;
+#endif
 
 #else
     // set compound_types_to_try

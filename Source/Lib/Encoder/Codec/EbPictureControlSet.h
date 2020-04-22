@@ -632,6 +632,9 @@ typedef struct PictureParentControlSet {
     uint8_t            loop_filter_mode;
     uint8_t            intra_pred_mode;
     uint8_t            tx_size_search_mode;
+#if APR22_ADOPTIONS
+    uint8_t            txs_in_inter_classes;
+#endif
     uint8_t            frame_end_cdf_update_mode; // mm-signal: 0: OFF, 1:ON
     //**********************************************************************************************************//
     Av1RpsNode av1_ref_signal;

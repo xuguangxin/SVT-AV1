@@ -246,6 +246,8 @@ extern "C" {
 #define M8_CLEAN_UP 1 // remove useless code: energy, full loop escape
 #define ME_HME_PRUNING_CLEANUP 1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
 #define ADOPT_SC_HME_PRUNING 1 // Adopt HME-based ref pruning in SC
+#define ENABLE_SC_DETECTOR 1 // turn on the SC detector by default; move SC settings to be set after detection
+#define APR22_ADOPTIONS 1 // New M0
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

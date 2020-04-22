@@ -1643,6 +1643,18 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->tx_size_search_mode = 0;
 
+#if APR22_ADOPTIONS
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - TXS in intra classes only
+    // 1 ON - TXS in all classes
+    if (pcs_ptr->sc_content_detected)
+        pcs_ptr->txs_in_inter_classes = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        pcs_ptr->txs_in_inter_classes = (pcs_ptr->is_used_as_reference_flag && pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) ? 1 : 0;
+    else
+        pcs_ptr->txs_in_inter_classes = 0;
+#endif
+
 #if !INTER_COMP_REDESIGN
     // Set Wedge mode      Settings
     // 0                 FULL: Full search
@@ -1685,6 +1697,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->slice_type != I_SLICE && scs_ptr->seq_header.enable_interintra_compound) {
 #if INTRA_COMPOUND_OPT
 #if PRESETS_SHIFT
+#if ENABLE_SC_DETECTOR
+        if (pcs_ptr->sc_content_detected)
+            pcs_ptr->enable_inter_intra = 0;
+        else
+#endif
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
 #else
 #if MAR30_ADOPTIONS
@@ -1781,6 +1798,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // CHKN: Temporal MVP should be disabled for pictures beloning to 4L MiniGop
     // preceeded by 5L miniGOP. in this case the RPS is wrong(known issue). check
     // RPS construction for more info.
+#if ENABLE_SC_DETECTOR
+    if (pcs_ptr->sc_content_detected)
+        pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
+    else
+#endif
     if (pcs_ptr->slice_type == I_SLICE)
         pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
     else
@@ -1797,7 +1819,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR30_ADOPTIONS
 #if APR08_ADOPTIONS
 #if PRESETS_SHIFT
+#if APR22_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M2 || (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->sc_content_detected))
+#else
     if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->sc_content_detected))
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M7 && pcs_ptr->sc_content_detected))
 #endif
