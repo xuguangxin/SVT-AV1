@@ -248,6 +248,13 @@ extern "C" {
 #define ADOPT_SC_HME_PRUNING 1 // Adopt HME-based ref pruning in SC
 #define ENABLE_SC_DETECTOR 1 // turn on the SC detector by default; move SC settings to be set after detection
 #define APR22_ADOPTIONS 1 // New M0
+#define APR23_ADOPTIONS 1
+#define M1_COMBO_1 0
+#define M1_COMBO_2 0
+#define M1_COMBO_3 0
+#define M2_COMBO_1 0
+#define M2_COMBO_2 0
+#define M2_COMBO_3 0
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 

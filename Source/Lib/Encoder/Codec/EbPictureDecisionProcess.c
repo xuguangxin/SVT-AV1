@@ -858,8 +858,13 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->enable_hme_level2_flag = 1;
         }
         else {
+#if APR23_ADOPTIONS
+            pcs_ptr->enable_hme_level1_flag = 1;
+            pcs_ptr->enable_hme_level2_flag = 1;
+#else
             pcs_ptr->enable_hme_level1_flag = 0;
             pcs_ptr->enable_hme_level2_flag = 0;
+#endif
         }
     else {
         pcs_ptr->enable_hme_level1_flag = 1;
@@ -1073,7 +1078,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
     else {
 #if PRESETS_SHIFT
+#if M2_COMBO_3
+        if (pcs_ptr->enc_mode <= ENC_M1)
+#else
         if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
 #else
 #if MAR19_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M7)
@@ -1523,6 +1532,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
         if (sc_content_detected)
+#if APR23_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M5)
+#else
 #if PRESETS_SHIFT
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
@@ -1533,6 +1545,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -1738,8 +1751,18 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR17_ADOPTIONS
 #if INTER_COMP_REDESIGN
 #if PRESETS_SHIFT
+#if APR23_ADOPTIONS
+            if (pcs_ptr->sc_content_detected)
+                pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+            else
+#endif
+#if M2_COMBO_1 || M1_COMBO_2
+                pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
+                pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M3 ? 1 :
                                      pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M4 ? 1 :
                                      pcs_ptr->enc_mode <= ENC_M7 ? 2 : 0;

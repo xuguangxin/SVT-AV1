@@ -127,7 +127,11 @@ void* set_me_hme_params_oq(
 #endif
 #if NEW_HME_ME_SIZES
 #if PRESETS_SHIFT
+#if M1_COMBO_2 || M2_COMBO_2
+            if (pcs_ptr->enc_mode <= ENC_M0) {
+#else
             if (pcs_ptr->enc_mode <= ENC_M2) {
+#endif
 #else
             if (pcs_ptr->enc_mode <= ENC_M3) {
 #endif
@@ -150,7 +154,15 @@ void* set_me_hme_params_oq(
             }
 #endif
 #if APR22_ADOPTIONS
+#if APR23_ADOPTIONS
+#if M2_COMBO_1 || M1_COMBO_3
     else if (pcs_ptr->enc_mode <= ENC_M0) {
+#else
+    else if (pcs_ptr->enc_mode <= ENC_M2) {
+#endif
+#else
+    else if (pcs_ptr->enc_mode <= ENC_M0) {
+#endif
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 120;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 480;
     }
@@ -162,8 +174,8 @@ void* set_me_hme_params_oq(
     else if (pcs_ptr->enc_mode <= ENC_M3) {
 #endif
 #endif
-        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 120;
-        me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = input_resolution <= INPUT_SIZE_480p_RANGE ? 240 : 360;
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 80;
+        me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 320;
     }
 #if M8_HME_ME
     else if (pcs_ptr->enc_mode <= ENC_M5) {
@@ -207,7 +219,15 @@ void* set_me_hme_params_oq(
     }
     else {
 #if APR22_ADOPTIONS
+#if APR23_ADOPTIONS
+#if M1_COMBO_3 || M2_COMBO_2 || M2_COMBO_3
         if (pcs_ptr->enc_mode <= ENC_M0) {
+#else
+        if (pcs_ptr->enc_mode <= ENC_M2) {
+#endif
+#else
+        if (pcs_ptr->enc_mode <= ENC_M0) {
+#endif
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 120;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
         }
@@ -260,7 +280,11 @@ void* set_me_hme_params_oq(
 #endif
     else if (input_resolution <= INPUT_SIZE_720p_RANGE)
 #if PRESETS_SHIFT
+#if M2_COMBO_1
+        me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M2 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
+#endif
 #else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M3 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
 #endif
@@ -478,10 +502,14 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
+#if APR23_ADOPTIONS
+    if (enc_mode <= ENC_M2) {
+#else
 #if MAR10_ADOPTIONS
     if (enc_mode <= ENC_M1) {
 #else
     if (enc_mode <= ENC_M0) {
+#endif
 #endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
@@ -583,6 +611,9 @@ EbErrorType signal_derivation_me_kernel_oq(
     // 1: perform me nsq_search only for the best refrenece picture.
     // 2: perform me nsq_search only for the nearest refrenece pictures.
     // 3: me nsq_search off.
+#if APR23_ADOPTIONS
+    if (MR_MODE)
+#else
 #if MAR30_ADOPTIONS
     if (enc_mode <= ENC_M0)
 #else
@@ -590,6 +621,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     if (enc_mode <= ENC_M1 && pcs_ptr->sc_content_detected == 0)
 #else
     if (MR_MODE && pcs_ptr->sc_content_detected == 0)
+#endif
 #endif
 #endif
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
@@ -607,9 +639,17 @@ EbErrorType signal_derivation_me_kernel_oq(
 #else
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
 #endif
+#if M1_COMBO_1
+    else if (enc_mode <= ENC_M0)
+#else
     else if (enc_mode <= ENC_M1)
+#endif
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 2);
+#if M2_COMBO_2 || M2_COMBO_3
+    else if (enc_mode <= ENC_M1)
+#else
     else if (enc_mode <= ENC_M2)
+#endif
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 3);
     else
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 4);
@@ -950,10 +990,14 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
         // adopt M2 setting in M1
+#if APR23_ADOPTIONS
+    if (enc_mode <= ENC_M2) {
+#else
 #if MAR10_ADOPTIONS
     if (enc_mode <= ENC_M1) {
 #else
     if (enc_mode <= ENC_M0) {
+#endif
 #endif
         context_ptr->me_context_ptr->half_pel_mode =
             pcs_ptr->sc_content_detected ? REFINEMENT_HP_MODE : EX_HP_MODE;
