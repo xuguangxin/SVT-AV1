@@ -210,7 +210,7 @@ EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
             scs_ptr->seq_header.enable_restoration = 0;
         else
 #endif
-#if M8_RESTORATION
+#if M8_RESTORATION && !UPGRADE_M8
             scs_ptr->seq_header.enable_restoration = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
 #else
             scs_ptr->seq_header.enable_restoration = 1;

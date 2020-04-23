@@ -625,9 +625,15 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 #endif
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
+#if UPGRADE_M8
+    else if (enc_mode <= ENC_M7)
+        context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
+    else
+        context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 3;
+#else
     else
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
-
+#endif
 #if ME_HME_PRUNING_CLEANUP
 
     // Set hme/me based reference pruning level (0-4)

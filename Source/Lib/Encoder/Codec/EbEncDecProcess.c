@@ -1585,7 +1585,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
     }
 #endif
+#if UPGRADE_M8
+    else if (enc_mode <= ENC_M7) {
+#else
     else {
+#endif
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 5;
         else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
@@ -1595,6 +1599,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
     }
+#if UPGRADE_M8
+    else {
+        if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 6;
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 6;
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 5;
+        else
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
+    }
+#endif
 #endif
 #endif
     // Tx_search Level                                Settings
@@ -2281,7 +2297,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->bipred3x3_injection = 1;
             else
 #if MAR18_ADOPTIONS
-#if M8_BIPRED_3x3
+#if M8_BIPRED_3x3 && !UPGRADE_M8
                 if (enc_mode <= ENC_M5)
                     context_ptr->bipred3x3_injection = 2;
                 else
@@ -2308,7 +2324,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             context_ptr->bipred3x3_injection = 1;
         else
-#if M8_BIPRED_3x3
+#if M8_BIPRED_3x3 && !UPGRADE_M8
     if (enc_mode <= ENC_M5)
         context_ptr->bipred3x3_injection = 2;
     else
@@ -2379,7 +2395,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR4_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
-#if M8_PRED_ME
+#if M8_PRED_ME && !UPGRADE_M8
                     if (enc_mode <= ENC_M5)
 #else
                     if (enc_mode <= ENC_M8)
@@ -2408,7 +2424,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 6;
 #if MAR12_M8_ADOPTIONS
                     else
-#if M8_PRED_ME
+#if M8_PRED_ME && !UPGRADE_M8
                         if (enc_mode <= ENC_M5)
                             context_ptr->predictive_me_level = 5;
                         else

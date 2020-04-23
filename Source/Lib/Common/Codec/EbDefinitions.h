@@ -255,6 +255,8 @@ extern "C" {
 #define M2_COMBO_1 0
 #define M2_COMBO_2 0
 #define M2_COMBO_3 0
+
+#define UPGRADE_M8 1 // Upgrade M8
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
