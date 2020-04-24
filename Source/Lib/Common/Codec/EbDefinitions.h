@@ -263,7 +263,7 @@ extern "C" {
 #define M5_I_NSQ   1
 #define M5_I_PD    1
 #endif
-#define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
+#define DISABLE_NOT_NEEDED_BLOCK_TF_ME 1
 #define PD0_PD1_NSQ_BLIND 1 // Make PD0/PD1 NSQ blind
 #define FIX_CHROMA_LAST_STAGE 1 // Fix Tx Type, Predicted Samples, and Fast_Rate if chroma_mode change between first stage and last stage
 #if FIX_CHROMA_LAST_STAGE

@@ -1681,7 +1681,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if APR23_ADOPTIONS_2
         // New adoption levels after UPDATE_TXT_LEVEL
         if (enc_mode <= ENC_M0)
+#if MR_I_TXT
+            context_ptr->md_txt_search_level = (enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE) ? 0 : 1;
+#else
             context_ptr->md_txt_search_level = 1;
+#endif
         else if (enc_mode <= ENC_M7)
             context_ptr->md_txt_search_level = 2;
         else if (enc_mode <= ENC_M8)
