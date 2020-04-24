@@ -272,6 +272,7 @@ extern "C" {
 #define M5_I_SG    1
 #endif
 #define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
+#define PD0_PD1_NSQ_BLIND 1 // Make PD0/PD1 NSQ blind
 
 
 #endif

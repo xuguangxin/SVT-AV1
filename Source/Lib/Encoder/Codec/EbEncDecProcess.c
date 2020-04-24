@@ -2031,8 +2031,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if SB_CLASSIFIER
 #if OPT_BLOCK_INDICES_GEN_2
+
+#if PD0_PD1_NSQ_BLIND
+     if (pd_pass == PD_PASS_0)
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
+     else if (pd_pass == PD_PASS_1)
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
+     else
+         // Update nsq settings based on the sb_class
+         context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#else
      // Update nsq settings based on the sb_class
      context_ptr->md_disallow_nsq = (context_ptr->enable_area_based_cycles_allocation &&  context_ptr->sb_class == HIGH_COMPLEX_CLASS ) ? 1 : pcs_ptr->parent_pcs_ptr->disallow_nsq;
+#endif
 #else
      context_ptr->md_disallow_nsq = pcs_ptr->parent_pcs_ptr->disallow_nsq;
 #endif
