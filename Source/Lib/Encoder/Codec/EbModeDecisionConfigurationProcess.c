@@ -1078,12 +1078,20 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         if (pcs_ptr->enc_mode <= ENC_M7)
             pcs_ptr->update_cdf = 1;
         else
+#if M5_I_CDF
+            pcs_ptr->update_cdf = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
+#else
             pcs_ptr->update_cdf = 0;
+#endif
     else
         if (pcs_ptr->enc_mode <= ENC_M5)
             pcs_ptr->update_cdf = 1;
         else
+#if M5_I_CDF
+            pcs_ptr->update_cdf = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
+#else
             pcs_ptr->update_cdf = 0;
+#endif
 #else
     pcs_ptr->update_cdf = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
 #endif

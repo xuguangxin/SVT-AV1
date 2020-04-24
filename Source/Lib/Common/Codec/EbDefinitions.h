@@ -289,6 +289,14 @@ extern "C" {
 #define ALLOW_NSQ_M6 1
 #define ALLOW_CFL_M8 1
 #define ALLOW_HME_L1L2_REFINEMENT 1
+
+#define M5_I_IBC   1
+#define M5_I_RDOQ  1
+#define M5_I_CDF   1
+#define M5_I_CDEF  1
+#define M5_I_SG    1
+#define M5_I_4x4   1
+
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

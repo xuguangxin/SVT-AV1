@@ -2071,7 +2071,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if UPGRADE_M6_M7_M8
      if (enc_mode <= ENC_M5)
          context_ptr->disallow_4x4 = EB_FALSE;
+#if M5_I_4x4
+     else if (enc_mode <= ENC_M8)
+#else
      else if (enc_mode <= ENC_M7)
+#endif
          context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
      else
          context_ptr->disallow_4x4 = EB_TRUE;
@@ -2735,7 +2739,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
                     context_ptr->enable_rdoq = EB_TRUE;
                 else
+#if M5_I_RDOQ
+                    context_ptr->enable_rdoq = pcs_ptr->slice_type == I_SLICE ? EB_TRUE : EB_FALSE;
+#else
                     context_ptr->enable_rdoq = EB_FALSE;
+#endif
 #if MAR4_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
             else if (enc_mode <= ENC_M8)

@@ -1350,7 +1350,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR4_M8_ADOPTIONS
 #if M8_IBC
 #if UPGRADE_M6_M7_M8
+#if M5_I_IBC
+        if (pcs_ptr->enc_mode <= ENC_M8)
+#else
         if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
@@ -1458,7 +1462,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M7)
                 pcs_ptr->cdef_filter_mode = 5;
             else
+#if M5_I_CDEF
+                pcs_ptr->cdef_filter_mode = pcs_ptr->slice_type == I_SLICE ? 5 : 2;
+#else
                 pcs_ptr->cdef_filter_mode = 2;
+#endif
 #else
             pcs_ptr->cdef_filter_mode = 5;
 #endif
@@ -1470,7 +1478,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
                 pcs_ptr->cdef_filter_mode = 5;
             else
+#if M5_I_CDEF
+                pcs_ptr->cdef_filter_mode = pcs_ptr->slice_type == I_SLICE ? 5 : 2;
+#else
                 pcs_ptr->cdef_filter_mode = 2;
+#endif
 #else
         pcs_ptr->cdef_filter_mode = 5;
 #endif
@@ -1506,7 +1518,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             cm->sg_filter_mode = 4;
         else
+#if M5_I_SG
+            cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 4 : 1;
+#else
             cm->sg_filter_mode = 1;
+#endif
 #else
         cm->sg_filter_mode = 4;
 #endif
@@ -1543,7 +1559,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
         cm->sg_filter_mode = 3;
     else
+#if M5_I_SG
+        cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 3 : 1;
+#else
         cm->sg_filter_mode = 1;
+#endif
 #else
     else
         cm->sg_filter_mode = 3;
