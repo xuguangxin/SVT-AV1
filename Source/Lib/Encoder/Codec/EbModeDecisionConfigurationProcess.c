@@ -1129,7 +1129,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if APR23_ADOPTIONS_2
     if (scs_ptr->seq_header.enable_filter_intra) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if SHIFT_M3_SC_TO_M1
+            if (pcs_ptr->enc_mode <= ENC_M0)
+#else
             if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
                 pcs_ptr->pic_filter_intra_mode = 1;
             else
                 pcs_ptr->pic_filter_intra_mode = 0;

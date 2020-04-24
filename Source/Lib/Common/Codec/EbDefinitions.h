@@ -300,6 +300,8 @@ extern "C" {
 
 #define  FIXED_LAST_STAGE_SC 1 // Refactor last stage TH
 #define ADD_TXT_LEVEL5 1
+#define SHIFT_M3_SC_TO_M1 1
+#define M1_SC_ADOPTION 1 // Adopt Palette in REF frames only for M1 & Beyond SC
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

@@ -1399,7 +1399,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR10_ADOPTIONS
 #if M8_PALETTE
 #if UPGRADE_M6_M7_M8
+#if M1_SC_ADOPTION
+           (pcs_ptr->enc_mode <= ENC_M0 || pcs_ptr->is_used_as_reference_flag)
+#else
            (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->is_used_as_reference_flag)
+#endif
 #else
             pcs_ptr->enc_mode <= ENC_M5
 #endif

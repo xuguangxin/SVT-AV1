@@ -1798,6 +1798,10 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
         }
 #endif
             ////MULT
+#if SHIFT_M3_SC_TO_M1
+        if (((pcs_ptr->enc_mode <= ENC_M2) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
+            ((pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
+#else
 #if APR23_ADOPTIONS
         if (((pcs_ptr->enc_mode <= ENC_M2) && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
             ((pcs_ptr->enc_mode <= ENC_M2 && pcs_ptr->parent_pcs_ptr->sc_content_detected) && context_ptr->blk_geom->shape == PART_N)) {
@@ -1824,6 +1828,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #else
             if ((pcs_ptr->enc_mode <= ENC_M0 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) ||
                 ((pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected)) && context_ptr->blk_geom->shape == PART_N)) {
+#endif
 #endif
 #endif
 #endif
