@@ -376,6 +376,8 @@ extern "C" {
 #define RESTRUCTURE_SAD 1
 #endif
 
+#define BOUNDARY_CHECK 1
+
 typedef enum MeHpMode {
     EX_HP_MODE        = 0, // Exhaustive  1/2-pel serach mode.
     REFINEMENT_HP_MODE = 1 // Refinement 1/2-pel serach mode.
