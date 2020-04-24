@@ -299,7 +299,7 @@ extern "C" {
 
 
 #define  FIXED_LAST_STAGE_SC 1 // Refactor last stage TH
-#define ADD_TXT_LEVEL5 0
+#define ADD_TXT_LEVEL5 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////
