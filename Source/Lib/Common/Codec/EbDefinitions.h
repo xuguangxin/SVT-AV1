@@ -222,21 +222,21 @@ extern "C" {
 // MRP
 #define M8_MRP 1 // Done
 //MD
-#define M8_BIPRED_3x3 1
-#define M8_PRED_ME 1
+#define M8_BIPRED_3x3 1 // Done
+#define M8_PRED_ME 1 // Done
 #define M8_CDF 1 // Done
 #define M8_WM 1 // Done
 #define M8_OBMC 1 // Done
-#define M8_INTRA_MODE 1
+#define M8_INTRA_MODE 1 // Done 
 #define M8_RDOQ 1 // Done
 // Filtering
-#define M8_SG 1
-#define M8_RESTORATION 1
-#define M8_LOOP_FILTER 1
-#define M8_CDEF 1
+#define M8_SG 1 // Done
+#define M8_RESTORATION 1// Done
+#define M8_LOOP_FILTER 1// Done
+#define M8_CDEF 1 // Done
 // SC
 #define M8_PALETTE 1 // Done
-#define M8_IBC 1
+#define M8_IBC 1 // Done
 // NIC
 #define M8_NIC 1 // Done
 // HME/ME

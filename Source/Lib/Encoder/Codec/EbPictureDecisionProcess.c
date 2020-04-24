@@ -873,16 +873,38 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
         }
     else {
+#if UPGRADE_M6_M7_M8
+        if (pcs_ptr->enc_mode <= ENC_M7) {
+            pcs_ptr->enable_hme_level1_flag = 1;
+            pcs_ptr->enable_hme_level2_flag = 1;
+        }
+        else {
+            pcs_ptr->enable_hme_level1_flag = 1;
+            pcs_ptr->enable_hme_level2_flag = 0;
+        }
+#else
         pcs_ptr->enable_hme_level1_flag = 1;
         pcs_ptr->enable_hme_level2_flag = 1;
+#endif
     }
 
     pcs_ptr->tf_enable_hme_flag = 1;
     pcs_ptr->tf_enable_hme_level0_flag = 1;
 #if PRESETS_SHIFT
     // Can enable everywhere b/c TF is off for SC anyway; remove fake diff
+#if UPGRADE_M6_M7_M8
+    if (pcs_ptr->enc_mode <= ENC_M7) {
+        pcs_ptr->tf_enable_hme_level1_flag = 1;
+        pcs_ptr->tf_enable_hme_level2_flag = 1;
+    } 
+    else {
+        pcs_ptr->tf_enable_hme_level1_flag = 1;
+        pcs_ptr->tf_enable_hme_level2_flag = 0;
+    }
+#else
     pcs_ptr->tf_enable_hme_level1_flag = 1;
     pcs_ptr->tf_enable_hme_level2_flag = 1;
+#endif
 #else
     if (sc_content_detected)
         if (pcs_ptr->enc_mode <= ENC_M3) {
@@ -1314,7 +1336,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         // IBC Modes:   0:Slow   1:Fast   2:Faster
 #if MAR4_M8_ADOPTIONS
 #if M8_IBC
+#if UPGRADE_M6_M7_M8
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M8)
 #endif
@@ -1415,9 +1441,20 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR17_ADOPTIONS
 #if M8_CDEF
         if (pcs_ptr->sc_content_detected)
+#if UPGRADE_M6_M7_M8
+            if (pcs_ptr->enc_mode <= ENC_M7)
+                pcs_ptr->cdef_filter_mode = 5;
+            else
+                pcs_ptr->cdef_filter_mode = 2;
+#else
             pcs_ptr->cdef_filter_mode = 5;
+#endif
         else
+#if UPGRADE_M6_M7_M8
+            if (pcs_ptr->enc_mode <= ENC_M7)
+#else
             if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
                 pcs_ptr->cdef_filter_mode = 5;
             else
                 pcs_ptr->cdef_filter_mode = 2;
@@ -1449,7 +1486,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (sc_content_detected)
 #if MAR12_M8_ADOPTIONS
 #if M8_SG
+#if UPGRADE_M6_M7_M8
+        if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             cm->sg_filter_mode = 4;
         else
             cm->sg_filter_mode = 1;
@@ -1482,7 +1523,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         cm->sg_filter_mode = 4;
 #if MAR12_M8_ADOPTIONS
 #if M8_SG
+#if UPGRADE_M6_M7_M8
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
         cm->sg_filter_mode = 3;
     else
         cm->sg_filter_mode = 1;
@@ -1945,11 +1990,34 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #if TF_LEVELS
+#if UPGRADE_M6_M7_M8
+    uint8_t perform_filtering =
+        (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && pcs_ptr->sc_content_detected == 0 && scs_ptr->static_config.hierarchical_levels >= 1)
+        ? 1 : 0;
+#else
     uint8_t perform_filtering =
         (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && pcs_ptr->sc_content_detected == 0 && scs_ptr->static_config.hierarchical_levels >= 1) &&
         (pcs_ptr->temporal_layer_index == 0 ||(pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
         ? 1 : 0;
+#endif
+
+ 
+
     if (perform_filtering) {
+#if UPGRADE_M6_M7_M8
+        if (pcs_ptr->enc_mode <= ENC_M7) {
+            if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
+                context_ptr->tf_level = 0;
+            else
+                context_ptr->tf_level = 3;
+        }
+        else {
+            if (pcs_ptr->temporal_layer_index == 0)
+                context_ptr->tf_level = 0;
+            else
+                context_ptr->tf_level = 3;
+        }
+#else
 #if UPGRADE_M8
         if (pcs_ptr->enc_mode <= ENC_M8) {
 #else
@@ -1960,6 +2028,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else {
             context_ptr->tf_level = 2;
         }
+#endif
     }
     else
         context_ptr->tf_level = 3;
@@ -5623,8 +5692,8 @@ void* picture_decision_kernel(void *input_ptr)
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                     }
                                     else {
-                                        pcs_ptr->ref_list0_count_try = 1;
-                                        pcs_ptr->ref_list1_count_try = 1;
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
                                     }
                                 }
                                 else {
@@ -5633,8 +5702,8 @@ void* picture_decision_kernel(void *input_ptr)
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                     }
                                     else {
-                                        pcs_ptr->ref_list0_count_try = 1;
-                                        pcs_ptr->ref_list1_count_try = 1;
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
                                     }
                                 }
 #else

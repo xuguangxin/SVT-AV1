@@ -153,15 +153,16 @@ void* set_me_hme_params_oq(
 #endif
             }
 #if UPGRADE_M6_M7_M8
-            else if (pcs_ptr->enc_mode <= ENC_M6) {
+            else {
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 300;
             }
-#endif
+#else
             else {
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;
             }
+#endif
 #else
             else {
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 225;
@@ -198,15 +199,20 @@ void* set_me_hme_params_oq(
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;
     }
 #if UPGRADE_M6_M7_M8
-    else if (pcs_ptr->enc_mode <= ENC_M6) {
+    else if (pcs_ptr->enc_mode <= ENC_M7) {
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 25;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 100;
     }
-#endif
+    else {
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 16;
+        me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 64;
+    }
+#else
     else {
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 25;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 50;
     }
+#endif
 #else
     else {
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
@@ -235,8 +241,19 @@ void* set_me_hme_params_oq(
 #if ADD_MAX_HME_SIGNAL
 #if NEW_HME_ME_SIZES
     if (sc_content_detected) {
+#if UPGRADE_M6_M7_M8
+        if (pcs_ptr->enc_mode <= ENC_M7) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 150;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 600;
+        }
+        else {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 75;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 300;
+        }
+#else
         me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 150;
         me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 600;
+#endif
     }
     else {
 #if APR22_ADOPTIONS
@@ -252,10 +269,21 @@ void* set_me_hme_params_oq(
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 120;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
         }
+#if UPGRADE_M6_M7_M8
+        else if (pcs_ptr->enc_mode <= ENC_M7) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 100;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 400;
+        } 
+        else {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 32;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 128;
+        }
+#else
         else {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 100;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 400;
         }
+#endif
 #else
         me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 100;
         me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 400;
@@ -780,14 +808,28 @@ void* tf_set_me_hme_params_oq(
     me_context_ptr->max_me_search_height = me_context_ptr->search_area_height * 2;
 #endif
 #if APR22_ADOPTIONS
+#if UPGRADE_M6_M7_M8
+    if (pcs_ptr->enc_mode <= ENC_M7)
+        me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 30;
+    else
+        me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 16;
+#else
     me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 30;
+#endif
 #else
     me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = me_context_ptr->max_me_search_height;
 #endif
 #if ADD_MAX_HME_SIGNAL
 #if APR22_ADOPTIONS
+#if UPGRADE_M6_M7_M8
+    if (pcs_ptr->enc_mode <= ENC_M7)
+        me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 60;
+    else
+        me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 32;
+#else
     me_context_ptr->hme_level0_max_total_search_area_width =
         me_context_ptr->hme_level0_max_total_search_area_height = 60;
+#endif
 #else
     me_context_ptr->hme_level0_max_total_search_area_width =
         me_context_ptr->hme_level0_max_total_search_area_height =
