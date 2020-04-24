@@ -273,6 +273,14 @@ extern "C" {
 #endif
 #define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
 #define PD0_PD1_NSQ_BLIND 1 // Make PD0/PD1 NSQ blind
+#define FIX_CHROMA_LAST_STAGE 1 // Fix Tx Type, Predicted Samples, and Fast_Rate if chroma_mode change between first stage and last stage
+#if FIX_CHROMA_LAST_STAGE
+#define REFACTOR_SIGNALS 1
+#define FIX_CFL_OFF 1
+#endif
+#define PR_1210 1
+#define PR_1217 1
+#define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
 
 
 #endif

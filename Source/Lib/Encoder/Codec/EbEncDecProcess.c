@@ -1851,7 +1851,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M7_ADOPTIONS
 #if MAR10_ADOPTIONS
+#if FIX_CHROMA_PALETTE_INTERACTION
+            if (enc_mode <= ENC_M0)
+                context_ptr->chroma_level = CHROMA_MODE_0;
+            else if (enc_mode <= ENC_M8)
+#else
             if (enc_mode <= ENC_M8)
+#endif
 #else
             if (enc_mode <= ENC_M7)
 #endif
@@ -1957,9 +1963,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         context_ptr->md_disable_cfl = EB_TRUE;
 #endif
-
+#if !REFACTOR_SIGNALS
     if (sequence_control_set_ptr->static_config.disable_cfl_flag == 1 && context_ptr->md_disable_cfl == EB_TRUE)
         context_ptr->chroma_at_last_md_stage = 0; // Indeprndent chroma search at last MD stage is not supported when CFL is off
+#endif
 #endif
 #if CFL_REDUCED_ALPHA
     // libaom_short_cuts_ths
