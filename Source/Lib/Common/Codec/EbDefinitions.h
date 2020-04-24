@@ -270,8 +270,8 @@ extern "C" {
 #define M5_I_CDF   1
 #define M5_I_CDEF  1
 #define M5_I_SG    1
-#define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
 #endif
+#define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
 
 
 #endif
