@@ -257,7 +257,8 @@ extern "C" {
 #define M2_COMBO_3 0
 
 #define UPGRADE_M8 1 // Upgrade M8
-#define UPDATE_TXT_LEVEL 1
+#define UPDATE_TXT_LEVEL  1
+#define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
