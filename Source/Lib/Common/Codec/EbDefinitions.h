@@ -297,6 +297,8 @@ extern "C" {
 #define M5_I_SG    1
 #define M5_I_4x4   1
 
+
+#define  FIXED_LAST_STAGE_SC 1 // Refactor last stage TH
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

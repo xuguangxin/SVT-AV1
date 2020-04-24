@@ -3435,8 +3435,12 @@ void construct_best_sorted_arrays_md_stage_3(struct ModeDecisionContext *  conte
     uint32_t i, id;
     uint32_t id_inter = 0;
     uint32_t id_intra = fullReconCandidateCount - 1;
+#if FIXED_LAST_STAGE_SC
+    context_ptr->md_stage_3_total_intra_count = 0;
+#else
     if (context_ptr->chroma_at_last_md_stage)
         context_ptr->md_stage_3_total_intra_count = 0;
+#endif
     for (i = 0; i < fullReconCandidateCount; ++i) {
         id = sorted_candidate_index_array[i];
         if (buffer_ptr_array[id]->candidate_ptr->type == INTER_MODE) {
@@ -3466,9 +3470,11 @@ void construct_best_sorted_arrays_md_stage_3(struct ModeDecisionContext *  conte
             if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_inter_cost)
                 context_ptr->best_inter_cost = *buffer_ptr_array[id]->full_cost_ptr;
     }
+#if !FIXED_LAST_STAGE_SC
     uint64_t intra_th = 30;
     if ((context_ptr->best_inter_cost * (100 + intra_th)) < (context_ptr->best_intra_cost * 100))
         context_ptr->md_stage_3_total_intra_count = 0;
+#endif
     sort_array_index_fast_cost_ptr(
         buffer_ptr_array, sorted_candidate_index_array, fullReconCandidateCount);
 }
@@ -7918,13 +7924,19 @@ void update_intra_chroma_mode(ModeDecisionContext *context_ptr, ModeDecisionCand
 #else
             if (candidate_ptr->type == INTRA_MODE) {
 #endif
+#if !FIXED_LAST_STAGE_SC
                 uint64_t cfl_th = 30;
+#endif
                 uint32_t intra_chroma_mode;
                 int32_t  angle_delta;
                 uint8_t  is_directional_chroma_mode_flag;
+#if FIXED_LAST_STAGE_SC
+                if (((context_ptr->best_inter_cost * context_ptr->chroma_at_last_md_stage_cfl_th) < (context_ptr->best_intra_cost * 100))) {
+#else
                 if (((context_ptr->best_inter_cost * (100 + cfl_th)) <
                     (context_ptr->best_intra_cost * 100)) &&
                     !(pcs_ptr->parent_pcs_ptr->sc_content_detected)) {
+#endif
                     intra_chroma_mode =
                         context_ptr->best_uv_mode[candidate_ptr->intra_luma_mode]
                         [MAX_ANGLE_DELTA +
@@ -9548,7 +9560,11 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
         if (context_ptr->blk_geom->sq_size < 128) {
             if (context_ptr->blk_geom->has_uv) {
+#if FIXED_LAST_STAGE_SC
+                if ((context_ptr->best_inter_cost * context_ptr->chroma_at_last_md_stage_intra_th) >= (context_ptr->best_intra_cost * 100))
+#else
                 if (context_ptr->md_stage_3_total_intra_count)
+#endif
                     search_best_independent_uv_mode(pcs_ptr,
                         input_picture_ptr,
                         input_cb_origin_in_index,

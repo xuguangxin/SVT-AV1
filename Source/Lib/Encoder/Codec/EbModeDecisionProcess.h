@@ -388,6 +388,10 @@ typedef struct ModeDecisionContext {
     uint8_t              parent_sq_pred_mode[MAX_PARENT_SQ];
     uint8_t              chroma_level;
     uint8_t              chroma_at_last_md_stage;
+#if  FIXED_LAST_STAGE_SC
+    uint64_t             chroma_at_last_md_stage_intra_th;
+    uint64_t             chroma_at_last_md_stage_cfl_th;
+#endif
 #if M5_CHROMA_NICS
     uint8_t              independent_chroma_nics;
 #endif

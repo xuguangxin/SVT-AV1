@@ -1956,8 +1956,26 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->chroma_at_last_md_stage =
          context_ptr->chroma_level == CHROMA_MODE_0  ? 1 : 0;
 #else
+#if FIXED_LAST_STAGE_SC
+    context_ptr->chroma_at_last_md_stage = MR_MODE ? 0 : context_ptr->chroma_level == CHROMA_MODE_0 ? 1 : 0;
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+        if (enc_mode <= ENC_M0) {
+            context_ptr->chroma_at_last_md_stage_intra_th = (uint64_t) ~0;
+            context_ptr->chroma_at_last_md_stage_cfl_th = (uint64_t)~0;
+        }
+        else {
+            context_ptr->chroma_at_last_md_stage_intra_th = (uint64_t)~0;
+            context_ptr->chroma_at_last_md_stage_cfl_th = (uint64_t)~0;
+        }
+    }
+    else {
+        context_ptr->chroma_at_last_md_stage_intra_th = 130;
+        context_ptr->chroma_at_last_md_stage_cfl_th = 130;
+    }
+#else
     context_ptr->chroma_at_last_md_stage =
         MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#endif
 #endif
 #else
 #if MAR30_ADOPTIONS
