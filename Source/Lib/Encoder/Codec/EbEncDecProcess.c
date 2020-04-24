@@ -1989,6 +1989,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0                    Allow cfl
     // 1                    Disable cfl
 #if PRESETS_SHIFT
+#if ALLOW_CFL_M8
+    context_ptr->md_disable_cfl = EB_FALSE;
+#else
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->md_disable_cfl = EB_FALSE;
 #if APR23_ADOPTIONS_2
@@ -1999,6 +2002,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_disable_cfl = EB_FALSE;
     else
         context_ptr->md_disable_cfl = EB_TRUE;
+#endif
 #else
 #if ADOPT_CHROMA_MODE1_CFL_OFF
 #if MAR17_ADOPTIONS

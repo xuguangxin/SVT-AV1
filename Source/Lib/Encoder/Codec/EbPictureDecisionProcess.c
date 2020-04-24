@@ -848,6 +848,10 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->enable_hme_flag        = 1;
     pcs_ptr->enable_hme_level0_flag = 1;
 
+#if ALLOW_HME_L1L2_REFINEMENT
+    pcs_ptr->enable_hme_level1_flag = 1;
+    pcs_ptr->enable_hme_level2_flag = 1;
+#else
     if (sc_content_detected)
 #if APR23_ADOPTIONS_2
         // HME refinement was turned on everywhere before the branch was used for M8 testing;
@@ -887,6 +891,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->enable_hme_level2_flag = 1;
 #endif
     }
+#endif
 
     pcs_ptr->tf_enable_hme_flag = 1;
     pcs_ptr->tf_enable_hme_level0_flag = 1;
@@ -1064,11 +1069,19 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set disallow_nsq
 #if M8_NSQ
 #if M5_I_NSQ
+#if ALLOW_NSQ_M6
+    if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
         pcs_ptr->disallow_nsq = EB_FALSE;
     }
 #if UPGRADE_M6_M7_M8
+#if ALLOW_NSQ_M6
+    else if (pcs_ptr->enc_mode <= ENC_M7) {
+#else
     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
         if (pcs_ptr->sc_content_detected)
             pcs_ptr->disallow_nsq = pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
         else

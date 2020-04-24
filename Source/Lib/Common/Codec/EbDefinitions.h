@@ -260,7 +260,7 @@ extern "C" {
 #define UPDATE_TXT_LEVEL  1
 #define M5_I  1  //change M5 presets to M8 for I slice--
 #if M5_I
-#define M5_I_NSQ   1
+#define M5_I_NSQ   1 // If turned off, may affect other adoptions
 #define M5_I_PD    1
 #endif
 #define DISABLE_NOT_NEEDED_BLOCK_TF_ME 1
@@ -286,7 +286,9 @@ extern "C" {
 
 #define NEW_M1_CAND 1 // applying the new M1 settings based on overnight tests
 #define APR23_ADOPTIONS_2 1 // Adoptions based on daytime tests
-
+#define ALLOW_NSQ_M6 1
+#define ALLOW_CFL_M8 1
+#define ALLOW_HME_L1L2_REFINEMENT 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////
