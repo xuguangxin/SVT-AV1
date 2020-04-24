@@ -1045,6 +1045,14 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->enc_mode <= ENC_M5) {
         pcs_ptr->disallow_nsq = EB_FALSE;
     }
+#if UPGRADE_M6_M7_M8
+    else if (pcs_ptr->enc_mode <= ENC_M6) {
+        if (pcs_ptr->sc_content_detected)
+            pcs_ptr->disallow_nsq = pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
+        else
+            pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+    }
+#endif
     else {
         pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
     }
@@ -1315,11 +1323,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             pcs_ptr->ibc_mode = 0;
         else
-#if M5_I_IBC
-            pcs_ptr->ibc_mode = 0;
-#else
             pcs_ptr->ibc_mode = 1;
-#endif
     }
     else {
         // this will enable sc tools for P frames. hence change bitstream even if
@@ -1351,8 +1355,8 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS
 #if M8_PALETTE
-#if M5_I_PAL
-           (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->slice_type == I_SLICE)
+#if UPGRADE_M6_M7_M8
+           (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->is_used_as_reference_flag)
 #else
             pcs_ptr->enc_mode <= ENC_M5
 #endif
@@ -1416,11 +1420,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M5)
                 pcs_ptr->cdef_filter_mode = 5;
             else
-#if M5_I_CDEF
-                pcs_ptr->cdef_filter_mode = pcs_ptr->slice_type == I_SLICE ? 5 : 2;
-#else
                 pcs_ptr->cdef_filter_mode = 2;
-#endif
 #else
         pcs_ptr->cdef_filter_mode = 5;
 #endif
@@ -1452,11 +1452,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         if (pcs_ptr->enc_mode <= ENC_M5)
             cm->sg_filter_mode = 4;
         else
-#if M5_I_SG
-            cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 4 : 1;
-#else
             cm->sg_filter_mode = 1;
-#endif
 #else
         cm->sg_filter_mode = 4;
 #endif
@@ -1489,11 +1485,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else if (pcs_ptr->enc_mode <= ENC_M5)
         cm->sg_filter_mode = 3;
     else
-#if M5_I_SG
-        cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 3 : 1;
-#else
         cm->sg_filter_mode = 1;
-#endif
 #else
     else
         cm->sg_filter_mode = 3;
@@ -5624,6 +5616,28 @@ void* picture_decision_kernel(void *input_ptr)
 
 #if MRP_CTRL
                                 //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
+#if UPGRADE_M6_M7_M8
+                                if (pcs_ptr->sc_content_detected) {
+                                    if (pcs_ptr->enc_mode <= ENC_M7) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+                                    }
+                                    else {
+                                        pcs_ptr->ref_list0_count_try = 1;
+                                        pcs_ptr->ref_list1_count_try = 1;
+                                    }
+                                }
+                                else {
+                                    if (pcs_ptr->enc_mode <= ENC_M5) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+                                    }
+                                    else {
+                                        pcs_ptr->ref_list0_count_try = 1;
+                                        pcs_ptr->ref_list1_count_try = 1;
+                                    }
+                                }
+#else
                                 if (pcs_ptr->sc_content_detected){
                                     pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                     pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
@@ -5631,6 +5645,7 @@ void* picture_decision_kernel(void *input_ptr)
                                     pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                     pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                 }
+#endif
                                 assert(pcs_ptr->ref_list0_count_try <= pcs_ptr->ref_list0_count);
                                 assert(pcs_ptr->ref_list1_count_try <= pcs_ptr->ref_list1_count);
 #endif

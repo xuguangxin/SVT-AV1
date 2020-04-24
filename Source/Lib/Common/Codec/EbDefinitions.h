@@ -216,32 +216,32 @@ extern "C" {
 #define M8_SETTINGS 1 // M8 settings
 #if M8_SETTINGS
 // Part
-#define M8_4x4 1
-#define M8_NSQ 1
-#define M8_SB_SIZE 1
+#define M8_4x4 1 // Done
+#define M8_NSQ 1 // Done
+#define M8_SB_SIZE 1 // Done
 // MRP
-#define M8_MRP 1
+#define M8_MRP 1 // Done
 //MD
 #define M8_BIPRED_3x3 1
 #define M8_PRED_ME 1
-#define M8_CDF 1
-#define M8_WM 1
-#define M8_OBMC 1
+#define M8_CDF 1 // Done
+#define M8_WM 1 // Done
+#define M8_OBMC 1 // Done
 #define M8_INTRA_MODE 1
-#define M8_RDOQ 1
+#define M8_RDOQ 1 // Done
 // Filtering
 #define M8_SG 1
 #define M8_RESTORATION 1
 #define M8_LOOP_FILTER 1
 #define M8_CDEF 1
 // SC
-#define M8_PALETTE 1
+#define M8_PALETTE 1 // Done
 #define M8_IBC 1
 // NIC
-#define M8_NIC 1
+#define M8_NIC 1 // Done
 // HME/ME
-#define M8_HME_ME 1
-#define M8_MPPD 1
+#define M8_HME_ME 1 // Done
+#define M8_MPPD 1 // Done
 #endif
 #define M8_CLEAN_UP 1 // remove useless code: energy, full loop escape
 #define ME_HME_PRUNING_CLEANUP 1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
@@ -261,15 +261,7 @@ extern "C" {
 #define M5_I  1  //change M5 presets to M8 for I slice--
 #if M5_I
 #define M5_I_NSQ   1
-#define M5_I_NIC   0
-#define M5_I_4x4   0
 #define M5_I_PD    1
-#define M5_I_IBC   0
-#define M5_I_PAL   0
-#define M5_I_RDOQ  0
-#define M5_I_CDF   0
-#define M5_I_CDEF  0
-#define M5_I_SG    0
 #endif
 #define DISABLE_NOT_NEEDED_BLOCK_TF_ME 0
 #define PD0_PD1_NSQ_BLIND 1 // Make PD0/PD1 NSQ blind
@@ -281,6 +273,7 @@ extern "C" {
 #define PR_1210 1
 #define PR_1217 1
 #define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
+#define UPGRADE_M6_M7_M8 1
 
 #define MR_I   0 //Use MR setting in M0 for I slice
 #if MR_I

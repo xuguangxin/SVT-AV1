@@ -1073,13 +1073,17 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 
     // CDF
 #if M8_CDF
-#if M5_I_CDF
-    if (pcs_ptr->enc_mode <= ENC_M5) {
-        pcs_ptr->update_cdf = 1;
-    }
-    else {
-        pcs_ptr->update_cdf = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
-    }
+#if UPGRADE_M6_M7_M8
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (pcs_ptr->enc_mode <= ENC_M7)
+            pcs_ptr->update_cdf = 1;
+        else
+            pcs_ptr->update_cdf = 0;
+    else
+        if (pcs_ptr->enc_mode <= ENC_M5)
+            pcs_ptr->update_cdf = 1;
+        else
+            pcs_ptr->update_cdf = 0;
 #else
     pcs_ptr->update_cdf = (pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
 #endif
@@ -1154,6 +1158,19 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     EbBool enable_wm;
 #if PRESETS_SHIFT
 #if M8_WM
+#if UPGRADE_M6_M7_M8
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
+            enable_wm = EB_TRUE;
+        }
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) {
+            enable_wm = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? EB_TRUE : EB_FALSE;
+        }
+        else {
+            enable_wm = EB_FALSE;
+        }
+    } else
+#endif
     if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
         enable_wm = EB_TRUE;
 #if UPGRADE_M8
@@ -1272,7 +1289,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
                 pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
 #if OBMC_FAST
 #if M8_OBMC
+#if UPGRADE_M6_M7_M8
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#else
             else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
             else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
 #endif

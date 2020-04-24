@@ -2060,16 +2060,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if M8_4x4
      // Set disallow_4x4
-#if M5_I_4x4
-     if (pcs_ptr->enc_mode <= ENC_M5) {
+#if UPGRADE_M6_M7_M8
+     if (enc_mode <= ENC_M5)
          context_ptr->disallow_4x4 = EB_FALSE;
-     }
-     else {
-         context_ptr->disallow_4x4 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
-     }
+     else if (enc_mode <= ENC_M7)
+         context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
+     else
+         context_ptr->disallow_4x4 = EB_TRUE;
 #else
      context_ptr->disallow_4x4 = pcs_ptr->enc_mode <= ENC_M5 ? EB_FALSE : EB_TRUE;
 #endif
+
      // If SB non-multiple of 4, then disallow_4x4 could not be used
      // SB Stats
      uint32_t sb_width =
@@ -2709,7 +2710,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR17_ADOPTIONS
 #if M8_RDOQ
+#if UPGRADE_M6_M7_M8
+                if (enc_mode <= ENC_M6)
+#else
                 if (enc_mode <= ENC_M5)
+#endif
 #else
                 if (enc_mode <= ENC_M8)
 #endif
@@ -2722,11 +2727,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
                     context_ptr->enable_rdoq = EB_TRUE;
                 else
-#if M5_I_RDOQ
-                    context_ptr->enable_rdoq = pcs_ptr->slice_type == I_SLICE ? EB_TRUE : EB_FALSE;
-#else
                     context_ptr->enable_rdoq = EB_FALSE;
-#endif
 #if MAR4_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
             else if (enc_mode <= ENC_M8)
@@ -5538,8 +5539,19 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             }
                             else {
 #if M5_I_PD
+#if UPGRADE_M6_M7_M8
+                                if (pcs_ptr->enc_mode <= ENC_M7) {
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+                                }
+                                else {
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
+                                }
+#else
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
                                 e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
+#endif
 #else
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
                                 e_depth = pcs_ptr->slice_type == I_SLICE ?  1 : 0;

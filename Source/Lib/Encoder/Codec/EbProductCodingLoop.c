@@ -1922,7 +1922,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
 #if MAR25_ADOPTIONS
 #if M8_NIC
+#if UPGRADE_M6_M7_M8
+                else if (pcs_ptr->enc_mode <= ENC_M7) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #else
                 else if (pcs_ptr->enc_mode <= ENC_M8) {
 #endif
@@ -1943,11 +1947,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     inter_scaling_denom = 5;
                     // INTRA
                     intra_scaling_num = 1;
-#if M5_I_NIC
-                    intra_scaling_denom = pcs_ptr->slice_type == I_SLICE ? 1 : 5;
-#else
                     intra_scaling_denom = 5;
-#endif
 #else
                     // INTER
                     inter_scaling_num = 3;
@@ -2033,11 +2033,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     inter_scaling_denom = 5;
                     // INTRA
                     intra_scaling_num = 1;
-#if M5_I_NIC
-                    intra_scaling_denom = pcs_ptr->slice_type == I_SLICE ? 1 : 5;
-#else
                     intra_scaling_denom = 5;
-#endif
 #else
                     // INTER
                     inter_scaling_num = 1;
