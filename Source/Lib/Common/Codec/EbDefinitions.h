@@ -341,6 +341,7 @@ extern "C" {
 
 #define REMAP_MODES   0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
+#define R2R_FIX_PADDING 1
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
