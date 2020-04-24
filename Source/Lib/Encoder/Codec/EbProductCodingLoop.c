@@ -5726,6 +5726,7 @@ void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
         txt_search_ctrls->txt_table_idx = 0;
         txt_search_ctrls->txt_allow_skip = 0;
         break;
+#if !UPDATE_TXT_LEVEL
     case 3:
         txt_search_ctrls->txt_allow_rdoq = 0;
         txt_search_ctrls->txt_allow_ssse = 0;
@@ -5736,6 +5737,9 @@ void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
         txt_search_ctrls->txt_allow_skip = 0;
         break;
     case 4:
+#else
+    case 3:
+#endif
         txt_search_ctrls->txt_allow_rdoq = 0;
         txt_search_ctrls->txt_allow_ssse = 0;
         txt_search_ctrls->txt_weight[0] = 0;
@@ -5744,6 +5748,7 @@ void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
         txt_search_ctrls->txt_table_idx = 4;
         txt_search_ctrls->txt_allow_skip = 0;
         break;
+#if !UPDATE_TXT_LEVEL
     case 5:
         txt_search_ctrls->txt_allow_rdoq = 0;
         txt_search_ctrls->txt_allow_ssse = 0;
@@ -5753,6 +5758,11 @@ void set_txt_search_ctrls(ModeDecisionContext *context_ptr) {
         txt_search_ctrls->txt_table_idx = 5;
         txt_search_ctrls->txt_allow_skip = 0;
         break;
+#else
+    case 4: // txt_allow_skip [1: skip txt based on tx_weight, 2: always skip]
+        txt_search_ctrls->txt_allow_skip = 2;
+        break;
+#endif
     default:
         printf("Error: unvalid md_txt_search_level\n");
         break;
@@ -5781,6 +5791,10 @@ uint8_t get_tx_search_config(ModeDecisionContext *context_ptr,
         context_ptr->txt_ssse = 1;
     if (level && txt_search_ctrls->txt_allow_skip)
         tx_search_skip_flag = 1;
+#if UPDATE_TXT_LEVEL
+    if (txt_search_ctrls->txt_allow_skip == 2)
+        tx_search_skip_flag = 1;
+#endif
     tx_search_skip_flag = sq_size >= 128 ? 1 : tx_search_skip_flag;
     return tx_search_skip_flag;
 }
