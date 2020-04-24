@@ -1896,7 +1896,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                 }
                 else
 #endif
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
                 if (pcs_ptr->enc_mode <= ENC_M0) {
 #else
 #if PRESETS_SHIFT
@@ -2126,9 +2126,9 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             }
 #endif
 #if APR23_ADOPTIONS
-#if M1_COMBO_3
-            if ((pcs_ptr->enc_mode > ENC_M0 && pcs_ptr->parent_pcs_ptr->input_resolution > INPUT_SIZE_480p_RANGE) || (pcs_ptr->enc_mode > ENC_M2 ||
-                (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode > ENC_M0))) {
+#if M1_COMBO_3 || NEW_M1_CAND
+            if ((pcs_ptr->enc_mode > ENC_M0 && pcs_ptr->parent_pcs_ptr->input_resolution > INPUT_SIZE_480p_RANGE) || pcs_ptr->enc_mode > ENC_M2 ||
+                (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode > ENC_M0)) {
 #else
             if (pcs_ptr->enc_mode > ENC_M2 ||
                 (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode > ENC_M0)) {
@@ -8497,7 +8497,7 @@ EbErrorType signal_derivation_block(
 
     context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
 #if APR22_ADOPTIONS
-#if M2_COMBO_1 || M1_COMBO_3
+#if M2_COMBO_1 || M1_COMBO_3 || NEW_M1_CAND
     if (pcs->enc_mode <= ENC_M0)
 #else
     if (pcs->enc_mode <= ENC_M2)

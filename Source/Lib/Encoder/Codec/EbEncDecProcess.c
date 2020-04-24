@@ -1573,6 +1573,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 0;
     }
+#if !NEW_M1_CAND
 #if !M1_COMBO_2
     else if (enc_mode == ENC_M1) {
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
@@ -1584,6 +1585,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
     }
+#endif
 #endif
 #if UPGRADE_M8
     else if (enc_mode <= ENC_M7) {
@@ -1676,6 +1678,30 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (MR_MODE)
         context_ptr->md_txt_search_level = 0;
     else {
+#if APR23_ADOPTIONS_2
+        // New adoption levels after UPDATE_TXT_LEVEL
+        if (enc_mode <= ENC_M0)
+            context_ptr->md_txt_search_level = 1;
+        else if (enc_mode <= ENC_M7)
+            context_ptr->md_txt_search_level = 2;
+        else if (enc_mode <= ENC_M8)
+            context_ptr->md_txt_search_level = 3;
+#else
+#if NEW_M1_CAND
+        if(pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (enc_mode <= ENC_M0)
+                context_ptr->md_txt_search_level = 1;
+            else
+                context_ptr->md_txt_search_level = 2;
+#if APR23_ADOPTIONS_2
+        else if (enc_mode <= ENC_M2)
+#else
+        else if (enc_mode <= ENC_M3)
+#endif
+            context_ptr->md_txt_search_level = 1;
+        else
+            context_ptr->md_txt_search_level = 2;
+#else
 #if APR23_ADOPTIONS
 #if M2_COMBO_3
         if (enc_mode <= ENC_M1)
@@ -1700,6 +1726,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_txt_search_level = 3;
         else
             context_ptr->md_txt_search_level = 4;
+#endif
+#endif
 #endif
     }
 #else
@@ -1959,7 +1987,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PRESETS_SHIFT
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
         context_ptr->md_disable_cfl = EB_FALSE;
+#if APR23_ADOPTIONS_2
+    else if (enc_mode <= ENC_M5)
+#else
     else if (enc_mode <= ENC_M4)
+#endif
         context_ptr->md_disable_cfl = EB_FALSE;
     else
         context_ptr->md_disable_cfl = EB_TRUE;
@@ -2242,10 +2274,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR30_ADOPTIONS
+#if APR23_ADOPTIONS_2
+                if (enc_mode <= ENC_M4)
+#else
 #if APR22_ADOPTIONS
                 if (enc_mode <= ENC_M2)
 #else
                 if (enc_mode <= ENC_M0)
+#endif
 #endif
                     context_ptr->new_nearest_near_comb_injection = 1;
                 else
@@ -2349,7 +2385,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if MAR18_ADOPTIONS
 #if PRESETS_SHIFT
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
         else if (enc_mode <= ENC_M0)
 #else
         else if (enc_mode <= ENC_M2)
@@ -2452,7 +2488,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 0;
                 else
 #if MAR10_ADOPTIONS
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
                     if (enc_mode <= ENC_M0)
 #else
                     if (enc_mode <= ENC_M1)
@@ -2908,8 +2944,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_1_class_prune_th = 100;
     else
 #if PRESETS_SHIFT
+#if APR23_ADOPTIONS_2
+        if (enc_mode <= ENC_M5 ||
+            pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
         if (enc_mode <= ENC_M2 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #else
 #if MAR12_ADOPTIONS
         if (enc_mode <= ENC_M3 ||
@@ -2941,8 +2982,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (MR_MODE)
             context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
 #if PRESETS_SHIFT
-#if M1_COMBO_2 || M2_COMBO_3
+#if M1_COMBO_2 || M2_COMBO_3 || NEW_M1_CAND
+#if APR23_ADOPTIONS_2
+        else if (enc_mode <= ENC_M0 ||
+            pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
         else if (enc_mode <= ENC_M0)
+#endif
 #else
         else if (enc_mode <= ENC_M2 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -2981,6 +3027,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
         else
 #endif
+#if APR23_ADOPTIONS_2
+            if ((enc_mode <= ENC_M4 &&
+                pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
 #if APR23_ADOPTIONS
             if ((enc_mode <= ENC_M2 &&
                 pcs_ptr->parent_pcs_ptr->sc_content_detected))
@@ -2999,6 +3049,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         if ((enc_mode <= ENC_M3 &&
             pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#endif
 #endif
 #endif
 #endif
@@ -3038,10 +3089,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if PRESETS_SHIFT
+#if NEW_M1_CAND
+                if (enc_mode <= ENC_M0)
+#else
 #if M2_COMBO_1
                 if (enc_mode <= ENC_M1)
 #else
                 if (enc_mode <= ENC_M3)
+#endif
 #endif
 #else
 #if MAR30_ADOPTIONS
@@ -3052,6 +3107,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 5;
+#if NEW_M1_CAND
+                else if (enc_mode <= ENC_M3)
+                    context_ptr->sq_weight =
+                    sequence_control_set_ptr->static_config.sq_weight;
+#endif
 #if M2_COMBO_1
                 else if (enc_mode <= ENC_M2)
                     context_ptr->sq_weight =
@@ -3066,7 +3126,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR10_ADOPTIONS
 #if MAR30_ADOPTIONS
 #if APR02_ADOPTIONS
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
                 if (enc_mode <= ENC_M0)
 #else
                 if (enc_mode <= ENC_M1)
@@ -3082,10 +3142,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 5;
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight =
-#if M1_COMBO_3
+#if M1_COMBO_3 || NEW_M1_CAND
                 pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? sequence_control_set_ptr->static_config.sq_weight : sequence_control_set_ptr->static_config.sq_weight - 5;
 #else
                 sequence_control_set_ptr->static_config.sq_weight;
@@ -3332,7 +3392,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
 #if MAR25_ADOPTIONS
 #if PRESETS_SHIFT
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
         else if (enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #else
         else if (enc_mode <= ENC_M2 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -3341,7 +3401,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M3 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
-#if M1_COMBO_1
+#if M1_COMBO_1 || NEW_M1_CAND
         else if (enc_mode <= ENC_M1)
             context_ptr->inter_inter_distortion_based_reference_pruning = 3;
 #endif
@@ -3381,6 +3441,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->block_based_depth_reduction_level = 0;
     else
+#if NEW_M1_CAND
+        if (enc_mode <= ENC_M0)
+            context_ptr->block_based_depth_reduction_level = 0;
+        else
+            context_ptr->block_based_depth_reduction_level = 2;
+#else
 #if APR02_ADOPTIONS
 #if M2_COMBO_1
         if (enc_mode <= ENC_M0 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M1))
@@ -3409,6 +3475,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
             context_ptr->block_based_depth_reduction_level = 2;
+#endif
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
 #endif
     // Set max_ref_count @ MD

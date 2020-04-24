@@ -291,6 +291,8 @@ extern "C" {
 #define MR_I_UV_LAST   1
 #endif
 
+#define NEW_M1_CAND 1 // applying the new M1 settings based on overnight tests
+#define APR23_ADOPTIONS_2 1 // Adoptions based on daytime tests
 
 #endif
 

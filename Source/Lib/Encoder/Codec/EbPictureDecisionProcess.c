@@ -849,16 +849,22 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->enable_hme_level0_flag = 1;
 
     if (sc_content_detected)
+#if APR23_ADOPTIONS_2
+        // HME refinement was turned on everywhere before the branch was used for M8 testing;
+        // this restores the previous settings
+        if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if PRESETS_SHIFT
         if (pcs_ptr->enc_mode <= ENC_M2) {
 #else
         if (pcs_ptr->enc_mode <= ENC_M3) {
 #endif
+#endif
             pcs_ptr->enable_hme_level1_flag = 1;
             pcs_ptr->enable_hme_level2_flag = 1;
         }
         else {
-#if APR23_ADOPTIONS
+#if 0//APR23_ADOPTIONS
             pcs_ptr->enable_hme_level1_flag = 1;
             pcs_ptr->enable_hme_level2_flag = 1;
 #else
@@ -1601,6 +1607,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->intra_pred_mode = 4;
 #endif
+#if APR23_ADOPTIONS_2
+        else if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if PRESETS_SHIFT
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
@@ -1611,6 +1620,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
         else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -1785,7 +1795,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
             else
 #endif
-#if M2_COMBO_1 || M1_COMBO_2
+#if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
                 pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
 #else

@@ -1101,12 +1101,12 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         pcs_ptr->update_cdf =
 #if MAR3_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
-            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8) ? 1 : 0;
+        (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8) ? 1 : 0;
 #else
-            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6) ? 1 : 0;
+        (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6) ? 1 : 0;
 #endif
 #else
-            (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
+        (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) ? 1 : 0;
 #endif
 #if !REMOVED_MEM_OPT_CDF
     if (pcs_ptr->update_cdf)
@@ -1114,10 +1114,26 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #endif
     // Filter INTRA
+#if APR23_ADOPTIONS_2
+    if (scs_ptr->seq_header.enable_filter_intra) {
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (pcs_ptr->enc_mode <= ENC_M2)
+                pcs_ptr->pic_filter_intra_mode = 1;
+            else
+                pcs_ptr->pic_filter_intra_mode = 0;
+        else if (pcs_ptr->enc_mode <= ENC_M5)
+            pcs_ptr->pic_filter_intra_mode = 1;
+        else
+            pcs_ptr->pic_filter_intra_mode = 0;
+    }
+    else
+        pcs_ptr->pic_filter_intra_mode = 0;
+#else
     if (scs_ptr->seq_header.enable_filter_intra)
         pcs_ptr->pic_filter_intra_mode = 1;
     else
         pcs_ptr->pic_filter_intra_mode = 0;
+#endif
 
     // High Precision
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
