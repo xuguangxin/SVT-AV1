@@ -1913,7 +1913,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     inter_scaling_num = 1;
                     inter_scaling_denom = 1;
                     // INTRA
+#if MR_I_NIC
+                    intra_scaling_num  = (pcs_ptr->enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE) ? 2 : 1;
+#else
                     intra_scaling_num = 1;
+#endif
                     intra_scaling_denom = 1;
                 }
 #if MAR25_ADOPTIONS
@@ -1999,7 +2003,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     inter_scaling_num = 1;
                     inter_scaling_denom = 1;
                     // INTRA
+#if MR_I_NIC
+                    intra_scaling_num = (pcs_ptr->enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE) ? 2 : 1;
+#else
                     intra_scaling_num = 1;
+#endif
                     intra_scaling_denom = 1;
                 }
 #if MAR25_ADOPTIONS

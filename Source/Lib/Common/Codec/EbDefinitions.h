@@ -282,6 +282,15 @@ extern "C" {
 #define PR_1217 1
 #define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
 
+#define MR_I   0 //Use MR setting in M0 for I slice
+#if MR_I
+#define MR_I_TXT       1 
+#define MR_I_CP        1
+#define MR_I_COEFF_RED 1
+#define MR_I_NIC       1
+#define MR_I_UV_LAST   1
+#endif
+
 
 #endif
 

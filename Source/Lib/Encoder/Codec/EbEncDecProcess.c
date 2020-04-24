@@ -1685,7 +1685,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         if (enc_mode <= ENC_M0)
 #endif
+#if MR_I_TXT
+            context_ptr->md_txt_search_level = (enc_mode == ENC_M0 && pcs_ptr->slice_type==I_SLICE) ? 0 : 1;
+#else
             context_ptr->md_txt_search_level = 1;
+#endif
 #if APR23_ADOPTIONS
         else
             context_ptr->md_txt_search_level = 2;
@@ -1913,8 +1917,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0                    post first md_stage
     // 1                    post last md_stage
 #if APR22_ADOPTIONS
+#if MR_I_UV_LAST   
+    if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected || (pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->slice_type == I_SLICE))
+        context_ptr->chroma_at_last_md_stage = 0;
+    else 
+        context_ptr->chroma_at_last_md_stage =
+         context_ptr->chroma_level == CHROMA_MODE_0  ? 1 : 0;
+#else
     context_ptr->chroma_at_last_md_stage =
         MR_MODE ? 0 : (context_ptr->chroma_level == CHROMA_MODE_0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 1 : 0;
+#endif
 #else
 #if MAR30_ADOPTIONS
     context_ptr->chroma_at_last_md_stage =
@@ -2948,7 +2960,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (enc_mode <= ENC_M3 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #endif
+#if MR_I_CP
+            context_ptr->md_stage_2_3_cand_prune_th = (enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE) ? (uint64_t)~0 : 15;
+#else
             context_ptr->md_stage_2_3_cand_prune_th = 15;
+#endif
         else
             context_ptr->md_stage_2_3_cand_prune_th = 5;
 
@@ -3213,7 +3229,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
 
     else
+#if MR_I_COEFF_RED
+        context_ptr->coeff_based_nsq_cand_reduction = 
+        (enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE &&
+         pcs_ptr->parent_pcs_ptr->sc_content_detected == 0) ? EB_FALSE : EB_TRUE;
+#else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
+#endif
 
     // Set pic_obmc_mode @ MD
     if (pd_pass == PD_PASS_0)
