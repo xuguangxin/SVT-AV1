@@ -258,7 +258,23 @@ extern "C" {
 
 #define UPGRADE_M8 1 // Upgrade M8
 #define UPDATE_TXT_LEVEL 1
+#define M5_I  0  //change M5 presets to M8 for I slice--
+#if M5_I
+#define M5_I_NSQ   1
+#define M5_I_NIC   1
+#define M5_I_4x4   1
+#define M5_I_PD    1
+#define M5_I_IBC   1
+#define M5_I_PAL   1
+#define M5_I_RDOQ  1
+#define M5_I_CDF   1
+#define M5_I_CDEF  1
+#define M5_I_SG    1
 #endif
+
+
+#endif
+
 // END  MAY2020 /////////////////////////////////////////////////////////
 
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
