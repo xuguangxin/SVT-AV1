@@ -328,6 +328,7 @@ extern "C" {
 #define APR25_3AM_ADOPTIONS 1
 #define SHIFT_M6_SC_TO_M5 1
 #define APR23_4AM_M6_ADOPTIONS 1
+#define APR25_10AM_ADOPTIONS 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////
