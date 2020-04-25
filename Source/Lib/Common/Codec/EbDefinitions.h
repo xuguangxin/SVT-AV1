@@ -308,7 +308,7 @@ extern "C" {
 #define MRP_ADOPTIONS 1
 #define APR25_12AM_ADOPTIONS 1
 
-
+#define OPT_BLOCK_INDICES_GEN_4  1 // Fix block indices generation for PD_PASS OFF (lossless)
 // (M8 + non - Green OFF) versus M8
 #if 0
 #define REVERT_WHITE 1  

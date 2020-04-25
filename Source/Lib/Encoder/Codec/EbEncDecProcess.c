@@ -6769,7 +6769,7 @@ void *enc_dec_kernel(void *input_ptr) {
                                                   sb_origin_y);
                         }
                     }
-#if OPT_BLOCK_INDICES_GEN_0
+#if OPT_BLOCK_INDICES_GEN_0 && !OPT_BLOCK_INDICES_GEN_4
                     else
                         // Build the t=0 cand_block_array
                         build_starting_cand_block_array(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
@@ -6781,6 +6781,11 @@ void *enc_dec_kernel(void *input_ptr) {
                     // Re-build mdc_blk_ptr for the 2nd PD Pass [PD_PASS_1]
                     if(pcs_ptr->parent_pcs_ptr->multi_pass_pd_level != MULTI_PASS_PD_OFF)
                     build_cand_block_array(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#if OPT_BLOCK_INDICES_GEN_4
+                    else
+                        // Build the t=0 cand_block_array
+                        build_starting_cand_block_array(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
 #endif
                     // [PD_PASS_2] Mode Decision - Obtain the final partitioning decision using more accurate info
                     // than previous stages.  Reduce the total number of partitions to 1.
