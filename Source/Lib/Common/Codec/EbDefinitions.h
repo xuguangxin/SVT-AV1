@@ -305,6 +305,7 @@ extern "C" {
 #define SHIFT_M5_SC_TO_M3 1
 #define APR24_M3_ADOPTIONS 1 // Adoptions for M3
 #define APR24_ADOPTIONS_M6_M7 1
+#define MRP_ADOPTIONS 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////
