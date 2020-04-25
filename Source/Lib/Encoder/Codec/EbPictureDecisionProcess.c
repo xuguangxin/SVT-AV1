@@ -1071,7 +1071,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->enc_mode <= ENC_M5) {
         pcs_ptr->disallow_nsq = EB_FALSE;
     }
+#if APR25_3AM_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6 && !sc_content_detected) {
+#else
     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
         pcs_ptr->disallow_nsq = pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
     }
     else if (pcs_ptr->enc_mode <= ENC_M7) {
@@ -1416,7 +1420,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if UPGRADE_M6_M7_M8
 #if M1_SC_ADOPTION
 #if REVERT_WHITE // palette_mode
+#if APR25_3AM_ADOPTIONS
+           (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
+            (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
+#else
            (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M7))
+#endif
 #else
            (pcs_ptr->enc_mode <= ENC_M0 || pcs_ptr->is_used_as_reference_flag)
 #endif
@@ -1580,7 +1589,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR12_M8_ADOPTIONS
 #if M8_SG
 #if UPGRADE_M6_M7_M8
+#if APR25_3AM_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
@@ -5763,16 +5776,24 @@ void* picture_decision_kernel(void *input_ptr)
                                 //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
 #if UPGRADE_M6_M7_M8
                                 if (pcs_ptr->sc_content_detected) {
+#if APR25_3AM_ADOPTIONS
+                                    if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if MRP_ADOPTIONS
                                     if (pcs_ptr->enc_mode <= ENC_M6) {
 #else
                                     if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
+#endif
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                     }
 #if APR25_12AM_ADOPTIONS
+#if APR25_3AM_ADOPTIONS
+                                    else if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
                                     else if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
                                         pcs_ptr->ref_list0_count_try = pcs_ptr->is_used_as_reference_flag ? MIN(pcs_ptr->ref_list0_count, 4) : MIN(pcs_ptr->ref_list0_count, 1);
                                         pcs_ptr->ref_list1_count_try = pcs_ptr->is_used_as_reference_flag ? MIN(pcs_ptr->ref_list1_count, 3) : MIN(pcs_ptr->ref_list1_count, 1);
                                     }

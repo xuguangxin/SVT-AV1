@@ -316,7 +316,7 @@ extern "C" {
 #define REVERT_BLUE 1   
 #endif
 // (M8 + non - Green OFF + Non - yellow) versus M8
-#if 0
+#if 1 // Adopt this for M8
 #define REVERT_WHITE 1  
 #define REVERT_BLUE 1   
 #endif
@@ -325,7 +325,7 @@ extern "C" {
 #define REVERT_WHITE 1  
 #endif
 
-
+#define APR25_3AM_ADOPTIONS 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////
