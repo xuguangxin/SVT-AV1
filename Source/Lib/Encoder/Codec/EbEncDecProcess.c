@@ -5287,6 +5287,14 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
                 ? 17
                 : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
 
+#if NO_AB_HV4 
+            if (pcs_ptr->parent_pcs_ptr->disallow_HVA_HVB_HV4)
+                tot_d1_blocks = MIN(5, tot_d1_blocks);
+
+            if (pcs_ptr->parent_pcs_ptr->disallow_HV4)
+                tot_d1_blocks = MIN(17, tot_d1_blocks);
+#endif
+
             d1_blocks_accumlated = 0;
             for (d1_block_idx = 0; d1_block_idx < tot_d1_blocks; d1_block_idx++)
                 d1_blocks_accumlated +=
@@ -6123,6 +6131,14 @@ static void build_starting_cand_block_array(SequenceControlSet *scs_ptr, Picture
                 blk_geom->sq_size == 128
                 ? 17
                 : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
+
+#if NO_AB_HV4 
+            if (pcs_ptr->parent_pcs_ptr->disallow_HVA_HVB_HV4)
+                tot_d1_blocks = MIN(5, tot_d1_blocks);
+
+            if (pcs_ptr->parent_pcs_ptr->disallow_HV4)
+                tot_d1_blocks = MIN(17, tot_d1_blocks);
+#endif
 
             for (uint32_t idx = 0; idx < tot_d1_blocks; ++idx) {
                 blk_geom = get_blk_geom_mds(blk_index);

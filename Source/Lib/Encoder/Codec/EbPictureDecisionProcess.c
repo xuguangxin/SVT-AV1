@@ -1188,6 +1188,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_all_nsq_blocks_above_32x32= EB_FALSE;
     pcs_ptr->disallow_all_nsq_blocks_above_16x16= EB_FALSE;
 #endif
+
+#if NO_AB_HV4 
+    pcs_ptr->disallow_HVA_HVB_HV4 = EB_FALSE;
+    pcs_ptr->disallow_HV4 = EB_FALSE;
+#endif
+
     // Set disallow_all_non_hv_nsq_blocks_below_16x16
     pcs_ptr->disallow_all_non_hv_nsq_blocks_below_16x16 = EB_FALSE;
 
