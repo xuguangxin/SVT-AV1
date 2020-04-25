@@ -332,6 +332,7 @@ extern "C" {
 #define APR25_11AM_ADOPTIONS 1
 #define APR25_1PM_ADOPTIONS 1
 #define NO_NSQ_B32           1  //disallow nsq in 32x32 and below; in 64x64 and  below
+#define NEW_M5_HME_ME 1
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////

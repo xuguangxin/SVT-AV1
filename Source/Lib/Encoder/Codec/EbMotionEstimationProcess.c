@@ -238,10 +238,20 @@ void* set_me_hme_params_oq(
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 320;
     }
 #if M8_HME_ME
+#if NEW_M5_HME_ME
+    else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
     else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;
     }
+#if NEW_M5_HME_ME
+    else if (pcs_ptr->enc_mode <= ENC_M5) {
+        me_context_ptr->search_area_width = me_context_ptr->search_area_height = 64;
+        me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 128;
+    }
+#endif
 #if APR25_1PM_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M6) {
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 32;
@@ -335,6 +345,9 @@ void* set_me_hme_params_oq(
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
         }
 #if UPGRADE_M6_M7_M8
+#if NEW_M5_HME_ME
+        else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
 #if APR25_1PM_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
@@ -344,9 +357,16 @@ void* set_me_hme_params_oq(
         else if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
 #endif
+#endif
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 100;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 400;
         }
+#if NEW_M5_HME_ME
+        else if (pcs_ptr->enc_mode <= ENC_M5) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 64;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 256;
+        }
+#endif
         else {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 32;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 128;
