@@ -307,6 +307,25 @@ extern "C" {
 #define APR24_ADOPTIONS_M6_M7 1
 #define MRP_ADOPTIONS 1
 #define APR25_12AM_ADOPTIONS 1
+
+
+// (M8 + non - Green OFF) versus M8
+#if 0
+#define REVERT_WHITE 1  
+#define REVERT_YELLOW 1 
+#define REVERT_BLUE 1   
+#endif
+// (M8 + non - Green OFF + Non - yellow) versus M8
+#if 0
+#define REVERT_WHITE 1  
+#define REVERT_BLUE 1   
+#endif
+// (M8 + non - Green OFF + Non - yellow + Non - Cyan) versus M8
+#if 0
+#define REVERT_WHITE 1  
+#endif
+
+
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

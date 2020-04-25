@@ -2143,13 +2143,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
              context_ptr->disallow_4x4 = EB_FALSE;
+#if REVERT_WHITE // disallow_4x4
+         else if (enc_mode <= ENC_M7)
+#else
          else if (enc_mode <= ENC_M8)
+#endif
             context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
         else
             context_ptr->disallow_4x4 = EB_TRUE;
      else if (enc_mode <= ENC_M2)
          context_ptr->disallow_4x4 = EB_FALSE;
+#if REVERT_WHITE // disallow_4x4
+     else if (enc_mode <= ENC_M7)
+#else
      else if (enc_mode <= ENC_M8)
+#endif
          context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
      else
          context_ptr->disallow_4x4 = EB_TRUE;
@@ -2592,7 +2600,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M8_PRED_ME && !UPGRADE_M8
                     if (enc_mode <= ENC_M5)
 #else
+#if REVERT_WHITE // Pred_ME
+                    if (enc_mode <= ENC_M7)
+#else
                     if (enc_mode <= ENC_M8)
+#endif
 #endif
 #else
                     if (enc_mode <= ENC_M5)
@@ -2617,7 +2629,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
                         context_ptr->predictive_me_level = 6;
 #if MAR12_M8_ADOPTIONS
+#if REVERT_WHITE // Pred_ME
+                    else if (enc_mode <= ENC_M7)
+#else
                     else
+#endif
 #if M8_PRED_ME && !UPGRADE_M8
                         if (enc_mode <= ENC_M5)
                             context_ptr->predictive_me_level = 5;
@@ -2625,6 +2641,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                             context_ptr->predictive_me_level = 0;
 #else
                         context_ptr->predictive_me_level = 5;
+#endif
+#if REVERT_WHITE // Pred_ME
+            else
+                context_ptr->predictive_me_level = 0;
 #endif
 #else
 #if MAR4_M6_ADOPTIONS
@@ -5688,8 +5708,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
                                 }
                                 else {
+#if REVERT_WHITE // MPPD
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -1 : 0;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 1 : 0;
+#else
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
+#endif
                                 }
 #else
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : 0;

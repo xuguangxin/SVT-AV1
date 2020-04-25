@@ -1415,7 +1415,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if M8_PALETTE
 #if UPGRADE_M6_M7_M8
 #if M1_SC_ADOPTION
+#if REVERT_WHITE // palette_mode
+           (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M7))
+#else
            (pcs_ptr->enc_mode <= ENC_M0 || pcs_ptr->is_used_as_reference_flag)
+#endif
 #else
            (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->is_used_as_reference_flag)
 #endif
@@ -1445,8 +1449,12 @@ EbErrorType signal_derivation_multi_processes_oq(
         .disable_dlf_flag &&
         frm_hdr->allow_intrabc == 0) {
 #if MAR2_M8_ADOPTIONS
-#if M8_LOOP_FILTER && !UPGRADE_M8
+#if M8_LOOP_FILTER && !UPGRADE_M8 || REVERT_WHITE
+#if REVERT_WHITE //  loop_filter_mode
+        if (pcs_ptr->enc_mode <= ENC_M7 || pcs_ptr->sc_content_detected)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
             pcs_ptr->loop_filter_mode = 3;
         else
             pcs_ptr->loop_filter_mode =
@@ -2077,7 +2085,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         }
         else {
             if (pcs_ptr->temporal_layer_index == 0)
+#if REVERT_YELLOW // tf_level
+                context_ptr->tf_level = 2;
+#else
                 context_ptr->tf_level = 0;
+#endif
             else
                 context_ptr->tf_level = 3;
         }
