@@ -5262,6 +5262,10 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
 #if OPT_BLOCK_INDICES_GEN_2
 #if OPT_BLOCK_INDICES_GEN_3
             tot_d1_blocks = (context_ptr->md_disallow_nsq) ||
+#if NO_NSQ_B32
+                (blk_geom->sq_size <= 64 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_64x64) ||
+                (blk_geom->sq_size <= 32 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_32x32) ||
+#endif
                 (blk_geom->sq_size <= 8 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
                 (blk_geom->sq_size <= 16 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ? 1 :
 #else
@@ -6090,6 +6094,10 @@ static void build_starting_cand_block_array(SequenceControlSet *scs_ptr, Picture
 #if OPT_BLOCK_INDICES_GEN_2
 #if OPT_BLOCK_INDICES_GEN_3
             tot_d1_blocks = (context_ptr->md_disallow_nsq) ||
+#if NO_NSQ_B32
+                (blk_geom->sq_size <= 64 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_64x64) ||
+                (blk_geom->sq_size <= 32 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_32x32) ||
+#endif
                 (blk_geom->sq_size <= 8 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_8x8) ||
                 (blk_geom->sq_size <= 16 && pcs_ptr->parent_pcs_ptr->disallow_all_nsq_blocks_below_16x16) ? 1 :
 #else

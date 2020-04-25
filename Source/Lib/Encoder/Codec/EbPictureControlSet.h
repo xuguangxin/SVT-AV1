@@ -629,6 +629,11 @@ typedef struct PictureParentControlSet {
 #else
     EbPictureDepthMode pic_depth_mode;
 #endif
+
+#if NO_NSQ_B32
+    EbBool disallow_all_nsq_blocks_below_64x64;  //disallow nsq in 64x64 and below
+    EbBool disallow_all_nsq_blocks_below_32x32;  //disallow nsq in 32x32 and below
+#endif
     uint8_t            loop_filter_mode;
     uint8_t            intra_pred_mode;
     uint8_t            tx_size_search_mode;
