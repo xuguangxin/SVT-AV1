@@ -3475,7 +3475,10 @@ void construct_best_sorted_arrays_md_stage_3(struct ModeDecisionContext *  conte
             if (*buffer_ptr_array[id]->full_cost_ptr < context_ptr->best_inter_cost)
                 context_ptr->best_inter_cost = *buffer_ptr_array[id]->full_cost_ptr;
     }
-#if !FIXED_LAST_STAGE_SC
+#if FIXED_LAST_STAGE_SC
+    if ((context_ptr->best_inter_cost * context_ptr->chroma_at_last_md_stage_intra_th) < (context_ptr->best_intra_cost * 100))
+        context_ptr->md_stage_3_total_intra_count = 0;
+#else
     uint64_t intra_th = 30;
     if ((context_ptr->best_inter_cost * (100 + intra_th)) < (context_ptr->best_intra_cost * 100))
         context_ptr->md_stage_3_total_intra_count = 0;
@@ -9580,11 +9583,7 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #endif
         if (context_ptr->blk_geom->sq_size < 128) {
             if (context_ptr->blk_geom->has_uv) {
-#if FIXED_LAST_STAGE_SC
-                if ((context_ptr->best_inter_cost * context_ptr->chroma_at_last_md_stage_intra_th) >= (context_ptr->best_intra_cost * 100))
-#else
                 if (context_ptr->md_stage_3_total_intra_count)
-#endif
                     search_best_independent_uv_mode(pcs_ptr,
                         input_picture_ptr,
                         input_cb_origin_in_index,
