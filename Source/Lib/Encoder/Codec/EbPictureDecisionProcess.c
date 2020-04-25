@@ -1641,6 +1641,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
         if (sc_content_detected)
+#if APR24_M3_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if APR23_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M5)
 #else
@@ -1654,6 +1657,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -1866,7 +1870,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
+#if SHIFT_M5_SC_TO_M3
+                pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
+#else
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
             else
 #endif
 #if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
@@ -1956,7 +1964,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if APR08_ADOPTIONS
 #if PRESETS_SHIFT
 #if APR22_ADOPTIONS
+#if SHIFT_M5_SC_TO_M3
+    if (pcs_ptr->enc_mode <= ENC_M2)
+#else
     if (pcs_ptr->enc_mode <= ENC_M2 || (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->sc_content_detected))
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->sc_content_detected))
 #endif

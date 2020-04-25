@@ -874,6 +874,12 @@ void *resource_coordination_kernel(void *input_ptr) {
                 // 0                 OFF
                 // 1                 ON
                 scs_ptr->seq_header.enable_interintra_compound =
+#if APR24_M3_ADOPTIONS
+                (scs_ptr->static_config.enc_mode <= ENC_M2 &&
+                    scs_ptr->static_config.screen_content_mode != 1)
+                    ? 1
+                    : 0;
+#else
 #if APR23_ADOPTIONS
                 (scs_ptr->static_config.enc_mode <= ENC_M5 &&
                     scs_ptr->static_config.screen_content_mode != 1)
@@ -904,6 +910,7 @@ void *resource_coordination_kernel(void *input_ptr) {
                                 scs_ptr->static_config.screen_content_mode != 1)
                         ? 1
                         : 0;
+#endif
 #endif
 #endif
 #endif

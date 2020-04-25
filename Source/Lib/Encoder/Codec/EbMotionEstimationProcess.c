@@ -130,10 +130,15 @@ void* set_me_hme_params_oq(
 #if M1_COMBO_2 || M2_COMBO_2
             if (pcs_ptr->enc_mode <= ENC_M0) {
 #else
+
+#if SHIFT_M5_SC_TO_M3
+            if (pcs_ptr->enc_mode <= ENC_M2) {
+#else
 #if APR23_ADOPTIONS_2
             if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
             if (pcs_ptr->enc_mode <= ENC_M2) {
+#endif
 #endif
 #endif
 #else
@@ -612,6 +617,9 @@ EbErrorType signal_derivation_me_kernel_oq(
     {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
+#if SHIFT_M5_SC_TO_M3
+            if (enc_mode <= ENC_M2)
+#else
 #if PRESETS_SHIFT
             if (enc_mode <= ENC_M4)
 #else
@@ -630,6 +638,7 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
 #else
             if (enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif

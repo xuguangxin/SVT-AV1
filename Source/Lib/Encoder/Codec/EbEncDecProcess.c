@@ -1996,6 +1996,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Level                Settings
     // 0                    All supported modes.
     // 1                    All supported modes in  Intra picture and 4 in inter picture
+#if SHIFT_M5_SC_TO_M3
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (enc_mode <= ENC_M2)
+            context_ptr->independent_chroma_nics = 0;
+        else
+            context_ptr->independent_chroma_nics = 1;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->independent_chroma_nics = 0;
+    else
+        context_ptr->independent_chroma_nics = 1;
+#else
 #if PRESETS_SHIFT
     context_ptr->independent_chroma_nics = enc_mode <= ENC_M3 ? 0 : 1;
 #else
@@ -2003,6 +2014,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->independent_chroma_nics = enc_mode <= ENC_M4 ? 0 : 1;
 #else
     context_ptr->independent_chroma_nics = enc_mode == ENC_M5 ? 1 : 0;
+#endif
 #endif
 #endif
 #endif
@@ -2047,6 +2059,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // libaom_short_cuts_ths
     // 1                    faster than libaom
     // 2                    libaom - default
+#if SHIFT_M5_SC_TO_M3
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (enc_mode <= ENC_M2)
+            context_ptr->libaom_short_cuts_ths = 2;
+        else
+            context_ptr->libaom_short_cuts_ths = 1;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->libaom_short_cuts_ths = 2;
+    else
+        context_ptr->libaom_short_cuts_ths = 1;
+#else
 #if PRESETS_SHIFT
     if (enc_mode <= ENC_M3)
         context_ptr->libaom_short_cuts_ths = 2;
@@ -2066,9 +2089,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+#endif
 #if UV_SEARCH_MODE_INJCECTION
     // 0                    inject all supprted chroma mode
     // 1                    follow the luma injection
+#if SHIFT_M5_SC_TO_M3
+    if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+        if (enc_mode <= ENC_M2)
+            context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+        else
+            context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
+    else if (enc_mode <= ENC_M3)
+        context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
+    else
+        context_ptr->intra_chroma_search_follows_intra_luma_injection = 1;
+#else
 #if PRESETS_SHIFT
     if (enc_mode <= ENC_M3)
         context_ptr->intra_chroma_search_follows_intra_luma_injection = 0;
@@ -2089,8 +2124,24 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #endif
+#endif
 #if M8_4x4
+#if APR24_M3_ADOPTIONS
      // Set disallow_4x4
+     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+         if (enc_mode <= ENC_M5)
+             context_ptr->disallow_4x4 = EB_FALSE;
+         else if (enc_mode <= ENC_M8)
+            context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
+        else
+            context_ptr->disallow_4x4 = EB_TRUE;
+     else if (enc_mode <= ENC_M2)
+         context_ptr->disallow_4x4 = EB_FALSE;
+     else if (enc_mode <= ENC_M8)
+         context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
+     else
+         context_ptr->disallow_4x4 = EB_TRUE;
+#else
 #if UPGRADE_M6_M7_M8
      if (enc_mode <= ENC_M5)
          context_ptr->disallow_4x4 = EB_FALSE;
@@ -2105,7 +2156,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
      context_ptr->disallow_4x4 = pcs_ptr->enc_mode <= ENC_M5 ? EB_FALSE : EB_TRUE;
 #endif
-
+#endif
      // If SB non-multiple of 4, then disallow_4x4 could not be used
      // SB Stats
      uint32_t sb_width =
@@ -2249,6 +2300,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
 #if MAR4_M6_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if SHIFT_M5_SC_TO_M3
+                if (enc_mode <= ENC_M2)
+#else
 #if PRESETS_SHIFT
                 if (enc_mode <= ENC_M4)
 #else
@@ -2267,6 +2321,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
                 if (enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -2310,6 +2365,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR30_ADOPTIONS
+#if SHIFT_M5_SC_TO_M3
+                if (enc_mode <= ENC_M2)
+#else
 #if APR23_ADOPTIONS_2
                 if (enc_mode <= ENC_M4)
 #else
@@ -2317,6 +2375,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 if (enc_mode <= ENC_M2)
 #else
                 if (enc_mode <= ENC_M0)
+#endif
 #endif
 #endif
                     context_ptr->new_nearest_near_comb_injection = 1;
@@ -2368,6 +2427,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->unipred3x3_injection = 2;
     }
     else
+#if SHIFT_M5_SC_TO_M3
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (enc_mode <= ENC_M2)
+                context_ptr->unipred3x3_injection = 1;
+            else
+                context_ptr->unipred3x3_injection = 0;
+        else
+#endif
 #if PRESETS_SHIFT
         if (enc_mode <= ENC_M4)
 #else
@@ -2392,6 +2459,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.bipred_3x3_inject ==
         DEFAULT)
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if SHIFT_M5_SC_TO_M3
+            if (enc_mode <= ENC_M2)
+#else
 #if PRESETS_SHIFT
             if (enc_mode <= ENC_M4)
 #else
@@ -2402,6 +2472,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M3)
 #else
             if (enc_mode <= ENC_M4)
+#endif
 #endif
 #endif
 #endif
@@ -2817,6 +2888,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (sequence_control_set_ptr->static_config.edge_skp_angle_intra == DEFAULT) {
 #if MAR12_ADOPTIONS
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if SHIFT_M5_SC_TO_M3
+                if (enc_mode <= ENC_M2)
+#else
 #if PRESETS_SHIFT
                 if (enc_mode <= ENC_M4)
 #else
@@ -2824,6 +2898,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 if (enc_mode <= ENC_M7)
 #else
                 if (enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
                     context_ptr->edge_based_skip_angle_intra = 0;
@@ -3067,6 +3142,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
         else
 #endif
+#if SHIFT_M5_SC_TO_M3
+            if ((enc_mode <= ENC_M2 &&
+                pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
 #if APR23_ADOPTIONS_2
             if ((enc_mode <= ENC_M4 &&
                 pcs_ptr->parent_pcs_ptr->sc_content_detected))
@@ -3089,6 +3168,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         if ((enc_mode <= ENC_M3 &&
             pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#endif
 #endif
 #endif
 #endif
@@ -3148,7 +3228,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 5;
 #if NEW_M1_CAND
+#if SHIFT_M5_SC_TO_M3
+                else if (enc_mode <= ENC_M2)
+#else
                 else if (enc_mode <= ENC_M3)
+#endif
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight;
 #endif
@@ -3199,6 +3283,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0: OFF
     // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
     // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
+#if SHIFT_M5_SC_TO_M3
+    if (enc_mode <= ENC_M0 || pd_pass < PD_PASS_2 || (enc_mode <= ENC_M2 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
+#else
 #if APR22_ADOPTIONS
     if (enc_mode <= ENC_M0 || pd_pass < PD_PASS_2 || (enc_mode <= ENC_M4 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
 #else
@@ -3212,6 +3299,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     if (MR_MODE || pd_pass < PD_PASS_2 || (enc_mode <= ENC_M3 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
 #else
     if (MR_MODE || pd_pass < PD_PASS_2)
+#endif
 #endif
 #endif
 #endif
