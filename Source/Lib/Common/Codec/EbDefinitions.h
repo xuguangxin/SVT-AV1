@@ -330,6 +330,7 @@ extern "C" {
 #define APR23_4AM_M6_ADOPTIONS 1
 #define APR25_10AM_ADOPTIONS 1
 #define APR25_11AM_ADOPTIONS 1
+#define APR25_1PM_ADOPTIONS 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////
