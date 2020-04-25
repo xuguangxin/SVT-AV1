@@ -335,6 +335,7 @@ extern "C" {
 #define NEW_M5_HME_ME 1
 
 #define NO_NSQ_ABOVE           1  //disallow nsq in 32x32 and above; in 64x64 and  above
+#define NSQ_OFF_IN_M6_M7_ME 1
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////

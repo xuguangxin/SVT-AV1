@@ -772,7 +772,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 #endif
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 0;
 #if UPGRADE_M8
+#if NSQ_OFF_IN_M6_M7_ME
+    else if (enc_mode <= ENC_M5)
+#else
     else if (enc_mode <= ENC_M7)
+#endif
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 2;
     else
         context_ptr->me_context_ptr->inherit_rec_mv_from_sq_block = 3;
