@@ -1075,14 +1075,10 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if M8_CDF
 #if UPGRADE_M6_M7_M8
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
-#if APR25_1PM_ADOPTIONS
-        if (pcs_ptr->enc_mode <= ENC_M5)
-#else
 #if APR25_12AM_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M6)
 #else
         if (pcs_ptr->enc_mode <= ENC_M7)
-#endif
 #endif
             pcs_ptr->update_cdf = 1;
         else
