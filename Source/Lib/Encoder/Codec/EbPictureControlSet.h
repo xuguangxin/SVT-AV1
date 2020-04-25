@@ -634,6 +634,11 @@ typedef struct PictureParentControlSet {
     EbBool disallow_all_nsq_blocks_below_64x64;  //disallow nsq in 64x64 and below
     EbBool disallow_all_nsq_blocks_below_32x32;  //disallow nsq in 32x32 and below
 #endif
+#if NO_NSQ_ABOVE
+    EbBool disallow_all_nsq_blocks_above_64x64;  //disallow nsq in 64x64 and above
+    EbBool disallow_all_nsq_blocks_above_32x32;  //disallow nsq in 32x32 and above
+    EbBool disallow_all_nsq_blocks_above_16x16;  //disallow nsq in 16x16 and above
+#endif
     uint8_t            loop_filter_mode;
     uint8_t            intra_pred_mode;
     uint8_t            tx_size_search_mode;
