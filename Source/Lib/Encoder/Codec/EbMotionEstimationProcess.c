@@ -148,6 +148,9 @@ void* set_me_hme_params_oq(
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 800;
             }
 #if M8_HME_ME
+#if SHIFT_M6_SC_TO_M5
+            else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
 #if APR25_3AM_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
@@ -155,6 +158,7 @@ void* set_me_hme_params_oq(
             else if (pcs_ptr->enc_mode <= ENC_M6) {
 #else
             else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #endif
 #endif
 #if APR23_ADOPTIONS_2
@@ -166,9 +170,19 @@ void* set_me_hme_params_oq(
 #endif
             }
 #if APR25_3AM_ADOPTIONS
+#if APR23_4AM_M6_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 150;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 450;
+            }
+#endif
+#if APR23_4AM_M6_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M6) {
+                me_context_ptr->search_area_width = me_context_ptr->search_area_height = 100;
+                me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 300;
             }
 #endif
 #if UPGRADE_M6_M7_M8

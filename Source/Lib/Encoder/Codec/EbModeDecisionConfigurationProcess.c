@@ -1183,7 +1183,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
             enable_wm = EB_TRUE;
         }
+#if SHIFT_M6_SC_TO_M5
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
+#else
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) {
+#endif
             enable_wm = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? EB_TRUE : EB_FALSE;
         }
         else {

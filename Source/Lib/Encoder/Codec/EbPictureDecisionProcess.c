@@ -5776,6 +5776,9 @@ void* picture_decision_kernel(void *input_ptr)
                                 //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
 #if UPGRADE_M6_M7_M8
                                 if (pcs_ptr->sc_content_detected) {
+#if SHIFT_M6_SC_TO_M5
+                                    if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
 #if APR25_3AM_ADOPTIONS
                                     if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
@@ -5785,12 +5788,17 @@ void* picture_decision_kernel(void *input_ptr)
                                     if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
 #endif
+#endif
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                     }
 #if APR25_12AM_ADOPTIONS
 #if APR25_3AM_ADOPTIONS
+#if APR23_4AM_M6_ADOPTIONS
+                                    else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
                                     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #else
                                     else if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
