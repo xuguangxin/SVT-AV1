@@ -304,6 +304,7 @@ extern "C" {
 #define M1_SC_ADOPTION 1 // Adopt Palette in REF frames only for M1 & Beyond SC
 #define SHIFT_M5_SC_TO_M3 1
 #define APR24_M3_ADOPTIONS 1 // Adoptions for M3
+#define APR24_ADOPTIONS_M6_M7 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

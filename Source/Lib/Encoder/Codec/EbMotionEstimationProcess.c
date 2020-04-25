@@ -148,7 +148,11 @@ void* set_me_hme_params_oq(
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 800;
             }
 #if M8_HME_ME
+#if APR24_ADOPTIONS_M6_M7
+            else if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
             else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #if APR23_ADOPTIONS_2
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 150;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 600;

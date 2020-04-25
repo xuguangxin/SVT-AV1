@@ -1310,7 +1310,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if OBMC_FAST
 #if M8_OBMC
 #if UPGRADE_M6_M7_M8
+#if APR24_ADOPTIONS_M6_M7
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6)
+#else
             else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #else
             else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
 #endif

@@ -1587,10 +1587,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 #endif
+#if APR24_ADOPTIONS_M6_M7
+    else if (enc_mode <= ENC_M6) {
+#else
 #if UPGRADE_M8
     else if (enc_mode <= ENC_M7) {
 #else
     else {
+#endif
 #endif
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 5;
@@ -2129,7 +2133,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if APR24_M3_ADOPTIONS
      // Set disallow_4x4
      if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if APR24_ADOPTIONS_M6_M7
+         if (enc_mode <= ENC_M6)
+#else
          if (enc_mode <= ENC_M5)
+#endif
              context_ptr->disallow_4x4 = EB_FALSE;
          else if (enc_mode <= ENC_M8)
             context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
@@ -5660,7 +5668,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if ADOPT_SKIPPING_PD1
                         else if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
 #if M8_MPPD
+#if APR24_ADOPTIONS_M6_M7
+                            if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
                             if(pcs_ptr->enc_mode <= ENC_M5) {
+#endif
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
                                 e_depth = pcs_ptr->slice_type == I_SLICE ?  2 :  1;
                             }
