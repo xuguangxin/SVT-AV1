@@ -1928,7 +1928,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #if MAR25_ADOPTIONS
 #if M8_NIC
 #if UPGRADE_M6_M7_M8
+#if APR25_12AM_ADOPTIONS
+                else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
                 else if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
 #else
                 else if (pcs_ptr->enc_mode <= ENC_M5) {
 #endif

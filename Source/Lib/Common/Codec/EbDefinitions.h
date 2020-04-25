@@ -306,6 +306,7 @@ extern "C" {
 #define APR24_M3_ADOPTIONS 1 // Adoptions for M3
 #define APR24_ADOPTIONS_M6_M7 1
 #define MRP_ADOPTIONS 1
+#define APR25_12AM_ADOPTIONS 1
 #endif
 
 // END  MAY2020 /////////////////////////////////////////////////////////

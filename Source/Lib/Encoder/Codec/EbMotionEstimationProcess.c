@@ -279,7 +279,11 @@ void* set_me_hme_params_oq(
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
         }
 #if UPGRADE_M6_M7_M8
+#if APR25_12AM_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
         else if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 100;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 400;
         } 

@@ -2133,10 +2133,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if APR24_M3_ADOPTIONS
      // Set disallow_4x4
      if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if APR25_12AM_ADOPTIONS
+         if (enc_mode <= ENC_M7)
+#else
 #if APR24_ADOPTIONS_M6_M7
          if (enc_mode <= ENC_M6)
 #else
          if (enc_mode <= ENC_M5)
+#endif
 #endif
              context_ptr->disallow_4x4 = EB_FALSE;
          else if (enc_mode <= ENC_M8)
