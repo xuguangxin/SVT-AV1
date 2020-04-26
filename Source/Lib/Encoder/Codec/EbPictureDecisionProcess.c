@@ -1083,10 +1083,24 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_nsq = pcs_ptr->is_used_as_reference_flag ? EB_FALSE : EB_TRUE;
     }
     else if (pcs_ptr->enc_mode <= ENC_M7) {
+#if APR25_7PM_ADOPTIONS
+        if (sc_content_detected)
+            pcs_ptr->disallow_nsq = EB_FALSE;
+        else
+            pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#else
         pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#endif
     }
     else {
+#if APR25_7PM_ADOPTIONS
+        if (sc_content_detected)
+            pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+        else
+            pcs_ptr->disallow_nsq = EB_TRUE;
+#else
         pcs_ptr->disallow_nsq = EB_TRUE;
+#endif
     }
 #else
 #if M8_NSQ
@@ -1185,8 +1199,24 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if NO_NSQ_ABOVE
     pcs_ptr->disallow_all_nsq_blocks_above_64x64= EB_FALSE;
+#if APR25_7PM_ADOPTIONS
+    // disallow_all_nsq_blocks_above_32x32
+    if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M5)
+        pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
+    else
+        pcs_ptr->disallow_all_nsq_blocks_above_32x32 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+
+    // disallow_all_nsq_blocks_above_16x16
+    if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M6)
+        pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_FALSE;
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        pcs_ptr->disallow_all_nsq_blocks_above_16x16 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+    else
+        pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_TRUE;
+#else
     pcs_ptr->disallow_all_nsq_blocks_above_32x32= EB_FALSE;
     pcs_ptr->disallow_all_nsq_blocks_above_16x16= EB_FALSE;
+#endif
 #endif
 
 #if NO_AB_HV4 
@@ -5851,8 +5881,13 @@ void* picture_decision_kernel(void *input_ptr)
                                     }
 #endif
                                     else {
+#if APR25_7PM_ADOPTIONS
+                                        pcs_ptr->ref_list0_count_try = pcs_ptr->is_used_as_reference_flag ? MIN(pcs_ptr->ref_list0_count, 2) : MIN(pcs_ptr->ref_list0_count, 1);
+                                        pcs_ptr->ref_list1_count_try = pcs_ptr->is_used_as_reference_flag ? MIN(pcs_ptr->ref_list1_count, 2) : MIN(pcs_ptr->ref_list1_count, 1);
+#else
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+#endif
                                     }
                                 }
 #else
