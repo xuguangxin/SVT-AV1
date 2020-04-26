@@ -2125,6 +2125,31 @@ void copy_api_from_app(
     scs_ptr->static_config.intra_refresh_type = ((EbSvtAv1EncConfiguration*)config_struct)->intra_refresh_type;
     scs_ptr->static_config.hierarchical_levels = ((EbSvtAv1EncConfiguration*)config_struct)->hierarchical_levels;
     scs_ptr->static_config.enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
+
+    //hack for enc_modes to allow user see modes 0..6
+#if REMAP_MODES
+    uint8_t enc_mode_cfg = ((EbSvtAv1EncConfiguration*)config_struct)->enc_mode;
+    if (enc_mode_cfg == ENC_M0)
+        scs_ptr->static_config.enc_mode = ENC_M0;
+    else if (enc_mode_cfg == ENC_M1)
+        scs_ptr->static_config.enc_mode = ENC_M1;
+    else if (enc_mode_cfg == ENC_M2)
+        scs_ptr->static_config.enc_mode = ENC_M3;
+    else if (enc_mode_cfg == ENC_M3)
+        scs_ptr->static_config.enc_mode = ENC_M5;
+    else if (enc_mode_cfg == ENC_M4)
+        scs_ptr->static_config.enc_mode = ENC_M6;
+    else if (enc_mode_cfg == ENC_M5)
+        scs_ptr->static_config.enc_mode = ENC_M7;
+    else if (enc_mode_cfg == ENC_M6)
+        scs_ptr->static_config.enc_mode = ENC_M8;
+    else
+        scs_ptr->static_config.enc_mode = ENC_M8;
+
+    printf("Going to Run M%i \n", scs_ptr->static_config.enc_mode);
+#endif
+
+
     scs_ptr->static_config.snd_pass_enc_mode = ((EbSvtAv1EncConfiguration*)config_struct)->snd_pass_enc_mode;
     scs_ptr->intra_period_length = scs_ptr->static_config.intra_period_length;
     scs_ptr->intra_refresh_type = scs_ptr->static_config.intra_refresh_type;

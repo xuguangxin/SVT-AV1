@@ -338,6 +338,10 @@ extern "C" {
 #define NSQ_OFF_IN_M6_M7_ME 1
 
 #define NO_AB_HV4              1 //disallow HA/HB/VA/VB H4/V4   
+
+#define REMAP_MODES   0//enc_mode remap
+
+
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
