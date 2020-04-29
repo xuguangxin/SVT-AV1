@@ -339,7 +339,7 @@ extern "C" {
 
 #define NO_AB_HV4              1 //disallow HA/HB/VA/VB H4/V4
 
-#define REMAP_MODES   1 //enc_mode remap
+#define REMAP_MODES   0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
 
 #endif
