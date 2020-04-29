@@ -227,7 +227,7 @@ extern "C" {
 #define M8_CDF 1 // Done
 #define M8_WM 1 // Done
 #define M8_OBMC 1 // Done
-#define M8_INTRA_MODE 1 // Done 
+#define M8_INTRA_MODE 1 // Done
 #define M8_RDOQ 1 // Done
 // Filtering
 #define M8_SG 1 // Done
@@ -277,7 +277,7 @@ extern "C" {
 
 #define MR_I   0 //Use MR setting in M0 for I slice
 #if MR_I
-#define MR_I_TXT       1 
+#define MR_I_TXT       1
 #define MR_I_CP        1
 #define MR_I_COEFF_RED 1
 #define MR_I_NIC       1
@@ -311,18 +311,18 @@ extern "C" {
 #define OPT_BLOCK_INDICES_GEN_4  1 // Fix block indices generation for PD_PASS OFF (lossless)
 // (M8 + non - Green OFF) versus M8
 #if 0
-#define REVERT_WHITE 1  
-#define REVERT_YELLOW 1 
-#define REVERT_BLUE 1   
+#define REVERT_WHITE 1
+#define REVERT_YELLOW 1
+#define REVERT_BLUE 1
 #endif
 // (M8 + non - Green OFF + Non - yellow) versus M8
 #if 1 // Adopt this for M8
-#define REVERT_WHITE 1  
-#define REVERT_BLUE 1   
+#define REVERT_WHITE 1
+#define REVERT_BLUE 1
 #endif
 // (M8 + non - Green OFF + Non - yellow + Non - Cyan) versus M8
 #if 0
-#define REVERT_WHITE 1  
+#define REVERT_WHITE 1
 #endif
 
 #define APR25_3AM_ADOPTIONS 1
@@ -337,7 +337,7 @@ extern "C" {
 #define NO_NSQ_ABOVE           1  //disallow nsq in 32x32 and above; in 64x64 and  above
 #define NSQ_OFF_IN_M6_M7_ME 1
 
-#define NO_AB_HV4              1 //disallow HA/HB/VA/VB H4/V4   
+#define NO_AB_HV4              1 //disallow HA/HB/VA/VB H4/V4
 
 #define REMAP_MODES   1 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1

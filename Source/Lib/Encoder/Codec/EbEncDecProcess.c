@@ -1960,10 +1960,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // 0                    post first md_stage
     // 1                    post last md_stage
 #if APR22_ADOPTIONS
-#if MR_I_UV_LAST   
+#if MR_I_UV_LAST
     if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected || (pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->slice_type == I_SLICE))
         context_ptr->chroma_at_last_md_stage = 0;
-    else 
+    else
         context_ptr->chroma_at_last_md_stage =
          context_ptr->chroma_level == CHROMA_MODE_0  ? 1 : 0;
 #else
@@ -3462,7 +3462,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     else
 #if MR_I_COEFF_RED
-        context_ptr->coeff_based_nsq_cand_reduction = 
+        context_ptr->coeff_based_nsq_cand_reduction =
         (enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE &&
          pcs_ptr->parent_pcs_ptr->sc_content_detected == 0) ? EB_FALSE : EB_TRUE;
 #else
@@ -5287,7 +5287,7 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
                 ? 17
                 : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
 
-#if NO_AB_HV4 
+#if NO_AB_HV4
             if (pcs_ptr->parent_pcs_ptr->disallow_HVA_HVB_HV4)
                 tot_d1_blocks = MIN(5, tot_d1_blocks);
 
@@ -6132,7 +6132,7 @@ static void build_starting_cand_block_array(SequenceControlSet *scs_ptr, Picture
                 ? 17
                 : blk_geom->sq_size > 8 ? 25 : blk_geom->sq_size == 8 ? 5 : 1;
 
-#if NO_AB_HV4 
+#if NO_AB_HV4
             if (pcs_ptr->parent_pcs_ptr->disallow_HVA_HVB_HV4)
                 tot_d1_blocks = MIN(5, tot_d1_blocks);
 

@@ -901,7 +901,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->enc_mode <= ENC_M7) {
         pcs_ptr->tf_enable_hme_level1_flag = 1;
         pcs_ptr->tf_enable_hme_level2_flag = 1;
-    } 
+    }
     else {
         pcs_ptr->tf_enable_hme_level1_flag = 1;
         pcs_ptr->tf_enable_hme_level2_flag = 0;
@@ -1219,7 +1219,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 
-#if NO_AB_HV4 
+#if NO_AB_HV4
     pcs_ptr->disallow_HVA_HVB_HV4 = EB_FALSE;
     pcs_ptr->disallow_HV4 = EB_FALSE;
 #endif
@@ -2135,7 +2135,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         ? 1 : 0;
 #endif
 
- 
+
 
     if (perform_filtering) {
 #if UPGRADE_M6_M7_M8

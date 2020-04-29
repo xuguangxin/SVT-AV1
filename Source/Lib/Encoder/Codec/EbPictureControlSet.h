@@ -641,7 +641,7 @@ typedef struct PictureParentControlSet {
 #endif
 #if NO_AB_HV4
     EbBool disallow_HV4;          //disallow             H4/V4
-    EbBool disallow_HVA_HVB_HV4;  //disallow HA/HB/VA/VB H4/V4    
+    EbBool disallow_HVA_HVB_HV4;  //disallow HA/HB/VA/VB H4/V4
 #endif
     uint8_t            loop_filter_mode;
     uint8_t            intra_pred_mode;

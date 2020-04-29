@@ -1211,7 +1211,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         (context_ptr->md_staging_use_bilinear) ? av1_make_interp_filters(BILINEAR, BILINEAR) : 0;
 #if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_FALSE;
-#endif 
+#endif
     product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc
                                      ? INTER_MODE
                                      : candidate_ptr->type](
