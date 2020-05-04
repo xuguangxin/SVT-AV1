@@ -5631,7 +5631,11 @@ EbErrorType inter_pu_prediction_av1(uint8_t hbd_mode_decision, ModeDecisionConte
                                 ->reference_picture;
                 }
                 interpolation_filter_search(picture_control_set_ptr,
+#if CAND_MEM_OPT
+                                            md_context_ptr->prediction_ptr_temp,
+#else
                                             candidate_buffer_ptr->prediction_ptr_temp,
+#endif
                                             md_context_ptr,
                                             candidate_buffer_ptr,
                                             mv_unit,

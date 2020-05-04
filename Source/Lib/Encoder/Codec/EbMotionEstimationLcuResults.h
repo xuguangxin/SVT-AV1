@@ -52,10 +52,15 @@ typedef struct MeSbResults {
     EbDctor       dctor;
     uint32_t      sb_distortion;
     uint8_t *     total_me_candidate_index;
+#if ME_MEM_OPT
+    MvCandidate *me_mv_array;
+    MeCandidate *me_candidate_array;
+#else
     MeCandidate **me_candidate;
     MeCandidate * me_candidate_array;
 
     MvCandidate **me_mv_array;
+#endif
     // [PU][LAST, LAST2, LAST3, GOLD, BWD, ALT2, ALT] if MRP Mode 0,
     // [PU][LAST, LAST2, BWD, ALT2] if MRP Mode 1,
     uint32_t max_number_of_pus_per_sb;

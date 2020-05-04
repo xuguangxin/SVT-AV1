@@ -1909,7 +1909,11 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
         &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                ->buffer_y)[txb_1d_offset]),
         NOT_USED_VALUE,
+#if CAND_MEM_OPT
+        &(((int32_t *)context_ptr->residual_quant_coeff_ptr->buffer_y)[txb_1d_offset]),
+#else
         &(((int32_t *)candidate_buffer->residual_quant_coeff_ptr->buffer_y)[txb_1d_offset]),
+#endif
         &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_y)[txb_1d_offset]),
         qp,
         seg_qp,
@@ -2041,7 +2045,11 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
 #if !MD_FRAME_CONTEXT_MEM_OPT
                                 context_ptr->coeff_est_entropy_coder_ptr,
 #endif
+#if CAND_MEM_OPT
+                                context_ptr->residual_quant_coeff_ptr,
+#else
                                 candidate_buffer->residual_quant_coeff_ptr,
+#endif
                                 y_count_non_zero_coeffs[txb_itr],
                                 0,
                                 0,
@@ -2742,6 +2750,18 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                     &context_ptr->cr_dc_sign_context);
 
         // NADER - TU
+#if CAND_MEM_OPT
+        txb_origin_index =
+            txb_origin_x + txb_origin_y * context_ptr->residual_quant_coeff_ptr->stride_y;
+        tu_cb_origin_index = (((txb_origin_x >> 3) << 3) +
+            (((txb_origin_y >> 3) << 3) *
+                context_ptr->residual_quant_coeff_ptr->stride_cb)) >>
+            1;
+        tu_cr_origin_index = (((txb_origin_x >> 3) << 3) +
+            (((txb_origin_y >> 3) << 3) *
+                context_ptr->residual_quant_coeff_ptr->stride_cr)) >>
+            1;
+#else
         txb_origin_index =
             txb_origin_x + txb_origin_y * candidate_buffer->residual_quant_coeff_ptr->stride_y;
         tu_cb_origin_index = (((txb_origin_x >> 3) << 3) +
@@ -2752,7 +2772,7 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                               (((txb_origin_y >> 3) << 3) *
                                candidate_buffer->residual_quant_coeff_ptr->stride_cr)) >>
                              1;
-
+#endif
         //    This function replaces the previous Intra Chroma mode if the LM fast
         //    cost is better.
         //    *Note - this might require that we have inv transform in the loop
@@ -2788,8 +2808,13 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                 &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                        ->buffer_cb)[txb_1d_offset]),
                 NOT_USED_VALUE,
+#if CAND_MEM_OPT
+                &(((int32_t *)
+                    context_ptr->residual_quant_coeff_ptr->buffer_cb)[txb_1d_offset]),
+#else
                 &(((int32_t *)
                        candidate_buffer->residual_quant_coeff_ptr->buffer_cb)[txb_1d_offset]),
+#endif
                 &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_cb)[txb_1d_offset]),
                 cb_qp,
                 seg_qp,
@@ -2875,8 +2900,13 @@ void full_loop_r(SuperBlock *sb_ptr, ModeDecisionCandidateBuffer *candidate_buff
                 &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                        ->buffer_cr)[txb_1d_offset]),
                 NOT_USED_VALUE,
+#if CAND_MEM_OPT
+                &(((int32_t *)
+                    context_ptr->residual_quant_coeff_ptr->buffer_cr)[txb_1d_offset]),
+#else
                 &(((int32_t *)
                        candidate_buffer->residual_quant_coeff_ptr->buffer_cr)[txb_1d_offset]),
+#endif
                 &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_cr)[txb_1d_offset]),
                 cb_qp,
                 seg_qp,
@@ -2991,8 +3021,13 @@ void cu_full_distortion_fast_txb_mode_r(
             MIN(context_ptr->blk_geom->tx_height_uv[tx_depth][txb_itr],
                 pcs_ptr->parent_pcs_ptr->aligned_height / 2 -
                     ((context_ptr->sb_origin_y + ((txb_origin_y >> 3) << 3)) >> 1));
+#if CAND_MEM_OPT
+        txb_origin_index =
+            txb_origin_x + txb_origin_y * context_ptr->residual_quant_coeff_ptr->stride_y;
+#else
         txb_origin_index =
             txb_origin_x + txb_origin_y * candidate_buffer->residual_quant_coeff_ptr->stride_y;
+#endif
         txb_chroma_origin_index = txb_1d_offset;
         // Reset the Bit Costs
         y_txb_coeff_bits  = 0;
@@ -3020,7 +3055,11 @@ void cu_full_distortion_fast_txb_mode_r(
 #endif
                     (((txb_origin_x >> 3) << 3) +
                      (((txb_origin_y >> 3) << 3) *
+#if CAND_MEM_OPT
+                      context_ptr->residual_quant_coeff_ptr->stride_cb)) >>
+#else
                       candidate_buffer->residual_quant_coeff_ptr->stride_cb)) >>
+#endif
                     1;
 
                 EbSpatialFullDistType spatial_full_dist_type_fun =
@@ -3116,7 +3155,11 @@ void cu_full_distortion_fast_txb_mode_r(
 #if !MD_FRAME_CONTEXT_MEM_OPT
                                         context_ptr->coeff_est_entropy_coder_ptr,
 #endif
+#if CAND_MEM_OPT
+                                        context_ptr->residual_quant_coeff_ptr,
+#else
                                         candidate_buffer->residual_quant_coeff_ptr,
+#endif
                                         count_non_zero_coeffs[0][current_txb_index],
                                         count_non_zero_coeffs[1][current_txb_index],
                                         count_non_zero_coeffs[2][current_txb_index],

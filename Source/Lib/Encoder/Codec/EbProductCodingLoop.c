@@ -4078,6 +4078,10 @@ void derive_me_offsets(const SequenceControlSet *scs_ptr, PictureControlSet *pcs
                 context_ptr->geom_offset_x,
                 context_ptr->geom_offset_y);
     }
+#if ME_MEM_OPT
+    context_ptr->me_cand_offset = context_ptr->me_block_offset *pcs_ptr->parent_pcs_ptr->max_number_of_candidates_per_block;
+#endif
+
 }
 // Copy ME_MVs (generated @ PA) from input buffer (pcs_ptr-> .. ->me_results) to local
 // MD buffers (context_ptr->sb_me_mv)
@@ -4118,6 +4122,17 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
             {
                 int16_t me_mv_x;
                 int16_t me_mv_y;
+#if ME_MEM_OPT
+                uint32_t pu_stride = scs_ptr->mrp_mode == 0 ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1;
+                if (list_idx == 0) {
+                    me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset*pu_stride + ref_idx].x_mv)<< 1;
+                    me_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset*pu_stride + ref_idx].y_mv)<< 1;
+                }
+                else {
+                    me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset*pu_stride + (scs_ptr->mrp_mode == 0 ? 4 : 2) + ref_idx].x_mv)<< 1;
+                    me_mv_y = (me_results->me_mv_array[context_ptr->me_block_offset*pu_stride + (scs_ptr->mrp_mode == 0 ? 4 : 2) + ref_idx].y_mv)<< 1;
+                }
+#else
                 if (list_idx == 0) {
                     me_mv_x = (me_results->me_mv_array[context_ptr->me_block_offset][ref_idx].x_mv)
                         << 1;
@@ -4136,7 +4151,7 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                     .y_mv)
                         << 1;
                 }
-
+#endif
                 if (context_ptr->perform_me_mv_1_8_pel_ref) {
                     int16_t  best_search_mvx = (int16_t)~0;
                     int16_t  best_search_mvy = (int16_t)~0;
@@ -5089,8 +5104,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                 context_ptr->pred_buf_q3,
                 &(candidate_buffer->prediction_ptr->buffer_cb[blk_chroma_origin_index]),
                 candidate_buffer->prediction_ptr->stride_cb,
+#if  CAND_MEM_OPT
+                &(context_ptr->cfl_temp_prediction_ptr->buffer_cb[blk_chroma_origin_index]),
+                context_ptr->cfl_temp_prediction_ptr->stride_cb,
+#else
                 &(candidate_buffer->cfl_temp_prediction_ptr->buffer_cb[blk_chroma_origin_index]),
                 candidate_buffer->cfl_temp_prediction_ptr->stride_cb,
+#endif
                 alpha_q3,
                 8,
                 chroma_width,
@@ -5100,9 +5120,15 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                 context_ptr->pred_buf_q3,
                 ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cb) + blk_chroma_origin_index,
                 candidate_buffer->prediction_ptr->stride_cb,
+#if  CAND_MEM_OPT
+                ((uint16_t *)context_ptr->cfl_temp_prediction_ptr->buffer_cb) +
+                blk_chroma_origin_index,
+                context_ptr->cfl_temp_prediction_ptr->stride_cb,
+#else
                 ((uint16_t *)candidate_buffer->cfl_temp_prediction_ptr->buffer_cb) +
                     blk_chroma_origin_index,
                 candidate_buffer->cfl_temp_prediction_ptr->stride_cb,
+#endif
                 alpha_q3,
                 10,
                 chroma_width,
@@ -5113,9 +5139,15 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
         residual_kernel(input_picture_ptr->buffer_cb,
                         input_cb_origin_in_index,
                         input_picture_ptr->stride_cb,
+#if  CAND_MEM_OPT
+                        context_ptr->cfl_temp_prediction_ptr->buffer_cb,
+                        blk_chroma_origin_index,
+                        context_ptr->cfl_temp_prediction_ptr->stride_cb,
+#else
                         candidate_buffer->cfl_temp_prediction_ptr->buffer_cb,
                         blk_chroma_origin_index,
                         candidate_buffer->cfl_temp_prediction_ptr->stride_cb,
+#endif
                         (int16_t *)candidate_buffer->residual_ptr->buffer_cb,
                         blk_chroma_origin_index,
                         candidate_buffer->residual_ptr->stride_cb,
@@ -5173,8 +5205,13 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                 context_ptr->pred_buf_q3,
                 &(candidate_buffer->prediction_ptr->buffer_cr[blk_chroma_origin_index]),
                 candidate_buffer->prediction_ptr->stride_cr,
+#if  CAND_MEM_OPT
+                &(context_ptr->cfl_temp_prediction_ptr->buffer_cr[blk_chroma_origin_index]),
+                context_ptr->cfl_temp_prediction_ptr->stride_cr,
+#else
                 &(candidate_buffer->cfl_temp_prediction_ptr->buffer_cr[blk_chroma_origin_index]),
                 candidate_buffer->cfl_temp_prediction_ptr->stride_cr,
+#endif
                 alpha_q3,
                 8,
                 chroma_width,
@@ -5184,9 +5221,15 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
                 context_ptr->pred_buf_q3,
                 ((uint16_t *)candidate_buffer->prediction_ptr->buffer_cr) + blk_chroma_origin_index,
                 candidate_buffer->prediction_ptr->stride_cr,
+#if  CAND_MEM_OPT
+                ((uint16_t *)context_ptr->cfl_temp_prediction_ptr->buffer_cr) +
+                blk_chroma_origin_index,
+                context_ptr->cfl_temp_prediction_ptr->stride_cr,
+#else
                 ((uint16_t *)candidate_buffer->cfl_temp_prediction_ptr->buffer_cr) +
                     blk_chroma_origin_index,
                 candidate_buffer->cfl_temp_prediction_ptr->stride_cr,
+#endif
                 alpha_q3,
                 10,
                 chroma_width,
@@ -5197,9 +5240,15 @@ void av1_cost_calc_cfl(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
         residual_kernel(input_picture_ptr->buffer_cr,
                         input_cb_origin_in_index,
                         input_picture_ptr->stride_cr,
+#if  CAND_MEM_OPT
+                        context_ptr->cfl_temp_prediction_ptr->buffer_cr,
+                        blk_chroma_origin_index,
+                        context_ptr->cfl_temp_prediction_ptr->stride_cr,
+#else
                         candidate_buffer->cfl_temp_prediction_ptr->buffer_cr,
                         blk_chroma_origin_index,
                         candidate_buffer->cfl_temp_prediction_ptr->stride_cr,
+#endif
                         (int16_t *)candidate_buffer->residual_ptr->buffer_cr,
                         blk_chroma_origin_index,
                         candidate_buffer->residual_ptr->stride_cr,
@@ -6665,8 +6714,12 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             &(((int32_t *)context_ptr->trans_quant_buffers_ptr->txb_trans_coeff2_nx2_n_ptr
                    ->buffer_y)[context_ptr->txb_1d_offset]),
             NOT_USED_VALUE,
+#if  CAND_MEM_OPT
+            &(((int32_t *)context_ptr->residual_quant_coeff_ptr->buffer_y)[context_ptr->txb_1d_offset]),
+#else
             &(((int32_t *)candidate_buffer->residual_quant_coeff_ptr
                    ->buffer_y)[context_ptr->txb_1d_offset]),
+#endif
             &(((int32_t *)candidate_buffer->recon_coeff_ptr->buffer_y)[context_ptr->txb_1d_offset]),
             qp,
             seg_qp,
@@ -6687,8 +6740,13 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             EB_FALSE);
 
         candidate_buffer->candidate_ptr->quantized_dc[0][context_ptr->txb_itr] =
+#if  CAND_MEM_OPT
+        (((int32_t *)context_ptr->residual_quant_coeff_ptr
+            ->buffer_y)[context_ptr->txb_1d_offset]);
+#else
             (((int32_t *)candidate_buffer->residual_quant_coeff_ptr
                   ->buffer_y)[context_ptr->txb_1d_offset]);
+#endif
         uint32_t y_has_coeff = y_count_non_zero_coeffs > 0;
 
         // tx_type not equal to DCT_DCT and no coeff is not an acceptable option in AV1.
@@ -6804,7 +6862,11 @@ void tx_type_search(PictureControlSet *pcs_ptr,
 #if !MD_FRAME_CONTEXT_MEM_OPT
             context_ptr->coeff_est_entropy_coder_ptr,
 #endif
+#if  CAND_MEM_OPT
+            context_ptr->residual_quant_coeff_ptr,
+#else
             candidate_buffer->residual_quant_coeff_ptr,
+#endif
             y_count_non_zero_coeffs,
             0,
             0,

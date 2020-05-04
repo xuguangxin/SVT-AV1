@@ -12623,6 +12623,20 @@ EbErrorType motion_estimate_sb(
                 pcs_ptr->me_results[sb_index]->me_candidate[pu_index][cand_index].distortion =
                     me_candidate->distortion;
 #endif
+#if  ME_MEM_OPT
+                uint32_t me_cand_off = pu_index * pcs_ptr->max_number_of_candidates_per_block + cand_index;
+                pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].direction =
+                    me_candidate->prediction_direction;
+                pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].ref_idx_l0 =
+                    me_candidate->ref_index[0];
+                pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].ref_idx_l1 =
+                    me_candidate->ref_index[1];
+                pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].ref0_list =
+                    me_candidate->ref0_list;
+                pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].ref1_list =
+                    me_candidate->ref1_list;
+#else
+
                 pcs_ptr->me_results[sb_index]->me_candidate[pu_index][cand_index].direction =
                     me_candidate->prediction_direction;
                 pcs_ptr->me_results[sb_index]->me_candidate[pu_index][cand_index].ref_idx_l0 =
@@ -12633,6 +12647,7 @@ EbErrorType motion_estimate_sb(
                     me_candidate->ref0_list;
                 pcs_ptr->me_results[sb_index]->me_candidate[pu_index][cand_index].ref1_list =
                     me_candidate->ref1_list;
+#endif
             }
 
             for (list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
@@ -12652,6 +12667,15 @@ EbErrorType motion_estimate_sb(
 
                 // Ref Picture Loop
                 for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index) {
+
+#if  ME_MEM_OPT
+                     uint32_t pu_stride = scs_ptr->mrp_mode == 0 ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1;
+                     pcs_ptr->me_results[sb_index]->me_mv_array[pu_index*pu_stride + ((list_index && scs_ptr->mrp_mode == 0)? 4: list_index ? 2 : 0) + ref_pic_index].x_mv =
+                         _MVXT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+
+                      pcs_ptr->me_results[sb_index]->me_mv_array[pu_index*pu_stride + ((list_index && scs_ptr->mrp_mode == 0) ? 4 : list_index ? 2 : 0) + ref_pic_index].y_mv =
+                          _MVYT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+#else
                     pcs_ptr->me_results[sb_index]
                         ->me_mv_array[pu_index][((list_index && scs_ptr->mrp_mode == 0)
                                                      ? 4
@@ -12664,6 +12688,7 @@ EbErrorType motion_estimate_sb(
                                                      : list_index ? 2 : 0) +
                                                 ref_pic_index]
                         .y_mv = _MVYT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+#endif
 
 #if LOG_MV_VALIDITY
                     //check if final MV is within AV1 limits

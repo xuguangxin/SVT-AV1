@@ -562,6 +562,15 @@ void *entropy_coding_kernel(void *input_ptr) {
                                 if (pcs_ptr->ref_pic_ptr_array[1][ref_idx] != EB_NULL)
                                     eb_release_object(pcs_ptr->ref_pic_ptr_array[1][ref_idx]);
                             }
+
+#if PAL_MEM_OPT
+                            //free palette data
+                            if (pcs_ptr->tile_tok[0][0])
+                                EB_FREE_ARRAY(pcs_ptr->tile_tok[0][0]);
+#endif
+
+
+
 #if PR_1210
                             frame_entropy_done = EB_TRUE;
 #else

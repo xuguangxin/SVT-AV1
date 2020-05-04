@@ -33,11 +33,21 @@ static void eb_get_mv(PictureParentControlSet *pcs_ptr, uint32_t sb_index, int32
 
     const MeSbResults *me_results       = pcs_ptr->me_results[sb_index];
     uint8_t            total_me_cnt     = me_results->total_me_candidate_index[0];
+
+#if ME_MEM_OPT
+    const MeCandidate *me_block_results = &me_results->me_candidate_array[0];
+#else
     const MeCandidate *me_block_results = me_results->me_candidate[0];
+#endif
     for (me_candidate_index = 0; me_candidate_index < total_me_cnt; me_candidate_index++) {
         if (me_block_results->direction == UNI_PRED_LIST_0) {
+#if ME_MEM_OPT
+            *x_current_mv = me_results->me_mv_array[0].x_mv;
+            *y_current_mv = me_results->me_mv_array[0].y_mv;
+#else
             *x_current_mv = me_results->me_mv_array[0][0].x_mv;
             *y_current_mv = me_results->me_mv_array[0][0].y_mv;
+#endif
             break;
         }
     }

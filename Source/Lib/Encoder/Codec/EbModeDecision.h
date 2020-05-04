@@ -210,10 +210,13 @@ typedef struct ModeDecisionCandidateBuffer {
 
     // Video Buffers
     EbPictureBufferDesc *prediction_ptr;
+
+#if !CAND_MEM_OPT
     EbPictureBufferDesc *prediction_ptr_temp;
     EbPictureBufferDesc *cfl_temp_prediction_ptr;
     EbPictureBufferDesc
         *residual_quant_coeff_ptr; // One buffer for residual and quantized coefficient
+#endif
     EbPictureBufferDesc *recon_coeff_ptr;
     EbPictureBufferDesc *residual_ptr;
 

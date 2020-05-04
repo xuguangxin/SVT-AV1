@@ -376,6 +376,15 @@ typedef struct ModeDecisionContext {
     uint8_t  injected_mv_count_bipred;
     uint32_t fast_candidate_inter_count;
     uint32_t me_block_offset;
+#if ME_MEM_OPT
+    uint32_t me_cand_offset;
+#endif
+#if CAND_MEM_OPT
+    EbPictureBufferDesc *cfl_temp_prediction_ptr;
+    EbPictureBufferDesc *prediction_ptr_temp;
+    EbPictureBufferDesc
+        *residual_quant_coeff_ptr; // One buffer for residual and quantized coefficient
+#endif
     uint8_t  tx_depth;
     uint8_t  txb_itr;
     uint32_t me_sb_addr;

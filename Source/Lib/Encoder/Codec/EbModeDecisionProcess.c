@@ -83,6 +83,13 @@ static void mode_decision_context_dctor(EbPtr p) {
 #if DEPTH_PART_CLEAN_UP
     EB_FREE_ARRAY(obj->mdc_sb_array);
 #endif
+
+#if CAND_MEM_OPT
+    EB_DELETE(obj->prediction_ptr_temp);
+    EB_DELETE(obj->cfl_temp_prediction_ptr);
+    EB_DELETE(obj->residual_quant_coeff_ptr);
+#endif
+
 }
 
 /******************************************************
@@ -316,6 +323,49 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
     EB_MALLOC_ARRAY(context_ptr->ref_best_ref_sq_table, MAX_REF_TYPE_CAND);
     EB_MALLOC_ARRAY(context_ptr->above_txfm_context, (MAX_SB_SIZE >> MI_SIZE_LOG2));
     EB_MALLOC_ARRAY(context_ptr->left_txfm_context, (MAX_SB_SIZE >> MI_SIZE_LOG2));
+
+#if  CAND_MEM_OPT
+    EbPictureBufferDescInitData thirty_two_width_picture_buffer_desc_init_data;
+    EbPictureBufferDescInitData picture_buffer_desc_init_data;
+
+    picture_buffer_desc_init_data.max_width = MAX_SB_SIZE;
+    picture_buffer_desc_init_data.max_height = MAX_SB_SIZE;
+    picture_buffer_desc_init_data.bit_depth = context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT;
+    picture_buffer_desc_init_data.color_format = EB_YUV420;
+    picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
+    picture_buffer_desc_init_data.left_padding = 0;
+    picture_buffer_desc_init_data.right_padding = 0;
+    picture_buffer_desc_init_data.top_padding = 0;
+    picture_buffer_desc_init_data.bot_padding = 0;
+    picture_buffer_desc_init_data.split_mode = EB_FALSE;
+
+    thirty_two_width_picture_buffer_desc_init_data.max_width = MAX_SB_SIZE;
+    thirty_two_width_picture_buffer_desc_init_data.max_height = MAX_SB_SIZE;
+    thirty_two_width_picture_buffer_desc_init_data.bit_depth = EB_32BIT;
+    thirty_two_width_picture_buffer_desc_init_data.color_format = EB_YUV420;
+    thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask =
+        PICTURE_BUFFER_DESC_FULL_MASK;
+    thirty_two_width_picture_buffer_desc_init_data.left_padding = 0;
+    thirty_two_width_picture_buffer_desc_init_data.right_padding = 0;
+    thirty_two_width_picture_buffer_desc_init_data.top_padding = 0;
+    thirty_two_width_picture_buffer_desc_init_data.bot_padding = 0;
+    thirty_two_width_picture_buffer_desc_init_data.split_mode = EB_FALSE;
+
+
+
+    EB_NEW(context_ptr->residual_quant_coeff_ptr,
+        eb_picture_buffer_desc_ctor,
+        (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
+
+    EB_NEW(context_ptr->prediction_ptr_temp,
+        eb_picture_buffer_desc_ctor,
+        (EbPtr)&picture_buffer_desc_init_data);
+
+    EB_NEW(context_ptr->cfl_temp_prediction_ptr,
+        eb_picture_buffer_desc_ctor,
+        (EbPtr)&picture_buffer_desc_init_data);
+
+#endif
     return EB_ErrorNone;
 }
 

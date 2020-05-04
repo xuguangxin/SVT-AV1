@@ -31,7 +31,9 @@
 #include "aom_dsp_rtcd.h"
 #include "EbMdRateEstimation.h"
 void av1_set_ref_frame(MvReferenceFrame *rf, int8_t ref_frame_type);
-
+#if SB_MEM_OPT
+uint8_t av1_drl_ctx(const CandidateMv *ref_mv_stack, int32_t ref_idx);
+#endif
 /*******************************************
 * set Penalize Skip Flag
 *

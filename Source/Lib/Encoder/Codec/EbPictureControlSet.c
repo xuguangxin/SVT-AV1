@@ -74,11 +74,16 @@ EbErrorType segmentation_map_ctor(SegmentationNeighborMap *seg_neighbor_map, uin
 
 static void me_sb_results_dctor(EbPtr p) {
     MeSbResults *obj = (MeSbResults *)p;
-
+#if  ME_MEM_OPT
+    EB_FREE_ARRAY(obj->me_candidate_array);
+    EB_FREE_ARRAY(obj->me_mv_array);
+#else
     EB_FREE_ARRAY(obj->me_candidate);
+
     if (obj->me_mv_array) { EB_FREE_ARRAY(obj->me_mv_array[0]); }
     EB_FREE_ARRAY(obj->me_mv_array);
     EB_FREE_ARRAY(obj->me_candidate_array);
+#endif
     EB_FREE_ARRAY(obj->total_me_candidate_index);
 }
 
@@ -89,14 +94,29 @@ EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint32_t max_number_of_blks
     size_t count                      = ((mrp_mode == 0) ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1);
     obj_ptr->dctor                    = me_sb_results_dctor;
     obj_ptr->max_number_of_pus_per_sb = max_number_of_blks_per_sb;
-
+#if ME_MEM_OPT
+    EB_MALLOC_ARRAY(obj_ptr->me_mv_array, max_number_of_blks_per_sb * count);
+    EB_MALLOC_ARRAY(obj_ptr->me_candidate_array,
+        max_number_of_blks_per_sb * maxNumberOfMeCandidatesPerPU);
+#else
     EB_MALLOC_ARRAY(obj_ptr->me_candidate, max_number_of_blks_per_sb);
     EB_MALLOC_ARRAY(obj_ptr->me_mv_array, max_number_of_blks_per_sb);
     EB_MALLOC_ARRAY(obj_ptr->me_candidate_array,
                     max_number_of_blks_per_sb * maxNumberOfMeCandidatesPerPU);
     EB_MALLOC_ARRAY(obj_ptr->me_mv_array[0], max_number_of_blks_per_sb * count);
-
+#endif
     for (pu_index = 0; pu_index < max_number_of_blks_per_sb; ++pu_index) {
+#if  ME_MEM_OPT
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 0].ref_idx_l0 = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 0].ref_idx_l1 = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 1].ref_idx_l0 = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 1].ref_idx_l1 = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 2].ref_idx_l0 = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 2].ref_idx_l1 = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 0].direction = 0;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 1].direction = 1;
+        obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 2].direction = 2;
+#else
         obj_ptr->me_candidate[pu_index] =
             &obj_ptr->me_candidate_array[pu_index * maxNumberOfMeCandidatesPerPU];
 
@@ -111,6 +131,7 @@ EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint32_t max_number_of_blks
         obj_ptr->me_candidate[pu_index][1].direction = 1;
         obj_ptr->me_candidate[pu_index][2].direction = 2;
         obj_ptr->me_mv_array[pu_index]               = obj_ptr->me_mv_array[0] + pu_index * count;
+#endif
     }
     EB_MALLOC_ARRAY(obj_ptr->total_me_candidate_index, max_number_of_blks_per_sb);
 
@@ -217,7 +238,9 @@ void picture_control_set_dctor(EbPtr p) {
 #if !REU_MEM_OPT
     EB_FREE_ARRAY(obj->rate_est_array);
 #endif
+#if !PAL_MEM_OPT
     if (obj->tile_tok[0][0]) EB_FREE_ARRAY(obj->tile_tok[0][0]);
+#endif
 #if !DEPTH_PART_CLEAN_UP
     EB_FREE_ARRAY(obj->mdc_sb_array);
 #endif
@@ -267,6 +290,26 @@ EbErrorType create_neighbor_array_units(InitData *data, size_t count) {
     return EB_ErrorNone;
 }
 
+#if PAL_MEM_OPT
+EbErrorType  alloc_palette_tokens(SequenceControlSet * scs_ptr, PictureControlSet * child_pcs_ptr)
+{
+
+    if (child_pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+        if (scs_ptr->static_config.screen_content_mode) {
+            uint32_t     mi_cols = scs_ptr->max_input_luma_width >> MI_SIZE_LOG2;
+            uint32_t     mi_rows = scs_ptr->max_input_luma_height >> MI_SIZE_LOG2;
+            uint32_t     mb_cols = (mi_cols + 2) >> 2;
+            uint32_t     mb_rows = (mi_rows + 2) >> 2;
+            unsigned int tokens = get_token_alloc(mb_rows, mb_cols, MAX_SB_SIZE_LOG2, 2);
+            EB_CALLOC_ARRAY(child_pcs_ptr->tile_tok[0][0], tokens);
+        }
+        else
+            child_pcs_ptr->tile_tok[0][0] = NULL;
+    }
+
+    return EB_ErrorNone;
+}
+#endif
 EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object_init_data_ptr) {
     PictureControlSetInitData *init_data_ptr = (PictureControlSetInitData *)object_init_data_ptr;
 
@@ -440,6 +483,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
 #endif
     EB_MALLOC_ARRAY(object_ptr->rate_est_array, all_sb);
 #endif
+#if ! PAL_MEM_OPT
     if (init_data_ptr->cfg_palette) {
         uint32_t     mi_cols = init_data_ptr->picture_width >> MI_SIZE_LOG2;
         uint32_t     mi_rows = init_data_ptr->picture_height >> MI_SIZE_LOG2;
@@ -449,6 +493,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
         EB_CALLOC_ARRAY(object_ptr->tile_tok[0][0], tokens);
     } else
         object_ptr->tile_tok[0][0] = NULL;
+#endif
 #if !DEPTH_PART_CLEAN_UP
     // Mode Decision Control config
     EB_MALLOC_ARRAY(object_ptr->mdc_sb_array, object_ptr->sb_total_count);

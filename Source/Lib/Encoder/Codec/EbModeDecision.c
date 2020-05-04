@@ -71,7 +71,11 @@ uint8_t is_me_data_present(
     uint8_t                      list_idx,
     uint8_t                      ref_idx){
     uint8_t total_me_cnt = me_results->total_me_candidate_index[context_ptr->me_block_offset];
+#if ME_MEM_OPT
+    const MeCandidate *me_block_results = &me_results->me_candidate_array[context_ptr->me_cand_offset];
+#else
     const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
+#endif
     for (uint32_t me_cand_i = 0; me_cand_i < total_me_cnt; ++me_cand_i){
         const MeCandidate *me_cand = &me_block_results[me_cand_i];
         assert(me_cand->direction >= 0 && me_cand->direction <= 2);
@@ -598,20 +602,28 @@ void choose_best_av1_mv_pred(ModeDecisionContext *           context_ptr,
 static void mode_decision_candidate_buffer_dctor(EbPtr p) {
     ModeDecisionCandidateBuffer *obj = (ModeDecisionCandidateBuffer *)p;
     EB_DELETE(obj->prediction_ptr);
+#if !CAND_MEM_OPT
     EB_DELETE(obj->prediction_ptr_temp);
     EB_DELETE(obj->cfl_temp_prediction_ptr);
+#endif
     EB_DELETE(obj->residual_ptr);
+#if !CAND_MEM_OPT
     EB_DELETE(obj->residual_quant_coeff_ptr);
+#endif
     EB_DELETE(obj->recon_coeff_ptr);
     EB_DELETE(obj->recon_ptr);
 }
 static void mode_decision_scratch_candidate_buffer_dctor(EbPtr p) {
     ModeDecisionCandidateBuffer *obj = (ModeDecisionCandidateBuffer *)p;
     EB_DELETE(obj->prediction_ptr);
+#if !CAND_MEM_OPT
     EB_DELETE(obj->prediction_ptr_temp);
     EB_DELETE(obj->cfl_temp_prediction_ptr);
+#endif
     EB_DELETE(obj->residual_ptr);
+#if ! CAND_MEM_OPT
     EB_DELETE(obj->residual_quant_coeff_ptr);
+#endif
     EB_DELETE(obj->recon_coeff_ptr);
     EB_DELETE(obj->recon_ptr);
 }
@@ -671,7 +683,7 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     EB_NEW(buffer_ptr->prediction_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
-
+#if !CAND_MEM_OPT
     EB_NEW(buffer_ptr->prediction_ptr_temp,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
@@ -679,15 +691,15 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     EB_NEW(buffer_ptr->cfl_temp_prediction_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
-
+#endif
     EB_NEW(buffer_ptr->residual_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&double_width_picture_buffer_desc_init_data);
-
+#if !CAND_MEM_OPT
     EB_NEW(buffer_ptr->residual_quant_coeff_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
-
+#endif
     EB_NEW(buffer_ptr->recon_coeff_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
@@ -751,7 +763,7 @@ EbErrorType mode_decision_scratch_candidate_buffer_ctor(ModeDecisionCandidateBuf
     EB_NEW(buffer_ptr->prediction_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
-
+#if ! CAND_MEM_OPT
     EB_NEW(buffer_ptr->prediction_ptr_temp,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
@@ -759,15 +771,15 @@ EbErrorType mode_decision_scratch_candidate_buffer_ctor(ModeDecisionCandidateBuf
     EB_NEW(buffer_ptr->cfl_temp_prediction_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
-
+#endif
     EB_NEW(buffer_ptr->residual_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&double_width_picture_buffer_desc_init_data);
-
+#if ! CAND_MEM_OPT
     EB_NEW(buffer_ptr->residual_quant_coeff_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
-
+#endif
     EB_NEW(buffer_ptr->recon_coeff_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
@@ -858,7 +870,11 @@ void unipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, Picture
     FrameHeader *      frm_hdr        = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     const MeSbResults *me_results     = pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr];
     uint8_t total_me_cnt = me_results->total_me_candidate_index[context_ptr->me_block_offset];
+#if ME_MEM_OPT
+    const MeCandidate *me_block_results = &me_results->me_candidate_array[context_ptr->me_cand_offset];
+#else
     const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
+#endif
     ModeDecisionCandidate *cand_array   = context_ptr->fast_candidate_array;
     EbBool       is_compound_enabled    = (frm_hdr->reference_mode == SINGLE_REFERENCE) ? 0 : 1;
     IntMv        best_pred_mv[2]        = {{0}, {0}};
@@ -1215,7 +1231,11 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
     FrameHeader *      frm_hdr        = &pcs_ptr->parent_pcs_ptr->frm_hdr;
     const MeSbResults *me_results     = pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr];
     uint8_t total_me_cnt = me_results->total_me_candidate_index[context_ptr->me_block_offset];
+#if ME_MEM_OPT
+    const MeCandidate *me_block_results = &me_results->me_candidate_array[context_ptr->me_cand_offset];
+#else
     const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
+#endif
     ModeDecisionCandidate *cand_array   = context_ptr->fast_candidate_array;
     EbBool       is_compound_enabled    = (frm_hdr->reference_mode == SINGLE_REFERENCE) ? 0 : 1;
     IntMv        best_pred_mv[2]        = {{0}, {0}};
@@ -3095,8 +3115,11 @@ void inject_warped_motion_candidates(
     IntMv  best_pred_mv[2] = { {0}, {0} };
 
     uint8_t total_me_cnt = me_results->total_me_candidate_index[context_ptr->me_block_offset];
+#if ME_MEM_OPT
+    const MeCandidate *me_block_results = &me_results->me_candidate_array[context_ptr->me_cand_offset];
+#else
     const MeCandidate *me_block_results = me_results->me_candidate[context_ptr->me_block_offset];
-
+#endif
     for (uint8_t me_candidate_index = 0; me_candidate_index < total_me_cnt; ++me_candidate_index)
     {
         const MeCandidate *me_block_results_ptr = &me_block_results[me_candidate_index];
@@ -3551,7 +3574,11 @@ void inject_new_candidates(const SequenceControlSet *  scs_ptr,
 
     const MeSbResults *me_results       = pcs_ptr->parent_pcs_ptr->me_results[me_sb_addr];
     uint8_t            total_me_cnt     = me_results->total_me_candidate_index[me_block_offset];
+#if ME_MEM_OPT
+    const MeCandidate *me_block_results = &me_results->me_candidate_array[context_ptr->me_cand_offset];
+#else
     const MeCandidate *me_block_results = me_results->me_candidate[me_block_offset];
+#endif
     MacroBlockD *      xd               = context_ptr->blk_ptr->av1xd;
     int                inside_tile      = 1;
     int                umv0tile         = (scs_ptr->static_config.unrestricted_motion_vector == 0);
