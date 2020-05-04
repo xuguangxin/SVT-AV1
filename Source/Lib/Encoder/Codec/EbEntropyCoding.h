@@ -57,7 +57,16 @@ extern EbErrorType reset_bitstream(EbPtr bitstream_ptr);
 extern EbErrorType reset_entropy_coder(EncodeContext *encode_context_ptr,
                                        EntropyCoder *entropy_coder_ptr, uint32_t qp,
                                        EB_SLICE slice_type);
-
+#if MD_FRAME_CONTEXT_MEM_OPT
+EbErrorType av1_txb_estimate_coeff_bits(
+    struct ModeDecisionContext *md_context, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
+    PictureControlSet *pcs_ptr, struct ModeDecisionCandidateBuffer *candidate_buffer_ptr,
+    uint32_t txb_origin_index, uint32_t txb_chroma_origin_index,
+    EbPictureBufferDesc *coeff_buffer_sb, uint32_t y_eob, uint32_t cb_eob, uint32_t cr_eob,
+    uint64_t *y_txb_coeff_bits, uint64_t *cb_txb_coeff_bits, uint64_t *cr_txb_coeff_bits,
+    TxSize txsize, TxSize txsize_uv, TxType tx_type, TxType tx_type_uv,
+    COMPONENT_TYPE component_type);
+#else
 EbErrorType av1_txb_estimate_coeff_bits(
     struct ModeDecisionContext *md_context, uint8_t allow_update_cdf, FRAME_CONTEXT *ec_ctx,
     PictureControlSet *pcs_ptr, struct ModeDecisionCandidateBuffer *candidate_buffer_ptr,
@@ -66,6 +75,7 @@ EbErrorType av1_txb_estimate_coeff_bits(
     uint64_t *y_txb_coeff_bits, uint64_t *cb_txb_coeff_bits, uint64_t *cr_txb_coeff_bits,
     TxSize txsize, TxSize txsize_uv, TxType tx_type, TxType tx_type_uv,
     COMPONENT_TYPE component_type);
+#endif
 
 extern EbErrorType copy_payload(Bitstream *bitstream_ptr, EbByte output_buffer,
                                                   uint32_t *     output_buffer_index,

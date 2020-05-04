@@ -283,9 +283,10 @@ typedef struct PictureControlSet {
     // SB Array
     uint16_t     sb_total_count;
     SuperBlock **sb_ptr_array;
+#if !MD_FRAME_CONTEXT_MEM_OPT
     // EncDec Entropy Coder (for rate estimation)
     EntropyCoder *coeff_est_entropy_coder_ptr;
-
+#endif
     // Mode Decision Neighbor Arrays
     NeighborArrayUnit **md_intra_luma_mode_neighbor_array[NEIGHBOR_ARRAY_TOTAL_COUNT];
     NeighborArrayUnit **md_intra_chroma_mode_neighbor_array[NEIGHBOR_ARRAY_TOTAL_COUNT];
@@ -377,7 +378,12 @@ typedef struct PictureControlSet {
     CRC_CALCULATOR   crc_calculator2;
 
     FRAME_CONTEXT *                 ec_ctx_array;
+#if MD_FRAME_CONTEXT_MEM_OPT
+    FRAME_CONTEXT                   md_frame_context;
+#endif
+#if !REU_MEM_OPT
     struct MdRateEstimationContext *rate_est_array;
+#endif
     uint8_t                         update_cdf;
     FRAME_CONTEXT                   ref_frame_context[REF_FRAMES];
     EbWarpedMotionParams            ref_global_motion[TOTAL_REFS_PER_FRAME];

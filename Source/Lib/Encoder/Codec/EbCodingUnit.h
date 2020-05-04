@@ -253,8 +253,9 @@ typedef struct MacroBlockD {
     int32_t mb_to_top_edge;
     int32_t mb_to_bottom_edge;
     uint8_t neighbors_ref_counts[TOTAL_REFS_PER_FRAME];
-
+#if !SB_MEM_OPT
     uint8_t                  use_intrabc;
+#endif
     MbModeInfo *             above_mbmi;
     MbModeInfo *             left_mbmi;
     MbModeInfo *             chroma_above_mbmi;
@@ -350,6 +351,12 @@ typedef struct BlkStruct {
     IntMv   ref_mvs[MODE_CTX_REF_FRAMES][MAX_MV_REF_CANDIDATES]; //used only for nonCompound modes.
 #endif
     uint8_t drl_index; // ec
+#if SB_MEM_OPT
+    int8_t drl_ctx[2]; // Store the drl ctx in coding loop to avoid storing
+                       // final_ref_mv_stack and ref_mv_count for EC
+    int8_t drl_ctx_near[2];// Store the drl ctx in coding loop to avoid storing
+                       // final_ref_mv_stack and ref_mv_count for EC
+#endif
     PredictionMode pred_mode; // ec
     IntMv          predmv[2]; // ec
 #if !CLEAN_UP_SB_DATA_4
@@ -386,6 +393,9 @@ typedef struct BlkStruct {
     PaletteInfo    palette_info; // ec
 #if !CLEAN_UP_SB_DATA_6
     uint8_t        do_not_process_block;
+#endif
+#if SB_MEM_OPT
+    uint8_t                  use_intrabc;
 #endif
 } BlkStruct;
 #else

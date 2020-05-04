@@ -240,6 +240,9 @@ typedef struct ModeDecisionContext {
     ModeDecisionCandidateBuffer *candidate_buffer_tx_depth_2;
     MdRateEstimationContext *     md_rate_estimation_ptr;
     EbBool                        is_md_rate_estimation_ptr_owner;
+#if REU_MEM_OPT
+    struct MdRateEstimationContext rate_est_table;
+#endif
     InterPredictionContext *      inter_prediction_context;
     MdBlkStruct *                md_local_blk_unit;
     BlkStruct *                  md_blk_arr_nsq;
@@ -302,7 +305,9 @@ typedef struct ModeDecisionContext {
     PALETTE_BUFFER   palette_buffer;
     PaletteInfo      palette_cand_array[MAX_PAL_CAND];
     // Entropy Coder
+#if !MD_FRAME_CONTEXT_MEM_OPT
     EntropyCoder *   coeff_est_entropy_coder_ptr;
+#endif
     MdEncPassCuData *md_ep_pipe_sb;
     uint8_t          pu_itr;
     uint8_t          cu_size_log2;

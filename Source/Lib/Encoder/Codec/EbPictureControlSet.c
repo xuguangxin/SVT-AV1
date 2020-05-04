@@ -195,7 +195,9 @@ void picture_control_set_dctor(EbPtr p) {
         EB_DELETE_PTR_ARRAY(obj->md_interpolation_type_neighbor_array[depth], tile_cnt);
     }
     EB_DELETE_PTR_ARRAY(obj->sb_ptr_array, obj->sb_total_count_unscaled);
+#if !MD_FRAME_CONTEXT_MEM_OPT
     EB_DELETE(obj->coeff_est_entropy_coder_ptr);
+#endif
     EB_DELETE(obj->bitstream_ptr);
     EB_DELETE_PTR_ARRAY(obj->entropy_coding_info, tile_cnt);
     EB_DELETE(obj->recon_picture32bit_ptr);
@@ -212,7 +214,9 @@ void picture_control_set_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->mip);
     EB_FREE_ARRAY(obj->md_rate_estimation_array);
     EB_FREE_ARRAY(obj->ec_ctx_array);
+#if !REU_MEM_OPT
     EB_FREE_ARRAY(obj->rate_est_array);
+#endif
     if (obj->tile_tok[0][0]) EB_FREE_ARRAY(obj->tile_tok[0][0]);
 #if !DEPTH_PART_CLEAN_UP
     EB_FREE_ARRAY(obj->mdc_sb_array);
@@ -385,10 +389,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
 
     // Packetization process Bitstream
     EB_NEW(object_ptr->bitstream_ptr, bitstream_ctor, PACKETIZATION_PROCESS_BUFFER_SIZE);
-
+#if !MD_FRAME_CONTEXT_MEM_OPT
     // Rate estimation entropy coder
     EB_NEW(
         object_ptr->coeff_est_entropy_coder_ptr, entropy_coder_ctor, SEGMENT_ENTROPY_BUFFER_SIZE);
+#endif
     // GOP
     object_ptr->picture_number       = 0;
     object_ptr->temporal_layer_index = 0;
@@ -427,13 +432,14 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     EB_MALLOC_ARRAY(object_ptr->md_rate_estimation_array, 1);
     memset(object_ptr->md_rate_estimation_array, 0, sizeof(MdRateEstimationContext));
     EB_MALLOC_ARRAY(object_ptr->ec_ctx_array, all_sb);
+#if !REU_MEM_OPT
 #if RATE_MEM_OPT
     if(init_data_ptr->serial_rate_est)
        EB_MALLOC_ARRAY(object_ptr->rate_est_array, 1);
     else
 #endif
     EB_MALLOC_ARRAY(object_ptr->rate_est_array, all_sb);
-
+#endif
     if (init_data_ptr->cfg_palette) {
         uint32_t     mi_cols = init_data_ptr->picture_width >> MI_SIZE_LOG2;
         uint32_t     mi_rows = init_data_ptr->picture_height >> MI_SIZE_LOG2;

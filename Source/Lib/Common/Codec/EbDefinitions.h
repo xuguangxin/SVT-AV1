@@ -346,6 +346,17 @@ extern "C" {
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
+
+// START  svt-01 /////////////////////////////////////////////////////////
+#define SVT_01 1
+
+#if SVT_01
+#define REU_MEM_OPT                 1 // Memory reduction for rate estimation tables
+#define SB_MEM_OPT                  1 // memory reduction for SB array. Removing memory allocation for av1xd per blk
+#define MD_FRAME_CONTEXT_MEM_OPT    1 // Memory reduction for frame context used in MD
+
+#endif
+// END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3

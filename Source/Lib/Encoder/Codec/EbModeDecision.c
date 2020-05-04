@@ -6504,8 +6504,11 @@ uint32_t product_full_mode_decision(
     blk_ptr->quantized_dc[2][0] = buffer_ptr_array[lowest_cost_index]->candidate_ptr->quantized_dc[2][0];
 #endif
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].count_non_zero_coeffs = candidate_ptr->count_non_zero_coeffs;
-
+#if SB_MEM_OPT
+    blk_ptr->use_intrabc = candidate_ptr->use_intrabc;
+#else
     blk_ptr->av1xd->use_intrabc = candidate_ptr->use_intrabc;
+#endif
     if (blk_ptr->prediction_mode_flag == INTER_MODE && candidate_ptr->is_compound)
     {
         blk_ptr->interinter_comp.type = candidate_ptr->interinter_comp.type;
@@ -6570,7 +6573,11 @@ uint32_t product_full_mode_decision(
 #else
         pu_ptr->merge_flag = candidate_ptr->merge_flag;
 #endif
+#if SB_MEM_OPT
+        if (blk_ptr->prediction_mode_flag != INTER_MODE && blk_ptr->use_intrabc == 0)
+#else
         if (blk_ptr->prediction_mode_flag != INTER_MODE && blk_ptr->av1xd->use_intrabc == 0)
+#endif
         {
             pu_ptr->inter_pred_direction_index = 0x03;
 #if CLEAN_UP_SB_DATA_7

@@ -2038,7 +2038,9 @@ void product_full_loop(ModeDecisionCandidateBuffer *candidate_buffer,
                                 candidate_buffer,
                                 txb_1d_offset,
                                 0,
+#if !MD_FRAME_CONTEXT_MEM_OPT
                                 context_ptr->coeff_est_entropy_coder_ptr,
+#endif
                                 candidate_buffer->residual_quant_coeff_ptr,
                                 y_count_non_zero_coeffs[txb_itr],
                                 0,
@@ -2345,7 +2347,11 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             0,
             0,
             0,
+#if SB_MEM_OPT
+            blk_ptr->use_intrabc,
+#else
             blk_ptr->av1xd->use_intrabc,
+#endif
             context_ptr->full_lambda,
             EB_FALSE);
 
@@ -2390,8 +2396,10 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
 
         // Set the Candidate Buffer
         candidate_buffer = candidate_buffer_ptr_array[0];
+#if !MD_FRAME_CONTEXT_MEM_OPT
         // Rate estimation function uses the values from CandidatePtr. The right values are copied from blk_ptr to CandidatePtr
         EntropyCoder *coeff_est_entropy_coder_ptr          = pcs_ptr->coeff_est_entropy_coder_ptr;
+#endif
         candidate_buffer->candidate_ptr->type              = blk_ptr->prediction_mode_flag;
         candidate_buffer->candidate_ptr->pred_mode         = blk_ptr->pred_mode;
         candidate_buffer->candidate_ptr->filter_intra_mode = blk_ptr->filter_intra_mode;
@@ -2405,7 +2413,9 @@ void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_pt
             candidate_buffer,
             coeff1d_offset,
             0,
+#if !MD_FRAME_CONTEXT_MEM_OPT
             coeff_est_entropy_coder_ptr,
+#endif
             coeff_samples_sb,
             y_count_non_zero_coeffs_temp,
             0,
@@ -2531,7 +2541,11 @@ void encode_pass_tx_search_hbd(
             0,
             0,
             0,
+#if SB_MEM_OPT
+            blk_ptr->use_intrabc,
+#else
             blk_ptr->av1xd->use_intrabc,
+#endif
             context_ptr->full_lambda,
             EB_FALSE);
 
@@ -2577,7 +2591,9 @@ void encode_pass_tx_search_hbd(
         // Set the Candidate Buffer
         candidate_buffer = candidate_buffer_ptr_array[0];
         // Rate estimation function uses the values from CandidatePtr. The right values are copied from blk_ptr to CandidatePtr
+#if !MD_FRAME_CONTEXT_MEM_OPT
         EntropyCoder *coeff_est_entropy_coder_ptr          = pcs_ptr->coeff_est_entropy_coder_ptr;
+#endif
         candidate_buffer->candidate_ptr->type              = blk_ptr->prediction_mode_flag;
         candidate_buffer->candidate_ptr->pred_mode         = blk_ptr->pred_mode;
         candidate_buffer->candidate_ptr->filter_intra_mode = blk_ptr->filter_intra_mode;
@@ -2591,7 +2607,9 @@ void encode_pass_tx_search_hbd(
             candidate_buffer,
             coeff1d_offset,
             0,
+#if !MD_FRAME_CONTEXT_MEM_OPT
             coeff_est_entropy_coder_ptr,
+#endif
             coeff_samples_sb,
             y_count_non_zero_coeffs_temp,
             0,
@@ -3095,7 +3113,9 @@ void cu_full_distortion_fast_txb_mode_r(
                                         candidate_buffer,
                                         txb_origin_index,
                                         txb_chroma_origin_index,
+#if !MD_FRAME_CONTEXT_MEM_OPT
                                         context_ptr->coeff_est_entropy_coder_ptr,
+#endif
                                         candidate_buffer->residual_quant_coeff_ptr,
                                         count_non_zero_coeffs[0][current_txb_index],
                                         count_non_zero_coeffs[1][current_txb_index],

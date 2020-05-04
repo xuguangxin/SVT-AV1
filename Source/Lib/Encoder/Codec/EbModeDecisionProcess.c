@@ -506,8 +506,9 @@ void reset_mode_decision(SequenceControlSet *scs_ptr, ModeDecisionContext *conte
             context_ptr->md_rate_estimation_ptr;
 
     // Reset CABAC Contexts
+#if !MD_FRAME_CONTEXT_MEM_OPT
     context_ptr->coeff_est_entropy_coder_ptr = pcs_ptr->coeff_est_entropy_coder_ptr;
-
+#endif
     // Reset Neighbor Arrays at start of new Segment / Picture
     if (segment_index == 0) {
         for (uint16_t r =
