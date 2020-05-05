@@ -218,7 +218,9 @@ typedef struct PictureControlSet {
     EbPictureBufferDesc *film_grain_picture_ptr;
     EbPictureBufferDesc *recon_picture16bit_ptr;
     EbPictureBufferDesc *film_grain_picture16bit_ptr;
+#if !PCS_MEM_OPT
     EbPictureBufferDesc *recon_picture32bit_ptr;
+#endif
     EbPictureBufferDesc *input_frame16bit;
 
     struct PictureParentControlSet *parent_pcs_ptr; //The parent of this PCS.

@@ -221,7 +221,9 @@ void picture_control_set_dctor(EbPtr p) {
 #endif
     EB_DELETE(obj->bitstream_ptr);
     EB_DELETE_PTR_ARRAY(obj->entropy_coding_info, tile_cnt);
+#if !PCS_MEM_OPT
     EB_DELETE(obj->recon_picture32bit_ptr);
+#endif
     EB_DELETE(obj->recon_picture16bit_ptr);
     EB_DELETE(obj->recon_picture_ptr);
     EB_DELETE(obj->film_grain_picture16bit_ptr);
@@ -383,12 +385,12 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     coeff_buffer_desc_32bit_init_data.top_padding        = 0;
     coeff_buffer_desc_32bit_init_data.bot_padding        = 0;
     coeff_buffer_desc_32bit_init_data.split_mode         = EB_FALSE;
-
+#if !PCS_MEM_OPT
     object_ptr->recon_picture32bit_ptr = (EbPictureBufferDesc *)EB_NULL;
     EB_NEW(object_ptr->recon_picture32bit_ptr,
            eb_recon_picture_buffer_desc_ctor,
            (EbPtr)&coeff_buffer_desc_32bit_init_data);
-
+#endif
     // Reconstructed Picture Buffer
     if (is_16bit) {
         EB_NEW(object_ptr->recon_picture16bit_ptr,

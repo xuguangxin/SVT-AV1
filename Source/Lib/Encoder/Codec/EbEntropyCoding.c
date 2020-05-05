@@ -1693,37 +1693,44 @@ EbErrorType bitstream_ctor(Bitstream *bitstream_ptr, uint32_t buffer_size) {
 
 static void entropy_coder_dctor(EbPtr p) {
     EntropyCoder *       obj               = (EntropyCoder *)p;
+#if !EC_MEM_OPT
     CabacEncodeContext * cabac_enc_ctx_ptr = (CabacEncodeContext *)obj->cabac_encode_context_ptr;
     OutputBitstreamUnit *output_bitstream_ptr =
         (OutputBitstreamUnit *)cabac_enc_ctx_ptr->bac_enc_context.m_pc_t_com_bit_if;
 
     EB_DELETE(output_bitstream_ptr);
-
     output_bitstream_ptr = (OutputBitstreamUnit *)obj->ec_output_bitstream_ptr;
+#else
+    OutputBitstreamUnit *output_bitstream_ptr =
+        (OutputBitstreamUnit *)obj->ec_output_bitstream_ptr;
+#endif
     EB_DELETE(output_bitstream_ptr);
 
     EB_FREE(obj->fc);
+#if !EC_MEM_OPT
     EB_FREE(obj->cabac_encode_context_ptr);
+#endif
 }
 EbErrorType entropy_coder_ctor(EntropyCoder *entropy_coder_ptr, uint32_t buffer_size) {
     OutputBitstreamUnit *output_bitstream_ptr;
 
     entropy_coder_ptr->dctor = entropy_coder_dctor;
-
+#if !EC_MEM_OPT
     EB_CALLOC(entropy_coder_ptr->cabac_encode_context_ptr, 1, sizeof(CabacEncodeContext));
-
+#endif
     EB_MALLOC(entropy_coder_ptr->fc, sizeof(FRAME_CONTEXT));
 
     EB_NEW(output_bitstream_ptr, output_bitstream_unit_ctor, buffer_size);
 
     entropy_coder_ptr->ec_output_bitstream_ptr = output_bitstream_ptr;
-
+#if !EC_MEM_OPT
     EB_NEW(output_bitstream_ptr, output_bitstream_unit_ctor, buffer_size);
     ((CabacEncodeContext *)entropy_coder_ptr->cabac_encode_context_ptr)
         ->bac_enc_context.m_pc_t_com_bit_if = output_bitstream_ptr;
+#endif
     return EB_ErrorNone;
 }
-
+#if !EC_MEM_OPT
 EbPtr entropy_coder_get_bitstream_ptr(EntropyCoder *entropy_coder_ptr) {
     CabacEncodeContext *cabac_enc_ctx_ptr =
         (CabacEncodeContext *)entropy_coder_ptr->cabac_encode_context_ptr;
@@ -1731,7 +1738,7 @@ EbPtr entropy_coder_get_bitstream_ptr(EntropyCoder *entropy_coder_ptr) {
 
     return bitstream_ptr;
 }
-
+#endif
 //*******************************************************************************************//
 //*******************************************************************************************//
 //*******************************************************************************************//
