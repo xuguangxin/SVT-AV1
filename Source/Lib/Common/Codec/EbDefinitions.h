@@ -359,6 +359,7 @@ extern "C" {
 #define CAND_MEM_OPT                1 // Memory reduction for candidate buffers
 #define PAL_MEM_OPT                 1 // Memory allocation on the fly for palette
 
+#define REST_MEM_OPT2                1 // Memory reduction for restoration
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
