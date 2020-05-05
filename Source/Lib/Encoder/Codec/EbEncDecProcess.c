@@ -1616,6 +1616,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 #endif
+#if MAY03_4K_10BIT_ADOPTS
+    else if (enc_mode <= ENC_M1) {
+        if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 4;
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
+        else
+            context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
+    }
+#endif
 #if APR24_ADOPTIONS_M6_M7
     else if (enc_mode <= ENC_M6) {
 #else
@@ -1963,6 +1975,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
         else
+#if MAY03_4K_10BIT_ADOPTS
+            context_ptr->chroma_level = CHROMA_MODE_1;
+#else
             context_ptr->chroma_level =
             (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
 #if ADOPT_CHROMA_MODE1_CFL_OFF
@@ -1971,6 +1986,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             ? CHROMA_MODE_2
 #endif
             : CHROMA_MODE_3;
+#endif
 
     }
     else // use specified level

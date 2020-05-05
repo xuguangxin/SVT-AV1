@@ -360,6 +360,7 @@ extern "C" {
 #define PAL_MEM_OPT                 1 // Memory allocation on the fly for palette
 
 #define REST_MEM_OPT2                1 // Memory reduction for restoration
+#define MAY03_4K_10BIT_ADOPTS       1 // disable chroma blind at MD for 10bit NSC; 4K setting change
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
