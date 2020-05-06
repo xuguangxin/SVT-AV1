@@ -342,6 +342,7 @@ extern "C" {
 #define REMAP_MODES   0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
 #define R2R_FIX_PADDING 1
+#define QP2QINDEX 1 // switch QP to qindex for MD
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////

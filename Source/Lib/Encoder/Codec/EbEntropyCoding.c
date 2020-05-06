@@ -5668,7 +5668,11 @@ EbErrorType write_modes_b(PictureControlSet *pcs_ptr, EntropyCodingContext *cont
                    blk_origin_x >> MI_SIZE_LOG2,
                    blk_origin_y >> MI_SIZE_LOG2);
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present) {
+#if QP2QINDEX
+            int32_t current_q_index = blk_ptr->qindex;
+#else
             int32_t current_q_index = quantizer_to_qindex[blk_ptr->qp];
+#endif
             int32_t super_block_upper_left =
                 (((blk_origin_y >> 2) & (scs_ptr->seq_header.sb_mi_size - 1)) == 0) &&
                 (((blk_origin_x >> 2) & (scs_ptr->seq_header.sb_mi_size - 1)) == 0);
@@ -5878,7 +5882,11 @@ EbErrorType write_modes_b(PictureControlSet *pcs_ptr, EntropyCodingContext *cont
                    blk_origin_x >> MI_SIZE_LOG2,
                    blk_origin_y >> MI_SIZE_LOG2);
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present) {
+#if QP2QINDEX
+            int32_t current_q_index = blk_ptr->qindex;
+#else
             int32_t current_q_index = quantizer_to_qindex[blk_ptr->qp];
+#endif
             int32_t super_block_upper_left =
                 (((blk_origin_y >> 2) & (scs_ptr->seq_header.sb_mi_size - 1)) == 0) &&
                 (((blk_origin_x >> 2) & (scs_ptr->seq_header.sb_mi_size - 1)) == 0);
