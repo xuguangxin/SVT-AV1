@@ -29,6 +29,17 @@ extern EbErrorType update_neighbor_samples_array_open_loop(uint8_t *above_ref, u
                                                            uint32_t stride, uint32_t srcOriginX,
                                                            uint32_t srcOriginY, uint8_t bwidth,
                                                            uint8_t bheight);
+#if TPL_LA
+extern EbErrorType update_neighbor_samples_array_open_loop_mb(uint8_t *above_ref, uint8_t *left_ref,
+#if USE_ORIGIN_YUV
+                                                           PictureParentControlSet *pcs_ptr,
+#endif
+                                                           EbPictureBufferDesc *input_ptr,
+                                                           uint8_t *dst_ptr,
+                                                           uint32_t stride, uint32_t srcOriginX,
+                                                           uint32_t srcOriginY, uint8_t bwidth,
+                                                           uint8_t bheight);
+#endif
 extern EbErrorType intra_prediction_open_loop(
         int32_t p_angle, uint8_t ois_intra_mode, uint32_t srcOriginX, uint32_t srcOriginY,
         TxSize tx_size, uint8_t *above_row, uint8_t *left_col,

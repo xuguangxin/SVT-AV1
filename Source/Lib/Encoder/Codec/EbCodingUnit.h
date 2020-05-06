@@ -234,6 +234,33 @@ typedef struct macroblockd_plane {
 #endif
 } MACROBLOCKD_PLANE;
 
+#if TPL_LA
+typedef enum InterPredMode {
+    UNIFORM_PRED,
+    WARP_PRED,
+    MASK_PRED,
+} InterPredMode;
+
+typedef struct InterPredParams {
+    InterPredMode mode;
+    EbWarpedMotionParams warp_params;
+    ConvolveParams conv_params;
+    //const InterpFilterParams *interp_filter_params[2];
+    InterpFilterParams interp_filter_params[2];
+    int block_width;
+    int block_height;
+    int pix_row;
+    int pix_col;
+    struct Buf2D ref_frame_buf;
+    int subsampling_x;
+    int subsampling_y;
+    const struct ScaleFactors *scale_factors;
+    int bit_depth;
+    int use_hbd_buf;
+    int is_intrabc;
+} InterPredParams;
+#endif
+
 typedef struct MacroBlockD {
     // block dimension in the unit of mode_info.
     uint8_t     n8_w, n8_h;
@@ -487,6 +514,22 @@ typedef struct OisSbResults {
     OisCandidate *ois_candidate_array[CU_MAX_COUNT];
     int8_t        best_distortion_index[CU_MAX_COUNT];
 } OisSbResults;
+
+#if TPL_LA
+typedef struct TplStats {
+    int64_t intra_cost;
+    int32_t intra_mode;
+    int64_t inter_cost;
+    int64_t srcrf_dist;
+    int64_t recrf_dist;
+    int64_t srcrf_rate;
+    int64_t recrf_rate;
+    int64_t mc_dep_rate;
+    int64_t mc_dep_dist;
+    MV mv;
+    uint64_t ref_frame_poc;
+} TplStats;
+#endif
 
 typedef struct SuperBlock {
     EbDctor                   dctor;

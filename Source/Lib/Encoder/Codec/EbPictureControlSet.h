@@ -43,6 +43,7 @@ extern "C" {
 #define MAX_NUMBER_OF_REGIONS_IN_WIDTH 4
 #define MAX_NUMBER_OF_REGIONS_IN_HEIGHT 4
 #define MAX_REF_QP_NUM 81
+#define QPS_SW_THRESH 8 // 100 to shut QPS/QPM (i.e. CORE only)
 
 // BDP OFF
 #define MD_NEIGHBOR_ARRAY_INDEX 0
@@ -598,6 +599,19 @@ typedef struct PictureParentControlSet {
     // Open loop Intra candidate Search Results
     OisSbResults **ois_sb_results;
     OisCandidate **ois_candicate;
+#if TPL_LA
+    OisMbResults **ois_mb_results;
+    TplStats     **tpl_stats;
+    int32_t      is_720p_or_larger;
+    int32_t      base_rdmult;
+    double       r0;
+    double       *tpl_beta;
+#if TPL_LA_LAMBDA_SCALING
+    double       *tpl_rdmult_scaling_factors;
+    double       *tpl_sb_rdmult_scaling_factors;
+    EbBool       blk_lambda_tuning;
+#endif
+#endif
     // Dynamic GOP
     EbPred   pred_structure;
     uint8_t  hierarchical_levels;
@@ -864,6 +878,9 @@ typedef struct PictureControlSetInitData {
     uint16_t  non_m8_pad_h;
 #endif
 
+#if TPL_LA
+    uint8_t enable_tpl_la;
+#endif
 } PictureControlSetInitData;
 
 typedef struct Av1Comp {

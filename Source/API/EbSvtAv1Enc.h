@@ -14,6 +14,8 @@ extern "C" {
 #include "EbSvtAv1.h"
 #include <stdlib.h>
 #include <stdio.h>
+
+#define TPL_LA 1
 //***HME***
 #define EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT 2
 #define EB_HME_SEARCH_AREA_ROW_MAX_COUNT 2
@@ -452,6 +454,22 @@ typedef struct EbSvtAv1EncConfiguration {
      *
      * Default depends on rate control mode.*/
     uint32_t look_ahead_distance;
+
+#if 1 //TPL_LA
+    /* Enable TPL in look ahead, only works when look_ahead_distance>0
+     * 0 = disable TPL in look ahead
+     * 1 = enable TPL in look ahead
+     * Default is 0  */
+    uint8_t enable_tpl_la;
+    /* Number of frames of sequence to be encoded. If number of frames is greater
+     * than the number of frames in file, the encoder will loop to the beginning
+     * and continue the encode.
+     *
+     * 0 = encodes the full clip.
+     *
+     * Default is 0. */
+    uint64_t frames_to_be_encoded;
+#endif
 
     /* Target bitrate in bits/second, only apllicable when rate control mode is
      * set to 2 or 3.

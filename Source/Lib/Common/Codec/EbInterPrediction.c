@@ -20,7 +20,6 @@
 #include "convolve.h"
 #include "common_dsp_rtcd.h"
 #include "EbUtility.h"
-//#include "EbRateDistortionCost.h"
 
 #define MVBOUNDLOW \
     36 //  (80-71)<<2 // 80 = ReferencePadding ; minus 71 is derived from the expression -64 + 1 - 8, and plus 7 is derived from expression -1 + 8
@@ -1256,11 +1255,6 @@ DECLARE_ALIGNED(256, const InterpKernel, sub_pel_filters_4smooth[SUBPEL_SHIFTS])
     {0, 0, 4, 40, 62, 22, 0, 0},
     {0, 0, 4, 36, 62, 26, 0, 0},
     {0, 0, 2, 34, 62, 30, 0, 0}};
-static const InterpFilterParams av1_interp_filter_params_list[SWITCHABLE_FILTERS + 1] = {
-    {(const int16_t *)sub_pel_filters_8, SUBPEL_TAPS, SUBPEL_SHIFTS, EIGHTTAP_REGULAR},
-    {(const int16_t *)sub_pel_filters_8smooth, SUBPEL_TAPS, SUBPEL_SHIFTS, EIGHTTAP_SMOOTH},
-    {(const int16_t *)sub_pel_filters_8sharp, SUBPEL_TAPS, SUBPEL_SHIFTS, MULTITAP_SHARP},
-    {(const int16_t *)bilinear_filters, SUBPEL_TAPS, SUBPEL_SHIFTS, BILINEAR}};
 static const InterpFilterParams av1_interp_4tap[2] = {
     {(const int16_t *)sub_pel_filters_4, SUBPEL_TAPS, SUBPEL_SHIFTS, EIGHTTAP_REGULAR},
     {(const int16_t *)sub_pel_filters_4smooth, SUBPEL_TAPS, SUBPEL_SHIFTS, EIGHTTAP_SMOOTH},
@@ -1512,7 +1506,6 @@ void svt_highbd_inter_predictor(const uint16_t *src, int32_t src_stride, uint16_
                                                                                   bd);
     }
 }
-
 
 #define USE_PRECOMPUTED_WEDGE_SIGN 1
 #define USE_PRECOMPUTED_WEDGE_MASK 1

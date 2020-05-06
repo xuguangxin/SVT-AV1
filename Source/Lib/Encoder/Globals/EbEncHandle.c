@@ -1021,6 +1021,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         input_data.non_m8_pad_w = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->max_input_pad_right;
         input_data.non_m8_pad_h = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->max_input_pad_bottom;
 #endif
+#if TPL_LA
+        input_data.enable_tpl_la = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.enable_tpl_la;
+#endif
 
         EB_NEW(
             enc_handle_ptr->picture_parent_control_set_pool_ptr_array[instance_index],
@@ -2286,6 +2289,10 @@ void copy_api_from_app(
     scs_ptr->static_config.scene_change_detection = ((EbSvtAv1EncConfiguration*)config_struct)->scene_change_detection;
     scs_ptr->static_config.rate_control_mode = ((EbSvtAv1EncConfiguration*)config_struct)->rate_control_mode;
     scs_ptr->static_config.look_ahead_distance = ((EbSvtAv1EncConfiguration*)config_struct)->look_ahead_distance;
+#if TPL_LA
+    scs_ptr->static_config.enable_tpl_la = ((EbSvtAv1EncConfiguration*)config_struct)->enable_tpl_la;
+    scs_ptr->static_config.frames_to_be_encoded = ((EbSvtAv1EncConfiguration*)config_struct)->frames_to_be_encoded;
+#endif
     scs_ptr->static_config.frame_rate = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate;
     scs_ptr->static_config.frame_rate_denominator = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate_denominator;
     scs_ptr->static_config.frame_rate_numerator = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate_numerator;
@@ -3031,6 +3038,10 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->scene_change_detection = 0;
     config_ptr->rate_control_mode = 0;
     config_ptr->look_ahead_distance = (uint32_t)~0;
+#if TPL_LA
+    config_ptr->enable_tpl_la = 0;
+    config_ptr->frames_to_be_encoded = 0;
+#endif
     config_ptr->target_bit_rate = 7000000;
     config_ptr->max_qp_allowed = 63;
     config_ptr->min_qp_allowed = 10;

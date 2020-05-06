@@ -1239,6 +1239,20 @@ static void picture_parent_control_set_dctor(EbPtr p) {
     }
 
     EB_FREE_2D(obj->ois_sb_results);
+#if TPL_LA
+    if (obj->ois_mb_results)
+        EB_FREE_2D(obj->ois_mb_results);
+    if (obj->tpl_stats)
+        EB_FREE_2D(obj->tpl_stats);
+    if (obj->tpl_beta)
+        EB_FREE_ARRAY(obj->tpl_beta);
+#if TPL_LA_LAMBDA_SCALING
+    if (obj->tpl_rdmult_scaling_factors)
+        EB_FREE_ARRAY(obj->tpl_rdmult_scaling_factors);
+    if (obj->tpl_sb_rdmult_scaling_factors)
+        EB_FREE_ARRAY(obj->tpl_sb_rdmult_scaling_factors);
+#endif
+#endif
     EB_FREE_2D(obj->ois_candicate);
     EB_FREE_ARRAY(obj->rc_me_distortion);
     // ME and OIS Distortion Histograms
@@ -1378,6 +1392,31 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
     else {
         object_ptr->ois_sb_results = NULL;
     }
+#if TPL_LA
+    if(init_data_ptr->enable_tpl_la) {
+        const uint16_t picture_width_in_mb  = (uint16_t)((init_data_ptr->picture_width + 15) / 16);
+        const uint16_t picture_height_in_mb = (uint16_t)((init_data_ptr->picture_height + 15) / 16);
+        object_ptr->r0 = 0;
+        object_ptr->is_720p_or_larger = AOMMIN(init_data_ptr->picture_width, init_data_ptr->picture_height) >= 720;
+        EB_MALLOC_2D(object_ptr->ois_mb_results, picture_width_in_mb * picture_height_in_mb, 1);
+        EB_MALLOC_2D(object_ptr->tpl_stats, (uint32_t)((picture_width_in_mb << (1 - object_ptr->is_720p_or_larger)) * (picture_height_in_mb << (1 - object_ptr->is_720p_or_larger))), 1);
+        EB_MALLOC_ARRAY(object_ptr->tpl_beta, object_ptr->sb_total_count);
+#if TPL_LA_LAMBDA_SCALING
+        EB_MALLOC_ARRAY(object_ptr->tpl_rdmult_scaling_factors, picture_width_in_mb * picture_height_in_mb);
+        EB_MALLOC_ARRAY(object_ptr->tpl_sb_rdmult_scaling_factors, picture_width_in_mb * picture_height_in_mb);
+#endif
+    } else {
+        object_ptr->r0 = 0;
+        object_ptr->is_720p_or_larger = 0;
+        object_ptr->ois_mb_results = NULL;
+        object_ptr->tpl_stats = NULL;
+        object_ptr->tpl_beta = NULL;
+#if TPL_LA_LAMBDA_SCALING
+        object_ptr->tpl_rdmult_scaling_factors = NULL;
+        object_ptr->tpl_sb_rdmult_scaling_factors = NULL;
+#endif
+    }
+#endif
 
     object_ptr->max_number_of_candidates_per_block =
         (init_data_ptr->mrp_mode == 0)

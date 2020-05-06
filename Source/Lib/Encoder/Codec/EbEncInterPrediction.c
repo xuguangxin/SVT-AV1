@@ -49,6 +49,140 @@ static INLINE MV clamp_mv_to_umv_border_sb(const MacroBlockD *xd, const MV *src_
     return clamped_mv;
 }
 
+#if TPL_LA
+void av1_init_inter_params(InterPredParams *inter_pred_params, int block_width,
+                           int block_height, int pix_row, int pix_col,
+                           int subsampling_x, int subsampling_y, int bit_depth,
+                           int use_hbd_buf, int is_intrabc,
+                           const struct ScaleFactors *sf,
+                           const struct Buf2D *ref_buf,
+                           uint32_t interp_filters) {
+  inter_pred_params->block_width = block_width;
+  inter_pred_params->block_height = block_height;
+  inter_pred_params->pix_row = pix_row;
+  inter_pred_params->pix_col = pix_col;
+  inter_pred_params->subsampling_x = subsampling_x;
+  inter_pred_params->subsampling_y = subsampling_y;
+  inter_pred_params->bit_depth = bit_depth;
+  inter_pred_params->use_hbd_buf = use_hbd_buf;
+  inter_pred_params->is_intrabc = is_intrabc;
+  inter_pred_params->scale_factors = sf;
+  inter_pred_params->ref_frame_buf = *ref_buf;
+  inter_pred_params->mode = UNIFORM_PRED;
+
+  if (is_intrabc) {
+    inter_pred_params->interp_filter_params[0] = av1_interp_filter_params_list[BILINEAR];
+    inter_pred_params->interp_filter_params[1] = av1_interp_filter_params_list[BILINEAR];
+  } else {
+    InterpFilter filter_x = av1_extract_interp_filter(interp_filters, 1);
+    InterpFilter filter_y = av1_extract_interp_filter(interp_filters, 0);
+    inter_pred_params->interp_filter_params[0] =
+        av1_get_interp_filter_params_with_block_size(
+            filter_x, block_width);
+    inter_pred_params->interp_filter_params[1] =
+        av1_get_interp_filter_params_with_block_size(
+            filter_y, block_height);
+  }
+}
+
+void av1_make_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
+                              int dst_stride,
+                              InterPredParams *inter_pred_params,
+                              const SubpelParams *subpel_params) {
+  assert(IMPLIES(inter_pred_params->conv_params.is_compound,
+                 inter_pred_params->conv_params.dst != NULL));
+
+  if (inter_pred_params->mode == WARP_PRED) {
+    eb_av1_warp_plane(
+        &inter_pred_params->warp_params, inter_pred_params->use_hbd_buf,
+        inter_pred_params->bit_depth, inter_pred_params->ref_frame_buf.buf0,
+        inter_pred_params->ref_frame_buf.width,
+        inter_pred_params->ref_frame_buf.height,
+        inter_pred_params->ref_frame_buf.stride, dst,
+        inter_pred_params->pix_col, inter_pred_params->pix_row,
+        inter_pred_params->block_width, inter_pred_params->block_height,
+        dst_stride, inter_pred_params->subsampling_x,
+        inter_pred_params->subsampling_y, &inter_pred_params->conv_params);
+  } else if (inter_pred_params->mode == UNIFORM_PRED) {
+    uint32_t interp_filters = (EIGHTTAP_REGULAR << 16) | EIGHTTAP_REGULAR;
+    svt_inter_predictor(
+        src, src_stride, dst, dst_stride, subpel_params,
+        inter_pred_params->scale_factors, inter_pred_params->block_width,
+        inter_pred_params->block_height, &inter_pred_params->conv_params,
+        interp_filters, 0);
+  }
+}
+#if CUTREE_MV_CLIP
+void av1_build_inter_predictor(Av1Common *cm, const uint8_t *src, int src_stride, uint8_t *dst,
+                               int dst_stride, const MV *src_mv, int pix_col, int pix_row,
+                               InterPredParams *inter_pred_params) {
+#else
+void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
+                               const MV *src_mv, int pix_col, int pix_row,
+                               InterPredParams *inter_pred_params) {
+#endif
+  SubpelParams subpel_params;
+  //const struct scale_factors *sf = inter_pred_params->scale_factors;
+  const struct ScaleFactors *sf = inter_pred_params->scale_factors;
+
+  (void)pix_row;
+  (void)pix_col;
+
+#if CUTREE_MV_CLIP
+  MacroBlockD xd;
+  int32_t       mi_row = pix_row >> MI_SIZE_LOG2;
+  int32_t       mi_col = pix_col >> MI_SIZE_LOG2;
+  BlockSize     bsize = BLOCK_16X16;
+  const int32_t bw = mi_size_wide[bsize];
+  const int32_t bh = mi_size_high[bsize];
+  xd.mb_to_top_edge = -((mi_row * MI_SIZE) * 8);
+  xd.mb_to_bottom_edge = ((cm->mi_rows - bh - mi_row) * MI_SIZE) * 8;
+  xd.mb_to_left_edge = -((mi_col * MI_SIZE) * 8);
+  xd.mb_to_right_edge = ((cm->mi_cols - bw - mi_col) * MI_SIZE) * 8;
+  MV best_mv_tmp = clamp_mv_to_umv_border_sb(&xd,
+                                             src_mv,
+                                             16,//blk_geom->bwidth,
+                                             16,//blk_geom->bheight,
+                                             inter_pred_params->subsampling_x,
+                                             inter_pred_params->subsampling_y);
+#endif
+
+  struct Buf2D *pre_buf    = &inter_pred_params->ref_frame_buf;
+  int           ssx        = inter_pred_params->subsampling_x;
+  int ssy = inter_pred_params->subsampling_y;
+  int orig_pos_y = inter_pred_params->pix_row << SUBPEL_BITS;
+#if CUTREE_MV_CLIP
+  orig_pos_y += best_mv_tmp.row;
+  int orig_pos_x = inter_pred_params->pix_col << SUBPEL_BITS;
+  orig_pos_x += best_mv_tmp.col;
+#else
+  orig_pos_y += src_mv->row * (1 << (1 - ssy));
+  int orig_pos_x = inter_pred_params->pix_col << SUBPEL_BITS;
+  orig_pos_x += src_mv->col * (1 << (1 - ssx));
+#endif
+  int pos_y = sf->scale_value_y(orig_pos_y, sf);
+  int pos_x = sf->scale_value_x(orig_pos_x, sf);
+  pos_x += SCALE_EXTRA_OFF;
+  pos_y += SCALE_EXTRA_OFF;
+
+  const int top = -AOM_LEFT_TOP_MARGIN_SCALED(ssy);
+  const int left = -AOM_LEFT_TOP_MARGIN_SCALED(ssx);
+  const int bottom = (pre_buf->height + AOM_INTERP_EXTEND) << SCALE_SUBPEL_BITS;
+  const int right = (pre_buf->width + AOM_INTERP_EXTEND) << SCALE_SUBPEL_BITS;
+  pos_y = clamp(pos_y, top, bottom);
+  pos_x = clamp(pos_x, left, right);
+
+  src = pre_buf->buf0 + (pos_y >> SCALE_SUBPEL_BITS) * pre_buf->stride +
+        (pos_x >> SCALE_SUBPEL_BITS);
+  subpel_params.subpel_x = pos_x & SCALE_SUBPEL_MASK;
+  subpel_params.subpel_y = pos_y & SCALE_SUBPEL_MASK;
+  subpel_params.xs = sf->x_step_q4;
+  subpel_params.ys = sf->y_step_q4;
+
+  av1_make_inter_predictor(src, src_stride, dst, dst_stride, inter_pred_params,
+                           &subpel_params);
+}
+#endif
 void av1_make_masked_inter_predictor(uint8_t *src_ptr, uint32_t src_stride, uint8_t *dst_ptr,
                                      uint32_t dst_stride, const BlockGeom *blk_geom, uint8_t bwidth,
                                      uint8_t bheight, InterpFilterParams *filter_params_x,
@@ -453,9 +587,13 @@ static void pick_wedge(PictureControlSet *picture_control_set_ptr, ModeDecisionC
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                 ? EB_8_BIT_MD
                                 : context_ptr->hbd_mode_decision;
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t full_lambda =  context_ptr->blk_full_lambda;
+#else
     uint32_t full_lambda =  hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD]:
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     EbPictureBufferDesc *src_pic =
             hbd_mode_decision ? picture_control_set_ptr->input_frame16bit
                               : picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -617,9 +755,13 @@ int64_t pick_wedge_fixed_sign(ModeDecisionCandidate *candidate_ptr,
                               int8_t *const best_wedge_index) {
     //const MACROBLOCKD *const xd = &x->e_mbd;
 
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t full_lambda =  context_ptr->blk_full_lambda;
+#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     const int bw = block_size_wide[bsize];
     const int bh = block_size_high[bsize];
     const int N  = bw * bh;
@@ -701,9 +843,13 @@ static void pick_interinter_seg(PictureControlSet *     picture_control_set_ptr,
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                 ? EB_8_BIT_MD
                                 : context_ptr->hbd_mode_decision;
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t full_lambda =  context_ptr->blk_full_lambda;
+#else
     uint32_t full_lambda =  hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     const int         bw = block_size_wide[bsize];
     const int         bh = block_size_high[bsize];
     const int         N  = 1 << num_pels_log2_lookup[bsize];
@@ -821,9 +967,13 @@ void model_rd_for_sb_with_curvfit(PictureControlSet *  picture_control_set_ptr,
     // we need to divide by 8 before sending to modeling function.
     const int bd_round = 0;
 
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t full_lambda =  context_ptr->blk_full_lambda;
+#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     int64_t rate_sum  = 0;
     int64_t dist_sum  = 0;
     int64_t total_sse = 0;
@@ -3141,10 +3291,14 @@ void interpolation_filter_search(PictureControlSet *          picture_control_se
     int32_t       i;
     int32_t       tmp_rate;
     int64_t       tmp_dist;
-
+    // AMIR LAMBDA
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t full_lambda_divided = md_context_ptr->blk_full_lambda;
+#else
     uint32_t full_lambda_divided = hbd_mode_decision ?
         md_context_ptr->full_lambda_md[EB_10_BIT_MD] >> (2 * (bit_depth - 8)) :
         md_context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     InterpFilter assign_filter = SWITCHABLE;
 
     if (cm->interp_filter != SWITCHABLE) assign_filter = cm->interp_filter;

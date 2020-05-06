@@ -606,6 +606,9 @@ typedef struct ModeDecisionContext {
     uint64_t best_nsq_default_cost;
     uint64_t default_cost_per_shape[NUMBER_OF_SHAPES];
 #endif
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t blk_full_lambda;
+#endif
 #if TXT_CONTROL
     uint8_t md_txt_search_level;
     TxTSearchCtrls txt_search_ctrls;

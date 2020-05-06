@@ -34,6 +34,33 @@
 #include "EbMeSadCalculation.h"
 #include "EbAvcStyleMcp.h"
 
+#if TPL_LA
+// coeff: 16 bits, dynamic range [-32640, 32640].
+// length: value range {16, 64, 256, 1024}.
+int aom_satd_c(const TranLow *coeff, int length) {
+  int i;
+  int satd = 0;
+  for (i = 0; i < length; ++i) satd += abs(coeff[i]);
+
+  // satd: 26 bits, dynamic range [-32640 * 1024, 32640 * 1024]
+  return satd;
+}
+
+int64_t av1_block_error_c(const TranLow *coeff, const TranLow *dqcoeff,
+                          intptr_t block_size, int64_t *ssz) {
+  int i;
+  int64_t error = 0, sqcoeff = 0;
+
+  for (i = 0; i < block_size; i++) {
+    const int diff = coeff[i] - dqcoeff[i];
+    error += diff * diff;
+    sqcoeff += coeff[i] * coeff[i];
+  }
+
+  *ssz = sqcoeff;
+  return error;
+}
+#endif
 
 /**************************************
  * Instruction Set Support
@@ -257,6 +284,12 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     if (flags & HAS_AVX2) eb_aom_sad128x64 = eb_aom_sad128x64_avx2;
     if (flags & HAS_AVX2) eb_aom_sad128x64x4d = eb_aom_sad128x64x4d_avx2;
     if (flags & HAS_AVX2) eb_av1_txb_init_levels = eb_av1_txb_init_levels_avx2;
+#if TPL_LA
+    aom_satd = aom_satd_c;
+    if (flags & HAS_AVX2) aom_satd = aom_satd_avx2;
+    av1_block_error = av1_block_error_c;
+    if (flags & HAS_AVX2) av1_block_error = av1_block_error_avx2;
+#endif
 
 #ifndef NON_AVX512_SUPPORT
     if (flags & HAS_AVX512F) {
@@ -558,6 +591,11 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_64x16 = eb_av1_fwd_txfm2d_64x16_avx2;
     if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_32x16 = eb_av1_fwd_txfm2d_32x16_avx2;
     if (flags & HAS_AVX2) eb_av1_fwd_txfm2d_16x32 = eb_av1_fwd_txfm2d_16x32_avx2;
+#if TPL_LA
+    eb_av1_lowbd_fwd_txfm   = av1_lowbd_fwd_txfm_c;
+    //if (flags & HAS_AVX2) eb_av1_lowbd_fwd_txfm = av1_lowbd_fwd_txfm_avx2;
+#endif
+
 #ifndef NON_AVX512_SUPPORT
     if (flags & HAS_AVX512F) {
         eb_av1_fwd_txfm2d_64x64 = av1_fwd_txfm2d_64x64_avx512;

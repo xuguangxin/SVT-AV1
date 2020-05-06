@@ -364,6 +364,22 @@ extern "C" {
 #define MAY03_4K_10BIT_ADOPTS       1 // disable chroma blind at MD for 10bit NSC; 4K setting change
 #define EC_MEM_OPT                  1 // Memory Opt for ec_ptr in pcs
 #define PCS_MEM_OPT                 1 // Memory reduction for child PCS 
+
+#define TPL_LA                      1 // Add TPL into look ahead
+#if TPL_LA
+#define MAX_TPL_LA_SW              60 // Max TPL look ahead sliding window size
+#define TPL_LA_QPS                  1
+#define TPL_LA_QPM                  1
+#define CUTREE_MV_CLIP              1
+#define UPDATE_SW                   1
+#define TPL_LA_REENCODE             0
+#define QPS_TPL                     1
+#define TPL_LA_LAMBDA_SCALING       1
+#define INTRA_RECON_WITH_REC        0
+#define TPL_LA_QPS_1PASS            1
+#define TPL_LA_QPM_1PASS            1
+#endif
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
