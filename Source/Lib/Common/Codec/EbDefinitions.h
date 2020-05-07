@@ -272,6 +272,7 @@ extern "C" {
 #endif
 #define PR_1210 1
 #define PR_1217 1
+#define PR_1286 1
 #define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
 #define UPGRADE_M6_M7_M8 1
 
