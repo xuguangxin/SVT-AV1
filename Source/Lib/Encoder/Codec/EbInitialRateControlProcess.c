@@ -844,11 +844,6 @@ static void generate_lambda_scaling_factor(PictureParentControlSet         *pcs_
     const int num_rows = (cm->mi_rows + num_mi_h - 1) / num_mi_h;
     const int stride   = mi_cols_sr >> (1 + pcs_ptr->is_720p_or_larger);
     const double c = 2;
-    int dbg = 0;
-    if (pcs_ptr->picture_number == 0 && 0) {
-        dbg = 1;
-        //printf("calculate tpl_rdmult_scaling_factors, 16x16 size %d/%d, ro %f\n", num_cols, num_rows, pcs_ptr->r0);
-    }
     //printf("[%ld], r0 is %f\n", pcs_ptr->picture_number, pcs_ptr->r0);
     for (int row = 0; row < num_rows; row++) {
         for (int col = 0; col < num_cols; col++) {
@@ -865,11 +860,6 @@ static void generate_lambda_scaling_factor(PictureParentControlSet         *pcs_
                         RDCOST(pcs_ptr->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist);
                     intra_cost  += (double)(tpl_stats_ptr->recrf_dist << RDDIV_BITS);
                     mc_dep_cost += (double)(tpl_stats_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
-                    if (dbg) {
-                        printf("\t(%d, %d): intra_cost %f, mc_dep_cost %f, base_rdmult %d, mc rate %ld, mc dist %ld, mc delta %ld\n",
-                                mi_col*4, mi_row*4, intra_cost, mc_dep_cost,
-                                pcs_ptr->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist, mc_dep_delta);
-                    }
                 }
             }
             double rk = 0;
@@ -877,11 +867,6 @@ static void generate_lambda_scaling_factor(PictureParentControlSet         *pcs_
                 rk = intra_cost / mc_dep_cost;
             }
             pcs_ptr->tpl_rdmult_scaling_factors[index] = rk / pcs_ptr->r0 + c;
-
-            if (dbg) {
-                printf("\tIndex %d, r0 %f, rk %f, factor %f\n",
-                        index, pcs_ptr->r0, rk, pcs_ptr->tpl_rdmult_scaling_factors[index]);
-            }
         }
     }
 

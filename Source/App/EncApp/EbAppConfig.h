@@ -416,7 +416,7 @@ typedef struct EbConfig {
     uint32_t rate_control_mode;
     uint32_t look_ahead_distance;
 #if TPL_LA
-    int8_t   enable_tpl_la;
+    uint32_t enable_tpl_la;
 #endif
     uint32_t target_bit_rate;
     uint32_t max_qp_allowed;

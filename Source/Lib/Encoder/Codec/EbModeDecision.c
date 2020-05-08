@@ -6870,7 +6870,7 @@ void get_blk_tuned_full_lambda(struct ModeDecisionContext *context_ptr, PictureC
     geom_mean_of_scale = exp(geom_mean_of_scale / base_block_count);
     int new_full_lambda = (int)((double)pic_full_lambda * geom_mean_of_scale + 0.5);
     new_full_lambda = AOMMAX(new_full_lambda, 0);
-
+#if 0
     //Check for debug purpose:
     //If the block size is the same as super block size, then the tuned lambda should be equal to sb level lambda
     //If it asserts below, check to see if
@@ -6892,6 +6892,7 @@ void get_blk_tuned_full_lambda(struct ModeDecisionContext *context_ptr, PictureC
             //assert(0);
         }
     }
+#endif
     context_ptr->blk_full_lambda = new_full_lambda;
 }
 #endif
