@@ -15,11 +15,15 @@ extern "C" {
 #endif
 
 // Max Search Area
+#if ME_MEM_OPT2
+#define MAX_SEARCH_AREA_WIDTH 800
+#define MAX_SEARCH_AREA_HEIGHT 800
+#else
 #define MAX_SEARCH_AREA_WIDTH 1280
 #define MAX_SEARCH_AREA_HEIGHT 1280
 #define MAX_SEARCH_AREA_WIDTH_CH MAX_SEARCH_AREA_WIDTH + PAD_VALUE
 #define MAX_SEARCH_AREA_HEIGHT_CH MAX_SEARCH_AREA_HEIGHT + PAD_VALUE
-
+#endif
 // 1-D interpolation shift value
 #define if_shift 6
 #define NUMBER_OF_SB_QUAD 4

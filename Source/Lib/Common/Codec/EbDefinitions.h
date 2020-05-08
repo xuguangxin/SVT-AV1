@@ -379,6 +379,7 @@ extern "C" {
 #define TPL_LA_QPS_1PASS            1
 #define TPL_LA_QPM_1PASS            1
 #endif
+#define ME_MEM_OPT2                 1 // Memory reduction for ME Context
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
