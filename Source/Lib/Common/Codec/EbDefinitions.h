@@ -381,6 +381,7 @@ extern "C" {
 #endif
 #define ME_MEM_OPT2                 1 // Memory reduction for ME Context
 
+#define NEW_CYCLE_ALLOCATION        1 // New cycle allocation where the action of the TXS and NICs was replaced by NSQ
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
@@ -5723,6 +5724,9 @@ static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
 #if SB_CLASSIFIER
 typedef enum ATTRIBUTE_PACKED {
     NONE_CLASS, // Do nothing class
+#if NEW_CYCLE_ALLOCATION
+    VERY_LOW_COMPLEX_CLASS,// Very Low complex SB Class
+#endif
     LOW_COMPLEX_CLASS, // Low complex SB Class
     MEDIUM_COMPLEX_CLASS, // Meduim complex SB Class
     HIGH_COMPLEX_CLASS, // High complex SB Class

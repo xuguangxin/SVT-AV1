@@ -175,7 +175,11 @@ typedef struct PicComplexControls {
 #endif
 #if SB_CLASSIFIER
 typedef struct SbClassControls {
+#if NEW_CYCLE_ALLOCATION
+    uint8_t sb_class_th[NUMBER_OF_SB_CLASS]; // treshold for sb classification
+#else
     uint8_t sb_class_th[NUMBER_OF_SB_CLASS -1]; // treshold for sb classification
+#endif
 } SbClassControls;
 #endif
 #if INTER_COMP_REDESIGN
