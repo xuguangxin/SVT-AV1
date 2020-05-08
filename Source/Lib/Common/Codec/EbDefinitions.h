@@ -363,7 +363,7 @@ extern "C" {
 #define REST_MEM_OPT2               1 // Memory reduction for restoration
 #define MAY03_4K_10BIT_ADOPTS       1 // disable chroma blind at MD for 10bit NSC; 4K setting change
 #define EC_MEM_OPT                  1 // Memory Opt for ec_ptr in pcs
-#define PCS_MEM_OPT                 1 // Memory reduction for child PCS 
+#define PCS_MEM_OPT                 1 // Memory reduction for child PCS
 
 #define TPL_LA                      1 // Add TPL into look ahead
 #if TPL_LA
