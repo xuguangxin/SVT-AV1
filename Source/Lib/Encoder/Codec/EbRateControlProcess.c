@@ -5108,10 +5108,10 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
         int is_smaller_360p = scs_ptr->input_resolution < INPUT_SIZE_360p_RANGE;
         const int new_kf_boost = get_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, frames_to_key, is_smaller_360p);
 
-        SVT_LOG("old kf boost %d new kf boost %d [%d] poc=%ld r0=%f\t", rc->kf_boost, new_kf_boost, frames_to_key, pcs_ptr->parent_pcs_ptr->picture_number, pcs_ptr->parent_pcs_ptr->r0);
-        SVT_LOG("%d\t%d\n",
-            pcs_ptr->parent_pcs_ptr->referenced_area_avg,
-            pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity);
+        //SVT_LOG("old kf boost %d new kf boost %d [%d] poc=%ld r0=%f\t", rc->kf_boost, new_kf_boost, frames_to_key, pcs_ptr->parent_pcs_ptr->picture_number, pcs_ptr->parent_pcs_ptr->r0);
+        //SVT_LOG("%d\t%d\n",
+        //    pcs_ptr->parent_pcs_ptr->referenced_area_avg,
+        //    pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity);
         rc->kf_boost = combine_prior_with_tpl_boost(rc->kf_boost, new_kf_boost, frames_to_key);
 
         // Baseline value derived from cpi->active_worst_quality and kf boost.
@@ -5151,12 +5151,14 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
                            - (pcs_ptr->parent_pcs_ptr->picture_number % (scs_ptr->intra_period_length + 1)) + 15;
         const int new_gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
         rc->arf_boost_factor = 1;
+#if 0
         if (!is_intrl_arf_boost) {
             SVT_LOG("old gfu boost %d new gfu boost %d [%d] poc=%ld r0=%f\t", rc->gfu_boost, new_gfu_boost, frames_to_key, pcs_ptr->parent_pcs_ptr->picture_number, pcs_ptr->parent_pcs_ptr->r0);
             SVT_LOG("%d\t%d\n",
                 pcs_ptr->parent_pcs_ptr->referenced_area_avg,
                 pcs_ptr->parent_pcs_ptr->qp_scaling_average_complexity);
         }
+#endif
         rc->gfu_boost = combine_prior_with_tpl_boost(rc->gfu_boost, new_gfu_boost, frames_to_key);
 
         q = active_worst_quality;
@@ -5203,8 +5205,8 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
     adjust_active_best_and_worst_quality(pcs_ptr, rc, rf_level, &active_worst_quality, &active_best_quality);
     q = active_best_quality;
     clamp(q, active_best_quality, active_worst_quality);
-    if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
-    SVT_LOG("tplqps poc=%d, q=%d, active_best_quality=%d, active_worst_quality=%d, boost=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost );
+    //if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
+    //    SVT_LOG("tplqps poc=%d, q=%d, active_best_quality=%d, active_worst_quality=%d, boost=%d\n", pcs_ptr->parent_pcs_ptr->picture_number, q, active_best_quality, active_worst_quality, frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ? rc->kf_boost : rc->gfu_boost );
 
     return q;
 }
@@ -6144,6 +6146,7 @@ void *rate_control_kernel(void *input_ptr) {
                         // Content adaptive qp assignment
 #if TPL_LA && TPL_LA_QPS
                         if (scs_ptr->use_input_stat_file &&
+                            !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                             scs_ptr->static_config.look_ahead_distance != 0 &&
                             scs_ptr->static_config.enable_tpl_la)
                             new_qindex = adaptive_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
@@ -6156,6 +6159,7 @@ void *rate_control_kernel(void *input_ptr) {
 #if TPL_LA && TPL_LA_QPS_1PASS
                         // 1pass QPS with tpl_la
                         else if (!scs_ptr->use_input_stat_file &&
+                                 !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                                  scs_ptr->static_config.look_ahead_distance != 0 &&
                                  scs_ptr->static_config.enable_tpl_la)
                             new_qindex = cqp_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
@@ -6265,6 +6269,7 @@ void *rate_control_kernel(void *input_ptr) {
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
                 !scs_ptr->use_output_stat_file &&
+                !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                 scs_ptr->use_input_stat_file &&
                 scs_ptr->static_config.look_ahead_distance != 0 &&
                 scs_ptr->static_config.enable_tpl_la &&
@@ -6276,6 +6281,7 @@ void *rate_control_kernel(void *input_ptr) {
             // 1pass QPM with tpl_la
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
+                !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
                 !scs_ptr->use_output_stat_file &&
                 !scs_ptr->use_input_stat_file &&
                 scs_ptr->static_config.look_ahead_distance != 0 &&
