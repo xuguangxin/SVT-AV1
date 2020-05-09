@@ -4808,7 +4808,7 @@ static int rtc_minq_12[QINDEX_RANGE] = {
 
 static int gf_high = 2000;
 static int gf_low  = 400;
-#if TPL_LA && TPL_LA_QPS
+#if TPL_LA && (TPL_LA_QPS || TPL_LA_QPS_1PASS)
 static int gf_high_tpl_la = 2400;
 static int gf_low_tpl_la  = 300;
 #endif
@@ -4855,7 +4855,7 @@ static int get_gf_active_quality(const RATE_CONTROL *const rc, int q, AomBitDept
     return get_active_quality(
         q, rc->gfu_boost, gf_low, gf_high, arfgf_low_motion_minq, arfgf_high_motion_minq);
 }
-#if TPL_LA && TPL_LA_QPS
+#if TPL_LA && (TPL_LA_QPS || TPL_LA_QPS_1PASS)
 static int get_gf_active_quality_tpl_la(const RATE_CONTROL *const rc, int q, AomBitDepth bit_depth) {
     int *arfgf_low_motion_minq;
     int *arfgf_high_motion_minq;
@@ -4947,7 +4947,7 @@ int av1_get_adaptive_rdmult(AomBitDepth bit_depth, int base_qindex, double beta)
   return (int)rdmult;
 }
 
-#if TPL_LA && TPL_LA_QPS
+#if TPL_LA && (TPL_LA_QPS || TPL_LA_QPS_1PASS)
 
 #define MIN_BPB_FACTOR 0.005
 #define MAX_BPB_FACTOR 50
@@ -5061,6 +5061,7 @@ static void adjust_active_best_and_worst_quality(PictureControlSet *pcs_ptr, RAT
     *active_worst = active_worst_quality;
 }
 
+#if TPL_LA_QPS
 static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, int qindex) {
     SequenceControlSet *scs_ptr              = pcs_ptr->parent_pcs_ptr->scs_ptr;
     const int           cq_level             = qindex;
@@ -5210,6 +5211,7 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
 
     return q;
 }
+#endif
 #endif
 
 #if TPL_LA && TPL_LA_QPS_1PASS

@@ -556,7 +556,7 @@ EbErrorType load_default_buffer_configuration_settings(
 
         //Pa-References.Min to sustain flow (RA-5L-MRP-ON) -->TODO: derive numbers for other GOP Structures.
 #if TPL_LA
-        min_paref = 25 +  scs_ptr->scd_delay + eos_delay + needed_lad_pictures;
+        min_paref = 25 + scs_ptr->scd_delay + eos_delay + (scs_ptr->static_config.enable_tpl_la ? needed_lad_pictures : 0);
 #else
         min_paref = 25 + scs_ptr->scd_delay + eos_delay;
 #endif
