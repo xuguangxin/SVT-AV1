@@ -610,9 +610,6 @@ typedef struct ModeDecisionContext {
     uint64_t best_nsq_default_cost;
     uint64_t default_cost_per_shape[NUMBER_OF_SHAPES];
 #endif
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t blk_full_lambda;
-#endif
 #if TXT_CONTROL
     uint8_t md_txt_search_level;
     TxTSearchCtrls txt_search_ctrls;
@@ -630,12 +627,12 @@ typedef struct ModeDecisionContext {
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
                                       uint8_t bit_depth, uint16_t qp_index,
         EbBool                        multiply_lambda);
-
+#if !TPL_LA_LAMBDA_SCALING
 typedef void (*EbLambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
                                    uint32_t *fast_chroma_lambda, uint32_t *full_chroma_lambda,
                                    uint32_t *full_chroma_lambda_sao,
                                    uint8_t qp_hierarchical_position, uint8_t qp, uint8_t chroma_qp);
-
+#endif
 /**************************************
      * Extern Function Declarations
      **************************************/
@@ -646,6 +643,7 @@ extern EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr,
                                               uint8_t enable_hbd_mode_decision,
                                               uint8_t cfg_palette);
 
+#if !TPL_LA_LAMBDA_SCALING
 extern void lambda_assign_low_delay(uint32_t *fast_lambda, uint32_t *full_lambda,
                                     uint32_t *fast_chroma_lambda, uint32_t *full_chroma_lambda,
                                     uint32_t *full_chroma_lambda_sao,
@@ -657,8 +655,8 @@ extern void lambda_assign_random_access(uint32_t *fast_lambda, uint32_t *full_la
                                         uint32_t *full_chroma_lambda_sao,
                                         uint8_t qp_hierarchical_position, uint8_t qp,
                                         uint8_t chroma_qp);
-
 extern const EbLambdaAssignFunc    lambda_assignment_function_table[4];
+#endif
 extern const EbAv1LambdaAssignFunc av1_lambda_assignment_function_table[4];
 
 // Table that converts 0-63 Q-range values passed in outside to the Qindex

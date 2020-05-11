@@ -229,7 +229,39 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
     context_ptr->qp_index =
         (uint8_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx;
 #endif
+#if TPL_LA_LAMBDA_SCALING
+    (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
+#if QP2QINDEX
+        &context_ptr->pic_fast_lambda[EB_8_BIT_MD],
+        &context_ptr->pic_full_lambda[EB_8_BIT_MD],
+#else
+        &context_ptr->fast_lambda,
+        &context_ptr->full_lambda,
+#endif
+        8,
+#if QP2QINDEX
+        pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx,
+#else
+        context_ptr->qp_index,
+#endif
+        EB_TRUE);
 
+    (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
+#if QP2QINDEX
+        &context_ptr->pic_fast_lambda[EB_10_BIT_MD],
+        &context_ptr->pic_full_lambda[EB_10_BIT_MD],
+#else
+        &context_ptr->fast_lambda,
+        &context_ptr->full_lambda,
+#endif
+        10,
+#if QP2QINDEX
+        pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx,
+#else
+        context_ptr->qp_index,
+#endif
+        EB_TRUE);
+#else
     (*av1_lambda_assignment_function_table[pcs_ptr->parent_pcs_ptr->pred_structure])(
 #if QP2QINDEX
         &context_ptr->pic_fast_lambda,
@@ -245,6 +277,8 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
         context_ptr->qp_index,
 #endif
         EB_TRUE);
+#endif
+
     // Reset MD rate Estimation table to initial values by copying from md_rate_estimation_array
     if (context_ptr->is_md_rate_estimation_ptr_owner) {
         EB_FREE(context_ptr->md_rate_estimation_ptr);
@@ -273,10 +307,10 @@ static void reset_enc_dec(EncDecContext *context_ptr, PictureControlSet *pcs_ptr
     return;
 }
 
+#if !QP2QINDEX
 /******************************************************
  * EncDec Configure SB
  ******************************************************/
-#if !QP2QINDEX
 static void enc_dec_configure_sb(EncDecContext *context_ptr, SuperBlock *sb_ptr,
                                  PictureControlSet *pcs_ptr, uint8_t sb_qp) {
     context_ptr->qp = sb_qp;
@@ -7088,7 +7122,13 @@ void *enc_dec_kernel(void *input_ptr) {
                       context_ptr->md_rate_estimation_ptr->wiener_restore_fac_bits,
                       2 * sizeof(int32_t));
 #if QP2QINDEX
+#if TPL_LA_LAMBDA_SCALING
+            pcs_ptr->parent_pcs_ptr->av1x->rdmult =
+                context_ptr->pic_full_lambda[(context_ptr->bit_depth == EB_10BIT) ? EB_10_BIT_MD
+                                                                                  : EB_8_BIT_MD];
+#else
             pcs_ptr->parent_pcs_ptr->av1x->rdmult = context_ptr->pic_full_lambda;
+#endif
 #else
             pcs_ptr->parent_pcs_ptr->av1x->rdmult = context_ptr->full_lambda;
 #endif

@@ -419,7 +419,7 @@ void reset_mode_decision_neighbor_arrays(PictureControlSet *pcs_ptr, uint16_t ti
 
     return;
 }
-
+#if !TPL_LA_LAMBDA_SCALING
 extern void lambda_assign_low_delay(uint32_t *fast_lambda, uint32_t *full_lambda,
                                     uint32_t *fast_chroma_lambda, uint32_t *full_chroma_lambda,
                                     uint32_t *full_chroma_lambda_sao,
@@ -489,7 +489,7 @@ const EbLambdaAssignFunc lambda_assignment_function_table[4] = {
     lambda_assign_random_access, // Random Access
     lambda_assign_i_slice // I_SLICE
 };
-
+#endif
 void av1_lambda_assign_md(
     ModeDecisionContext   *context_ptr)
 {

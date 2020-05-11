@@ -57,9 +57,14 @@ typedef struct EncDecContext {
     uint32_t full_lambda;
     uint32_t full_chroma_lambda_sao;
 #else
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t pic_fast_lambda[2];
+    uint32_t pic_full_lambda[2];
+#else
     uint32_t pic_fast_lambda;
     uint32_t pic_full_lambda;
     uint32_t pic_full_chroma_lambda_sao;
+#endif
 #endif
 
     //  Context Variables---------------------------------

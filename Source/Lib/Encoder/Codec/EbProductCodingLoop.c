@@ -1200,13 +1200,9 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     uint64_t luma_fast_distortion;
     uint64_t chroma_fast_distortion;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     uint32_t fast_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->fast_lambda_md[EB_10_BIT_MD] :
         context_ptr->fast_lambda_md[EB_8_BIT_MD];
@@ -5328,14 +5324,9 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
     uint64_t full_distortion[DIST_CALC_TOTAL];
     uint64_t coeff_bits;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
-
     const int64_t mode_rd = RDCOST(
          full_lambda,
         (uint64_t)candidate_buffer->candidate_ptr->md_rate_estimation_ptr
@@ -5504,13 +5495,9 @@ void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
     uint64_t full_distortion[DIST_CALC_TOTAL];
     uint64_t coeff_bits;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
 
     const int64_t mode_rd = RDCOST(
          full_lambda,
@@ -6021,13 +6008,9 @@ void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *
                                uint64_t *cb_full_distortion,
                                uint64_t *cr_full_distortion, uint64_t *cb_coeff_bits,
                                uint64_t *cr_coeff_bits) {
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     if (candidate_buffer->candidate_ptr->filter_intra_mode != FILTER_INTRA_MODES)
         assert(candidate_buffer->candidate_ptr->intra_luma_mode == DC_PRED);
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
@@ -6628,13 +6611,9 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                                .feature_data[context_ptr->blk_ptr->segment_id][SEG_LVL_ALT_Q]
                          : 0;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     TxType   txk_start           = DCT_DCT;
     TxType   txk_end             = TX_TYPES;
     uint64_t best_cost_tx_search = (uint64_t)~0;
@@ -7484,13 +7463,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              uint32_t qp, uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
 #endif
                              uint64_t *y_full_distortion) {
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     EbPictureBufferDesc *input_picture_ptr = context_ptr->hbd_mode_decision
                                                  ? pcs_ptr->input_frame16bit
                                                  : pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -7696,13 +7671,9 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
     uint64_t cb_coeff_bits = 0;
     uint64_t cr_coeff_bits = 0;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda = context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda = context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
 #if FIX_CFL_OFF
     int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE ||
         candidate_buffer->candidate_ptr->use_intrabc)
@@ -9508,13 +9479,18 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     BlkStruct *blk_ptr        = context_ptr->blk_ptr;
     candidate_buffer_ptr_array = &(candidate_buffer_ptr_array_base[0]);
 #if TPL_LA_LAMBDA_SCALING
-    uint32_t sb_full_lambda =  context_ptr->hbd_mode_decision ?
-        context_ptr->full_lambda_md[EB_10_BIT_MD] :
-        context_ptr->full_lambda_md[EB_8_BIT_MD];
-    uint32_t pic_full_lambda = context_ptr->enc_dec_context_ptr->pic_full_lambda;
-    context_ptr->blk_full_lambda = sb_full_lambda;
     //Get the new lambda for current block
-    get_blk_tuned_full_lambda(context_ptr, pcs_ptr, sb_full_lambda, pic_full_lambda);
+    if (pcs_ptr->parent_pcs_ptr->blk_lambda_tuning) {
+        context_ptr->full_lambda_md[EB_8_BIT_MD] =
+            get_blk_tuned_full_lambda(context_ptr,
+                pcs_ptr,
+                context_ptr->enc_dec_context_ptr->pic_full_lambda[EB_8_BIT_MD]);
+
+        context_ptr->full_lambda_md[EB_10_BIT_MD] =
+            get_blk_tuned_full_lambda(context_ptr,
+                pcs_ptr,
+                context_ptr->enc_dec_context_ptr->pic_full_lambda[EB_10_BIT_MD]);
+    }
 #endif
 
     signal_derivation_block(
@@ -10748,13 +10724,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     EbBool all_blk_init = (pcs_ptr->parent_pcs_ptr->pic_depth_mode <= PIC_SQ_DEPTH_MODE);
 #endif
     init_sq_nsq_block(scs_ptr, context_ptr);
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda = context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     // Mode Decision Neighbor Arrays
     context_ptr->intra_luma_mode_neighbor_array =
         pcs_ptr->md_intra_luma_mode_neighbor_array[MD_NEIGHBOR_ARRAY_INDEX][tile_idx];

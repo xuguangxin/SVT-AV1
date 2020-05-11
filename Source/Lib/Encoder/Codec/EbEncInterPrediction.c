@@ -587,13 +587,9 @@ static void pick_wedge(PictureControlSet *picture_control_set_ptr, ModeDecisionC
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                 ? EB_8_BIT_MD
                                 : context_ptr->hbd_mode_decision;
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD]:
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     EbPictureBufferDesc *src_pic =
             hbd_mode_decision ? picture_control_set_ptr->input_frame16bit
                               : picture_control_set_ptr->parent_pcs_ptr->enhanced_picture_ptr;
@@ -755,13 +751,9 @@ int64_t pick_wedge_fixed_sign(ModeDecisionCandidate *candidate_ptr,
                               int8_t *const best_wedge_index) {
     //const MACROBLOCKD *const xd = &x->e_mbd;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     const int bw = block_size_wide[bsize];
     const int bh = block_size_high[bsize];
     const int N  = bw * bh;
@@ -843,13 +835,9 @@ static void pick_interinter_seg(PictureControlSet *     picture_control_set_ptr,
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                 ? EB_8_BIT_MD
                                 : context_ptr->hbd_mode_decision;
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     const int         bw = block_size_wide[bsize];
     const int         bh = block_size_high[bsize];
     const int         N  = 1 << num_pels_log2_lookup[bsize];
@@ -967,13 +955,9 @@ void model_rd_for_sb_with_curvfit(PictureControlSet *  picture_control_set_ptr,
     // we need to divide by 8 before sending to modeling function.
     const int bd_round = 0;
 
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda =  context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     int64_t rate_sum  = 0;
     int64_t dist_sum  = 0;
     int64_t total_sse = 0;
@@ -3291,15 +3275,9 @@ void interpolation_filter_search(PictureControlSet *          picture_control_se
     int32_t       i;
     int32_t       tmp_rate;
     int64_t       tmp_dist;
-#if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda_divided = hbd_mode_decision ?
-                                   md_context_ptr->blk_full_lambda >> (2 * (bit_depth - 8)) :
-                                   md_context_ptr->blk_full_lambda;
-#else
     uint32_t full_lambda_divided = hbd_mode_decision ?
         md_context_ptr->full_lambda_md[EB_10_BIT_MD] >> (2 * (bit_depth - 8)) :
         md_context_ptr->full_lambda_md[EB_8_BIT_MD];
-#endif
     InterpFilter assign_filter = SWITCHABLE;
 
     if (cm->interp_filter != SWITCHABLE) assign_filter = cm->interp_filter;
