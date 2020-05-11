@@ -994,6 +994,18 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
     const uint32_t coeff1d_offset_chroma = context_ptr->coded_area_sb_uv;
     UNUSED(coeff1d_offset_chroma);
 
+#if TPL_LA_LAMBDA_SCALING
+    uint32_t sb_full_lambda = (bit_depth == EB_10BIT) ?
+        context_ptr->md_context->full_lambda_md[EB_10_BIT_MD] :
+        context_ptr->md_context->full_lambda_md[EB_8_BIT_MD];
+    uint32_t pic_full_lambda = context_ptr->pic_full_lambda;
+    context_ptr->md_context->blk_full_lambda = sb_full_lambda;
+    context_ptr->md_context->blk_geom = context_ptr->blk_geom;
+    context_ptr->md_context->blk_origin_x = context_ptr->blk_origin_x;
+    context_ptr->md_context->blk_origin_y = context_ptr->blk_origin_y;
+    //Get the new lambda for current block
+    get_blk_tuned_full_lambda(context_ptr->md_context, pcs_ptr, sb_full_lambda, pic_full_lambda);
+#endif
     {
         //**********************************
         // Luma
@@ -1105,8 +1117,12 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
 #else
                 blk_ptr->av1xd->use_intrabc,
 #endif
+#if TPL_LA_LAMBDA_SCALING
+                context_ptr->md_context->blk_full_lambda,
+#else
                 context_ptr->md_context
                     ->full_lambda_md[(bit_depth == EB_10BIT) ? EB_10_BIT_MD : EB_8_BIT_MD],
+#endif
                 EB_TRUE);
             if (context_ptr->md_skip_blk) {
                 count_non_zero_coeffs[0] = 0;
@@ -1273,8 +1289,12 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
 #else
                 blk_ptr->av1xd->use_intrabc,
 #endif
+#if TPL_LA_LAMBDA_SCALING
+                context_ptr->md_context->blk_full_lambda,
+#else
                 context_ptr->md_context
                     ->full_lambda_md[(bit_depth == EB_10BIT) ? EB_10_BIT_MD : EB_8_BIT_MD],
+#endif
                 EB_TRUE);
 
             if (context_ptr->md_skip_blk) {
@@ -1335,8 +1355,12 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
 #else
                 blk_ptr->av1xd->use_intrabc,
 #endif
+#if TPL_LA_LAMBDA_SCALING
+                context_ptr->md_context->blk_full_lambda,
+#else
                 context_ptr->md_context
                     ->full_lambda_md[(bit_depth == EB_10BIT) ? EB_10_BIT_MD : EB_8_BIT_MD],
+#endif
                 EB_TRUE);
             if (context_ptr->md_skip_blk) {
                 count_non_zero_coeffs[2] = 0;

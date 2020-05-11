@@ -3291,9 +3291,10 @@ void interpolation_filter_search(PictureControlSet *          picture_control_se
     int32_t       i;
     int32_t       tmp_rate;
     int64_t       tmp_dist;
-    // AMIR LAMBDA
 #if TPL_LA_LAMBDA_SCALING
-    uint32_t full_lambda_divided = md_context_ptr->blk_full_lambda;
+    uint32_t full_lambda_divided = hbd_mode_decision ?
+                                   md_context_ptr->blk_full_lambda >> (2 * (bit_depth - 8)) :
+                                   md_context_ptr->blk_full_lambda;
 #else
     uint32_t full_lambda_divided = hbd_mode_decision ?
         md_context_ptr->full_lambda_md[EB_10_BIT_MD] >> (2 * (bit_depth - 8)) :
