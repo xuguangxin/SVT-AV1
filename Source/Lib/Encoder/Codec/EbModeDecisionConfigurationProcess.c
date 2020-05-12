@@ -1133,10 +1133,14 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if APR23_ADOPTIONS_2
     if (scs_ptr->seq_header.enable_filter_intra) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAY12_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if SHIFT_M3_SC_TO_M1
             if (pcs_ptr->enc_mode <= ENC_M0)
 #else
             if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #endif
                 pcs_ptr->pic_filter_intra_mode = 1;
             else
@@ -1183,10 +1187,14 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
             enable_wm = EB_TRUE;
         }
+#if MAY12_ADOPTIONS
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8) {
+#else
 #if SHIFT_M6_SC_TO_M5
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
 #else
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #endif
             enable_wm = (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0) ? EB_TRUE : EB_FALSE;
         }
@@ -1195,7 +1203,11 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         }
     } else
 #endif
+#if MAY12_ADOPTIONS
+    if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2) {
+#else
     if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
+#endif
         enable_wm = EB_TRUE;
 #if UPGRADE_M8
     } else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8) {

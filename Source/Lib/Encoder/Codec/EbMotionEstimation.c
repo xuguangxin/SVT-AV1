@@ -9748,7 +9748,7 @@ void integer_search_sb(
             // Get hme results
             if (context_ptr->hme_results[list_index][ref_pic_index].do_ref == 0)
                 continue;  //so will not get ME results for those references.
-#if MAR30_ADOPTIONS
+#if MAR30_ADOPTIONS && !START_ME_AT_HME_MV
             x_search_center = pcs_ptr->input_resolution <= INPUT_SIZE_360p_RANGE ? 0 : context_ptr->hme_results[list_index][ref_pic_index].hme_sc_x;
             y_search_center = pcs_ptr->input_resolution <= INPUT_SIZE_360p_RANGE ? 0 : context_ptr->hme_results[list_index][ref_pic_index].hme_sc_y;
 #else
@@ -10321,7 +10321,7 @@ void hme_level0_sb(
     uint64_t ref1Poc = 0;
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag = context_ptr->enable_hme_level0_flag;
-#if DISABLE_HME_L0_FOR_240P
+#if DISABLE_HME_L0_FOR_240P && !RE_ENABLE_HME_L0_240p
     enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
 #endif
 #if ADD_HME_DECIMATION_SIGNAL
@@ -10933,7 +10933,7 @@ void set_final_seach_centre_sb(
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag =
         context_ptr->enable_hme_level0_flag;
-#if DISABLE_HME_L0_FOR_240P
+#if DISABLE_HME_L0_FOR_240P && !RE_ENABLE_HME_L0_240p
     enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
 #endif
     EbBool enable_hme_level1_flag =
@@ -11316,7 +11316,7 @@ void hme_sb(
     int16_t hme_level1_search_area_in_height;
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag = context_ptr->enable_hme_level0_flag;
-#if DISABLE_HME_L0_FOR_240P
+#if DISABLE_HME_L0_FOR_240P && !RE_ENABLE_HME_L0_240p
     enable_hme_level0_flag = input_ptr->height < 360 && input_ptr->width < 640 ? 0 : enable_hme_level0_flag;
 #endif
     EbBool enable_hme_level1_flag = context_ptr->enable_hme_level1_flag;

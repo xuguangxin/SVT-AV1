@@ -382,6 +382,10 @@ extern "C" {
 #define ME_MEM_OPT2                 1 // Memory reduction for ME Context
 
 #define NEW_CYCLE_ALLOCATION        1 // New cycle allocation where the action of the TXS and NICs was replaced by NSQ
+#define ADD_BEST_CAND_COUNT_SIGNAL 1 // replace BEST_CANDIDATE_COUNT macro with a signal
+#define RE_ENABLE_HME_L0_240p 1 // Re-enable HME L0 for 240p, as it helps high motion clips, and is noise for others
+#define START_ME_AT_HME_MV 1 // Start the ME search at the HME MV for all resolutions - needed for high motion clips
+#define MAY12_ADOPTIONS 1 // Adoptions in M0, M1, M2
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
@@ -860,10 +864,12 @@ typedef enum MdStagingMode {
 // NICS
 #define MAX_FRAME_TYPE    3  // Max number of frame type allowed for nics
 #define ALL_S0           -1  // Allow all candidates from stage0
+#if !ADD_BEST_CAND_COUNT_SIGNAL
 #if MR_MODE
 #define BEST_CANDIDATE_COUNT 23
 #else
 #define BEST_CANDIDATE_COUNT 4
+#endif
 #endif
 #define MAX_REF_TYPE_CAND 30
 #define PRUNE_REC_TH 5
