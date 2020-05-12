@@ -3530,6 +3530,9 @@ void md_stage_0(
             ? EB_TRUE
             : context_ptr->interpolation_search_level >= IT_SEARCH_FAST_LOOP_UV_BLIND ? EB_FALSE
                                                                                       : EB_TRUE;
+#if REMOVE_CHROMA_INTRA_S0
+    context_ptr->md_staging_skip_chroma_pred = EB_TRUE;
+#else
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
     context_ptr->md_staging_skip_chroma_pred =
 #else
@@ -3545,7 +3548,7 @@ void md_stage_0(
 #endif
             ? EB_TRUE
             : EB_FALSE;
-
+#endif
     context_ptr->md_staging_use_bilinear = (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
                                             context_ptr->md_staging_mode == MD_STAGING_MODE_2)
                                                ? EB_TRUE
@@ -7713,7 +7716,11 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
             // Cb/Cr Prediction
             if (context_ptr->md_staging_perform_intra_chroma_pred) {
                 context_ptr->uv_intra_comp_only = EB_TRUE;
+#if REMOVE_CHROMA_INTRA_S0
+                product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc ? INTER_MODE : candidate_ptr->type](
+#else
                 product_prediction_fun_table[candidate_ptr->type](
+#endif
                     context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
             }
         }
@@ -8004,6 +8011,9 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         context_ptr->md_staging_skip_inter_chroma_pred    = EB_TRUE;
 #endif
         candidate_buffer->candidate_ptr->interp_filters   = 0;
+#if REMOVE_CHROMA_INTRA_S0
+        context_ptr->md_staging_perform_intra_chroma_pred = EB_FALSE;
+#endif
         full_loop_core(pcs_ptr,
                        sb_ptr,
                        blk_ptr,
@@ -8073,7 +8083,11 @@ void md_stage_2(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         context_ptr->md_staging_spatial_sse_full_loop = context_ptr->spatial_sse_full_loop;
 #endif
 #if FIX_CFL_OFF
+#if REMOVE_CHROMA_INTRA_S0
+        context_ptr->md_staging_perform_intra_chroma_pred = EB_FALSE;
+#else
         context_ptr->md_staging_perform_intra_chroma_pred = 0;
+#endif
 #endif
         full_loop_core(pcs_ptr,
                        sb_ptr,
@@ -8283,7 +8297,11 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
         }
 #endif
 #if FIX_CFL_OFF
+#if REMOVE_CHROMA_INTRA_S0
+        context_ptr->md_staging_perform_intra_chroma_pred = EB_TRUE;
+#else
         context_ptr->md_staging_perform_intra_chroma_pred = 0;
+#endif
         if (context_ptr->chroma_at_last_md_stage) {
             update_intra_chroma_mode(context_ptr, candidate_ptr, pcs_ptr);
         }

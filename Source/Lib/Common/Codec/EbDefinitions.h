@@ -386,6 +386,7 @@ extern "C" {
 #define RE_ENABLE_HME_L0_240p 1 // Re-enable HME L0 for 240p, as it helps high motion clips, and is noise for others
 #define START_ME_AT_HME_MV 1 // Start the ME search at the HME MV for all resolutions - needed for high motion clips
 #define MAY12_ADOPTIONS 1 // Adoptions in M0, M1, M2
+#define REMOVE_CHROMA_INTRA_S0 1 // INTRA S0 Chroma OFF
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
