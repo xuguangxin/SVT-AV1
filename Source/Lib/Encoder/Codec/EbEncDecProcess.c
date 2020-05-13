@@ -3460,6 +3460,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->md_stage_2_3_class_prune_th =
             sequence_control_set_ptr->static_config.md_stage_2_3_class_prune_th;
+#if COEFF_BASED_BYPASS_NSQ
+    if (pd_pass == PD_PASS_0)
+        context_ptr->coeff_area_based_bypass_nsq_th = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->coeff_area_based_bypass_nsq_th = 0;
+    else
+        if (MR_MODE || pcs_ptr->slice_type != I_SLICE)
+            context_ptr->coeff_area_based_bypass_nsq_th = 0;
+        else if (enc_mode <= ENC_M0)
+            context_ptr->coeff_area_based_bypass_nsq_th = 4;
+        else if (enc_mode <= ENC_M1)
+            context_ptr->coeff_area_based_bypass_nsq_th = 5;
+        else
+            context_ptr->coeff_area_based_bypass_nsq_th = 0; // TH to be identified for M2-M8
+#endif
 
     // Weighting (expressed as a percentage) applied to
     // square shape costs for determining if a and b
@@ -3492,7 +3507,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if PRESETS_SHIFT
 #if NEW_M1_CAND
+#if COEFF_BASED_BYPASS_NSQ
+                if (enc_mode <= ENC_M1)
+#else
                 if (enc_mode <= ENC_M0)
+#endif
 #else
 #if M2_COMBO_1
                 if (enc_mode <= ENC_M1)
@@ -3508,8 +3527,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if MAY12_ADOPTIONS
+#if COEFF_BASED_BYPASS_NSQ
+                    context_ptr->sq_weight = (uint32_t)~0;
+#else
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 10;
+#endif
 #else
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 5;
@@ -3554,8 +3577,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M0 || (enc_mode <= ENC_M1 && !(pcs_ptr->parent_pcs_ptr->sc_content_detected)))
 #endif
 #if MAY12_ADOPTIONS
+#if COEFF_BASED_BYPASS_NSQ
+                context_ptr->sq_weight =(uint32_t)~0;
+#else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 10;
+#endif
 #else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 5;
@@ -3564,7 +3591,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight =
 #if M1_COMBO_3 || NEW_M1_CAND
+#if COEFF_BASED_BYPASS_NSQ
+                (uint32_t)~0;
+#else
                 pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? sequence_control_set_ptr->static_config.sq_weight : sequence_control_set_ptr->static_config.sq_weight - 5;
+#endif
 #else
                 sequence_control_set_ptr->static_config.sq_weight;
 #endif
@@ -3572,6 +3603,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight - 5;
+
 #if NEW_CYCLE_ALLOCATION
     if (context_ptr->enable_area_based_cycles_allocation) {
         if (context_ptr->sb_class == LOW_COMPLEX_CLASS)

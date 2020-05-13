@@ -393,6 +393,8 @@ extern "C" {
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
 #define CAND_PRUN_OPT               1 // new candidate pruning for stage3: adaptive txt/txs levels
 
+
+#define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

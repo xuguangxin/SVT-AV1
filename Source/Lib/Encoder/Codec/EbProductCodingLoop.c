@@ -11186,7 +11186,66 @@ void block_based_depth_reduction(
 
 }
 #endif
+#if COEFF_BASED_BYPASS_NSQ
+uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
+    uint8_t skip_nsq = 0;
+    if (context_ptr->coeff_area_based_bypass_nsq_th) {
+        if (context_ptr->blk_geom->shape != PART_N) {
+            uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].count_non_zero_coeffs;
+            uint32_t total_samples = (context_ptr->blk_geom->bwidth*context_ptr->blk_geom->bheight);
+            uint8_t band_idx = 0;
+            if (count_non_zero_coeffs >= ((total_samples * 18) / 20)) {
+                band_idx = 9;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 16) / 20)) {
+                band_idx = 8;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 14) / 20)) {
+                band_idx = 7;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 12) / 20)) {
+                band_idx = 6;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 10) / 20)) {
+                band_idx = 5;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 8) / 20)) {
+                band_idx = 4;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 6) / 20)) {
+                band_idx = 3;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 4) / 20)) {
+                band_idx = 2;
+            }
+            else if (count_non_zero_coeffs >= ((total_samples * 2) / 20)) {
+                band_idx = 1;
+            }
+            else {
+                band_idx = 0;
+            }
 
+            if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE) {
+                if (allowed_part_weight_240pF[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
+                    skip_nsq = 1;
+            }
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) {
+                if (allowed_part_weight_360p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
+                    skip_nsq = 1;
+            }
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_720p_RANGE) {
+                if (allowed_part_weight_720p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
+                    skip_nsq = 1;
+            }
+            else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_1080p_RANGE) {
+                if (allowed_part_weight_1080p[context_ptr->blk_geom->depth][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
+                    skip_nsq = 1;
+            }
+        }
+    }
+    return skip_nsq;
+}
+#endif
 EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                        const MdcSbData *const mdcResultTbPtr, SuperBlock *sb_ptr,
                                        uint16_t sb_origin_x, uint16_t sb_origin_y, uint32_t sb_addr,
@@ -11579,10 +11638,19 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if !CLEAN_UP_SB_DATA_6
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
+#if COEFF_BASED_BYPASS_NSQ
+            uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr);
+            if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
+                !skip_next_nsq && !skip_next_sq &&
+                !sq_weight_based_nsq_skip &&
+                !skip_next_depth &&
+                !skip_nsq) {
+#else
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq &&
                 !sq_weight_based_nsq_skip &&
                 !skip_next_depth) {
+#endif
                 md_encode_block(pcs_ptr,
                                 context_ptr,
                                 input_picture_ptr,

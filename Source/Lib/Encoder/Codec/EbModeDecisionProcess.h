@@ -625,6 +625,9 @@ typedef struct ModeDecisionContext {
     uint8_t sb_class;
     SbClassControls sb_class_ctrls;
 #endif
+#if COEFF_BASED_BYPASS_NSQ
+    uint16_t coeff_area_based_bypass_nsq_th;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
