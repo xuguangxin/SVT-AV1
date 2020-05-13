@@ -387,6 +387,12 @@ extern "C" {
 #define START_ME_AT_HME_MV 1 // Start the ME search at the HME MV for all resolutions - needed for high motion clips
 #define MAY12_ADOPTIONS 1 // Adoptions in M0, M1, M2
 #define REMOVE_CHROMA_INTRA_S0 1 // INTRA S0 Chroma OFF
+
+
+#define NICS_CLEANUP                1 // cleanup nics generation (lossy)
+#define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
+#define CAND_PRUN_OPT               1 // new candidate pruning for stage3: adaptive txt/txs levels
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
