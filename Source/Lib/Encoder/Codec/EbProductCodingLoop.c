@@ -3983,7 +3983,12 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
              refinement_pos_y <= search_position_end_y;
              ++refinement_pos_y) {
 #endif
+#if INT_RECON_OFFSET_FIX
+            // Never negative here
+            int32_t ref_origin_index =
+#else
             uint32_t ref_origin_index =
+#endif
                 ref_pic->origin_x + (context_ptr->blk_origin_x + (mvx >> 3) + refinement_pos_x) +
                 (context_ptr->blk_origin_y + (mvy >> 3) + ref_pic->origin_y + refinement_pos_y) *
                     ref_pic->stride_y;
@@ -4553,7 +4558,12 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                         (mvp_y_array[mvp_index] >> 3) < -ref_pic->origin_y)
                     continue;
 #endif
+#if INT_RECON_OFFSET_FIX
+                // Never be negative here
                 int32_t ref_origin_index =
+#else
+                uint32_t ref_origin_index =
+#endif
                     ref_pic->origin_x +
                     (context_ptr->blk_origin_x + (mvp_x_array[mvp_index] >> 3)) +
                     (context_ptr->blk_origin_y + (mvp_y_array[mvp_index] >> 3) +
@@ -4644,7 +4654,12 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                 if (!out_of_boundary) {
 #endif
 
+#if INT_RECON_OFFSET_FIX
+                // Never be negative here
+                int32_t ref_origin_index =
+#else
                 uint32_t ref_origin_index =
+#endif
                     ref_pic->origin_x + (context_ptr->blk_origin_x + (me_mv_x >> 3)) +
                     (context_ptr->blk_origin_y + (me_mv_y >> 3) + ref_pic->origin_y) *
                     ref_pic->stride_y;
