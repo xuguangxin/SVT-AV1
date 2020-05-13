@@ -370,14 +370,7 @@ extern "C" {
 #define MAX_TPL_LA_SW              60 // Max TPL look ahead sliding window size
 #define TPL_LA_QPS                  1
 #define TPL_LA_QPM                  1
-#define CUTREE_MV_CLIP              1
-#define UPDATE_SW                   1
-#define TPL_LA_REENCODE             0
-#define QPS_TPL                     1
 #define TPL_LA_LAMBDA_SCALING       1
-#define INTRA_RECON_WITH_REC        0
-#define TPL_LA_QPS_1PASS            1
-#define TPL_LA_QPM_1PASS            1
 #endif
 #define ME_MEM_OPT2                 1 // Memory reduction for ME Context
 

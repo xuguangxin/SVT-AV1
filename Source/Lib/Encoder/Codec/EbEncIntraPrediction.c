@@ -1305,13 +1305,9 @@ EbErrorType update_neighbor_samples_array_open_loop(
 #if TPL_LA
 #define USE_PADDING_FIX 1
 EbErrorType update_neighbor_samples_array_open_loop_mb(
-        uint8_t                           *above_ref,
+        uint8_t                            *above_ref,
         uint8_t                            *left_ref,
-#if USE_ORIGIN_YUV
-        PictureParentControlSet          *pcs_ptr,
-#endif
-        EbPictureBufferDesc              *input_ptr,
-        uint8_t                          *dst_ptr,
+        EbPictureBufferDesc                *input_ptr,
         uint32_t                            stride,
         uint32_t                            src_origin_x,
         uint32_t                            src_origin_y,
@@ -1329,17 +1325,8 @@ EbErrorType update_neighbor_samples_array_open_loop_mb(
     uint32_t height = input_ptr->height;
     uint32_t block_size_half = bwidth << 1;
 
-    if (dst_ptr) {
-        // Set to the recon dest buffer pointer if not null pointer
-        src_ptr = dst_ptr;
-    } else {
-        // Adjust the Source ptr to start at the origin of the block being updated
-        src_ptr = input_ptr->buffer_y + (((src_origin_y + input_ptr->origin_y) * stride) + (src_origin_x + input_ptr->origin_x));
-    }
-#if USE_ORIGIN_YUV
-    if(pcs_ptr->temporal_layer_index == 0)
-        src_ptr =  pcs_ptr->save_enhanced_picture_ptr[0] + (((src_origin_y + input_ptr->origin_y) * stride) + (src_origin_x + input_ptr->origin_x));
-#endif
+    // Adjust the Source ptr to start at the origin of the block being updated
+    src_ptr = input_ptr->buffer_y + (((src_origin_y + input_ptr->origin_y) * stride) + (src_origin_x + input_ptr->origin_x));
 
     //Initialise the Luma Intra Reference Array to the mid range value 128 (for CUs at the picture boundaries)
     EB_MEMSET(above_ref, 127, (bwidth << 1) + 1);

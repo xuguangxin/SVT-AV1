@@ -112,15 +112,9 @@ void av1_make_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
         interp_filters, 0);
   }
 }
-#if CUTREE_MV_CLIP
 void av1_build_inter_predictor(Av1Common *cm, const uint8_t *src, int src_stride, uint8_t *dst,
                                int dst_stride, const MV *src_mv, int pix_col, int pix_row,
                                InterPredParams *inter_pred_params) {
-#else
-void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst, int dst_stride,
-                               const MV *src_mv, int pix_col, int pix_row,
-                               InterPredParams *inter_pred_params) {
-#endif
   SubpelParams subpel_params;
   //const struct scale_factors *sf = inter_pred_params->scale_factors;
   const struct ScaleFactors *sf = inter_pred_params->scale_factors;
@@ -128,7 +122,6 @@ void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
   (void)pix_row;
   (void)pix_col;
 
-#if CUTREE_MV_CLIP
   MacroBlockD xd;
   int32_t       mi_row = pix_row >> MI_SIZE_LOG2;
   int32_t       mi_col = pix_col >> MI_SIZE_LOG2;
@@ -145,21 +138,14 @@ void av1_build_inter_predictor(const uint8_t *src, int src_stride, uint8_t *dst,
                                              16,//blk_geom->bheight,
                                              inter_pred_params->subsampling_x,
                                              inter_pred_params->subsampling_y);
-#endif
 
   struct Buf2D *pre_buf    = &inter_pred_params->ref_frame_buf;
   int           ssx        = inter_pred_params->subsampling_x;
   int ssy = inter_pred_params->subsampling_y;
   int orig_pos_y = inter_pred_params->pix_row << SUBPEL_BITS;
-#if CUTREE_MV_CLIP
   orig_pos_y += best_mv_tmp.row;
   int orig_pos_x = inter_pred_params->pix_col << SUBPEL_BITS;
   orig_pos_x += best_mv_tmp.col;
-#else
-  orig_pos_y += src_mv->row * (1 << (1 - ssy));
-  int orig_pos_x = inter_pred_params->pix_col << SUBPEL_BITS;
-  orig_pos_x += src_mv->col * (1 << (1 - ssx));
-#endif
   int pos_y = sf->scale_value_y(orig_pos_y, sf);
   int pos_x = sf->scale_value_x(orig_pos_x, sf);
   pos_x += SCALE_EXTRA_OFF;
