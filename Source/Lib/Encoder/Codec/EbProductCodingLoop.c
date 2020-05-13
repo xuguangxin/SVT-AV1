@@ -4539,6 +4539,20 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                 EbPictureBufferDesc *ref_pic = hbd_mode_decision ? ref_obj->reference_picture16bit
                                                                  : ref_obj->reference_picture;
 
+#if BOUNDARY_CHECK
+                // Skip the pred_me at the boundary
+                if (context_ptr->blk_origin_x + (mvp_x_array[mvp_index] >> 3) +
+                        context_ptr->blk_geom->bwidth >
+                        ref_pic->max_width + ref_pic->origin_x ||
+                        context_ptr->blk_origin_y + (mvp_y_array[mvp_index] >> 3) +
+                        context_ptr->blk_geom->bheight >
+                        ref_pic->max_height + ref_pic->origin_y ||
+                        context_ptr->blk_origin_x +
+                        (mvp_x_array[mvp_index] >> 3) < -ref_pic->origin_x ||
+                        context_ptr->blk_origin_y +
+                        (mvp_y_array[mvp_index] >> 3) < -ref_pic->origin_y)
+                    continue;
+#endif
                 int32_t ref_origin_index =
                     ref_pic->origin_x +
                     (context_ptr->blk_origin_x + (mvp_x_array[mvp_index] >> 3)) +
@@ -4613,6 +4627,22 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                 EbReferenceObject *ref_obj = pcs_ptr->ref_pic_ptr_array[list_idx][ref_idx]->object_ptr;
                 EbPictureBufferDesc *ref_pic =
                     hbd_mode_decision ? ref_obj->reference_picture16bit : ref_obj->reference_picture;
+#if BOUNDARY_CHECK
+                // Check the boundary, may over the boundary because of the round-up
+                EbBool out_of_boundary = EB_FALSE;
+                if (context_ptr->blk_origin_x + (me_mv_x >> 3) +
+                        context_ptr->blk_geom->bwidth >
+                        ref_pic->max_width + ref_pic->origin_x ||
+                        context_ptr->blk_origin_y + (me_mv_y >> 3) +
+                        context_ptr->blk_geom->bheight >
+                        ref_pic->max_height + ref_pic->origin_y ||
+                        context_ptr->blk_origin_x +
+                        (me_mv_x >> 3) < -ref_pic->origin_x ||
+                        context_ptr->blk_origin_y +
+                        (me_mv_y >> 3) < -ref_pic->origin_y)
+                    out_of_boundary = EB_TRUE;
+                if (!out_of_boundary) {
+#endif
 
                 uint32_t ref_origin_index =
                     ref_pic->origin_x + (context_ptr->blk_origin_x + (me_mv_x >> 3)) +
@@ -4655,6 +4685,9 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                                 context_ptr->blk_geom->bwidth);
                     }
                 }
+#if BOUNDARY_CHECK
+                }
+#endif
             }
 
             // early_inter_distortion_array
