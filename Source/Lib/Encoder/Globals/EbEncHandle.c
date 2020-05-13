@@ -2293,10 +2293,6 @@ void copy_api_from_app(
     scs_ptr->static_config.scene_change_detection = ((EbSvtAv1EncConfiguration*)config_struct)->scene_change_detection;
     scs_ptr->static_config.rate_control_mode = ((EbSvtAv1EncConfiguration*)config_struct)->rate_control_mode;
     scs_ptr->static_config.look_ahead_distance = ((EbSvtAv1EncConfiguration*)config_struct)->look_ahead_distance;
-#if TPL_LA
-    scs_ptr->static_config.enable_tpl_la = ((EbSvtAv1EncConfiguration*)config_struct)->enable_tpl_la;
-    scs_ptr->static_config.frames_to_be_encoded = ((EbSvtAv1EncConfiguration*)config_struct)->frames_to_be_encoded;
-#endif
     scs_ptr->static_config.frame_rate = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate;
     scs_ptr->static_config.frame_rate_denominator = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate_denominator;
     scs_ptr->static_config.frame_rate_numerator = ((EbSvtAv1EncConfiguration*)config_struct)->frame_rate_numerator;
@@ -2368,6 +2364,14 @@ void copy_api_from_app(
         scs_ptr->static_config.look_ahead_distance = compute_default_look_ahead(&scs_ptr->static_config);
     else
         scs_ptr->static_config.look_ahead_distance = cap_look_ahead_distance(&scs_ptr->static_config);
+#if TPL_LA
+    scs_ptr->static_config.enable_tpl_la = ((EbSvtAv1EncConfiguration*)config_struct)->enable_tpl_la;
+    scs_ptr->static_config.frames_to_be_encoded = ((EbSvtAv1EncConfiguration*)config_struct)->frames_to_be_encoded;
+    if (scs_ptr->static_config.enable_tpl_la && scs_ptr->static_config.look_ahead_distance > (uint32_t)0) {
+        SVT_LOG("SVT [Warning]: force look_ahead_distance to be 32 from %d for perf/quality tradeoff when enable_tpl_la=1\n", scs_ptr->static_config.look_ahead_distance);
+        scs_ptr->static_config.look_ahead_distance = 32;
+    }
+#endif
 
     scs_ptr->static_config.enable_altrefs = config_struct->enable_altrefs;
     scs_ptr->static_config.altref_strength = config_struct->altref_strength;
