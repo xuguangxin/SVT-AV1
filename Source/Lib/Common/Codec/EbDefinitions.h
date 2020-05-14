@@ -384,7 +384,7 @@ extern "C" {
 
 #define NICS_CLEANUP                1 // cleanup nics generation (lossy)
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
-#define CAND_PRUN_OPT               1 // new candidate pruning for stage3: adaptive txt/txs levels
+#define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 
 
 #define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
