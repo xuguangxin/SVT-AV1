@@ -202,6 +202,9 @@ extern "C" {
 #if TXT_CONTROL
 #define MAX_TX_WEIGHT 500
 #define SB_CLASSIFIER       1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
+#if SB_CLASSIFIER
+#define SB_CLASSIFIER_R2R_FIX 1
+#endif
 #endif
 #define PRESETS_SHIFT 1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
 #define OPT_BLOCK_INDICES_GEN 1 // Optimized block indices derivation towards less overhead when looping over a subset of blocks (e.g. when enabling disallow_nsq)

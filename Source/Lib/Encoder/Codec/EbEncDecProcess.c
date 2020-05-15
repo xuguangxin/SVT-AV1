@@ -5926,7 +5926,7 @@ static uint8_t determine_sb_class(
             (blk_geom->sq_size < 128) ? 1 : 0;
         split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
         if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
-#if R2R_FIX
+#if SB_CLASSIFIER_R2R_FIX
             context_ptr->md_local_blk_unit[blk_index].avail_blk_flag &&
 #endif
             is_blk_allowed) {
