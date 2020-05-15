@@ -1627,12 +1627,10 @@ EbErrorType tpl_mc_flow(
 
     uint32_t                         inputQueueIndex;
     int32_t                          frames_in_sw = MIN(MAX_TPL_LA_SW, pcs_ptr->frames_in_sw);
-    uint64_t                         start_poc = 0;
     int32_t                          frame_idx, i;
     uint32_t                         shift = pcs_ptr->is_720p_or_larger ? 0 : 1;
     uint32_t picture_width_in_mb  = (pcs_ptr->enhanced_picture_ptr->width  + 16 - 1) / 16;
     uint32_t picture_height_in_mb = (pcs_ptr->enhanced_picture_ptr->height + 16 - 1) / 16;
-    EbBool                           start_is_intra = EB_FALSE;
     EbBool                           got_intra_in_sw = EB_FALSE;
 
     (void)scs_ptr;
@@ -1672,8 +1670,6 @@ EbErrorType tpl_mc_flow(
     if (got_intra_in_sw) {
         return EB_ErrorNone;
     }
-    start_poc = pcs_array[0]->picture_number;
-    start_is_intra = frame_is_intra_only(pcs_array[0]);
 
     for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
         encode_context_ptr->poc_map_idx[frame_idx] = -1;
@@ -1682,10 +1678,10 @@ EbErrorType tpl_mc_flow(
         EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
     }
 
-    if (start_is_intra && pcs_array[0]->temporal_layer_index == 0) {
+    if (frame_is_intra_only(pcs_array[0]) && pcs_array[0]->temporal_layer_index == 0) {
         // dispenser I0 or frame_idx0 pic in LA1
         int32_t sw_length = MIN(17, (frames_in_sw));
-        for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++) {
+        for(frame_idx = 0; frame_idx < sw_length; frame_idx++) {
             EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
             encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
             for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
