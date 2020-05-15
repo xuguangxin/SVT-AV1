@@ -2354,7 +2354,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
         else
             context_ptr->disallow_4x4 = EB_TRUE;
+#if M1_C2_ADOPTIONS
+     else if (enc_mode <= ENC_M0)
+#else
      else if (enc_mode <= ENC_M2)
+#endif
          context_ptr->disallow_4x4 = EB_FALSE;
 #if REVERT_WHITE // disallow_4x4
      else if (enc_mode <= ENC_M7)
@@ -3363,6 +3367,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAR10_ADOPTIONS
         if (MR_MODE)
             context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+#if M1_C2_ADOPTIONS
+        else if (enc_mode <= ENC_M0 ||
+            pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
 #if PRESETS_SHIFT
 #if M1_COMBO_2 || M2_COMBO_3 || NEW_M1_CAND
 #if MAY12_ADOPTIONS
@@ -3387,6 +3395,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
         else if (enc_mode <= ENC_M4 ||
             pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #endif
 #endif
 #else
@@ -3511,10 +3520,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if PRESETS_SHIFT
 #if NEW_M1_CAND
+#if M1_C2_ADOPTIONS
+                if (enc_mode <= ENC_M0)
+#else
 #if COEFF_BASED_BYPASS_NSQ
                 if (enc_mode <= ENC_M1)
 #else
                 if (enc_mode <= ENC_M0)
+#endif
 #endif
 #else
 #if M2_COMBO_1
@@ -3557,6 +3570,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight;
 #endif
+#if M1_C2_ADOPTIONS
+                else if(enc_mode <= ENC_M1)
+                    context_ptr->sq_weight = 100;
+#endif
                 else
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight - 5;
@@ -3594,6 +3611,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M1_COMBO_1 || NEW_M1_CAND
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight =
+#if M1_C2_ADOPTIONS
+                100;
+#else
 #if M1_COMBO_3 || NEW_M1_CAND
 #if COEFF_BASED_BYPASS_NSQ
                 (uint32_t)~0;
@@ -3602,6 +3622,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
                 sequence_control_set_ptr->static_config.sq_weight;
+#endif
 #endif
 #endif
             else
@@ -3695,6 +3716,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_7;
         }
         else {
+#if M1_C2_ADOPTIONS
+            context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
 #if PRESETS_SHIFT
 #if M2_COMBO_1
             context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
@@ -3714,6 +3739,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
             context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #endif
 #endif
 #endif
@@ -3972,7 +3998,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->bipred3x3_number_input_mv = 4;
     else if (pd_pass == PD_PASS_1)
         context_ptr->bipred3x3_number_input_mv = 4;
+#if M1_C2_ADOPTIONS
+    else if (enc_mode <= ENC_M0)
+#else
     else if (enc_mode <= ENC_M2)
+#endif
         context_ptr->bipred3x3_number_input_mv = 4;
     else
         context_ptr->bipred3x3_number_input_mv = 1;

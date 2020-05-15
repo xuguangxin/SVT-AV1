@@ -1388,6 +1388,34 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 #define INTER_PRED_NFL 24
 #define INTER_COMP_NFL 16
 #else
+#if M1_C2_ADOPTIONS
+uint32_t nics_scale_factor[2/*sc/nsc*/][9/*levels*/][2/*num/denum*/] = {
+    {
+        //NSC
+        {8,8},    // level0
+        {7,8},    // level1
+        {6,8},    // level2
+        {5,8},    // level3
+        {4,8},    // level4
+        {3,8},    // level5
+        {2,8},    // level6
+        {1,8},    // level7
+        {1,16}    // level8
+    },
+    {
+        //SC
+        {8,8},    // level0
+        {7,8},    // level1
+        {6,8},    // level2
+        {5,8},    // level3
+        {4,8},    // level4
+        {3,8},    // level5
+        {2,8},    // level6
+        {1,8},    // level7
+        {1,16}    // level8
+    },
+};
+#else
 uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
     {
         //NSC
@@ -1418,12 +1446,29 @@ uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
 
 
 };
+#endif
 
 void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     // minimum nics allowed
     uint32_t min_nics = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 1;
 
     uint8_t nics_scling_level ;
+#if M1_C2_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M0)
+        nics_scling_level = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        nics_scling_level = 2;
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+        nics_scling_level = 4;
+    else if (pcs_ptr->enc_mode <= ENC_M5)
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 6 : 4;
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 6 : 7;
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        nics_scling_level = 7;
+    else
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 8 : 7;
+#else
     if (pcs_ptr->enc_mode <= ENC_M1)
         nics_scling_level = 0;
     else if (pcs_ptr->enc_mode <= ENC_M4)
@@ -1436,6 +1481,7 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
         nics_scling_level = 4;
     else
         nics_scling_level = 5;
+#endif
 
     uint32_t scale_num =
         nics_scale_factor[pcs_ptr->parent_pcs_ptr->sc_content_detected][nics_scling_level][0];

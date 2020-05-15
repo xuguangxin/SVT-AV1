@@ -680,6 +680,9 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
+#if M1_C2_ADOPTIONS
+    if (enc_mode <= ENC_M0) {
+#else
 #if APR23_ADOPTIONS
     if (enc_mode <= ENC_M2) {
 #else
@@ -687,6 +690,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     if (enc_mode <= ENC_M1) {
 #else
     if (enc_mode <= ENC_M0) {
+#endif
 #endif
 #endif
         context_ptr->me_context_ptr->half_pel_mode =
@@ -1209,6 +1213,9 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->use_subpel_flag = scs_ptr->static_config.enable_subpel;
 
         // adopt M2 setting in M1
+#if M1_C2_ADOPTIONS
+    if (enc_mode <= ENC_M0) {
+#else
 #if APR23_ADOPTIONS
     if (enc_mode <= ENC_M2) {
 #else
@@ -1216,6 +1223,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     if (enc_mode <= ENC_M1) {
 #else
     if (enc_mode <= ENC_M0) {
+#endif
 #endif
 #endif
         context_ptr->me_context_ptr->half_pel_mode =
