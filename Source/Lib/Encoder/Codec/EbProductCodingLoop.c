@@ -1391,7 +1391,11 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
     {
         //NSC
+#if NEW_M0_M1_ME_NICS
+        {7,8},    // level0
+#else
         {8,8},    // level0
+#endif
         {4,8},    // level1
         {4,8},    // level2
         {1,8},    // level3
@@ -1399,7 +1403,11 @@ uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
         {1,8}     // level5
     },
     {
+#if NEW_M0_M1_ME_NICS
+        {7,8},    // level0
+#else
         {8,8},    // level0
+#endif
         {4,8},    // level1
         {2,8},    // level2
         {2,8},    // level3
@@ -1410,6 +1418,7 @@ uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
 
 
 };
+#endif
 
 void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     // minimum nics allowed
