@@ -393,6 +393,7 @@ extern "C" {
 
 #define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
 #define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
+#define COEFF_BASED_BYPASS_NSQ_FIX 1 // apply algorithm to non-I_SLICE
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
