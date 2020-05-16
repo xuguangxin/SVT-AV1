@@ -6098,6 +6098,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             }
                             else
 #endif
+#if M1_C3_ADOPTIONS
+                            if (pcs_ptr->enc_mode <= ENC_M0) {
+#else
 #if MAY12_ADOPTIONS
                             if (pcs_ptr->enc_mode <= ENC_M2 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M4)) {
 #else
@@ -6107,13 +6110,16 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             if(pcs_ptr->enc_mode <= ENC_M5) {
 #endif
 #endif
-                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
-#if M1_C3_ADOPTIONS
-                                e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
-#else
-                                e_depth = pcs_ptr->slice_type == I_SLICE ?  2 :  1;
 #endif
+                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                e_depth = pcs_ptr->slice_type == I_SLICE ?  2 :  1;
                             }
+#if M1_C3_ADOPTIONS
+                            else if (pcs_ptr->enc_mode <= ENC_M2 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M4)) {
+                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+                            }
+#endif
 #if MAY12_ADOPTIONS
                             else if (pcs_ptr->enc_mode <= ENC_M6) {
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
