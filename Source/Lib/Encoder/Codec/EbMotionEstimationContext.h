@@ -539,6 +539,11 @@ typedef struct MeContext {
     uint64_t tf_32x32_block_error[4];
 
     int tf_32x32_block_split_flag[4];
+#if TF_IMP
+    int tf_block_row;
+    int tf_block_col;
+    uint16_t min_frame_size;
+#endif
     // -------
 } MeContext;
 

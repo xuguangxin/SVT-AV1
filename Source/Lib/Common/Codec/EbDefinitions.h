@@ -37,8 +37,8 @@ extern "C" {
 #ifndef NON_AVX512_SUPPORT
 #define NON_AVX512_SUPPORT
 #endif
-// START  BEYOND_CS2 /////////////////////////////////////////////////////////
 
+// START  BEYOND_CS2 /////////////////////////////////////////////////////////
 #define BEYOND_CS2        1 // BASED ON CS2 branch 3a19f29b789df30ef81d5bb263ce991617cbf30c
 
 #if BEYOND_CS2
@@ -396,6 +396,8 @@ extern "C" {
 #define COEFF_BASED_BYPASS_NSQ_FIX 1 // apply algorithm to non-I_SLICE
 #define NEW_M0_M1_ME_NICS 1 // New ME and NICS scaling adoptions for M0/M1
 #define M1_C2_ADOPTIONS 1 // Adoptions for M1
+#define TF_IMP                      1 // Improve the temporal filtering by considering MV and distortion
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
