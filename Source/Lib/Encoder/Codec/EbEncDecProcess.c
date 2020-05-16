@@ -2737,6 +2737,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 context_ptr->bipred3x3_injection = 0;
 #endif
 #if MAR18_ADOPTIONS
+#if MAY16_M0_ADOPTIONS
+        else if (MR_MODE || (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE))
+#else
 #if PRESETS_SHIFT
 #if M1_COMBO_1 || NEW_M1_CAND
         else if (enc_mode <= ENC_M0)
@@ -2748,6 +2751,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M3)
 #else
         else if (enc_mode <= ENC_M4)
+#endif
 #endif
 #endif
             context_ptr->bipred3x3_injection = 1;

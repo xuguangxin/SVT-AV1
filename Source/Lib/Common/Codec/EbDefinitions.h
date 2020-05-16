@@ -401,7 +401,8 @@ extern "C" {
 #define NOISE_BASED_TF_FRAMES 1 // Use adative number of frames in temporal filtering
 #define M1_C3_ADOPTIONS 1 // Adoptions for M1
 #define HME_4K_ADOPTIONS 1 // Adoptions for SC HME and 4K HME
-#define MAY15_M0_ADOPTIONS 1 // adopt sq_weight 105 for M0
+#define MAY15_M0_ADOPTIONS 1 // M0 adoptions
+#define MAY16_M0_ADOPTIONS 1
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////

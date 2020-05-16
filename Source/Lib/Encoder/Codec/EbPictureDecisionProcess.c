@@ -1967,12 +1967,17 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             else
 #endif
+#if MAY16_M0_ADOPTIONS
+                pcs_ptr->compound_mode = (MR_MODE || (pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)) ? 1 :
+                pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#else
 #if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
                 pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M3 ? 1 :
                                      pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M4 ? 1 :
