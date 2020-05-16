@@ -398,6 +398,8 @@ extern "C" {
 #define M1_C2_ADOPTIONS 1 // Adoptions for M1
 #define TF_IMP                      1 // Improve the temporal filtering by considering MV and distortion
 
+#define NOISE_BASED_TF_FRAMES 1 // Use adative number of frames in temporal filtering
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
@@ -505,7 +507,11 @@ enum {
  * this number can be increased by increasing the constant
  * FUTURE_WINDOW_WIDTH defined in EbPictureDecisionProcess.c
  */
+#if 1//NOISE_BASED_TF_FRAMES
+#define ALTREF_MAX_NFRAMES 13
+#else
 #define ALTREF_MAX_NFRAMES 10
+#endif
 #define ALTREF_MAX_STRENGTH 6
 #define PAD_VALUE (128 + 32)
 #define PAD_VALUE_SCALED (128+128+32)

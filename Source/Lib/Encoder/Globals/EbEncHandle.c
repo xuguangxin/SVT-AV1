@@ -92,9 +92,11 @@
 #define ENCDEC_INPUT_PORT_MDC                                0
 #define ENCDEC_INPUT_PORT_ENCDEC                             1
 #define ENCDEC_INPUT_PORT_INVALID                           -1
-
+#if NOISE_BASED_TF_FRAMES
+#define SCD_LAD                                             12
+#else
 #define SCD_LAD                                              6
-
+#endif
 /**************************************
  * Globals
  **************************************/
@@ -3160,7 +3162,11 @@ EbErrorType eb_svt_enc_init_parameter(
 
     // Alt-Ref default values
     config_ptr->enable_altrefs = EB_TRUE;
+#if NOISE_BASED_TF_FRAMES
+    config_ptr->altref_nframes = ALTREF_MAX_NFRAMES;
+#else
     config_ptr->altref_nframes = 7;
+#endif
     config_ptr->altref_strength = 5;
     config_ptr->enable_overlays = EB_FALSE;
 

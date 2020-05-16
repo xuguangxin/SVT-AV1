@@ -137,6 +137,14 @@ void svt_av1_apply_temporal_filter_planewise_c(
     int ss_x, int ss_y, const double *noise_levels, const int decay_control, uint32_t *y_accum,
     uint16_t *y_count, uint32_t *u_accum, uint16_t *u_count, uint32_t *v_accum, uint16_t *v_count);
 #endif
+
+#if NOISE_BASED_TF_FRAMES
+double estimate_noise(const uint8_t *src, uint16_t width, uint16_t height,
+    uint16_t stride_y);
+
+double estimate_noise_highbd(const uint16_t *src, int width, int height, int stride,
+    int bd);
+#endif
 #ifdef __cplusplus
 }
 #endif

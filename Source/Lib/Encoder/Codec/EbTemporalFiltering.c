@@ -2761,8 +2761,13 @@ static EbErrorType produce_temporally_filtered_pic(
 // function from libaom
 // Standard bit depht input (=8 bits) to estimate the noise, I don't think there needs to be two methods for this
 // Operates on the Y component only
+#if NOISE_BASED_TF_FRAMES
+double estimate_noise(const uint8_t *src, uint16_t width, uint16_t height,
+    uint16_t stride_y) {
+#else
 static double estimate_noise(const uint8_t *src, uint16_t width, uint16_t height,
                              uint16_t stride_y) {
+#endif
     int64_t sum = 0;
     int64_t num = 0;
 
@@ -2798,8 +2803,13 @@ static double estimate_noise(const uint8_t *src, uint16_t width, uint16_t height
 }
 
 // Noise estimation for highbd
+#if NOISE_BASED_TF_FRAMES
+double estimate_noise_highbd(const uint16_t *src, int width, int height, int stride,
+    int bd) {
+#else
 static double estimate_noise_highbd(const uint16_t *src, int width, int height, int stride,
                                     int bd) {
+#endif
     int64_t sum = 0;
     int64_t num = 0;
 
@@ -3111,7 +3121,7 @@ EbErrorType svt_av1_init_temporal_filtering(
     eb_block_on_mutex(picture_control_set_ptr_central->temp_filt_mutex);
     if (picture_control_set_ptr_central->temp_filt_prep_done == 0) {
         picture_control_set_ptr_central->temp_filt_prep_done = 1;
-
+#if !NOISE_BASED_TF_FRAMES
         // allocate 16 bit buffer
         if (is_highbd) {
             EB_MALLOC_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_Y],
@@ -3193,6 +3203,7 @@ EbErrorType svt_av1_init_temporal_filtering(
                                              (central_picture_ptr->height >> ss_y),
                                              central_picture_ptr->stride_cr);
         }
+#endif
         // adjust filter parameter based on the estimated noise of the picture
         adjust_filter_strength(picture_control_set_ptr_central,
                                noise_levels[0],
@@ -3296,6 +3307,7 @@ EbErrorType svt_av1_init_temporal_filtering(
 #endif
 
         if (is_highbd) {
+
             unpack_highbd_pic(picture_control_set_ptr_central->altref_buffer_highbd,
                               central_picture_ptr,
                               ss_x,
@@ -3305,6 +3317,7 @@ EbErrorType svt_av1_init_temporal_filtering(
             EB_FREE_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_Y]);
             EB_FREE_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_U]);
             EB_FREE_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_V]);
+
             for (int i = 0; i < (picture_control_set_ptr_central->past_altref_nframes + picture_control_set_ptr_central->future_altref_nframes + 1); i++) {
                 if (i != picture_control_set_ptr_central->past_altref_nframes) {
                     EB_FREE_ARRAY(list_picture_control_set_ptr[i]->altref_buffer_highbd[C_Y]);

@@ -26,7 +26,9 @@
 #include "EbObject.h"
 #include "EbUtility.h"
 #include "EbLog.h"
-
+#if NOISE_BASED_TF_FRAMES
+#include "EbMalloc.h"
+#endif
 /************************************************
  * Defines
  ************************************************/
@@ -4888,8 +4890,20 @@ static __inline uint32_t compute_luma_sad_between_center_and_target_frame(
     }
     return ahd;
 }
+#if NOISE_BASED_TF_FRAMES
+double estimate_noise(const uint8_t *src, uint16_t width, uint16_t height,
+    uint16_t stride_y);
 
+double estimate_noise_highbd(const uint16_t *src, int width, int height, int stride,
+    int bd);
+
+void pack_highbd_pic(const EbPictureBufferDesc *pic_ptr, uint16_t *buffer_16bit[3], uint32_t ss_x,
+    uint32_t ss_y, EbBool include_padding);
+
+EbErrorType derive_tf_window_params(
+#else
 void derive_tf_window_params(
+#endif
     SequenceControlSet *scs_ptr,
     EncodeContext *encode_context_ptr,
     PictureParentControlSet *pcs_ptr,
@@ -4897,8 +4911,134 @@ void derive_tf_window_params(
     PictureDecisionContext *context_ptr,
 #endif
     uint32_t out_stride_diff64) {
+
+
+#if NOISE_BASED_TF_FRAMES
+    PictureParentControlSet * picture_control_set_ptr_central = pcs_ptr;
+    EbPictureBufferDesc * central_picture_ptr = picture_control_set_ptr_central->enhanced_picture_ptr;
+    uint32_t encoder_bit_depth = picture_control_set_ptr_central->scs_ptr->static_config.encoder_bit_depth;
+    EbBool is_highbd = (encoder_bit_depth == 8) ? (uint8_t)EB_FALSE : (uint8_t)EB_TRUE;
+
+    // chroma subsampling
+    uint32_t ss_x = picture_control_set_ptr_central->scs_ptr->subsampling_x;
+    uint32_t ss_y = picture_control_set_ptr_central->scs_ptr->subsampling_y;
+    double *noise_levels = &(picture_control_set_ptr_central->noise_levels[0]);
+
+    // allocate 16 bit buffer
+    if (is_highbd) {
+        EB_MALLOC_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_Y],
+            central_picture_ptr->luma_size);
+        EB_MALLOC_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_U],
+            central_picture_ptr->chroma_size);
+        EB_MALLOC_ARRAY(picture_control_set_ptr_central->altref_buffer_highbd[C_V],
+            central_picture_ptr->chroma_size);
+
+        // pack byte buffers to 16 bit buffer
+        pack_highbd_pic(central_picture_ptr,
+            picture_control_set_ptr_central->altref_buffer_highbd,
+            ss_x,
+            ss_y,
+            EB_TRUE);
+    }
+
+    // Estimate source noise level
+    if (is_highbd) {
+        uint16_t *altref_buffer_highbd_start[COLOR_CHANNELS];
+        altref_buffer_highbd_start[C_Y] =
+            picture_control_set_ptr_central->altref_buffer_highbd[C_Y] +
+            central_picture_ptr->origin_y * central_picture_ptr->stride_y +
+            central_picture_ptr->origin_x;
+
+        altref_buffer_highbd_start[C_U] =
+            picture_control_set_ptr_central->altref_buffer_highbd[C_U] +
+            (central_picture_ptr->origin_y >> ss_y) * central_picture_ptr->stride_bit_inc_cb +
+            (central_picture_ptr->origin_x >> ss_x);
+
+        altref_buffer_highbd_start[C_V] =
+            picture_control_set_ptr_central->altref_buffer_highbd[C_V] +
+            (central_picture_ptr->origin_y >> ss_y) * central_picture_ptr->stride_bit_inc_cr +
+            (central_picture_ptr->origin_x >> ss_x);
+
+        noise_levels[0] = estimate_noise_highbd(altref_buffer_highbd_start[C_Y], // Y only
+            central_picture_ptr->width,
+            central_picture_ptr->height,
+            central_picture_ptr->stride_y,
+            encoder_bit_depth);
+
+        noise_levels[1] = estimate_noise_highbd(altref_buffer_highbd_start[C_U], // U only
+            (central_picture_ptr->width >> 1),
+            (central_picture_ptr->height >> 1),
+            central_picture_ptr->stride_cb,
+            encoder_bit_depth);
+
+        noise_levels[2] = estimate_noise_highbd(altref_buffer_highbd_start[C_V], // V only
+            (central_picture_ptr->width >> 1),
+            (central_picture_ptr->height >> 1),
+            central_picture_ptr->stride_cb,
+            encoder_bit_depth);
+
+    }
+    else {
+        EbByte buffer_y = central_picture_ptr->buffer_y +
+            central_picture_ptr->origin_y * central_picture_ptr->stride_y +
+            central_picture_ptr->origin_x;
+        EbByte buffer_u =
+            central_picture_ptr->buffer_cb +
+            (central_picture_ptr->origin_y >> ss_y) * central_picture_ptr->stride_cb +
+            (central_picture_ptr->origin_x >> ss_x);
+        EbByte buffer_v =
+            central_picture_ptr->buffer_cr +
+            (central_picture_ptr->origin_y >> ss_x) * central_picture_ptr->stride_cr +
+            (central_picture_ptr->origin_x >> ss_x);
+
+        noise_levels[0] = estimate_noise(buffer_y, // Y
+            central_picture_ptr->width,
+            central_picture_ptr->height,
+            central_picture_ptr->stride_y);
+
+        noise_levels[1] = estimate_noise(buffer_u, // U
+            (central_picture_ptr->width >> ss_x),
+            (central_picture_ptr->height >> ss_y),
+            central_picture_ptr->stride_cb);
+
+        noise_levels[2] = estimate_noise(buffer_v, // V
+            (central_picture_ptr->width >> ss_x),
+            (central_picture_ptr->height >> ss_y),
+            central_picture_ptr->stride_cr);
+    }   
+
+    // Adjust number of filtering frames based on noise and quantization factor.
+    // Basically, we would like to use more frames to filter low-noise frame such
+    // that the filtered frame can provide better predictions for more frames.
+    // Also, when the quantization factor is small enough (lossless compression),
+    // we will not change the number of frames for key frame filtering, which is
+    // to avoid visual quality drop.
+    int adjust_num = 0;
+#if 0
+    if (num_frames == 1) {  // `arnr_max_frames = 1` is used to disable filtering.
+        adjust_num = 0;
+    }
+    else if (filter_frame_lookahead_idx < 0 && q <= 10) {
+        adjust_num = 0;
+    }
+    else 
+#endif
+    if (noise_levels[0] < 0.5) {
+        adjust_num = 6;
+    }
+    else if (noise_levels[0] < 1.0) {
+        adjust_num = 4;
+    }
+    else if (noise_levels[0] < 2.0) {
+        adjust_num = 2;
+    }
+#endif
 #if TF_LEVELS
+#if NOISE_BASED_TF_FRAMES
+    int altref_nframes = MIN(scs_ptr->static_config.altref_nframes, context_ptr->tf_ctrls.window_size + adjust_num);
+#else
     int altref_nframes = MIN(scs_ptr->static_config.altref_nframes, context_ptr->tf_ctrls.window_size);
+#endif
 #else
     int altref_nframes = scs_ptr->static_config.altref_nframes;
 #endif
@@ -5029,6 +5169,9 @@ void derive_tf_window_params(
             }
         }
     }
+#if NOISE_BASED_TF_FRAMES
+    return EB_ErrorNone; 
+#endif
 }
 /* Picture Decision Kernel */
 
