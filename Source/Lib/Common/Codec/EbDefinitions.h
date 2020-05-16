@@ -391,7 +391,7 @@ extern "C" {
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 
 
-#define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
+#define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
 #define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
 #define COEFF_BASED_BYPASS_NSQ_FIX 1 // apply algorithm to non-I_SLICE
 #define NEW_M0_M1_ME_NICS 1 // New ME and NICS scaling adoptions for M0/M1
@@ -399,6 +399,9 @@ extern "C" {
 #define TF_IMP                      1 // Improve the temporal filtering by considering MV and distortion
 
 #define NOISE_BASED_TF_FRAMES 1 // Use adative number of frames in temporal filtering
+#define M1_C3_ADOPTIONS 1 // Adoptions for M1
+#define HME_4K_ADOPTIONS 1 // Adoptions for SC HME and 4K HME
+#define MAY15_M0_ADOPTIONS 1 // adopt sq_weight 105 for M0
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////

@@ -345,8 +345,13 @@ void* set_me_hme_params_oq(
 #else
         if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
+#if HME_4K_ADOPTIONS
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = input_resolution <= INPUT_SIZE_1080p_RANGE ? 120 : 240;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
+#else
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 150;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 600;
+#endif
         }
         else {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 75;
@@ -372,8 +377,13 @@ void* set_me_hme_params_oq(
         if (pcs_ptr->enc_mode <= ENC_M0) {
 #endif
 #endif
+#if HME_4K_ADOPTIONS
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = input_resolution <= INPUT_SIZE_1080p_RANGE ? 120 : 240;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
+#else
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 120;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
+#endif
         }
 #if UPGRADE_M6_M7_M8
 #if !MAY12_ADOPTIONS

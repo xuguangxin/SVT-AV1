@@ -2866,7 +2866,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         else
                             context_ptr->predictive_me_level = 0;
 #else
+#if M1_C3_ADOPTIONS
+                        context_ptr->predictive_me_level = 4;
+#else
                         context_ptr->predictive_me_level = 5;
+#endif
 #endif
 #if REVERT_WHITE // Pred_ME
             else
@@ -3521,34 +3525,38 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PRESETS_SHIFT
 #if NEW_M1_CAND
 #if M1_C2_ADOPTIONS
-                if (enc_mode <= ENC_M0)
+                    if (enc_mode <= ENC_M0)
 #else
 #if COEFF_BASED_BYPASS_NSQ
-                if (enc_mode <= ENC_M1)
+                    if (enc_mode <= ENC_M1)
 #else
-                if (enc_mode <= ENC_M0)
+                    if (enc_mode <= ENC_M0)
 #endif
 #endif
 #else
 #if M2_COMBO_1
-                if (enc_mode <= ENC_M1)
+                    if (enc_mode <= ENC_M1)
 #else
-                if (enc_mode <= ENC_M3)
+                    if (enc_mode <= ENC_M3)
 #endif
 #endif
 #else
 #if MAR30_ADOPTIONS
-                if (enc_mode <= ENC_M4)
+                    if (enc_mode <= ENC_M4)
 #else
-                if (enc_mode <= ENC_M3)
+                    if (enc_mode <= ENC_M3)
 #endif
 #endif
 #if MAY12_ADOPTIONS
 #if COEFF_BASED_BYPASS_NSQ
-                    context_ptr->sq_weight = (uint32_t)~0;
+                        context_ptr->sq_weight = (uint32_t)~0;
+#else
+#if MAY15_M0_ADOPTIONS
+                        context_ptr->sq_weight = 105;
 #else
                     context_ptr->sq_weight =
                     sequence_control_set_ptr->static_config.sq_weight + 10;
+#endif
 #endif
 #else
                     context_ptr->sq_weight =
@@ -3601,8 +3609,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if COEFF_BASED_BYPASS_NSQ
                 context_ptr->sq_weight =(uint32_t)~0;
 #else
+#if MAY15_M0_ADOPTIONS
+                context_ptr->sq_weight = 105;
+#else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 10;
+#endif
 #endif
 #else
                 context_ptr->sq_weight =
@@ -3942,7 +3954,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->block_based_depth_reduction_level = 0;
     else
 #if NEW_M1_CAND
+#if MAY15_M0_ADOPTIONS
+        if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
         if (enc_mode <= ENC_M0)
+#endif
             context_ptr->block_based_depth_reduction_level = 0;
         else
             context_ptr->block_based_depth_reduction_level = 2;
@@ -6092,7 +6108,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #endif
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+#if M1_C3_ADOPTIONS
+                                e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#else
                                 e_depth = pcs_ptr->slice_type == I_SLICE ?  2 :  1;
+#endif
                             }
 #if MAY12_ADOPTIONS
                             else if (pcs_ptr->enc_mode <= ENC_M6) {
