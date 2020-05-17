@@ -1177,6 +1177,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
     else {
+#if MAY16_7PM_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M0 ||
+            (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->input_resolution <= INPUT_SIZE_1080p_RANGE))
+            pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
+        else if (pcs_ptr->enc_mode <= ENC_M4)
+            pcs_ptr->disallow_all_nsq_blocks_below_8x8 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#else
 #if PRESETS_SHIFT
 #if M2_COMBO_3
         if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1191,6 +1198,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
+#endif
         else
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
     }
@@ -1474,11 +1482,16 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if UPGRADE_M6_M7_M8
 #if M1_SC_ADOPTION
 #if REVERT_WHITE // palette_mode
+#if MAY16_7PM_ADOPTIONS
+           ((pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
+            (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
+#else
 #if APR25_3AM_ADOPTIONS
            (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
             (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
 #else
            (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M7))
+#endif
 #endif
 #else
            (pcs_ptr->enc_mode <= ENC_M0 || pcs_ptr->is_used_as_reference_flag)
@@ -1867,12 +1880,16 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - TXS in intra classes only
     // 1 ON - TXS in all classes
+#if MAY16_7PM_ADOPTIONS
+    pcs_ptr->txs_in_inter_classes = 0;
+#else
     if (pcs_ptr->sc_content_detected)
         pcs_ptr->txs_in_inter_classes = 0;
     else if (pcs_ptr->enc_mode <= ENC_M0)
         pcs_ptr->txs_in_inter_classes = (pcs_ptr->is_used_as_reference_flag && pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) ? 1 : 0;
     else
         pcs_ptr->txs_in_inter_classes = 0;
+#endif
 #endif
 
 #if !INTER_COMP_REDESIGN
@@ -1967,17 +1984,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             else
 #endif
-#if MAY16_M0_ADOPTIONS
-                pcs_ptr->compound_mode = (MR_MODE || (pcs_ptr->enc_mode <= ENC_M0 && pcs_ptr->input_resolution >= INPUT_SIZE_720p_RANGE)) ? 1 :
-                pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
-#else
 #if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
                 pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M3 ? 1 :
                                      pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
-#endif
 #endif
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M4 ? 1 :

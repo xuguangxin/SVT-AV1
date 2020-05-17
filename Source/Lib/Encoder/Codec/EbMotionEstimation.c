@@ -7994,8 +7994,8 @@ void hme_level_1(
     // Don't change TWO_DECIMATION_HME refinement; use the HME distance algorithm only for non-2D HME
     if (context_ptr->hme_decimation <= ONE_DECIMATION_HME) {
 #if ADD_MAX_HME_SIGNAL
-        hme_level1_search_area_in_width = MIN(((hme_sr_factor_x  * hme_level1_search_area_in_width) / 100), hme_level1_max_search_area_in_width);
-        hme_level1_search_area_in_height = MIN(((hme_sr_factor_y  * hme_level1_search_area_in_height) / 100), hme_level1_max_search_area_in_height);
+        hme_level1_search_area_in_width = MIN((((int16_t)hme_sr_factor_x  * hme_level1_search_area_in_width) / 100), hme_level1_max_search_area_in_width);
+        hme_level1_search_area_in_height = MIN((((int16_t)hme_sr_factor_y  * hme_level1_search_area_in_height) / 100), hme_level1_max_search_area_in_height);
 #else
         hme_level1_search_area_in_width = (hme_sr_factor_x  * hme_level1_search_area_in_width) / 100;
         hme_level1_search_area_in_height = (hme_sr_factor_y  * hme_level1_search_area_in_height) / 100;
@@ -8185,8 +8185,8 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
     // Don't change TWO_DECIMATION_HME or ONE_DECIMATION_HME refinement; use the HME distance algorithm only for 0D HME
     if (context_ptr->hme_decimation <= ZERO_DECIMATION_HME) {
 #if ADD_MAX_HME_SIGNAL
-        hme_level2_search_area_in_width = MIN(((hme_sr_factor_x  * hme_level2_search_area_in_width) / 100), hme_level2_max_search_area_in_width);
-        hme_level2_search_area_in_height = MIN(((hme_sr_factor_y  * hme_level2_search_area_in_height) / 100), hme_level2_max_search_area_in_height);
+        hme_level2_search_area_in_width = MIN((((int16_t)hme_sr_factor_x  * hme_level2_search_area_in_width) / 100), hme_level2_max_search_area_in_width);
+        hme_level2_search_area_in_height = MIN((((int16_t)hme_sr_factor_y  * hme_level2_search_area_in_height) / 100), hme_level2_max_search_area_in_height);
 #else
         hme_level2_search_area_in_width = (hme_sr_factor_x  * hme_level2_search_area_in_width) / 100;
         hme_level2_search_area_in_height = (hme_sr_factor_y  * hme_level2_search_area_in_height) / 100;

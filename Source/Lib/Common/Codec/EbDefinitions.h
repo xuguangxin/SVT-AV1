@@ -410,6 +410,7 @@ extern "C" {
 #define SSE_BASED_SPLITTING       1
 #define SPEED_WEIGHT              0
 #endif
+#define MAY16_7PM_ADOPTIONS 1 // M0 and M1 adoptions
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
