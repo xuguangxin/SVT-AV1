@@ -403,7 +403,13 @@ extern "C" {
 #define HME_4K_ADOPTIONS 1 // Adoptions for SC HME and 4K HME
 #define MAY15_M0_ADOPTIONS 1 // M0 adoptions
 #define MAY16_M0_ADOPTIONS 1
-
+#if COEFF_BASED_BYPASS_NSQ
+#define REMOVE_SQ_WEIGHT_TOGGLING 1
+#define M1_TH4                    1
+#define MERGED_COEFF_BAND         1
+#define SSE_BASED_SPLITTING       1
+#define SPEED_WEIGHT              0
+#endif
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
