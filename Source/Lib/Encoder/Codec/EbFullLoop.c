@@ -1673,13 +1673,18 @@ int32_t av1_quantize_inv_quantize(
     const QmVal *   q_matrix  = pcs_ptr->parent_pcs_ptr->gqmatrix[NUM_QM_LEVELS - 1][0][txsize];
     const QmVal *   iq_matrix = pcs_ptr->parent_pcs_ptr->giqmatrix[NUM_QM_LEVELS - 1][0][txsize];
     uint32_t        q_index   = pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_present
+                           ?
 #if QP2QINDEX
-                           ? qindex
+                             qindex
 #else
-                           ? quantizer_to_qindex[qp]
+                             quantizer_to_qindex[qp]
 #endif
-                           : pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx +
-                                 segmentation_qp_offset;
+                           : (uint32_t)CLIP3(
+                              pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_res,
+                              255 - pcs_ptr->parent_pcs_ptr->frm_hdr.delta_q_params.delta_q_res,
+                              (int32_t)pcs_ptr->parent_pcs_ptr->frm_hdr.quantization_params.base_q_idx +
+                                       segmentation_qp_offset);
+
     if (bit_increment == 0) {
         if (component_type == COMPONENT_LUMA) {
             candidate_plane.quant_qtx = pcs_ptr->parent_pcs_ptr->quants_8bit.y_quant[q_index];

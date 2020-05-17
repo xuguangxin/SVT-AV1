@@ -6838,9 +6838,6 @@ uint32_t get_blk_tuned_full_lambda(struct ModeDecisionContext *context_ptr, Pict
     PictureParentControlSet *ppcs_ptr = pcs_ptr->parent_pcs_ptr;
     Av1Common *cm = ppcs_ptr->av1_cm;
 
-    int sb_qindex = context_ptr->sb_ptr->qindex;
-    int pic_qindex = ppcs_ptr->frm_hdr.quantization_params.base_q_idx;
-
     BlockSize bsize = context_ptr->blk_geom->bsize;
     const int bsize_base = BLOCK_16X16;
     const int num_mi_w = mi_size_wide[bsize_base];

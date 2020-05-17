@@ -252,6 +252,10 @@ uint32_t product_full_mode_decision(struct ModeDecisionContext *context_ptr, Blk
                                     uint32_t *                    best_candidate_index_array,
                                     uint8_t   prune_ref_frame_for_rec_partitions,
                                     uint32_t *best_intra_mode);
+#if TPL_LA_LAMBDA_SCALING
+uint32_t get_blk_tuned_full_lambda(struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
+                                   uint32_t pic_full_lambda);
+#endif
 
 typedef EbErrorType (*EB_INTRA_4x4_FAST_LUMA_COST_FUNC)(
     struct ModeDecisionContext *context_ptr, uint32_t pu_index,

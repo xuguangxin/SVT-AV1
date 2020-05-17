@@ -1682,7 +1682,6 @@ EbErrorType tpl_mc_flow(
         // dispenser I0 or frame_idx0 pic in LA1
         int32_t sw_length = MIN(17, (frames_in_sw));
         for(frame_idx = 0; frame_idx < sw_length; frame_idx++) {
-            EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
             encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
             for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
                 memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
@@ -1706,7 +1705,6 @@ EbErrorType tpl_mc_flow(
             if (frame_idx == 1) {
                 EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
                 uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[0];
-                // copy frame_idx0 input to rec before run frame_idx1 picture
                 memcpy(dst_buffer, input_picture_ptr->buffer_y, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
             }
             for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
