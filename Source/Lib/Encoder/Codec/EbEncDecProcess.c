@@ -1699,7 +1699,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
             context_ptr->coeffcients_area_based_cycles_allocation_level = 3;
         else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_1080p_RANGE)
+#if MAY17_ADOPTIONS
+            context_ptr->coeffcients_area_based_cycles_allocation_level =
+            pcs_ptr->parent_pcs_ptr->sc_content_detected ? 3 : 2;
+#else
             context_ptr->coeffcients_area_based_cycles_allocation_level = 2;
+#endif
 #if MAY12_ADOPTIONS
         else if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_360p_RANGE)
 #else
@@ -1845,7 +1850,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MR_I_TXT
             context_ptr->md_txt_search_level = (enc_mode == ENC_M0 && pcs_ptr->slice_type == I_SLICE) ? 0 : 1;
 #else
+#if MAY17_ADOPTIONS
+            context_ptr->md_txt_search_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 2 : 1;
+#else
             context_ptr->md_txt_search_level = 1;
+#endif
 #endif
         else if (enc_mode <= ENC_M7)
             context_ptr->md_txt_search_level = 2;
@@ -6122,6 +6131,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if ADOPT_SKIPPING_PD1
                         else if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
 #if M8_MPPD
+#if !MAY17_ADOPTIONS
 #if MAY12_ADOPTIONS
 #if MAY16_7PM_ADOPTIONS
                             if (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0) {
@@ -6132,6 +6142,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
                             }
                             else
+#endif
 #endif
 #if MAY16_7PM_ADOPTIONS
                             if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M2)) {

@@ -9770,7 +9770,11 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 
     uint8_t class_pruning_scaling_level ;
     if (pcs_ptr->enc_mode  <= ENC_M0)
+#if MAY17_ADOPTIONS
+        class_pruning_scaling_level = sc_content_detected ? 1 : 0;
+#else
         class_pruning_scaling_level = 0;
+#endif
     else
         class_pruning_scaling_level = 1;
 

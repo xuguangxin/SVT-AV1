@@ -230,7 +230,11 @@ void* set_me_hme_params_oq(
 #if NEW_M0_M1_ME_NICS
     else if (pcs_ptr->enc_mode <= ENC_M2) {
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 64;
+#if MAY17_ADOPTIONS
+    me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = (input_resolution <= INPUT_SIZE_1080p_RANGE) ? 192 : 256;
+#else
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 256;
+#endif
     }
 #else
 #if APR22_ADOPTIONS
@@ -266,7 +270,11 @@ void* set_me_hme_params_oq(
 #endif
 #if MAY12_ADOPTIONS
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 64;
+#if MAY17_ADOPTIONS
+    me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = (input_resolution <= INPUT_SIZE_1080p_RANGE) ? 192 : 256;
+#else
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 256;
+#endif
 #else
         me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
         me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 150;

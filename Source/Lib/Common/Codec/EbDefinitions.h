@@ -411,6 +411,7 @@ extern "C" {
 #define SPEED_WEIGHT              0
 #endif
 #define MAY16_7PM_ADOPTIONS 1 // M0 and M1 adoptions
+#define MAY17_ADOPTIONS 1 // Adoptions for M0/M1
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
