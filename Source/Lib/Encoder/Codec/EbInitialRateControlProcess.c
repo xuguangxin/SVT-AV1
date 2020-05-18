@@ -1632,6 +1632,7 @@ EbErrorType tpl_mc_flow(
     uint32_t picture_width_in_mb  = (pcs_ptr->enhanced_picture_ptr->width  + 16 - 1) / 16;
     uint32_t picture_height_in_mb = (pcs_ptr->enhanced_picture_ptr->height + 16 - 1) / 16;
     EbBool                           got_intra_in_sw = EB_FALSE;
+    EbByte                           mc_flow_rec_picture_buffer_noref = NULL;
 
     (void)scs_ptr;
 
@@ -1673,10 +1674,9 @@ EbErrorType tpl_mc_flow(
 
     for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
         encode_context_ptr->poc_map_idx[frame_idx] = -1;
+        encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
     }
-    for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++) {
-        EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
-    }
+    EB_MALLOC_ARRAY(mc_flow_rec_picture_buffer_noref, pcs_ptr->enhanced_picture_ptr->luma_size);
 
     if (frame_is_intra_only(pcs_array[0]) && pcs_array[0]->temporal_layer_index == 0) {
         // dispenser I0 or frame_idx0 pic in LA1
@@ -1687,7 +1687,20 @@ EbErrorType tpl_mc_flow(
                 memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
             }
 
+            if (pcs_array[frame_idx]->is_used_as_reference_flag && encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] == NULL) {
+                EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
+            } else
+            if (!pcs_array[frame_idx]->is_used_as_reference_flag) {
+                encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = mc_flow_rec_picture_buffer_noref;
+            }
             tpl_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
+        }
+        for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
+            if ( encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] &&
+                 encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] != mc_flow_rec_picture_buffer_noref ) {
+                EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
+            }
+            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
         }
 
         // synthesizer I0 or frame_idx0 pic in LA1
@@ -1700,6 +1713,9 @@ EbErrorType tpl_mc_flow(
     if (pcs_array[1]->temporal_layer_index == 0) {
         // dispenser frame_idx1 pic in LA1 or LA2+
         encode_context_ptr->poc_map_idx[0] = pcs_array[0]->picture_number;
+        if (pcs_array[0]->is_used_as_reference_flag && encode_context_ptr->mc_flow_rec_picture_buffer[0] == NULL) {
+            EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[0], pcs_ptr->enhanced_picture_ptr->luma_size);
+        }
         for(frame_idx = 1; frame_idx < frames_in_sw; frame_idx++) {
             encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
             if (frame_idx == 1) {
@@ -1710,7 +1726,20 @@ EbErrorType tpl_mc_flow(
             for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
                 memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
             }
+            if (pcs_array[frame_idx]->is_used_as_reference_flag && encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] == NULL) {
+                EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
+            } else
+            if (!pcs_array[frame_idx]->is_used_as_reference_flag) {
+                encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = mc_flow_rec_picture_buffer_noref;
+            }
             tpl_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
+        }
+        for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
+            if ( encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] &&
+                 encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] != mc_flow_rec_picture_buffer_noref ) {
+                EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
+            }
+            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
         }
         // synthesizer frame_idx1 pic in LA1 or LA2+
         PictureParentControlSet *pcs_array_reorder[MAX_TPL_LA_SW] = {NULL, };
@@ -1723,8 +1752,7 @@ EbErrorType tpl_mc_flow(
         generate_r0beta(pcs_array[1]);
     }
 
-    for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++)
-        EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
+    EB_FREE_ARRAY(mc_flow_rec_picture_buffer_noref);
 
     return EB_ErrorNone;
 }
