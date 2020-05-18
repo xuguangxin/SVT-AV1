@@ -356,6 +356,9 @@ extern "C" {
 #define SVT_01 1
 
 #if SVT_01
+#define DISALLOW_ALL_ACTIONS 1
+#define MULTI_BAND_ACTIONS   1
+
 #define REU_MEM_OPT                 1 // Memory reduction for rate estimation tables
 #define SB_MEM_OPT                  1 // memory reduction for SB array. Removing memory allocation for av1xd per blk
 #define MD_FRAME_CONTEXT_MEM_OPT    1 // Memory reduction for frame context used in MD
@@ -390,8 +393,11 @@ extern "C" {
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 
-
+#if MULTI_BAND_ACTIONS
+#define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
+#else
 #define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
+#endif
 #define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
 #define COEFF_BASED_BYPASS_NSQ_FIX 1 // apply algorithm to non-I_SLICE
 #define NEW_M0_M1_ME_NICS 1 // New ME and NICS scaling adoptions for M0/M1
@@ -5758,6 +5764,32 @@ static const uint16_t ep_to_pa_block_index[BLOCK_MAX_COUNT_SB_64] = {
     84,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0
 };
 #if SB_CLASSIFIER
+#if MULTI_BAND_ACTIONS
+typedef enum ATTRIBUTE_PACKED {
+    NONE_CLASS, // Do nothing class
+    SB_CLASS_1,
+    SB_CLASS_2,
+    SB_CLASS_3,
+    SB_CLASS_4,
+    SB_CLASS_5,
+    SB_CLASS_6,
+    SB_CLASS_7,
+    SB_CLASS_8,
+    SB_CLASS_9,
+    SB_CLASS_10,
+    SB_CLASS_11,
+    SB_CLASS_12,
+    SB_CLASS_13,
+    SB_CLASS_14,
+    SB_CLASS_15,
+    SB_CLASS_16,
+    SB_CLASS_17,
+    SB_CLASS_18,
+    SB_CLASS_19,
+    SB_CLASS_20,
+    NUMBER_OF_SB_CLASS, // Total number of SB classes
+} SB_CLASS;
+#else
 typedef enum ATTRIBUTE_PACKED {
     NONE_CLASS, // Do nothing class
 #if NEW_CYCLE_ALLOCATION
@@ -5768,6 +5800,7 @@ typedef enum ATTRIBUTE_PACKED {
     HIGH_COMPLEX_CLASS, // High complex SB Class
     NUMBER_OF_SB_CLASS, // Total number of SB classes
 } SB_CLASS;
+#endif
 #endif
 typedef struct _EbEncHandle EbEncHandle;
 typedef struct _EbThreadContext EbThreadContext;
