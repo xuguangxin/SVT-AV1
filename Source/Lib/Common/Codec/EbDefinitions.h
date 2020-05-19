@@ -416,6 +416,9 @@ extern "C" {
 #define MAY21_NSQ_OFF_FIX          1 // Fix issue when turning NSQ off
 #define MAY23_M0_ADOPTIONS         1 // M0 adoptions towards a better slope M0
 #define NON_UNIFORM_NSQ_BANDING    1 // Change the NSQ cycles reduction frequency bands and TH for better behaviour
+#define MD_CTX_CLEAN_UP             1 // Memory reduction for MdEncPassCuData
+#define BLK_MEM_CLEAN_UP            1 // Memory reduction for BlkStruct
+#define SB64_MEM_OPT                1 // Memory reduction for SB size 64
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
