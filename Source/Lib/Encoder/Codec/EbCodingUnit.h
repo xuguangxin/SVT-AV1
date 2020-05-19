@@ -517,9 +517,6 @@ typedef struct OisSbResults {
 
 #if TPL_LA
 typedef struct TplStats {
-    int64_t intra_cost;
-    int32_t intra_mode;
-    int64_t inter_cost;
     int64_t srcrf_dist;
     int64_t recrf_dist;
     int64_t srcrf_rate;

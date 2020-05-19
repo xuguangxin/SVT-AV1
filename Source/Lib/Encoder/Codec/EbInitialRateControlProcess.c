@@ -916,15 +916,11 @@ static void result_model_store(PictureParentControlSet *pcs_ptr, TplStats  *tpl_
   const int shift = 3 + pcs_ptr->is_720p_or_larger;
   const int aligned16_width = ((pcs_ptr->aligned_width + 15) / 16) << 4;
 
-  int64_t intra_cost = tpl_stats_ptr->intra_cost / (mi_height * mi_width);
-  int64_t inter_cost = tpl_stats_ptr->inter_cost / (mi_height * mi_width);
   int64_t srcrf_dist = tpl_stats_ptr->srcrf_dist / (mi_height * mi_width);
   int64_t recrf_dist = tpl_stats_ptr->recrf_dist / (mi_height * mi_width);
   int64_t srcrf_rate = tpl_stats_ptr->srcrf_rate / (mi_height * mi_width);
   int64_t recrf_rate = tpl_stats_ptr->recrf_rate / (mi_height * mi_width);
 
-  intra_cost = AOMMAX(1, intra_cost);
-  inter_cost = AOMMAX(1, inter_cost);
   srcrf_dist = AOMMAX(1, srcrf_dist);
   recrf_dist = AOMMAX(1, recrf_dist);
   srcrf_rate = AOMMAX(1, srcrf_rate);
@@ -933,8 +929,6 @@ static void result_model_store(PictureParentControlSet *pcs_ptr, TplStats  *tpl_
   for (int idy = 0; idy < mi_height; idy += step) {
     TplStats *dst_ptr = pcs_ptr->tpl_stats[((mb_origin_y >> shift) + (idy >> 1)) * (aligned16_width >> shift) + (mb_origin_x >> shift)];
     for (int idx = 0; idx < mi_width; idx += step) {
-      dst_ptr->intra_cost = intra_cost;
-      dst_ptr->inter_cost = inter_cost;
       dst_ptr->srcrf_dist = srcrf_dist;
       dst_ptr->recrf_dist = recrf_dist;
       dst_ptr->srcrf_rate = srcrf_rate;
@@ -1248,8 +1242,6 @@ void tpl_mc_flow_dispenser(
                         best_inter_cost = 0;
                     else
                         best_inter_cost = AOMMIN(best_intra_cost, best_inter_cost);
-                    tpl_stats.inter_cost = best_inter_cost << TPL_DEP_COST_SCALE_LOG2;
-                    tpl_stats.intra_cost = best_intra_cost << TPL_DEP_COST_SCALE_LOG2;
 
                     tpl_stats.srcrf_dist = recon_error << (TPL_DEP_COST_SCALE_LOG2);
 
@@ -1677,6 +1669,13 @@ EbErrorType tpl_mc_flow(
         encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
     }
     EB_MALLOC_ARRAY(mc_flow_rec_picture_buffer_noref, pcs_ptr->enhanced_picture_ptr->luma_size);
+    for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++) {
+        if (pcs_array[frame_idx]->is_used_as_reference_flag) {
+            EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
+        } else {
+            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = mc_flow_rec_picture_buffer_noref;
+        }
+    }
 
     if (frame_is_intra_only(pcs_array[0]) && pcs_array[0]->temporal_layer_index == 0) {
         // dispenser I0 or frame_idx0 pic in LA1
@@ -1687,20 +1686,7 @@ EbErrorType tpl_mc_flow(
                 memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
             }
 
-            if (pcs_array[frame_idx]->is_used_as_reference_flag && encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] == NULL) {
-                EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
-            } else
-            if (!pcs_array[frame_idx]->is_used_as_reference_flag) {
-                encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = mc_flow_rec_picture_buffer_noref;
-            }
             tpl_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
-        }
-        for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
-            if ( encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] &&
-                 encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] != mc_flow_rec_picture_buffer_noref ) {
-                EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
-            }
-            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
         }
 
         // synthesizer I0 or frame_idx0 pic in LA1
@@ -1713,9 +1699,6 @@ EbErrorType tpl_mc_flow(
     if (pcs_array[1]->temporal_layer_index == 0) {
         // dispenser frame_idx1 pic in LA1 or LA2+
         encode_context_ptr->poc_map_idx[0] = pcs_array[0]->picture_number;
-        if (pcs_array[0]->is_used_as_reference_flag && encode_context_ptr->mc_flow_rec_picture_buffer[0] == NULL) {
-            EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[0], pcs_ptr->enhanced_picture_ptr->luma_size);
-        }
         for(frame_idx = 1; frame_idx < frames_in_sw; frame_idx++) {
             encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
             if (frame_idx == 1) {
@@ -1726,20 +1709,7 @@ EbErrorType tpl_mc_flow(
             for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
                 memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
             }
-            if (pcs_array[frame_idx]->is_used_as_reference_flag && encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] == NULL) {
-                EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
-            } else
-            if (!pcs_array[frame_idx]->is_used_as_reference_flag) {
-                encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = mc_flow_rec_picture_buffer_noref;
-            }
             tpl_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
-        }
-        for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
-            if ( encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] &&
-                 encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] != mc_flow_rec_picture_buffer_noref ) {
-                EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
-            }
-            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
         }
         // synthesizer frame_idx1 pic in LA1 or LA2+
         PictureParentControlSet *pcs_array_reorder[MAX_TPL_LA_SW] = {NULL, };
@@ -1752,6 +1722,13 @@ EbErrorType tpl_mc_flow(
         generate_r0beta(pcs_array[1]);
     }
 
+    for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++) {
+        if ( encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] &&
+             encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] != mc_flow_rec_picture_buffer_noref ) {
+            EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
+        }
+        encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
+    }
     EB_FREE_ARRAY(mc_flow_rec_picture_buffer_noref);
 
     return EB_ErrorNone;
