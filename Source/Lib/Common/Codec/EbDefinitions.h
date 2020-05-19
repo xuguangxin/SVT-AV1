@@ -187,26 +187,26 @@ extern "C" {
 #define MAY2020        1 // BASED ON apr2020 branch 62c1da44c258c973d668744b5aabfd1214cd8b22
 
 #if MAY2020
-#define FIX_RC_SB_SIZE 1 // Force SB size to 64x64 when rate control is on
-#define ADOPT_SKIPPING_PD1 1 // Skip PD1 for all modes; remove the PD0 thresholds
-#define ADD_MAX_HME_SIGNAL 1 // Add a signal for MAX HME size
-#define NEW_HME_ME_SIZES 1 // New HME/ME size adoptions
-#define CLASS_MERGING       1 // merge classes into class 0 to 4
-#define INJECT_BACKUP_CANDIDATE 1 // handle the case of no candidate(s) @ md_stage_0()
-#define MULTI_PASS_PD_FOR_INCOMPLETE 1 // add the ability to perform MPPD for incomplete SB
-#define SHUT_PALETTE_BC_PD_PASS_0_1 1 // shut Palette/BlockCopy @ PD0/PD1
-#define OVER_BOUNDARY_BLOCK_MODE_1_FOR_ALL 1 // over_boundary_block_mode=1 for all presets
-#define TXT_CONTROL 1 // Add TXT search optimizations
-#define FIX_HME_LOAD    1 //fix to ENABLE_HME_AT_INC_SB
+#define FIX_RC_SB_SIZE                       1 // Force SB size to 64x64 when rate control is on
+#define ADOPT_SKIPPING_PD1                   1 // Skip PD1 for all modes; remove the PD0 thresholds
+#define ADD_MAX_HME_SIGNAL                   1 // Add a signal for MAX HME size
+#define NEW_HME_ME_SIZES                     1 // New HME/ME size adoptions
+#define CLASS_MERGING                        1 // merge classes into class 0 to 4
+#define INJECT_BACKUP_CANDIDATE              1 // handle the case of no candidate(s) @ md_stage_0()
+#define MULTI_PASS_PD_FOR_INCOMPLETE         1 // add the ability to perform MPPD for incomplete SB
+#define SHUT_PALETTE_BC_PD_PASS_0_1          1 // shut Palette/BlockCopy @ PD0/PD1
+#define OVER_BOUNDARY_BLOCK_MODE_1_FOR_ALL   1 // over_boundary_block_mode=1 for all presets
+#define TXT_CONTROL                          1 // Add TXT search optimizations
+#define FIX_HME_LOAD                         1 //fix to ENABLE_HME_AT_INC_SB
 
 #if TXT_CONTROL
-#define MAX_TX_WEIGHT 500
-#define SB_CLASSIFIER       1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
+#define MAX_TX_WEIGHT        500
+#define SB_CLASSIFIER          1 // Classify the SBs based on the PD0 output and apply specific settings for the detected SBs
 #if SB_CLASSIFIER
 #define SB_CLASSIFIER_R2R_FIX 1
 #endif
 #endif
-#define PRESETS_SHIFT 1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
+#define PRESETS_SHIFT         1 // Shift M4->M3, M5->M4, M8->M5 to avoid empty presets
 #define OPT_BLOCK_INDICES_GEN 1 // Optimized block indices derivation towards less overhead when looping over a subset of blocks (e.g. when enabling disallow_nsq)
 #if OPT_BLOCK_INDICES_GEN
 #define OPT_BLOCK_INDICES_GEN_0 1 // refactor block indices derivation
@@ -214,44 +214,45 @@ extern "C" {
 #define OPT_BLOCK_INDICES_GEN_2 1 // unify the action(s) of disallow_nsq and complex sb
 #define OPT_BLOCK_INDICES_GEN_3 1 // apply disallow_all_nsq_blocks_below_8x8, disallow_all_nsq_blocks_below_16x16, ..
 #endif
-#define TF_LEVELS 1 // Defined levels for temporal filtering based on the filtering window size
-#define TF_X86_KERNEL_FIX 1 // call x86 instead of C
-#define M8_SETTINGS 1 // M8 settings
+#define TF_LEVELS               1 // Defined levels for temporal filtering based on the filtering window size
+#define TF_X86_KERNEL_FIX       1 // call x86 instead of C
+#define M8_SETTINGS             1 // M8 settings
 #if M8_SETTINGS
 // Part
-#define M8_4x4 1 // Done
-#define M8_NSQ 1 // Done
-#define M8_SB_SIZE 1 // Done
+#define M8_4x4      1 // Done
+#define M8_NSQ      1 // Done
+#define M8_SB_SIZE  1 // Done
 // MRP
-#define M8_MRP 1 // Done
+#define M8_MRP      1 // Done
 //MD
 #define M8_BIPRED_3x3 1 // Done
-#define M8_PRED_ME 1 // Done
-#define M8_CDF 1 // Done
-#define M8_WM 1 // Done
-#define M8_OBMC 1 // Done
+#define M8_PRED_ME    1 // Done
+#define M8_CDF        1 // Done
+#define M8_WM         1 // Done
+#define M8_OBMC       1 // Done
 #define M8_INTRA_MODE 1 // Done
-#define M8_RDOQ 1 // Done
+#define M8_RDOQ       1 // Done
 // Filtering
-#define M8_SG 1 // Done
+#define M8_SG          1 // Done
 #define M8_RESTORATION 1// Done
 #define M8_LOOP_FILTER 1// Done
-#define M8_CDEF 1 // Done
+#define M8_CDEF        1 // Done
 // SC
-#define M8_PALETTE 1 // Done
-#define M8_IBC 1 // Done
+#define M8_PALETTE     1 // Done
+#define M8_IBC         1 // Done
 // NIC
-#define M8_NIC 1 // Done
+#define M8_NIC         1 // Done
 // HME/ME
-#define M8_HME_ME 1 // Done
-#define M8_MPPD 1 // Done
+#define M8_HME_ME      1 // Done
+#define M8_MPPD        1 // Done
 #endif
-#define M8_CLEAN_UP 1 // remove useless code: energy, full loop escape
-#define ME_HME_PRUNING_CLEANUP 1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
-#define ADOPT_SC_HME_PRUNING 1 // Adopt HME-based ref pruning in SC
-#define ENABLE_SC_DETECTOR 1 // turn on the SC detector by default; move SC settings to be set after detection
-#define APR22_ADOPTIONS 1 // New M0
-#define APR23_ADOPTIONS 1
+#define M8_CLEAN_UP             1 // remove useless code: energy, full loop escape
+#define ME_HME_PRUNING_CLEANUP  1 // cleanup HME/ME ref pruning and HME-based ME SR reduction
+#define ADOPT_SC_HME_PRUNING    1 // Adopt HME-based ref pruning in SC
+#define ENABLE_SC_DETECTOR      1 // turn on the SC detector by default; move SC settings to be set after detection
+#define APR22_ADOPTIONS         1 // New M0
+#define APR23_ADOPTIONS         1
+
 #define M1_COMBO_1 0
 #define M1_COMBO_2 0
 #define M1_COMBO_3 0
@@ -267,8 +268,8 @@ extern "C" {
 #define M5_I_PD    1
 #endif
 #define DISABLE_NOT_NEEDED_BLOCK_TF_ME 1
-#define PD0_PD1_NSQ_BLIND 1 // Make PD0/PD1 NSQ blind
-#define FIX_CHROMA_LAST_STAGE 1 // Fix Tx Type, Predicted Samples, and Fast_Rate if chroma_mode change between first stage and last stage
+#define PD0_PD1_NSQ_BLIND              1 // Make PD0/PD1 NSQ blind
+#define FIX_CHROMA_LAST_STAGE          1 // Fix Tx Type, Predicted Samples, and Fast_Rate if chroma_mode change between first stage and last stage
 #if FIX_CHROMA_LAST_STAGE
 #define REFACTOR_SIGNALS 1
 #define FIX_CFL_OFF 1
@@ -277,7 +278,7 @@ extern "C" {
 #define PR_1217 1
 #define PR_1286 1
 #define FIX_CHROMA_PALETTE_INTERACTION 1 // Fix Chroma/Palette interaction and enable independent in M0 for SC
-#define UPGRADE_M6_M7_M8 1
+#define UPGRADE_M6_M7_M8               1
 
 #define MR_I   0 //Use MR setting in M0 for I slice
 #if MR_I
@@ -288,10 +289,10 @@ extern "C" {
 #define MR_I_UV_LAST   1
 #endif
 
-#define NEW_M1_CAND 1 // applying the new M1 settings based on overnight tests
-#define APR23_ADOPTIONS_2 1 // Adoptions based on daytime tests
-#define ALLOW_NSQ_M6 1
-#define ALLOW_CFL_M8 1
+#define NEW_M1_CAND               1 // applying the new M1 settings based on overnight tests
+#define APR23_ADOPTIONS_2         1 // Adoptions based on daytime tests
+#define ALLOW_NSQ_M6              1
+#define ALLOW_CFL_M8              1
 #define ALLOW_HME_L1L2_REFINEMENT 1
 
 #define M5_I_IBC   1
@@ -301,16 +302,15 @@ extern "C" {
 #define M5_I_SG    1
 #define M5_I_4x4   1
 
-
-#define  FIXED_LAST_STAGE_SC 1 // Refactor last stage TH
-#define ADD_TXT_LEVEL5 1
-#define SHIFT_M3_SC_TO_M1 1
-#define M1_SC_ADOPTION 1 // Adopt Palette in REF frames only for M1 & Beyond SC
-#define SHIFT_M5_SC_TO_M3 1
-#define APR24_M3_ADOPTIONS 1 // Adoptions for M3
+#define FIXED_LAST_STAGE_SC   1 // Refactor last stage TH
+#define ADD_TXT_LEVEL5        1
+#define SHIFT_M3_SC_TO_M1     1
+#define M1_SC_ADOPTION        1 // Adopt Palette in REF frames only for M1 & Beyond SC
+#define SHIFT_M5_SC_TO_M3     1
+#define APR24_M3_ADOPTIONS    1 // Adoptions for M3
 #define APR24_ADOPTIONS_M6_M7 1
-#define MRP_ADOPTIONS 1
-#define APR25_12AM_ADOPTIONS 1
+#define MRP_ADOPTIONS         1
+#define APR25_12AM_ADOPTIONS  1
 
 #define OPT_BLOCK_INDICES_GEN_4  1 // Fix block indices generation for PD_PASS OFF (lossless)
 // (M8 + non - Green OFF) versus M8
@@ -329,24 +329,23 @@ extern "C" {
 #define REVERT_WHITE 1
 #endif
 
-#define APR25_3AM_ADOPTIONS 1
-#define SHIFT_M6_SC_TO_M5 1
+#define APR25_3AM_ADOPTIONS    1
+#define SHIFT_M6_SC_TO_M5      1
 #define APR23_4AM_M6_ADOPTIONS 1
-#define APR25_10AM_ADOPTIONS 1
-#define APR25_11AM_ADOPTIONS 1
-#define APR25_1PM_ADOPTIONS 1
-#define NO_NSQ_B32           1  //disallow nsq in 32x32 and below; in 64x64 and  below
-#define NEW_M5_HME_ME 1
+#define APR25_10AM_ADOPTIONS   1
+#define APR25_11AM_ADOPTIONS   1
+#define APR25_1PM_ADOPTIONS    1
+#define NO_NSQ_B32             1  //disallow nsq in 32x32 and below; in 64x64 and  below
+#define NEW_M5_HME_ME          1
 
 #define NO_NSQ_ABOVE           1  //disallow nsq in 32x32 and above; in 64x64 and  above
-#define NSQ_OFF_IN_M6_M7_ME 1
-
+#define NSQ_OFF_IN_M6_M7_ME    1
 #define NO_AB_HV4              1 //disallow HA/HB/VA/VB H4/V4
 
-#define REMAP_MODES   0 //enc_mode remap
+#define REMAP_MODES         0 //enc_mode remap
 #define APR25_7PM_ADOPTIONS 1
-#define R2R_FIX_PADDING 1
-#define QP2QINDEX 1 // switch QP to qindex for MD
+#define R2R_FIX_PADDING     1
+#define QP2QINDEX           1 // switch QP to qindex for MD
 
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
@@ -356,68 +355,61 @@ extern "C" {
 #define SVT_01 1
 
 #if SVT_01
-#define DISALLOW_ALL_ACTIONS 1
-#define MULTI_BAND_ACTIONS   1
+
 
 #define REU_MEM_OPT                 1 // Memory reduction for rate estimation tables
 #define SB_MEM_OPT                  1 // memory reduction for SB array. Removing memory allocation for av1xd per blk
 #define MD_FRAME_CONTEXT_MEM_OPT    1 // Memory reduction for frame context used in MD
-
 #define ME_MEM_OPT                  1 // Memory reduction for ME results
 #define CAND_MEM_OPT                1 // Memory reduction for candidate buffers
 #define PAL_MEM_OPT                 1 // Memory allocation on the fly for palette
-
 #define REST_MEM_OPT2               1 // Memory reduction for restoration
 #define MAY03_4K_10BIT_ADOPTS       1 // disable chroma blind at MD for 10bit NSC; 4K setting change
 #define EC_MEM_OPT                  1 // Memory Opt for ec_ptr in pcs
 #define PCS_MEM_OPT                 1 // Memory reduction for child PCS
-
 #define TPL_LA                      1 // Add TPL into look ahead
 #if TPL_LA
-#define MAX_TPL_LA_SW              60 // Max TPL look ahead sliding window size
-#define TPL_LA_QPS                  1
-#define TPL_LA_QPM                  1
-#define TPL_LA_LAMBDA_SCALING       1
+#define MAX_TPL_LA_SW            60 // Max TPL look ahead sliding window size
+#define TPL_LA_QPS                1
+#define TPL_LA_QPM                1
+#define TPL_LA_LAMBDA_SCALING     1
 #endif
 #define ME_MEM_OPT2                 1 // Memory reduction for ME Context
-
 #define NEW_CYCLE_ALLOCATION        1 // New cycle allocation where the action of the TXS and NICs was replaced by NSQ
-#define ADD_BEST_CAND_COUNT_SIGNAL 1 // replace BEST_CANDIDATE_COUNT macro with a signal
-#define RE_ENABLE_HME_L0_240p 1 // Re-enable HME L0 for 240p, as it helps high motion clips, and is noise for others
-#define START_ME_AT_HME_MV 1 // Start the ME search at the HME MV for all resolutions - needed for high motion clips
-#define MAY12_ADOPTIONS 1 // Adoptions in M0, M1, M2
-#define REMOVE_CHROMA_INTRA_S0 1 // INTRA S0 Chroma OFF
-
-
+#define ADD_BEST_CAND_COUNT_SIGNAL  1 // replace BEST_CANDIDATE_COUNT macro with a signal
+#define RE_ENABLE_HME_L0_240p       1 // Re-enable HME L0 for 240p, as it helps high motion clips, and is noise for others
+#define START_ME_AT_HME_MV          1 // Start the ME search at the HME MV for all resolutions - needed for high motion clips
+#define MAY12_ADOPTIONS             1 // Adoptions in M0, M1, M2
+#define REMOVE_CHROMA_INTRA_S0      1 // INTRA S0 Chroma OFF
 #define NICS_CLEANUP                1 // cleanup nics generation (lossy)
 #define CLASS_PRUNE                 1 // new class pruning for stage3: adaptive nics sclings
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
-
-#if MULTI_BAND_ACTIONS
+#define DISALLOW_ALL_ACTIONS        1
+#define MULTI_BAND_ACTIONS          1
+#if MULTI_BAND_ACTIONS              
 #define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
 #else
 #define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
 #endif
-#define CAP_MV_DIFF 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
-#define COEFF_BASED_BYPASS_NSQ_FIX 1 // apply algorithm to non-I_SLICE
-#define NEW_M0_M1_ME_NICS 1 // New ME and NICS scaling adoptions for M0/M1
-#define M1_C2_ADOPTIONS 1 // Adoptions for M1
+#define CAP_MV_DIFF                 1 // Restrict the max. MV diff size to be within the allowable range: fp -2048 < x < 2048
+#define COEFF_BASED_BYPASS_NSQ_FIX  1 // apply algorithm to non-I_SLICE
+#define NEW_M0_M1_ME_NICS           1 // New ME and NICS scaling adoptions for M0/M1
+#define M1_C2_ADOPTIONS             1 // Adoptions for M1
 #define TF_IMP                      1 // Improve the temporal filtering by considering MV and distortion
-
-#define NOISE_BASED_TF_FRAMES 1 // Use adative number of frames in temporal filtering
-#define M1_C3_ADOPTIONS 1 // Adoptions for M1
-#define HME_4K_ADOPTIONS 1 // Adoptions for SC HME and 4K HME
-#define MAY15_M0_ADOPTIONS 1 // M0 adoptions
-#define MAY16_M0_ADOPTIONS 1
-#if COEFF_BASED_BYPASS_NSQ
+#define NOISE_BASED_TF_FRAMES       1 // Use adative number of frames in temporal filtering
+#define M1_C3_ADOPTIONS             1 // Adoptions for M1
+#define HME_4K_ADOPTIONS            1 // Adoptions for SC HME and 4K HME
+#define MAY15_M0_ADOPTIONS          1 // M0 adoptions
+#define MAY16_M0_ADOPTIONS          1
+#if COEFF_BASED_BYPASS_NSQ          
 #define REMOVE_SQ_WEIGHT_TOGGLING 1
 #define M1_TH4                    1
 #define MERGED_COEFF_BAND         1
 #define SSE_BASED_SPLITTING       1
 #define SPEED_WEIGHT              0
 #endif
-#define MAY16_7PM_ADOPTIONS 1 // M0 and M1 adoptions
-#define MAY17_ADOPTIONS 1 // Adoptions for M0/M1
+#define MAY16_7PM_ADOPTIONS         1 // M0 and M1 adoptions
+#define MAY17_ADOPTIONS             1 // Adoptions for M0/M1
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
