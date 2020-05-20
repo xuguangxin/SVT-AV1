@@ -159,9 +159,6 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
     EB_NEW(context_ptr->md_context,
            mode_decision_context_ctor,
            color_format,
-#if SB64_MEM_OPT
-           static_config->super_block_size,
-#endif
            0,
            0,
            enable_hbd_mode_decision,
