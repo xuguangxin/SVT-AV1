@@ -1392,6 +1392,36 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 #define INTER_PRED_NFL 24
 #define INTER_COMP_NFL 16
 #else
+#if MAY19_ADOPTIONS
+uint32_t nics_scale_factor[2/*sc/nsc*/][10/*levels*/][2/*num/denum*/] = {
+    {
+        //NSC
+        {10,8},   // level0
+        {8,8},    // level1
+        {7,8},    // level2
+        {6,8},    // level3
+        {5,8},    // level4
+        {4,8},    // level5
+        {3,8},    // level6
+        {2,8},    // level7
+        {1,8},    // level8
+        {1,16}    // level9
+    },
+    {
+        //SC
+        {10,8},   // level0
+        {8,8},    // level1
+        {7,8},    // level2
+        {6,8},    // level3
+        {5,8},    // level4
+        {4,8},    // level5
+        {3,8},    // level6
+        {2,8},    // level7
+        {1,8},    // level8
+        {1,16}    // level9
+    },
+};
+#else
 #if M1_C2_ADOPTIONS
 uint32_t nics_scale_factor[2/*sc/nsc*/][9/*levels*/][2/*num/denum*/] = {
     {
@@ -1451,12 +1481,31 @@ uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
 
 };
 #endif
+#endif
 
 void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     // minimum nics allowed
     uint32_t min_nics = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 1;
 
     uint8_t nics_scling_level ;
+#if MAY19_ADOPTIONS
+    if (MR_MODE)
+        nics_scling_level = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        nics_scling_level = 3;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        nics_scling_level = 4;
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+        nics_scling_level = 5;
+    else if (pcs_ptr->enc_mode <= ENC_M5)
+        nics_scling_level = 7;
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 7 : 8;
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+        nics_scling_level = 8;
+    else
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 9 : 8;
+#else
 #if M1_C2_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M0)
 #if MAY16_M0_ADOPTIONS
@@ -1473,7 +1522,11 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     else if (pcs_ptr->enc_mode <= ENC_M4)
         nics_scling_level = 4;
     else if (pcs_ptr->enc_mode <= ENC_M5)
+#if MAY19_ADOPTIONS
+        nics_scling_level = 6;
+#else
         nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 6 : 4;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M6)
         nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 6 : 7;
     else if (pcs_ptr->enc_mode <= ENC_M7)
@@ -1493,6 +1546,7 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
         nics_scling_level = 4;
     else
         nics_scling_level = 5;
+#endif
 #endif
 
     uint32_t scale_num =

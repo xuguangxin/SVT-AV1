@@ -932,6 +932,10 @@ void *resource_coordination_kernel(void *input_ptr) {
             // 0                 OFF
             // 1                 ON
             if (scs_ptr->static_config.enable_filter_intra)
+#if MAY19_ADOPTIONS
+                scs_ptr->seq_header.enable_filter_intra =
+                (scs_ptr->static_config.enc_mode <= ENC_M6) ? 1 : 0;
+#else
 #if APR23_ADOPTIONS_2
                 scs_ptr->seq_header.enable_filter_intra =
                 (scs_ptr->static_config.enc_mode <= ENC_M5) ? 1 : 0;
@@ -967,6 +971,7 @@ void *resource_coordination_kernel(void *input_ptr) {
 #else
                 scs_ptr->seq_header.enable_filter_intra =
                     (scs_ptr->static_config.enc_mode <= ENC_M4) ? 1 : 0;
+#endif
 #endif
 #endif
 #endif
