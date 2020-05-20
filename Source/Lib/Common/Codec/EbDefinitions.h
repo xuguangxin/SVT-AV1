@@ -386,7 +386,7 @@ extern "C" {
 #define CAND_PRUN_OPT               0 // new candidate pruning for stage3: adaptive txt/txs levels
 #define DISALLOW_ALL_ACTIONS        1
 #define MULTI_BAND_ACTIONS          1
-#if MULTI_BAND_ACTIONS              
+#if MULTI_BAND_ACTIONS
 #define COEFF_BASED_BYPASS_NSQ    1  //coefficient-based nsq bypassing
 #else
 #define COEFF_BASED_BYPASS_NSQ    0  //coefficient-based nsq bypassing
@@ -401,7 +401,7 @@ extern "C" {
 #define HME_4K_ADOPTIONS            1 // Adoptions for SC HME and 4K HME
 #define MAY15_M0_ADOPTIONS          1 // M0 adoptions
 #define MAY16_M0_ADOPTIONS          1
-#if COEFF_BASED_BYPASS_NSQ          
+#if COEFF_BASED_BYPASS_NSQ
 #define REMOVE_SQ_WEIGHT_TOGGLING 1
 #define M1_TH4                    1
 #define MERGED_COEFF_BAND         1

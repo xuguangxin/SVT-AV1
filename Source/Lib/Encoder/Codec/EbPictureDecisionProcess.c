@@ -5042,7 +5042,7 @@ void derive_tf_window_params(
             (central_picture_ptr->width >> ss_x),
             (central_picture_ptr->height >> ss_y),
             central_picture_ptr->stride_cr);
-    }   
+    }
 
     // Adjust number of filtering frames based on noise and quantization factor.
     // Basically, we would like to use more frames to filter low-noise frame such
@@ -5058,7 +5058,7 @@ void derive_tf_window_params(
     else if (filter_frame_lookahead_idx < 0 && q <= 10) {
         adjust_num = 0;
     }
-    else 
+    else
 #endif
     if (noise_levels[0] < 0.5) {
         adjust_num = 6;
@@ -5207,7 +5207,7 @@ void derive_tf_window_params(
         }
     }
 #if NOISE_BASED_TF_FRAMES
-    return EB_ErrorNone; 
+    return EB_ErrorNone;
 #endif
 }
 /* Picture Decision Kernel */
@@ -5409,8 +5409,8 @@ void* picture_decision_kernel(void *input_ptr)
             window_avail = EB_TRUE;
             previous_entry_index = QUEUE_GET_PREVIOUS_SPOT(encode_context_ptr->picture_decision_reorder_queue_head_index);
 #if NOISE_BASED_TF_FRAMES
-            parent_pcs_window[ 0] = parent_pcs_window[ 1] = parent_pcs_window[ 2] = parent_pcs_window[ 3] = parent_pcs_window[ 4] = parent_pcs_window[ 5] = 
-            parent_pcs_window[ 6] = parent_pcs_window[ 7] = parent_pcs_window[ 8] = parent_pcs_window[ 9] = parent_pcs_window[10] = parent_pcs_window[11] = 
+            parent_pcs_window[ 0] = parent_pcs_window[ 1] = parent_pcs_window[ 2] = parent_pcs_window[ 3] = parent_pcs_window[ 4] = parent_pcs_window[ 5] =
+            parent_pcs_window[ 6] = parent_pcs_window[ 7] = parent_pcs_window[ 8] = parent_pcs_window[ 9] = parent_pcs_window[10] = parent_pcs_window[11] =
             parent_pcs_window[12] = parent_pcs_window[13] = NULL;
 #else
             parent_pcs_window[0] = parent_pcs_window[1] = parent_pcs_window[2] = parent_pcs_window[3] = parent_pcs_window[4] = parent_pcs_window[5] = NULL;
