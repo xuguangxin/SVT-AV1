@@ -413,6 +413,8 @@ extern "C" {
 #define MAY17_ADOPTIONS             1 // Adoptions for M0/M1
 #define MAY19_ADOPTIONS             1 // Adoptions in MR, M5-M8 from svt-01_presets branch
 
+#define MAY21_NSQ_OFF_FIX          1 // Fix issue when turning NSQ off
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common

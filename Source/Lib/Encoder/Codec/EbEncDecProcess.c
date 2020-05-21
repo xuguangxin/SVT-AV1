@@ -2633,10 +2633,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if OPT_BLOCK_INDICES_GEN_2
 
 #if PD0_PD1_NSQ_BLIND
+#if MAY21_NSQ_OFF_FIX
+     if (pd_pass == PD_PASS_0)
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+     else if (pd_pass == PD_PASS_1)
+         context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#else
      if (pd_pass == PD_PASS_0)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
      else if (pd_pass == PD_PASS_1)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
+#endif
      else
          // Update nsq settings based on the sb_class
 #if NEW_CYCLE_ALLOCATION
