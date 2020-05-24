@@ -1549,6 +1549,26 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[sb_class_idx] = 20;
     switch (context_ptr->coeffcients_area_based_cycles_allocation_level) {
     case 0:
+#if NON_UNIFORM_NSQ_BANDING
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 100;
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 100;
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 20;  // 1.    [95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 20;  // 2.    [90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 20;  // 3.    [85%;90%]
@@ -1569,8 +1589,34 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 20;  //18.   [10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 20;  //19    [5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 20;  //20    [0%;5%]
+#endif
         break;
     case 1: // TH 80%
+#if NON_UNIFORM_NSQ_BANDING
+    case 2: // TH 70%
+    case 3: // TH 60%
+    case 4: // TH 50%
+    case 5: // TH 40%
+    case 6: // TH 30%
+        sb_class_ctrls->sb_class_th[SB_CLASS_1] = 85;
+        sb_class_ctrls->sb_class_th[SB_CLASS_2] = 75;
+        sb_class_ctrls->sb_class_th[SB_CLASS_3] = 65;
+        sb_class_ctrls->sb_class_th[SB_CLASS_4] = 60;
+        sb_class_ctrls->sb_class_th[SB_CLASS_5] = 55;
+        sb_class_ctrls->sb_class_th[SB_CLASS_6] = 50;
+        sb_class_ctrls->sb_class_th[SB_CLASS_7] = 45;
+        sb_class_ctrls->sb_class_th[SB_CLASS_8] = 40;
+        sb_class_ctrls->sb_class_th[SB_CLASS_9] = 35;
+        sb_class_ctrls->sb_class_th[SB_CLASS_10] = 30;
+        sb_class_ctrls->sb_class_th[SB_CLASS_11] = 25;
+        sb_class_ctrls->sb_class_th[SB_CLASS_12] = 20;
+        sb_class_ctrls->sb_class_th[SB_CLASS_13] = 17;
+        sb_class_ctrls->sb_class_th[SB_CLASS_14] = 14;
+        sb_class_ctrls->sb_class_th[SB_CLASS_15] = 10;
+        sb_class_ctrls->sb_class_th[SB_CLASS_16] = 6;
+        sb_class_ctrls->sb_class_th[SB_CLASS_17] = 3;
+        sb_class_ctrls->sb_class_th[SB_CLASS_18] = 0;
+#else
         sb_class_ctrls->sb_class_th[SB_CLASS_1] = 19;  // 1.    [95%;100%]
         sb_class_ctrls->sb_class_th[SB_CLASS_2] = 18;  // 2.    [90%;95%]
         sb_class_ctrls->sb_class_th[SB_CLASS_3] = 17;  // 3.    [85%;90%]
@@ -1701,6 +1747,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
         sb_class_ctrls->sb_class_th[SB_CLASS_18] = 2;  //18.    [10%;15%]
         sb_class_ctrls->sb_class_th[SB_CLASS_19] = 1;  //19.    [5%;10%]
         sb_class_ctrls->sb_class_th[SB_CLASS_20] = 0;  //20.    [0%;5%]
+#endif
         break;
     default:
         printf("Error - Invalid sb_class_level");
@@ -1813,6 +1860,50 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 #endif
 
 #if MULTI_BAND_ACTIONS
+#if NON_UNIFORM_NSQ_BANDING
+uint8_t m0_nsq_cycles_reduction_th[19] = {
+ 0, // NONE
+ 17, //[85%;100%]
+ 15,//[75%;85%]
+ 14,//[65%;75%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;65%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 6,//[20%;25%]
+ 5,//[17%;20%]
+ 5,//[14%;17%]
+ 4,//[10%;14%]
+ 3,//[6%;10%]
+ 2,//[3%;6%]
+ 1 //[0%;3%]
+};
+uint8_t m1_nsq_cycles_reduction_th[19] = {
+ 0, // NONE
+ 17, //[85%;100%]
+ 15,//[75%;85%]
+ 14,//[65%;75%]
+ 13,//[60%;65%]
+ 12,//[55%;60%]
+ 11,//[50%;65%]
+ 10,//[45%;50%]
+ 9,//[40%;45%]
+ 8,//[35%;40%]
+ 7,//[30%;35%]
+ 6,//[25%;30%]
+ 6,//[20%;25%]
+ 5,//[17%;20%]
+ 5,//[14%;17%]
+ 4,//[10%;14%]
+ 3,//[6%;10%]
+ 2,//[3%;6%]
+ 1 //[0%;3%]
+};
+#else
 uint8_t m0_nsq_cycles_reduction_th[21] = {
 0, // NONE
 50,//[95%;100%]
@@ -1859,7 +1950,7 @@ uint8_t m1_nsq_cycles_reduction_th[21] = {
  3,//[5%;10%]
 2 //[0%;5%]
 };
-
+#endif
 #endif
 /******************************************************
 * Derive EncDec Settings for OQ
@@ -3079,6 +3170,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (sequence_control_set_ptr->static_config.pred_me == DEFAULT) {
 
                 if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAY23_M0_ADOPTIONS
+                    if (enc_mode <= ENC_M0)
+                        context_ptr->predictive_me_level = 6;
+                    else
+#endif
 #if MAR4_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
 #if M8_PRED_ME && !UPGRADE_M8
@@ -3102,6 +3198,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     else
                         context_ptr->predictive_me_level = 0;
                 else
+#if MAY23_M0_ADOPTIONS
+                    if (enc_mode <= ENC_M0)
+#else
 #if MAY16_7PM_ADOPTIONS
                     if (MR_MODE)
 #else
@@ -3113,6 +3212,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
                     if (enc_mode <= ENC_M0)
+#endif
 #endif
 #endif
                         context_ptr->predictive_me_level = 6;
@@ -3642,6 +3742,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_cand_prune_th = 5;
     else
+#if MAY23_M0_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            if (enc_mode <= ENC_M0)
+                context_ptr->md_stage_2_3_cand_prune_th = 45;
+            else
+                context_ptr->md_stage_2_3_cand_prune_th = 15;
+        else if (enc_mode <= ENC_M0)
+            context_ptr->md_stage_2_3_cand_prune_th = 45;
+        else
+            context_ptr->md_stage_2_3_cand_prune_th = 5;
+#else
 #if MAR10_ADOPTIONS
         if (MR_MODE)
 #if MAY19_ADOPTIONS
@@ -3691,6 +3802,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
             context_ptr->md_stage_2_3_cand_prune_th = 5;
+#endif
 
     // md_stage_2_3_class_prune_th (for class removal)
     // Remove class if deviation to the best is higher than
@@ -4209,6 +4321,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
         else if (pd_pass == PD_PASS_1)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#if MAY23_M0_ADOPTIONS
+        else if (enc_mode <= ENC_M0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#else
 #if MAY19_ADOPTIONS
         else if (MR_MODE)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
@@ -4248,6 +4366,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->inter_inter_distortion_based_reference_pruning = 0; // 3 as default mode
 #endif
+#endif
     }
     else {
         context_ptr->inter_inter_distortion_based_reference_pruning = 0;
@@ -4274,6 +4393,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->block_based_depth_reduction_level = 0;
     else
+#if MAY23_M0_ADOPTIONS
+        if (enc_mode <= ENC_M0)
+            context_ptr->block_based_depth_reduction_level = 0;
+        else
+            context_ptr->block_based_depth_reduction_level = 2;
+#else
 #if MAY19_ADOPTIONS
         if (MR_MODE)
             context_ptr->block_based_depth_reduction_level = 0;
@@ -4317,6 +4442,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
             context_ptr->block_based_depth_reduction_level = 2;
+#endif
 #endif
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
 #endif
@@ -6319,6 +6445,44 @@ static uint8_t determine_sb_class(
     }
 
 #if MULTI_BAND_ACTIONS
+#if NON_UNIFORM_NSQ_BANDING
+    if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 100))
+        sb_class = SB_CLASS_1;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_2]) / 100))
+        sb_class = SB_CLASS_2;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_3]) / 100))
+        sb_class = SB_CLASS_3;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_4]) / 100))
+        sb_class = SB_CLASS_4;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_5]) / 100))
+        sb_class = SB_CLASS_5;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_6]) / 100))
+        sb_class = SB_CLASS_6;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_7]) / 100))
+        sb_class = SB_CLASS_7;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_8]) / 100))
+        sb_class = SB_CLASS_8;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_9]) / 100))
+        sb_class = SB_CLASS_9;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_10]) / 100))
+        sb_class = SB_CLASS_10;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_11]) / 100))
+        sb_class = SB_CLASS_11;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_12]) / 100))
+        sb_class = SB_CLASS_12;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_13]) / 100))
+        sb_class = SB_CLASS_13;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_14]) / 100))
+        sb_class = SB_CLASS_14;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_15]) / 100))
+        sb_class = SB_CLASS_15;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_16]) / 100))
+        sb_class = SB_CLASS_16;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_17]) / 100))
+        sb_class = SB_CLASS_17;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_18]) / 100))
+        sb_class = SB_CLASS_18;
+#else
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 20))
         sb_class = SB_CLASS_1;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_2]) / 20))
@@ -6359,6 +6523,7 @@ static uint8_t determine_sb_class(
         sb_class = SB_CLASS_19;
     else if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_20]) / 20))
         sb_class = SB_CLASS_20;
+#endif
 #else
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[HIGH_COMPLEX_CLASS]) / 20))
         sb_class = HIGH_COMPLEX_CLASS;

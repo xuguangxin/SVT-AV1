@@ -414,6 +414,8 @@ extern "C" {
 #define MAY19_ADOPTIONS             1 // Adoptions in MR, M5-M8 from svt-01_presets branch
 
 #define MAY21_NSQ_OFF_FIX          1 // Fix issue when turning NSQ off
+#define MAY23_M0_ADOPTIONS         1 // M0 adoptions towards a better slope M0
+#define NON_UNIFORM_NSQ_BANDING    1 // Change the NSQ cycles reduction frequency bands and TH for better behaviour
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
@@ -5782,8 +5784,10 @@ typedef enum ATTRIBUTE_PACKED {
     SB_CLASS_16,
     SB_CLASS_17,
     SB_CLASS_18,
+#if !NON_UNIFORM_NSQ_BANDING
     SB_CLASS_19,
     SB_CLASS_20,
+#endif
     NUMBER_OF_SB_CLASS, // Total number of SB classes
 } SB_CLASS;
 #else
