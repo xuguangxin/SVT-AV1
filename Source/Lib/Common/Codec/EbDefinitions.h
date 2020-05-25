@@ -441,6 +441,11 @@ extern "C" {
 
 #define ENBALE_RDOQ_SSSE_TXT        1 // Enable RDOQ and SSSE in TXT search
 #define UNIFY_TXT                   1 // Unify TXT search path and default path + fix bug in TXT search
+#if SB_MEM_OPT
+#define SB_BLK_MEM_OPT 1              // Memory reduction for total counts of final_blk_arr
+#else
+#define SB_BLK_MEM_OPT 0
+#endif
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
