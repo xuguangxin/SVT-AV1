@@ -376,6 +376,10 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
 
     uint32_t total_tile_cnt = init_data_ptr->tile_row_count * init_data_ptr->tile_column_count;
     uint32_t tile_idx = 0;
+#if OUTPUT_MEM_OPT
+    uint32_t output_buffer_size =
+        (uint32_t)(EB_OUTPUTSTREAMBUFFERSIZE_MACRO(init_data_ptr->picture_width * init_data_ptr->picture_height));
+#endif
     object_ptr->tile_row_count = init_data_ptr->tile_row_count;
     object_ptr->tile_column_count = init_data_ptr->tile_column_count;
 
@@ -467,13 +471,23 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     // Entropy Coder
     EB_ALLOC_PTR_ARRAY(object_ptr->entropy_coding_info, total_tile_cnt);
     for (tile_idx = 0; tile_idx < total_tile_cnt; tile_idx++) {
+#if OUTPUT_MEM_OPT
+        EB_NEW(object_ptr->entropy_coding_info[tile_idx],
+               entropy_tile_info_ctor,
+               output_buffer_size / total_tile_cnt);
+#else
         EB_NEW(object_ptr->entropy_coding_info[tile_idx],
                entropy_tile_info_ctor,
                SEGMENT_ENTROPY_BUFFER_SIZE / total_tile_cnt);
+#endif
     }
 
     // Packetization process Bitstream
+#if OUTPUT_MEM_OPT
+    EB_NEW(object_ptr->bitstream_ptr, bitstream_ctor, output_buffer_size);
+#else
     EB_NEW(object_ptr->bitstream_ptr, bitstream_ctor, PACKETIZATION_PROCESS_BUFFER_SIZE);
+#endif
 #if !MD_FRAME_CONTEXT_MEM_OPT
     // Rate estimation entropy coder
     EB_NEW(

@@ -436,6 +436,8 @@ extern "C" {
 #define REMOVE_MRP_MODE 1 
 #define USE_SUB_BLOCK_MVC 1
 #endif
+
+#define OUTPUT_MEM_OPT              1 // Memory reduction for output bitstream
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
@@ -2369,6 +2371,14 @@ typedef enum EbBitFieldMasks
 #define INPUT_SIZE_1080p_TH                 0x1AB3F0    // 1.75 Million
 #define INPUT_SIZE_4K_TH                    0x29F630    // 2.75 Million
 #define INPUT_SIZE_8K_TH                    0xA7D8C0    // 11 Million
+#endif
+
+#if OUTPUT_MEM_OPT
+#if NEW_RESOLUTION_RANGES
+#define EB_OUTPUTSTREAMBUFFERSIZE_MACRO(ResolutionSize)                ((ResolutionSize) < (INPUT_SIZE_720p_TH) ? 0x1E8480 : (ResolutionSize) < (INPUT_SIZE_1080p_TH) ? 0x2DC6C0 : (ResolutionSize) < (INPUT_SIZE_4K_TH) ? 0x2DC6C0 : 0x2DC6C0  )
+#else
+#define EB_OUTPUTSTREAMBUFFERSIZE_MACRO(ResolutionSize)                ((ResolutionSize) < (INPUT_SIZE_1080i_TH) ? 0x1E8480 : (ResolutionSize) < (INPUT_SIZE_1080p_TH) ? 0x2DC6C0 : (ResolutionSize) < (INPUT_SIZE_4K_TH) ? 0x2DC6C0 : 0x2DC6C0  )
+#endif
 #endif
 
 /** Redefine ASSERT() to avoid warnings
