@@ -419,6 +419,7 @@ extern "C" {
 #define MD_CTX_CLEAN_UP             1 // Memory reduction for MdEncPassCuData
 #define BLK_MEM_CLEAN_UP            1 // Memory reduction for BlkStruct
 #define SB64_MEM_OPT                1 // Memory reduction for SB size 64
+#define M0_DEPTH_REFINEMENT_ADOPTS  1 // Expand the M0/MR depth refinement
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////

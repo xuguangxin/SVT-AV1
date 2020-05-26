@@ -6618,6 +6618,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if FIX_MR_PD1
 #if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
 #if MAR19_ADOPTIONS
+#if !M0_DEPTH_REFINEMENT_ADOPTS
                         // Shut thresholds in MR_MODE
 #if APR22_ADOPTIONS
 #if MAY12_ADOPTIONS
@@ -6645,8 +6646,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             e_depth = 3;
                         }
 #endif
+#endif
 #if ADOPT_SKIPPING_PD1
+#if M0_DEPTH_REFINEMENT_ADOPTS
+                        if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
+#else
                         else if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
+#endif
 #if M8_MPPD
 #if !MAY17_ADOPTIONS
 #if MAY12_ADOPTIONS
@@ -6660,6 +6666,24 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             }
                             else
 #endif
+#endif
+#if M0_DEPTH_REFINEMENT_ADOPTS
+                            if (pcs_ptr->enc_mode <= ENC_M0) {
+                                if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE ||
+                                    pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                    e_depth = 2;
+                                }
+                                else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_720p_RANGE) {
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+                                }
+                                else {
+                                    s_depth = -2;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+                                }
+                            }
+                            else
 #endif
 #if MAY16_7PM_ADOPTIONS
                             if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M2)) {
