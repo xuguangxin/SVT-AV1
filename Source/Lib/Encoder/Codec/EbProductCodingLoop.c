@@ -11445,10 +11445,18 @@ void block_based_depth_reduction(
 #endif
 #endif
             // Get current_to_parent_deviation
+#if !SB64_MEM_OPT
             uint32_t parent_depth_sqi_mds =
                 (context_ptr->blk_geom->sqi_mds -
                 (context_ptr->blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]) -
                 parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
+#else
+            // Only do the calculation if it's not the SB "root"
+            uint32_t parent_depth_sqi_mds = (context_ptr->blk_geom->sqi_mds == 0) ? 0 :
+                (context_ptr->blk_geom->sqi_mds -
+                (context_ptr->blk_geom->quadi - 3) * ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth]) -
+                parent_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][context_ptr->blk_geom->depth];
+#endif
             int64_t current_to_parent_deviation = MIN_SIGNED_VALUE;
             if (context_ptr->md_local_blk_unit[parent_depth_sqi_mds].avail_blk_flag) {
                 current_to_parent_deviation = (int64_t)(((int64_t)(context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].cost * 4) - (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost) * 100) / (int64_t)context_ptr->md_local_blk_unit[parent_depth_sqi_mds].cost;
