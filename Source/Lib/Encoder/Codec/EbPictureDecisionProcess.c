@@ -1139,13 +1139,17 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_nsq = EB_FALSE;
 #endif
 #endif
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+    pcs_ptr->max_number_of_pus_per_sb = SQUARE_PU_COUNT;
+#else
     if (!pcs_ptr->disallow_nsq)
         assert(scs_ptr->nsq_present == 1 && "use nsq_present 1");
+
     pcs_ptr->max_number_of_pus_per_sb =
         pcs_ptr->disallow_nsq
         ? SQUARE_PU_COUNT
         : MAX_ME_PU_COUNT;
-
+#endif
     // Set sb_64x64_simulated - only allow when SB size is not already 64x64
 #if MAR23_ADOPTIONS
     if (scs_ptr->static_config.super_block_size != 64) {
@@ -2042,7 +2046,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->frame_end_cdf_update_mode =
         scs_ptr->static_config.frame_end_cdf_update;
-
+#if !SHUT_ME_CAND_SORTING
     if (scs_ptr->static_config.prune_unipred_me == DEFAULT)
 #if MAR4_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
@@ -2062,7 +2066,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else
         pcs_ptr->prune_unipred_at_me =
         scs_ptr->static_config.prune_unipred_me;
-
+#endif
     // CHKN: Temporal MVP should be disabled for pictures beloning to 4L MiniGop
     // preceeded by 5L miniGOP. in this case the RPS is wrong(known issue). check
     // RPS construction for more info.
@@ -2242,8 +2246,11 @@ static void set_all_ref_frame_type(SequenceControlSet *scs_ptr, PictureParentCon
             ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
         }
     }
-
+#if  REMOVE_MRP_MODE
+    if (parent_pcs_ptr->slice_type == B_SLICE)
+#else
     if (scs_ptr->mrp_mode == 0 && parent_pcs_ptr->slice_type == B_SLICE)
+#endif
     {
 
         //compound Uni-Dir

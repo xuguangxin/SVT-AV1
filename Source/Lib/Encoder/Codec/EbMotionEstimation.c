@@ -557,6 +557,7 @@ void sad_calculation_32x32_64x64_c(uint32_t *p_sad16x16, uint32_t *p_best_sad_32
         p_best_mv64x64[0]   = mv;
     }
 }
+#if !NSQ_ME_CONTEXT_CLEAN_UP
 /****************************************************
 Calculate SAD for Rect H, V and H4, V4 partitions
 
@@ -1330,7 +1331,8 @@ void ext_sad_calculation(uint32_t *p_sad8x8, uint32_t *p_sad16x16, uint32_t *p_s
         p_best_mv8x32[15]   = mv;
     }
 }
-
+#endif
+#if !SHUT_ME_NSQ_SEARCH
 /****************************************************
 Calculate SAD for Rect H, V and H4, V4 partitions
 and update its Motion info if the result SAD is better
@@ -2351,7 +2353,7 @@ void ext_eigth_sad_calculation_nsq_c(
         }
     }
 }
-
+#endif
 /*******************************************
  * ext_eight_sad_calculation_8x8_16x16
  *******************************************/
@@ -2525,6 +2527,7 @@ void ext_eight_sad_calculation_32x32_64x64_c(
         }
     }
 }
+#if !NSQ_ME_CONTEXT_CLEAN_UP
 void generate_nsq_mv(MeContext *context_ptr) {
     uint32_t *p_sad8x8 = context_ptr->p_best_sad_8x8;
     uint32_t *p_sad16x16 = context_ptr->p_best_sad_16x16;
@@ -2542,6 +2545,143 @@ void generate_nsq_mv(MeContext *context_ptr) {
     uint32_t *p_best_mv8x32 = context_ptr->p_best_mv8x32;
     uint32_t *p_best_mv64x16 = context_ptr->p_best_mv64x16;
     uint32_t *p_best_mv16x64 = context_ptr->p_best_mv16x64;
+#if FIX_SHUT_ME_NSQ_SEARCH
+    uint32_t *p_best_mv64x64 = context_ptr->p_best_mv64x64;
+    // 64x32
+    p_best_mv64x32[0] = p_best_mv64x64[0];//p_sad32x32[0] < p_sad32x32[1] ? p_best_mv32x32[0] : p_best_mv32x32[1];
+    p_best_mv64x32[1] = p_best_mv64x64[0];//p_sad32x32[2] < p_sad32x32[3] ? p_best_mv32x32[2] : p_best_mv32x32[3];
+    // 32x16
+    p_best_mv32x16[0] = p_best_mv32x32[0];//p_sad16x16[0] < p_sad16x16[1] ? p_best_mv16x16[0] : p_best_mv16x16[1];
+    p_best_mv32x16[1] = p_best_mv32x32[0];//p_sad16x16[2] < p_sad16x16[3] ? p_best_mv16x16[2] : p_best_mv16x16[3];
+    p_best_mv32x16[2] = p_best_mv32x32[1];//p_sad16x16[4] < p_sad16x16[5] ? p_best_mv16x16[4] : p_best_mv16x16[5];
+    p_best_mv32x16[3] = p_best_mv32x32[1];//p_sad16x16[6] < p_sad16x16[7] ? p_best_mv16x16[6] : p_best_mv16x16[7];
+    p_best_mv32x16[4] = p_best_mv32x32[2];//p_sad16x16[8] < p_sad16x16[9] ? p_best_mv16x16[8] : p_best_mv16x16[9];
+    p_best_mv32x16[5] = p_best_mv32x32[2];//p_sad16x16[10] < p_sad16x16[11] ? p_best_mv16x16[10] : p_best_mv16x16[11];
+    p_best_mv32x16[6] = p_best_mv32x32[3];//p_sad16x16[12] < p_sad16x16[13] ? p_best_mv16x16[12] : p_best_mv16x16[13];
+    p_best_mv32x16[7] = p_best_mv32x32[3];//p_sad16x16[14] < p_sad16x16[15] ? p_best_mv16x16[14] : p_best_mv16x16[15];
+    // 64x16
+    p_best_mv64x16[0] = p_best_mv64x64[0];//(p_sad16x16[0] + p_sad16x16[1]) < (p_sad16x16[4] + p_sad16x16[5]) ? p_best_mv32x16[0] : p_best_mv32x16[2];
+    p_best_mv64x16[1] = p_best_mv64x64[0];//(p_sad16x16[2] + p_sad16x16[3]) < (p_sad16x16[6] + p_sad16x16[7]) ? p_best_mv32x16[1] : p_best_mv32x16[3];
+    p_best_mv64x16[2] = p_best_mv64x64[0];//(p_sad16x16[8] + p_sad16x16[9]) < (p_sad16x16[12] + p_sad16x16[13]) ? p_best_mv32x16[4] : p_best_mv32x16[6];
+    p_best_mv64x16[3] = p_best_mv64x64[0];//(p_sad16x16[10] + p_sad16x16[11]) < (p_sad16x16[14] + p_sad16x16[15]) ? p_best_mv32x16[5] : p_best_mv32x16[7];
+    // 16x8
+    p_best_mv16x8[0]  = p_best_mv16x16[0];// p_sad8x8[0] < p_sad8x8[1] ? p_best_mv8x8[0] : p_best_mv8x8[1];
+    p_best_mv16x8[1]  = p_best_mv16x16[0];// p_sad8x8[2] < p_sad8x8[3] ? p_best_mv8x8[2] : p_best_mv8x8[3];
+    p_best_mv16x8[2]  = p_best_mv16x16[1];// p_sad8x8[4] < p_sad8x8[5] ? p_best_mv8x8[4] : p_best_mv8x8[5];
+    p_best_mv16x8[3]  = p_best_mv16x16[1];// p_sad8x8[6] < p_sad8x8[7] ? p_best_mv8x8[6] : p_best_mv8x8[7];
+    p_best_mv16x8[4]  = p_best_mv16x16[2];// p_sad8x8[8] < p_sad8x8[9] ? p_best_mv8x8[8] : p_best_mv8x8[9];
+    p_best_mv16x8[5]  = p_best_mv16x16[2];// p_sad8x8[10] < p_sad8x8[11] ? p_best_mv8x8[10] : p_best_mv8x8[11];
+    p_best_mv16x8[6]  = p_best_mv16x16[3];// p_sad8x8[12] < p_sad8x8[13] ? p_best_mv8x8[12] : p_best_mv8x8[13];
+    p_best_mv16x8[7]  = p_best_mv16x16[3];// p_sad8x8[14] < p_sad8x8[15] ? p_best_mv8x8[14] : p_best_mv8x8[15];
+    p_best_mv16x8[8]  = p_best_mv16x16[4];// p_sad8x8[16] < p_sad8x8[17] ? p_best_mv8x8[16] : p_best_mv8x8[17];
+    p_best_mv16x8[9]  = p_best_mv16x16[4];// p_sad8x8[18] < p_sad8x8[19] ? p_best_mv8x8[18] : p_best_mv8x8[19];
+    p_best_mv16x8[10] = p_best_mv16x16[5];// p_sad8x8[20] < p_sad8x8[21] ? p_best_mv8x8[20] : p_best_mv8x8[21];
+    p_best_mv16x8[11] = p_best_mv16x16[5];// p_sad8x8[22] < p_sad8x8[23] ? p_best_mv8x8[22] : p_best_mv8x8[23];
+    p_best_mv16x8[12] = p_best_mv16x16[6];// p_sad8x8[24] < p_sad8x8[25] ? p_best_mv8x8[24] : p_best_mv8x8[25];
+    p_best_mv16x8[13] = p_best_mv16x16[6];// p_sad8x8[26] < p_sad8x8[27] ? p_best_mv8x8[26] : p_best_mv8x8[27];
+    p_best_mv16x8[14] = p_best_mv16x16[7];// p_sad8x8[28] < p_sad8x8[29] ? p_best_mv8x8[28] : p_best_mv8x8[29];
+    p_best_mv16x8[15] = p_best_mv16x16[7];// p_sad8x8[30] < p_sad8x8[31] ? p_best_mv8x8[30] : p_best_mv8x8[31];
+    p_best_mv16x8[16] = p_best_mv16x16[8];// p_sad8x8[32] < p_sad8x8[33] ? p_best_mv8x8[32] : p_best_mv8x8[33];
+    p_best_mv16x8[17] = p_best_mv16x16[8];// p_sad8x8[34] < p_sad8x8[35] ? p_best_mv8x8[34] : p_best_mv8x8[35];
+    p_best_mv16x8[18] = p_best_mv16x16[9];// p_sad8x8[36] < p_sad8x8[37] ? p_best_mv8x8[36] : p_best_mv8x8[37];
+    p_best_mv16x8[19] = p_best_mv16x16[9];// p_sad8x8[38] < p_sad8x8[39] ? p_best_mv8x8[38] : p_best_mv8x8[39];
+    p_best_mv16x8[20] = p_best_mv16x16[10];// p_sad8x8[40] < p_sad8x8[41] ? p_best_mv8x8[40] : p_best_mv8x8[41];
+    p_best_mv16x8[21] = p_best_mv16x16[10];// p_sad8x8[42] < p_sad8x8[43] ? p_best_mv8x8[42] : p_best_mv8x8[43];
+    p_best_mv16x8[22] = p_best_mv16x16[11];// p_sad8x8[44] < p_sad8x8[45] ? p_best_mv8x8[44] : p_best_mv8x8[45];
+    p_best_mv16x8[23] = p_best_mv16x16[11];// p_sad8x8[46] < p_sad8x8[47] ? p_best_mv8x8[46] : p_best_mv8x8[47];
+    p_best_mv16x8[24] = p_best_mv16x16[12];// p_sad8x8[48] < p_sad8x8[49] ? p_best_mv8x8[48] : p_best_mv8x8[49];
+    p_best_mv16x8[25] = p_best_mv16x16[12];// p_sad8x8[50] < p_sad8x8[51] ? p_best_mv8x8[50] : p_best_mv8x8[51];
+    p_best_mv16x8[26] = p_best_mv16x16[13];// p_sad8x8[52] < p_sad8x8[53] ? p_best_mv8x8[52] : p_best_mv8x8[53];
+    p_best_mv16x8[27] = p_best_mv16x16[13];// p_sad8x8[54] < p_sad8x8[55] ? p_best_mv8x8[54] : p_best_mv8x8[55];
+    p_best_mv16x8[28] = p_best_mv16x16[14];// p_sad8x8[56] < p_sad8x8[57] ? p_best_mv8x8[56] : p_best_mv8x8[57];
+    p_best_mv16x8[29] = p_best_mv16x16[14];// p_sad8x8[58] < p_sad8x8[59] ? p_best_mv8x8[58] : p_best_mv8x8[59];
+    p_best_mv16x8[30] = p_best_mv16x16[15];// p_sad8x8[60] < p_sad8x8[61] ? p_best_mv8x8[60] : p_best_mv8x8[61];
+    p_best_mv16x8[31] = p_best_mv16x16[15];// p_sad8x8[62] < p_sad8x8[63] ? p_best_mv8x8[62] : p_best_mv8x8[63];
+    // 32x64
+    p_best_mv32x64[0] = p_best_mv64x64[0];//p_sad32x32[0] < p_sad32x32[2] ? p_best_mv32x32[0] : p_best_mv32x32[2];
+    p_best_mv32x64[1] = p_best_mv64x64[0];//p_sad32x32[1] < p_sad32x32[3] ? p_best_mv32x32[1] : p_best_mv32x32[3];
+    // 16x32
+    p_best_mv16x32[0] = p_best_mv32x32[0];//p_sad16x16[0] < p_sad16x16[2] ? p_best_mv16x16[0] : p_best_mv16x16[2];
+    p_best_mv16x32[1] = p_best_mv32x32[0];//p_sad16x16[1] < p_sad16x16[3] ? p_best_mv16x16[1] : p_best_mv16x16[3];
+    p_best_mv16x32[2] = p_best_mv32x32[1];//p_sad16x16[4] < p_sad16x16[6] ? p_best_mv16x16[4] : p_best_mv16x16[6];
+    p_best_mv16x32[3] = p_best_mv32x32[1];//p_sad16x16[5] < p_sad16x16[7] ? p_best_mv16x16[5] : p_best_mv16x16[7];
+    p_best_mv16x32[4] = p_best_mv32x32[2];//p_sad16x16[8] < p_sad16x16[10] ? p_best_mv16x16[8] : p_best_mv16x16[10];
+    p_best_mv16x32[5] = p_best_mv32x32[2];//p_sad16x16[9] < p_sad16x16[11] ? p_best_mv16x16[9] : p_best_mv16x16[11];
+    p_best_mv16x32[6] = p_best_mv32x32[3];//p_sad16x16[12] < p_sad16x16[14] ? p_best_mv16x16[12] : p_best_mv16x16[14];
+    p_best_mv16x32[7] = p_best_mv32x32[3];//p_sad16x16[13] < p_sad16x16[15] ? p_best_mv16x16[13] : p_best_mv16x16[15];
+    // 16x64
+    p_best_mv16x64[0] = p_best_mv64x64[0];//(p_sad16x16[0] + p_sad16x16[2]) < (p_sad16x16[8] + p_sad16x16[10]) ? p_best_mv32x16[0] : p_best_mv32x16[4];
+    p_best_mv16x64[1] = p_best_mv64x64[0];//(p_sad16x16[1] + p_sad16x16[3]) < (p_sad16x16[9] + p_sad16x16[11]) ? p_best_mv32x16[1] : p_best_mv32x16[5];
+    p_best_mv16x64[2] = p_best_mv64x64[0];//(p_sad16x16[4] + p_sad16x16[6]) < (p_sad16x16[12] + p_sad16x16[14]) ? p_best_mv32x16[2] : p_best_mv32x16[6];
+    p_best_mv16x64[3] = p_best_mv64x64[0];//(p_sad16x16[5] + p_sad16x16[7]) < (p_sad16x16[13] + p_sad16x16[15]) ? p_best_mv32x16[3] : p_best_mv32x16[7];
+    // 8x16
+    p_best_mv8x16[0]  = p_best_mv16x16[0];// p_sad8x8[0] < p_sad8x8[2] ? p_best_mv8x8[0] : p_best_mv8x8[2];
+    p_best_mv8x16[1]  = p_best_mv16x16[0];// p_sad8x8[1] < p_sad8x8[3] ? p_best_mv8x8[1] : p_best_mv8x8[3];
+    p_best_mv8x16[2]  = p_best_mv16x16[1];// p_sad8x8[4] < p_sad8x8[6] ? p_best_mv8x8[4] : p_best_mv8x8[6];
+    p_best_mv8x16[3]  = p_best_mv16x16[1];// p_sad8x8[5] < p_sad8x8[7] ? p_best_mv8x8[5] : p_best_mv8x8[7];
+    p_best_mv8x16[4]  = p_best_mv16x16[2];// p_sad8x8[8] < p_sad8x8[10] ? p_best_mv8x8[8] : p_best_mv8x8[10];
+    p_best_mv8x16[5]  = p_best_mv16x16[2];// p_sad8x8[9] < p_sad8x8[11] ? p_best_mv8x8[9] : p_best_mv8x8[11];
+    p_best_mv8x16[6]  = p_best_mv16x16[3];// p_sad8x8[12] < p_sad8x8[14] ? p_best_mv8x8[12] : p_best_mv8x8[14];
+    p_best_mv8x16[7]  = p_best_mv16x16[3];// p_sad8x8[13] < p_sad8x8[15] ? p_best_mv8x8[13] : p_best_mv8x8[15];
+    p_best_mv8x16[8]  = p_best_mv16x16[4];// p_sad8x8[16] < p_sad8x8[18] ? p_best_mv8x8[16] : p_best_mv8x8[18];
+    p_best_mv8x16[9]  = p_best_mv16x16[4];// p_sad8x8[17] < p_sad8x8[19] ? p_best_mv8x8[17] : p_best_mv8x8[19];
+    p_best_mv8x16[10] = p_best_mv16x16[5];// p_sad8x8[20] < p_sad8x8[22] ? p_best_mv8x8[20] : p_best_mv8x8[22];
+    p_best_mv8x16[11] = p_best_mv16x16[5];// p_sad8x8[21] < p_sad8x8[23] ? p_best_mv8x8[21] : p_best_mv8x8[23];
+    p_best_mv8x16[12] = p_best_mv16x16[6];// p_sad8x8[24] < p_sad8x8[26] ? p_best_mv8x8[24] : p_best_mv8x8[26];
+    p_best_mv8x16[13] = p_best_mv16x16[6];// p_sad8x8[25] < p_sad8x8[27] ? p_best_mv8x8[25] : p_best_mv8x8[27];
+    p_best_mv8x16[14] = p_best_mv16x16[7];// p_sad8x8[28] < p_sad8x8[30] ? p_best_mv8x8[28] : p_best_mv8x8[30];
+    p_best_mv8x16[15] = p_best_mv16x16[7];// p_sad8x8[29] < p_sad8x8[31] ? p_best_mv8x8[29] : p_best_mv8x8[31];
+    p_best_mv8x16[16] = p_best_mv16x16[8];// p_sad8x8[32] < p_sad8x8[34] ? p_best_mv8x8[32] : p_best_mv8x8[34];
+    p_best_mv8x16[17] = p_best_mv16x16[8];// p_sad8x8[33] < p_sad8x8[35] ? p_best_mv8x8[33] : p_best_mv8x8[35];
+    p_best_mv8x16[18] = p_best_mv16x16[9];// p_sad8x8[36] < p_sad8x8[38] ? p_best_mv8x8[36] : p_best_mv8x8[38];
+    p_best_mv8x16[19] = p_best_mv16x16[9];// p_sad8x8[37] < p_sad8x8[39] ? p_best_mv8x8[37] : p_best_mv8x8[39];
+    p_best_mv8x16[20] = p_best_mv16x16[10];// p_sad8x8[40] < p_sad8x8[42] ? p_best_mv8x8[40] : p_best_mv8x8[42];
+    p_best_mv8x16[21] = p_best_mv16x16[10];// p_sad8x8[41] < p_sad8x8[43] ? p_best_mv8x8[41] : p_best_mv8x8[43];
+    p_best_mv8x16[22] = p_best_mv16x16[11];// p_sad8x8[44] < p_sad8x8[46] ? p_best_mv8x8[44] : p_best_mv8x8[46];
+    p_best_mv8x16[23] = p_best_mv16x16[11];// p_sad8x8[45] < p_sad8x8[47] ? p_best_mv8x8[45] : p_best_mv8x8[47];
+    p_best_mv8x16[24] = p_best_mv16x16[12];// p_sad8x8[48] < p_sad8x8[50] ? p_best_mv8x8[48] : p_best_mv8x8[50];
+    p_best_mv8x16[25] = p_best_mv16x16[12];// p_sad8x8[49] < p_sad8x8[51] ? p_best_mv8x8[49] : p_best_mv8x8[51];
+    p_best_mv8x16[26] = p_best_mv16x16[13];// p_sad8x8[52] < p_sad8x8[54] ? p_best_mv8x8[52] : p_best_mv8x8[54];
+    p_best_mv8x16[27] = p_best_mv16x16[13];// p_sad8x8[53] < p_sad8x8[55] ? p_best_mv8x8[53] : p_best_mv8x8[55];
+    p_best_mv8x16[28] = p_best_mv16x16[14];// p_sad8x8[56] < p_sad8x8[58] ? p_best_mv8x8[56] : p_best_mv8x8[58];
+    p_best_mv8x16[29] = p_best_mv16x16[14];// p_sad8x8[57] < p_sad8x8[59] ? p_best_mv8x8[57] : p_best_mv8x8[59];
+    p_best_mv8x16[30] = p_best_mv16x16[15];// p_sad8x8[60] < p_sad8x8[62] ? p_best_mv8x8[60] : p_best_mv8x8[62];
+    p_best_mv8x16[31] = p_best_mv16x16[15];// p_sad8x8[61] < p_sad8x8[63] ? p_best_mv8x8[61] : p_best_mv8x8[63];
+    // 32x8
+    p_best_mv32x8[0]  = p_best_mv32x32[0];//(p_sad8x8[0] + p_sad8x8[1]) < (p_sad16x16[4] + p_sad8x8[5]) ? p_best_mv16x8[0] : p_best_mv16x8[2];
+    p_best_mv32x8[1]  = p_best_mv32x32[0];//(p_sad8x8[2] + p_sad8x8[3]) < (p_sad16x16[6] + p_sad8x8[7]) ? p_best_mv16x8[1] : p_best_mv16x8[3];
+    p_best_mv32x8[2]  = p_best_mv32x32[0];//(p_sad8x8[8] + p_sad8x8[9]) < (p_sad16x16[12] + p_sad8x8[13]) ? p_best_mv16x8[4] : p_best_mv16x8[6];
+    p_best_mv32x8[3]  = p_best_mv32x32[0];//(p_sad8x8[10] + p_sad8x8[11]) < (p_sad16x16[14] + p_sad8x8[15]) ? p_best_mv16x8[5] : p_best_mv16x8[7];
+    p_best_mv32x8[4]  = p_best_mv32x32[1];//(p_sad8x8[16] + p_sad8x8[17]) < (p_sad16x16[20] + p_sad8x8[21]) ? p_best_mv16x8[8] : p_best_mv16x8[10];
+    p_best_mv32x8[5]  = p_best_mv32x32[1];//(p_sad8x8[18] + p_sad8x8[19]) < (p_sad16x16[22] + p_sad8x8[23]) ? p_best_mv16x8[9] : p_best_mv16x8[11];
+    p_best_mv32x8[6]  = p_best_mv32x32[1];//(p_sad8x8[24] + p_sad8x8[25]) < (p_sad16x16[28] + p_sad8x8[29]) ? p_best_mv16x8[12] : p_best_mv16x8[14];
+    p_best_mv32x8[7]  = p_best_mv32x32[1];//(p_sad8x8[26] + p_sad8x8[27]) < (p_sad16x16[30] + p_sad8x8[31]) ? p_best_mv16x8[13] : p_best_mv16x8[15];
+    p_best_mv32x8[8]  = p_best_mv32x32[2];//(p_sad8x8[32] + p_sad8x8[33]) < (p_sad16x16[36] + p_sad8x8[37]) ? p_best_mv16x8[16] : p_best_mv16x8[18];
+    p_best_mv32x8[9]  = p_best_mv32x32[2];//(p_sad8x8[34] + p_sad8x8[36]) < (p_sad16x16[38] + p_sad8x8[39]) ? p_best_mv16x8[17] : p_best_mv16x8[19];
+    p_best_mv32x8[10] = p_best_mv32x32[2];//(p_sad8x8[40] + p_sad8x8[42]) < (p_sad16x16[44] + p_sad8x8[45]) ? p_best_mv16x8[20] : p_best_mv16x8[22];
+    p_best_mv32x8[11] = p_best_mv32x32[2];//(p_sad8x8[41] + p_sad8x8[43]) < (p_sad16x16[46] + p_sad8x8[47]) ? p_best_mv16x8[21] : p_best_mv16x8[23];
+    p_best_mv32x8[12] = p_best_mv32x32[3];//(p_sad8x8[48] + p_sad8x8[49]) < (p_sad16x16[52] + p_sad8x8[53]) ? p_best_mv16x8[24] : p_best_mv16x8[26];
+    p_best_mv32x8[13] = p_best_mv32x32[3];//(p_sad8x8[50] + p_sad8x8[51]) < (p_sad16x16[54] + p_sad8x8[55]) ? p_best_mv16x8[25] : p_best_mv16x8[27];
+    p_best_mv32x8[14] = p_best_mv32x32[3];//(p_sad8x8[56] + p_sad8x8[57]) < (p_sad16x16[60] + p_sad8x8[61]) ? p_best_mv16x8[28] : p_best_mv16x8[30];
+    p_best_mv32x8[15] = p_best_mv32x32[3];//(p_sad8x8[58] + p_sad8x8[59]) < (p_sad16x16[66] + p_sad8x8[63]) ? p_best_mv16x8[29] : p_best_mv16x8[31];
+    // 8x32
+    p_best_mv8x32[0]  = p_best_mv32x32[0];// (p_sad8x8[0] + p_sad8x8[2]) < (p_sad16x16[8] + p_sad8x8[10]) ? p_best_mv16x8[0] : p_best_mv16x8[4];
+    p_best_mv8x32[1]  = p_best_mv32x32[0];// (p_sad8x8[1] + p_sad8x8[3]) < (p_sad16x16[9] + p_sad8x8[11]) ? p_best_mv16x8[1] : p_best_mv16x8[5];
+    p_best_mv8x32[2]  = p_best_mv32x32[0];// (p_sad8x8[4] + p_sad8x8[6]) < (p_sad16x16[12] + p_sad8x8[14]) ? p_best_mv16x8[2] : p_best_mv16x8[6];
+    p_best_mv8x32[3]  = p_best_mv32x32[0];// (p_sad8x8[5] + p_sad8x8[7]) < (p_sad16x16[13] + p_sad8x8[15]) ? p_best_mv16x8[3] : p_best_mv16x8[7];
+    p_best_mv8x32[4]  = p_best_mv32x32[1];// (p_sad8x8[16] + p_sad8x8[18]) < (p_sad16x16[24] + p_sad8x8[26]) ? p_best_mv16x8[8] : p_best_mv16x8[12];
+    p_best_mv8x32[5]  = p_best_mv32x32[1];// (p_sad8x8[17] + p_sad8x8[19]) < (p_sad16x16[25] + p_sad8x8[27]) ? p_best_mv16x8[9] : p_best_mv16x8[13];
+    p_best_mv8x32[6]  = p_best_mv32x32[1];// (p_sad8x8[20] + p_sad8x8[22]) < (p_sad16x16[28] + p_sad8x8[30]) ? p_best_mv16x8[10] : p_best_mv16x8[14];
+    p_best_mv8x32[7]  = p_best_mv32x32[1];// (p_sad8x8[21] + p_sad8x8[23]) < (p_sad16x16[29] + p_sad8x8[31]) ? p_best_mv16x8[11] : p_best_mv16x8[15];
+    p_best_mv8x32[8]  = p_best_mv32x32[2];// (p_sad8x8[32] + p_sad8x8[34]) < (p_sad16x16[40] + p_sad8x8[42]) ? p_best_mv16x8[16] : p_best_mv16x8[20];
+    p_best_mv8x32[9]  = p_best_mv32x32[2];// (p_sad8x8[33] + p_sad8x8[35]) < (p_sad16x16[41] + p_sad8x8[43]) ? p_best_mv16x8[17] : p_best_mv16x8[21];
+    p_best_mv8x32[10] = p_best_mv32x32[2];// (p_sad8x8[36] + p_sad8x8[38]) < (p_sad16x16[44] + p_sad8x8[46]) ? p_best_mv16x8[18] : p_best_mv16x8[22];
+    p_best_mv8x32[11] = p_best_mv32x32[2];// (p_sad8x8[37] + p_sad8x8[39]) < (p_sad16x16[45] + p_sad8x8[47]) ? p_best_mv16x8[19] : p_best_mv16x8[23];
+    p_best_mv8x32[12] = p_best_mv32x32[3];// (p_sad8x8[48] + p_sad8x8[50]) < (p_sad16x16[56] + p_sad8x8[58]) ? p_best_mv16x8[24] : p_best_mv16x8[28];
+    p_best_mv8x32[13] = p_best_mv32x32[3];// (p_sad8x8[49] + p_sad8x8[51]) < (p_sad16x16[57] + p_sad8x8[59]) ? p_best_mv16x8[25] : p_best_mv16x8[29];
+    p_best_mv8x32[14] = p_best_mv32x32[3];// (p_sad8x8[52] + p_sad8x8[54]) < (p_sad16x16[60] + p_sad8x8[62]) ? p_best_mv16x8[26] : p_best_mv16x8[30];
+    p_best_mv8x32[15] = p_best_mv32x32[3];// (p_sad8x8[53] + p_sad8x8[55]) < (p_sad16x16[61] + p_sad8x8[63]) ? p_best_mv16x8[27] : p_best_mv16x8[31];
+#else
     // 64x32
     p_best_mv64x32[0] = p_sad32x32[0] < p_sad32x32[1] ? p_best_mv32x32[0] : p_best_mv32x32[1];
     p_best_mv64x32[1] = p_sad32x32[2] < p_sad32x32[3] ? p_best_mv32x32[2] : p_best_mv32x32[3];
@@ -2676,7 +2816,9 @@ void generate_nsq_mv(MeContext *context_ptr) {
     p_best_mv8x32[13] =(p_sad8x8[49] + p_sad8x8[51]) < (p_sad16x16[57] + p_sad8x8[59])  ? p_best_mv16x8[25] : p_best_mv16x8[29];
     p_best_mv8x32[14] =(p_sad8x8[52] + p_sad8x8[54]) < (p_sad16x16[60] + p_sad8x8[62])  ? p_best_mv16x8[26] : p_best_mv16x8[30];
     p_best_mv8x32[15] =(p_sad8x8[53] + p_sad8x8[55]) < (p_sad16x16[61] + p_sad8x8[63])  ? p_best_mv16x8[27] : p_best_mv16x8[31];
+#endif
 }
+#endif
 /*******************************************
  * open_loop_me_get_search_point_results_block
  *******************************************/
@@ -2722,6 +2864,7 @@ static void open_loop_me_get_eight_search_point_results_block(
                                           context_ptr->p_best_mv64x64,
                                           curr_mv,
                                           context_ptr->p_eight_sad32x32);
+#if !SHUT_ME_NSQ_SEARCH
     uint8_t perform_nsq_flag = 1;
     perform_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 1 && (list_index != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 0 : perform_nsq_flag;
     perform_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 2 && ref_pic_index) ? 0: perform_nsq_flag;
@@ -2754,6 +2897,7 @@ static void open_loop_me_get_eight_search_point_results_block(
                                   context_ptr->p_best_sad_16x64,
                                   context_ptr->p_best_mv16x64,
                                   curr_mv);
+#endif
 }
 
 /*******************************************
@@ -2792,6 +2936,7 @@ static void open_loop_me_get_search_point_results_block(
     uint32_t *p_best_sad_16x16      = context_ptr->p_best_sad_16x16;
     uint32_t *p_best_sad_32x32      = context_ptr->p_best_sad_32x32;
     uint32_t *p_best_sad_64x64      = context_ptr->p_best_sad_64x64;
+#if !NSQ_ME_CONTEXT_CLEAN_UP
     uint32_t *p_best_sad_64x32      = context_ptr->p_best_sad_64x32;
     uint32_t *p_best_sad_32x16      = context_ptr->p_best_sad_32x16;
     uint32_t *p_best_sad_16x8       = context_ptr->p_best_sad_16x8;
@@ -2802,10 +2947,12 @@ static void open_loop_me_get_search_point_results_block(
     uint32_t *p_best_sad_8x32       = context_ptr->p_best_sad_8x32;
     uint32_t *p_best_sad_64x16      = context_ptr->p_best_sad_64x16;
     uint32_t *p_best_sad_16x64      = context_ptr->p_best_sad_16x64;
+#endif
     uint32_t *p_best_mv8x8          = context_ptr->p_best_mv8x8;
     uint32_t *p_best_mv16x16        = context_ptr->p_best_mv16x16;
     uint32_t *p_best_mv32x32        = context_ptr->p_best_mv32x32;
     uint32_t *p_best_mv64x64        = context_ptr->p_best_mv64x64;
+#if !NSQ_ME_CONTEXT_CLEAN_UP
     uint32_t *p_best_mv64x32        = context_ptr->p_best_mv64x32;
     uint32_t *p_best_mv32x16        = context_ptr->p_best_mv32x16;
     uint32_t *p_best_mv16x8         = context_ptr->p_best_mv16x8;
@@ -2814,12 +2961,14 @@ static void open_loop_me_get_search_point_results_block(
     uint32_t *p_best_mv8x16         = context_ptr->p_best_mv8x16;
     uint32_t *p_best_mv32x8         = context_ptr->p_best_mv32x8;
     uint32_t *p_best_mv8x32         = context_ptr->p_best_mv8x32;
+#endif
     uint32_t *p_sad32x32            = context_ptr->p_sad32x32;
     uint32_t *p_sad16x16            = context_ptr->p_sad16x16;
     uint32_t *p_sad8x8              = context_ptr->p_sad8x8;
+#if !NSQ_ME_CONTEXT_CLEAN_UP
     uint32_t *p_best_mv64x16        = context_ptr->p_best_mv64x16;
     uint32_t *p_best_mv16x64        = context_ptr->p_best_mv16x64;
-
+#endif
     // TODO: block_index search_position_index could be removed
 
     const uint32_t src_stride = context_ptr->sb_src_stride;
@@ -3080,6 +3229,7 @@ static void open_loop_me_get_search_point_results_block(
                                     p_best_mv64x64,
                                     curr_mv,
                                     &p_sad32x32[0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
  #if DISABLE_NOT_NEEDED_BLOCK_TF_ME
     if(!context_ptr->me_alt_ref)
 #endif
@@ -3107,6 +3257,7 @@ static void open_loop_me_get_search_point_results_block(
                         p_best_sad_16x64,
                         p_best_mv16x64,
                         curr_mv);
+#endif
 }
 
 /*******************************************
@@ -4178,6 +4329,7 @@ void half_pel_refinement_sb(
 #if DISABLE_NOT_NEEDED_BLOCK_TF_ME
     }
 #endif
+#if !SHUT_ME_NSQ_SEARCH
     uint8_t perform_nsq_flag = 1;
     perform_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 1 && (list_index != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 0 : perform_nsq_flag;
     perform_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 2 && ref_pic_index) ? 0: perform_nsq_flag;
@@ -4528,6 +4680,7 @@ void half_pel_refinement_sb(
         }
     }
     }
+#endif
     return;
 }
 /*******************************************
@@ -4544,11 +4697,17 @@ static void open_loop_me_half_pel_search_sblock(
             ((ME_FILTER_TAP >> 1) *
              context_ptr->interpolated_full_stride[list_index][ref_pic_index]),
         context_ptr->interpolated_full_stride[list_index][ref_pic_index],
+#if REMOVE_ME_BIPRED_SEARCH
+        &(context_ptr->pos_b_buffer[(ME_FILTER_TAP >> 1) * context_ptr->interpolated_stride]),
+        &(context_ptr->pos_h_buffer[1]),
+        &(context_ptr->pos_j_buffer[0]),
+#else
         &(context_ptr->pos_b_buffer[list_index][ref_pic_index]
                                    [(ME_FILTER_TAP >> 1) * context_ptr->interpolated_stride]),
 
         &(context_ptr->pos_h_buffer[list_index][ref_pic_index][1]),
         &(context_ptr->pos_j_buffer[list_index][ref_pic_index][0]),
+#endif
         x_search_area_origin,
         y_search_area_origin,
         search_area_height,
@@ -4556,12 +4715,14 @@ static void open_loop_me_half_pel_search_sblock(
         list_index,
         ref_pic_index,
         0);
+#if !SHUT_ME_NSQ_SEARCH
     uint8_t gather_nsq_flag = 0;
     gather_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 1 && (list_index != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 1 : gather_nsq_flag;
     gather_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 2 && ref_pic_index) ? 1: gather_nsq_flag;
     gather_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 3 ) ? 1 : gather_nsq_flag;
     if(gather_nsq_flag)
         generate_nsq_mv(context_ptr);
+#endif
 }
 
 /*******************************************
@@ -4603,12 +4764,14 @@ static void open_loop_me_fullpel_search_sblock(MeContext *context_ptr, uint32_t 
                 (int32_t)y_search_index + y_search_area_origin);
         }
     }
+#if !SHUT_ME_NSQ_SEARCH
     uint8_t gather_nsq_flag = 0;
     gather_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 1 && (list_index != context_ptr->best_list_idx || ref_pic_index != context_ptr->best_ref_idx)) ? 1 : gather_nsq_flag;
     gather_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 2 && ref_pic_index) ? 1: gather_nsq_flag;
     gather_nsq_flag = (context_ptr->inherit_rec_mv_from_sq_block == 3 ) ? 1 : gather_nsq_flag;
     if(gather_nsq_flag)
         generate_nsq_mv(context_ptr);
+#endif
 }
 
 #ifndef AVCCODEL
@@ -4777,7 +4940,11 @@ void interpolate_search_region_avc(
         avc_style_luma_interpolation_filter(
             searchRegionBuffer - (ME_FILTER_TAP >> 1) * luma_stride - (ME_FILTER_TAP >> 1) + 1,
             luma_stride,
+#if REMOVE_ME_BIPRED_SEARCH
+            context_ptr->pos_b_buffer,
+#else
             context_ptr->pos_b_buffer[list_index][ref_pic_index],
+#endif
             context_ptr->interpolated_stride,
             search_area_width_for_asm,
             search_area_height + ME_FILTER_TAP,
@@ -4792,7 +4959,11 @@ void interpolate_search_region_avc(
         avc_style_luma_interpolation_filter(
             searchRegionBuffer - (ME_FILTER_TAP >> 1) * luma_stride - 1 + luma_stride,
             luma_stride,
+#if REMOVE_ME_BIPRED_SEARCH
+            context_ptr->pos_h_buffer,
+#else
             context_ptr->pos_h_buffer[list_index][ref_pic_index],
+#endif
             context_ptr->interpolated_stride,
             search_area_width_for_asm,
             search_area_height + 1,
@@ -4805,9 +4976,17 @@ void interpolate_search_region_avc(
     if (search_area_width_for_asm) {
         // Half pel interpolation of the search region using f1 -> pos_j_buffer
         avc_style_luma_interpolation_filter(
+#if REMOVE_ME_BIPRED_SEARCH
+            context_ptr->pos_b_buffer + context_ptr->interpolated_stride,
+#else
             context_ptr->pos_b_buffer[list_index][ref_pic_index] + context_ptr->interpolated_stride,
+#endif
             context_ptr->interpolated_stride,
+#if REMOVE_ME_BIPRED_SEARCH
+            context_ptr->pos_j_buffer,
+#else
             context_ptr->pos_j_buffer[list_index][ref_pic_index],
+#endif
             context_ptr->interpolated_stride,
             search_area_width_for_asm,
             search_area_height + 1,
@@ -5526,6 +5705,7 @@ void half_pel_search_sb(SequenceControlSet *scs_ptr, // input parameter, Sequenc
 #if DISABLE_NOT_NEEDED_BLOCK_TF_ME
     }
 #endif
+#if !SHUT_ME_NSQ_SEARCH
 #if DEPTH_PART_CLEAN_UP // disallow_nsq
 #if DISABLE_NOT_NEEDED_BLOCK_TF_ME
     uint8_t perform_nsq_flag = !pcs_ptr->disallow_nsq ? 1 : 0;
@@ -5867,7 +6047,7 @@ void half_pel_search_sb(SequenceControlSet *scs_ptr, // input parameter, Sequenc
                                    &context_ptr->psub_pel_direction16x64[idx]);
         }
     }
-
+#endif
     return;
 }
 /*******************************************
@@ -6654,7 +6834,11 @@ static void quarter_pel_search_sb(
     int16_t y_search_area_origin, //[IN] search area origin in the vertical
     // direction, used to point to reference samples
     EbBool enable_half_pel32x32, EbBool enable_half_pel16x16,
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+    EbBool enable_half_pel8x8, EbBool enable_quarter_pel) {
+#else
     EbBool enable_half_pel8x8, EbBool enable_quarter_pel, EbBool ext_block_flag) {
+#endif
     uint32_t pu_index;
 
     uint32_t pu_shift_x_index;
@@ -6909,6 +7093,7 @@ static void quarter_pel_search_sb(
 #if DISABLE_NOT_NEEDED_BLOCK_TF_ME
     }
 #endif
+#if !SHUT_ME_NSQ_SEARCH
 #if DISABLE_NOT_NEEDED_BLOCK_TF_ME
     uint8_t perform_nsq_flag = ext_block_flag;
     perform_nsq_flag = (context_ptr->me_alt_ref) ? 0 : perform_nsq_flag;
@@ -7491,8 +7676,9 @@ static void quarter_pel_search_sb(
                                                  &context_ptr->p_best_mv16x64[nidx],
                                                  context_ptr->psub_pel_direction16x64[nidx]);
         }
-    }
 
+    }
+#endif
     return;
 }
 void hme_one_quadrant_level_0(
@@ -8319,7 +8505,7 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
 
     return;
 }
-
+#if !REMOVE_ME_BIPRED_SEARCH
 static void select_buffer_luma(uint32_t  pu_index, //[IN]
                                uint8_t   fracPosition, //[IN]
                                uint32_t  pu_width, //[IN] Refrence picture list index
@@ -8368,7 +8554,7 @@ static void select_buffer_luma(uint32_t  pu_index, //[IN]
 
     return;
 }
-
+#endif
 static void quarder_pel_compensation(uint32_t pu_index, //[IN]
                                      uint8_t  fracPosition, //[IN]
                                      uint32_t pu_width, //[IN] Refrence picture list index
@@ -8466,6 +8652,7 @@ static void quarder_pel_compensation(uint32_t pu_index, //[IN]
 
     return;
 }
+#if !REMOVE_ME_BIPRED_SEARCH
 /*******************************************************************************
  * Requirement: pu_width      = 8, 16, 24, 32, 48 or 64
  * Requirement: pu_height % 2 = 0
@@ -8577,7 +8764,8 @@ uint32_t bi_pred_averaging(MeContext *context_ptr, MePredUnit *me_candidate, uin
 
     return me_candidate->distortion;
 }
-
+#endif
+#if !REMOVE_ME_BIPRED_SEARCH
 /*******************************************
  * BiPredictionComponsation
  *   performs componsation fro List 0 and
@@ -8756,7 +8944,8 @@ EbErrorType biprediction_compensation(MeContext *context_ptr, uint32_t pu_index,
 
     return return_error;
 }
-
+#endif
+#if !SHUT_ME_CAND_SORTING
 uint8_t skip_bi_pred(PictureParentControlSet *pcs_ptr, uint8_t ref_type,
                      uint8_t ref_type_table[7]) {
     if (!pcs_ptr->prune_unipred_at_me) return 1;
@@ -8768,7 +8957,8 @@ uint8_t skip_bi_pred(PictureParentControlSet *pcs_ptr, uint8_t ref_type,
     }
     return allow_cand;
 }
-
+#endif
+#if !REMOVE_ME_BIPRED_SEARCH
 /*******************************************
  * bi_prediction_search
  *   performs Bi-Prediction Search (SB)
@@ -8827,13 +9017,20 @@ EbErrorType bi_prediction_search(SequenceControlSet *scs_ptr, MeContext *context
                     svt_get_ref_frame_type(REF_LIST_0, first_list_ref_pict_idx);
                 uint8_t to_inject_ref_type_1 =
                     svt_get_ref_frame_type(REF_LIST_1, second_list_ref_pict_idx);
+#if SHUT_ME_CAND_SORTING
+                //if one of the references is skipped at ME, do not consider bi for this cand
+                if (context_ptr->hme_results[REF_LIST_0][first_list_ref_pict_idx].do_ref &&
+                    context_ptr->hme_results[REF_LIST_1][second_list_ref_pict_idx].do_ref) {
+#else
                 uint8_t add_bi = skip_bi_pred(pcs_ptr, to_inject_ref_type_0, ref_type_table);
                 add_bi += skip_bi_pred(pcs_ptr, to_inject_ref_type_1, ref_type_table);
+
                 //if one of the references is skipped at ME, do not consider bi for this cand
                 if (context_ptr->hme_results[REF_LIST_0][first_list_ref_pict_idx].do_ref == 0 ||
                     context_ptr->hme_results[REF_LIST_1][second_list_ref_pict_idx].do_ref == 0  )
                     add_bi = 0;
                 if (add_bi) {
+#endif
                     biprediction_compensation(
                         context_ptr,
                         pu_index,
@@ -8859,12 +9056,19 @@ EbErrorType bi_prediction_search(SequenceControlSet *scs_ptr, MeContext *context
              first_list_ref_pict_idx++) {
             uint8_t to_inject_ref_type_0 =
                 svt_get_ref_frame_type(REF_LIST_0, first_list_ref_pict_idx);
+#if SHUT_ME_CAND_SORTING
+            //if one of the references is skipped at ME, do not consider bi for this cand
+            if (context_ptr->hme_results[REF_LIST_0][0].do_ref &&
+                context_ptr->hme_results[REF_LIST_0][first_list_ref_pict_idx].do_ref) {
+#else
             uint8_t add_bi = skip_bi_pred(pcs_ptr, to_inject_ref_type_0, ref_type_table);
+
             //if one of the references is skipped at ME, do not consider bi for this cand
             if (context_ptr->hme_results[REF_LIST_0][0].do_ref == 0 ||
                 context_ptr->hme_results[REF_LIST_0][first_list_ref_pict_idx].do_ref == 0)
                 add_bi = 0;
             if (add_bi) {
+#endif
                 biprediction_compensation(
                     context_ptr,
                     pu_index,
@@ -8886,12 +9090,18 @@ EbErrorType bi_prediction_search(SequenceControlSet *scs_ptr, MeContext *context
              second_list_ref_pict_idx++) {
             uint8_t to_inject_ref_type_0 =
                 svt_get_ref_frame_type(REF_LIST_0, first_list_ref_pict_idx);
+#if SHUT_ME_CAND_SORTING
+            if (context_ptr->hme_results[REF_LIST_1][0].do_ref &&
+                context_ptr->hme_results[REF_LIST_1][first_list_ref_pict_idx].do_ref) {
+#else
             uint8_t add_bi = skip_bi_pred(pcs_ptr, to_inject_ref_type_0, ref_type_table);
+
             //if one of the references is skipped at ME, do not consider bi for this cand
             if (context_ptr->hme_results[REF_LIST_1][0].do_ref == 0 ||
                 context_ptr->hme_results[REF_LIST_1][first_list_ref_pict_idx].do_ref == 0)
                 add_bi = 0;
             if (add_bi) {
+#endif
                 biprediction_compensation(
                     context_ptr,
                     pu_index,
@@ -8912,7 +9122,7 @@ EbErrorType bi_prediction_search(SequenceControlSet *scs_ptr, MeContext *context
 
     return return_error;
 }
-
+#endif
 // Nader - to be replaced by loock-up table
 /*******************************************
  * get_me_info_index
@@ -9944,14 +10154,20 @@ void integer_search_sb(
                 (int16_t)(ref_pic_ptr->origin_y + sb_origin_y) + y_search_area_origin;
             search_region_index =
                 x_top_left_search_region + y_top_left_search_region * ref_pic_ptr->stride_y;
+#if !NSQ_ME_CONTEXT_CLEAN_UP
 #if DEPTH_PART_CLEAN_UP // disallow_nsq
             if (!pcs_ptr->disallow_nsq) {
 #else
             if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
 #endif
+#endif
                 initialize_buffer_32bits(
                             context_ptr->p_sb_best_sad[list_index][ref_pic_index],
+#if NSQ_ME_CONTEXT_CLEAN_UP
+                            21,
+#else
                             52,
+#endif
                             1,
                             MAX_SAD_VALUE);
                 context_ptr->p_best_sad_64x64 = &(
@@ -9966,6 +10182,7 @@ void integer_search_sb(
                         context_ptr->p_best_sad_8x8 = &(
                             context_ptr
                                 ->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                         context_ptr->p_best_sad_64x32 =
                             &(context_ptr->p_sb_best_sad[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_64x32_0]);
@@ -9996,7 +10213,7 @@ void integer_search_sb(
                         context_ptr->p_best_sad_16x64 =
                             &(context_ptr->p_sb_best_sad[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_16x64_0]);
-
+#endif
                         context_ptr->p_best_mv64x64 =
                             &(context_ptr
                                   ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
@@ -10009,6 +10226,7 @@ void integer_search_sb(
                         context_ptr->p_best_mv8x8 =
                             &(context_ptr
                                   ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                         context_ptr->p_best_mv64x32 = &(
                             context_ptr
                                 ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x32_0]);
@@ -10039,7 +10257,7 @@ void integer_search_sb(
                         context_ptr->p_best_mv16x64 = &(
                             context_ptr
                                 ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x64_0]);
-
+#endif
                         context_ptr->p_best_ssd64x64 = &(
                             context_ptr
                                 ->p_sb_best_ssd[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
@@ -10052,6 +10270,7 @@ void integer_search_sb(
                         context_ptr->p_best_ssd8x8 = &(
                             context_ptr
                                 ->p_sb_best_ssd[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                         context_ptr->p_best_ssd64x32 =
                             &(context_ptr->p_sb_best_ssd[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_64x32_0]);
@@ -10082,7 +10301,7 @@ void integer_search_sb(
                         context_ptr->p_best_ssd16x64 =
                             &(context_ptr->p_sb_best_ssd[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_16x64_0]);
-
+#endif
                         open_loop_me_fullpel_search_sblock(context_ptr,
                                                            list_index,
                                                            ref_pic_index,
@@ -10090,9 +10309,11 @@ void integer_search_sb(
                                                            y_search_area_origin,
                                                            search_area_width,
                                                            search_area_height);
-
+#if !NSQ_ME_CONTEXT_CLEAN_UP
             }
+
             else {
+
                  initialize_buffer_32bits(
                             context_ptr->p_sb_best_sad[list_index][ref_pic_index],
                             21,
@@ -10147,6 +10368,7 @@ void integer_search_sb(
                                            search_area_width,
                                            search_area_height);
             }
+#endif
             context_ptr->x_search_area_origin[list_index][ref_pic_index] = x_search_area_origin;
             context_ptr->y_search_area_origin[list_index][ref_pic_index] = y_search_area_origin;
             context_ptr->sa_width[list_index][ref_pic_index] = search_area_width;
@@ -11907,6 +12129,126 @@ void prune_references_sc(
     }
 }
 #endif
+#if REMOVE_ME_BIPRED_SEARCH
+void construct_me_candidate_array(
+    PictureParentControlSet *pcs_ptr,
+    MeContext* context_ptr,
+    uint8_t *total_me_candidate_index,
+    uint32_t num_of_list_to_search,
+    uint32_t pu_index,
+    uint32_t n_idx) {
+
+    MePredUnit *me_candidate;
+    uint8_t num_of_ref_pic_to_search;
+    uint32_t list_index;
+    uint32_t ref_pic_index;
+    for (list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
+#if MRP_CTRL
+        num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
+            ? pcs_ptr->ref_list0_count_try
+            : (list_index == REF_LIST_0)
+            ? pcs_ptr->ref_list0_count_try
+            : pcs_ptr->ref_list1_count_try;
+#else
+        num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
+            ? pcs_ptr->ref_list0_count
+            : (list_index == REF_LIST_0)
+            ? pcs_ptr->ref_list0_count
+            : pcs_ptr->ref_list1_count;
+#endif
+
+        // Ref Picture Loop
+        for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index) {
+            //ME was skipped, so do not add this Unipred candidate
+            if (context_ptr->hme_results[list_index][ref_pic_index].do_ref == 0)
+                continue;
+            me_candidate = &(context_ptr->me_candidate[*total_me_candidate_index].pu[pu_index]);
+            me_candidate->prediction_direction = list_index;
+            me_candidate->ref_index[list_index] = ref_pic_index;
+            me_candidate->ref0_list =
+                me_candidate->prediction_direction == 0 ? list_index : 24;
+            me_candidate->ref1_list =
+                me_candidate->prediction_direction == 1 ? list_index : 24;
+            me_candidate->distortion =
+                context_ptr->p_sb_best_sad[list_index][ref_pic_index][n_idx];
+            (*total_me_candidate_index) ++;
+        }
+    }
+
+    if (num_of_list_to_search) {
+        uint32_t first_list_ref_pict_idx;
+        uint32_t second_list_ref_pict_idx;
+
+        // 1st set of BIPRED cand
+        // (LAST ,BWD), (LAST,ALT ), (LAST,ALT2 )
+        // (LAST2,BWD), (LAST2,ALT), (LAST2,ALT2)
+        // (LAST3,BWD), (LAST3,ALT), (LAST3,ALT2)
+        // (GOLD ,BWD), (GOLD,ALT ), (GOLD,ALT2 )
+        for (first_list_ref_pict_idx = 0;
+            first_list_ref_pict_idx < pcs_ptr->ref_list0_count_try;
+            first_list_ref_pict_idx++) {
+            for (second_list_ref_pict_idx = 0;
+                second_list_ref_pict_idx < pcs_ptr->ref_list1_count_try;
+                second_list_ref_pict_idx++) {
+                    {
+
+                        if (context_ptr->hme_results[REF_LIST_0][first_list_ref_pict_idx]
+                            .do_ref &&
+                            context_ptr->hme_results[REF_LIST_1][second_list_ref_pict_idx]
+                            .do_ref) {
+
+                            me_candidate = &(context_ptr->me_candidate[*total_me_candidate_index].pu[pu_index]);
+                            me_candidate->prediction_direction = BI_PRED;
+                            me_candidate->ref_index[0] = (uint8_t)first_list_ref_pict_idx;
+                            me_candidate->ref0_list = (uint8_t)REFERENCE_PIC_LIST_0;
+                            me_candidate->ref_index[1] = (uint8_t)second_list_ref_pict_idx;
+                            me_candidate->ref1_list = (uint8_t)REFERENCE_PIC_LIST_1;
+
+                            (*total_me_candidate_index)++;
+                        }
+                    }
+            }
+        }
+
+        // 2nd set of BIPRED cand: (LAST,LAST2)    (LAST,LAST3) (LAST,GOLD)
+        for (first_list_ref_pict_idx = 1;
+            first_list_ref_pict_idx < pcs_ptr->ref_list0_count_try;
+            first_list_ref_pict_idx++) {
+
+            if (context_ptr->hme_results[REF_LIST_0][0].do_ref &&
+                context_ptr->hme_results[REF_LIST_0][first_list_ref_pict_idx].do_ref) {
+
+                me_candidate = &(context_ptr->me_candidate[*total_me_candidate_index].pu[pu_index]);
+                me_candidate->prediction_direction = BI_PRED;
+                me_candidate->ref_index[0] = (uint8_t)0;
+                me_candidate->ref0_list = (uint8_t)REFERENCE_PIC_LIST_0;
+                me_candidate->ref_index[1] = (uint8_t)first_list_ref_pict_idx;
+                me_candidate->ref1_list = (uint8_t)REFERENCE_PIC_LIST_0;
+
+                (*total_me_candidate_index)++;
+            }
+        }
+        // 3rd set of BIPRED cand: (BWD, ALT)
+        for (second_list_ref_pict_idx = 1;
+            second_list_ref_pict_idx < (uint32_t)MIN(pcs_ptr->ref_list1_count_try, 1);
+            second_list_ref_pict_idx++) {
+
+            if (context_ptr->hme_results[REF_LIST_1][0].do_ref &&
+                context_ptr->hme_results[REF_LIST_1][first_list_ref_pict_idx].do_ref) {
+
+                me_candidate = &(context_ptr->me_candidate[*total_me_candidate_index].pu[pu_index]);
+                me_candidate->prediction_direction = BI_PRED;
+                me_candidate->ref_index[0] = (uint8_t)0;
+                me_candidate->ref0_list = (uint8_t)REFERENCE_PIC_LIST_1;
+                me_candidate->ref_index[1] = (uint8_t)second_list_ref_pict_idx;
+                me_candidate->ref1_list = (uint8_t)REFERENCE_PIC_LIST_1;
+
+                (*total_me_candidate_index)++;
+            }
+        }
+    }
+}
+#endif
 /*******************************************
  * motion_estimate_sb
  *   performs ME (SB)
@@ -11980,7 +12322,11 @@ EbErrorType motion_estimate_sb(
 #if OVERLAY_R2R_FIX
             // R2R FIX: no winner integer MV is set in special case like initial p_sb_best_mv for overlay case,
             // then it sends dirty p_sb_best_mv to MD, initializing it is necessary
+#if NSQ_ME_CONTEXT_CLEAN_UP
+            for (uint32_t pi = 0; pi < SQUARE_PU_COUNT; pi++)
+#else
             for(uint32_t pi = 0; pi < MAX_ME_PU_COUNT; pi++)
+#endif
                 context_ptr->p_sb_best_mv[li][ri][pi] = 0;
 #endif
 #if PRUNE_HME_L0
@@ -12093,10 +12439,12 @@ EbErrorType motion_estimate_sb(
                            //we can also make the ME small and shut subpel
             {
                 {
+#if !NSQ_ME_CONTEXT_CLEAN_UP
 #if DEPTH_PART_CLEAN_UP // disallow_nsq
                     if (!pcs_ptr->disallow_nsq) {
 #else
                     if (pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE) {
+#endif
 #endif
                         context_ptr->p_best_sad_64x64 = &(
                             context_ptr
@@ -12110,6 +12458,7 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_sad_8x8 = &(
                             context_ptr
                                 ->p_sb_best_sad[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                         context_ptr->p_best_sad_64x32 =
                             &(context_ptr->p_sb_best_sad[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_64x32_0]);
@@ -12140,7 +12489,7 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_sad_16x64 =
                             &(context_ptr->p_sb_best_sad[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_16x64_0]);
-
+#endif
                         context_ptr->p_best_mv64x64 =
                             &(context_ptr
                                   ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
@@ -12153,6 +12502,7 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_mv8x8 =
                             &(context_ptr
                                   ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                         context_ptr->p_best_mv64x32 = &(
                             context_ptr
                                 ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x32_0]);
@@ -12183,7 +12533,7 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_mv16x64 = &(
                             context_ptr
                                 ->p_sb_best_mv[list_index][ref_pic_index][ME_TIER_ZERO_PU_16x64_0]);
-
+#endif
                         context_ptr->p_best_ssd64x64 = &(
                             context_ptr
                                 ->p_sb_best_ssd[list_index][ref_pic_index][ME_TIER_ZERO_PU_64x64]);
@@ -12196,6 +12546,7 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_ssd8x8 = &(
                             context_ptr
                                 ->p_sb_best_ssd[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                         context_ptr->p_best_ssd64x32 =
                             &(context_ptr->p_sb_best_ssd[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_64x32_0]);
@@ -12226,6 +12577,7 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_ssd16x64 =
                             &(context_ptr->p_sb_best_ssd[list_index][ref_pic_index]
                                                         [ME_TIER_ZERO_PU_16x64_0]);
+#endif
                         context_ptr->full_quarter_pel_refinement = 0;
                         if (context_ptr->half_pel_mode == EX_HP_MODE ||
                             context_ptr->local_hp_mode[list_index][ref_pic_index] == EX_HP_MODE) {
@@ -12259,12 +12611,20 @@ EbErrorType motion_estimate_sb(
 
                             initialize_buffer_32bits(
                                 context_ptr->p_sb_best_ssd[list_index][ref_pic_index],
+#if NSQ_ME_CONTEXT_CLEAN_UP
+                                21,
+#else
                                 52,
+#endif
                                 1,
                                 MAX_SSE_VALUE);
                             memcpy(context_ptr->p_sb_best_full_pel_mv[list_index][ref_pic_index],
                                    context_ptr->p_sb_best_mv[list_index][ref_pic_index],
+#if NSQ_ME_CONTEXT_CLEAN_UP
+                                   SQUARE_PU_COUNT * sizeof(uint32_t));
+#else
                                    MAX_ME_PU_COUNT * sizeof(uint32_t));
+#endif
                             context_ptr->full_quarter_pel_refinement = 1;
                             context_ptr->p_best_full_pel_mv64x64 =
                                 &(context_ptr->p_sb_best_full_pel_mv[list_index][ref_pic_index]
@@ -12278,6 +12638,7 @@ EbErrorType motion_estimate_sb(
                             context_ptr->p_best_full_pel_mv8x8 =
                                 &(context_ptr->p_sb_best_full_pel_mv[list_index][ref_pic_index]
                                                                     [ME_TIER_ZERO_PU_8x8_0]);
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                             context_ptr->p_best_full_pel_mv64x32 =
                                 &(context_ptr->p_sb_best_full_pel_mv[list_index][ref_pic_index]
                                                                     [ME_TIER_ZERO_PU_64x32_0]);
@@ -12308,6 +12669,7 @@ EbErrorType motion_estimate_sb(
                             context_ptr->p_best_full_pel_mv16x64 =
                                 &(context_ptr->p_sb_best_full_pel_mv[list_index][ref_pic_index]
                                                                     [ME_TIER_ZERO_PU_16x64_0]);
+#endif
                             // half-Pel search
                             open_loop_me_half_pel_search_sblock(pcs_ptr,
                                                                 context_ptr,
@@ -12318,9 +12680,9 @@ EbErrorType motion_estimate_sb(
                                                                 context_ptr->sa_width[list_index][ref_pic_index],
                                                                 context_ptr->sa_height[list_index][ref_pic_index]);
                         }
-
-
+#if !NSQ_ME_CONTEXT_CLEAN_UP
                     } else {
+
                         initialize_buffer_32bits(
                             context_ptr->p_sb_best_sad[list_index][ref_pic_index],
                             21,
@@ -12367,7 +12729,8 @@ EbErrorType motion_estimate_sb(
                         context_ptr->p_best_ssd8x8 = &(
                             context_ptr
                                 ->p_sb_best_ssd[list_index][ref_pic_index][ME_TIER_ZERO_PU_8x8_0]);
-                    }
+}
+#endif
                 }
 
                 if (context_ptr->fractional_search_model == 0) {
@@ -12432,11 +12795,17 @@ EbErrorType motion_estimate_sb(
                                 ((ME_FILTER_TAP >> 1) *
                                  context_ptr->interpolated_full_stride[list_index][ref_pic_index]),
                             context_ptr->interpolated_full_stride[list_index][ref_pic_index],
+#if REMOVE_ME_BIPRED_SEARCH
+                            &(context_ptr->pos_b_buffer[(ME_FILTER_TAP >> 1) * context_ptr->interpolated_stride]),
+                            &(context_ptr->pos_h_buffer[1]),
+                            &(context_ptr->pos_j_buffer[0]),
+#else
                             &(context_ptr->pos_b_buffer[list_index][ref_pic_index]
                                                        [(ME_FILTER_TAP >> 1) *
                                                         context_ptr->interpolated_stride]),
                             &(context_ptr->pos_h_buffer[list_index][ref_pic_index][1]),
                             &(context_ptr->pos_j_buffer[list_index][ref_pic_index][0]),
+#endif
                             context_ptr->x_search_area_origin[list_index][ref_pic_index],
                             context_ptr->y_search_area_origin[list_index][ref_pic_index],
                             enable_half_pel_32x32,
@@ -12453,6 +12822,11 @@ EbErrorType motion_estimate_sb(
                                 ((ME_FILTER_TAP >> 1) *
                                  context_ptr->interpolated_full_stride[list_index][ref_pic_index]),
                             context_ptr->interpolated_full_stride[list_index][ref_pic_index],
+#if REMOVE_ME_BIPRED_SEARCH
+                            &(context_ptr->pos_b_buffer[(ME_FILTER_TAP >> 1) * context_ptr->interpolated_stride]), // points to b position of the figure above
+                            &(context_ptr->pos_h_buffer[1]), // points to h position of the figure above
+                            &(context_ptr->pos_j_buffer[0]), // points to j position of the figure above
+#else
                             &(context_ptr
                                   ->pos_b_buffer[list_index][ref_pic_index]
                                                 [(ME_FILTER_TAP >> 1) *
@@ -12467,16 +12841,24 @@ EbErrorType motion_estimate_sb(
                             &(context_ptr->pos_j_buffer[list_index][ref_pic_index]
                                                        [0]), // points to j position
                             // of the figure above
+#endif
                             context_ptr->x_search_area_origin[list_index][ref_pic_index],
                             context_ptr->y_search_area_origin[list_index][ref_pic_index],
                             enable_half_pel_32x32,
                             enable_half_pel_16x16,
                             enable_half_pel_8x8,
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+                            enable_quarter_pel);
+#else
                             enable_quarter_pel,
 #if DEPTH_PART_CLEAN_UP // disallow_nsq
                             !pcs_ptr->disallow_nsq);
 #else
                             pcs_ptr->pic_depth_mode <= PIC_ALL_C_DEPTH_MODE);
+#endif
+#if SHUT_ME_NSQ_SEARCH
+                        generate_nsq_mv(context_ptr);
+#endif
 #endif
                     }
                 }
@@ -12487,10 +12869,11 @@ EbErrorType motion_estimate_sb(
     if (context_ptr->me_alt_ref == EB_FALSE) {
         // Bi-Prediction motion estimation loop
         for (pu_index = 0; pu_index < max_number_of_pus_per_sb; ++pu_index) {
+#if !REMOVE_ME_BIPRED_SEARCH
             cand_index = 0;
-
+#endif
             uint32_t n_idx;
-
+#if !REMOVE_ME_BIPRED_SEARCH
             if (pu_index > 200)
                 n_idx = pu_index;
             else if (pu_index > 184)
@@ -12509,12 +12892,15 @@ EbErrorType motion_estimate_sb(
                 n_idx = tab32x16[pu_index - 87] + 87;
             else if (pu_index > 84)
                 n_idx = pu_index;
-            else if (pu_index > 20)
+            else 
+#endif
+            if (pu_index > 20)
                 n_idx = tab8x8[pu_index - 21] + 21;
             else if (pu_index > 4)
                 n_idx = tab16x16[pu_index - 5] + 5;
             else
                 n_idx = pu_index;
+#if !REMOVE_ME_BIPRED_SEARCH
             for (list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
 #if MRP_CTRL
                 num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
@@ -12547,9 +12933,12 @@ EbErrorType motion_estimate_sb(
                     cand_index++;
                 }
             }
-
             total_me_candidate_index = cand_index;
+
+
             uint8_t ref_type_table[7];
+#endif
+#if !SHUT_ME_CAND_SORTING
             if (pcs_ptr->prune_unipred_at_me) {
                 // Sorting of the ME candidates
                 for (candidate_index = 0; candidate_index < total_me_candidate_index - 1;
@@ -12579,6 +12968,17 @@ EbErrorType motion_estimate_sb(
                             me_candidate->ref1_list, me_candidate->ref_index[1]);
                 }
             }
+#endif
+#if REMOVE_ME_BIPRED_SEARCH
+            total_me_candidate_index = 0;
+            construct_me_candidate_array(             
+                pcs_ptr,
+                context_ptr,
+                &total_me_candidate_index,
+                num_of_list_to_search,
+                pu_index,
+                n_idx);
+#else
             if (num_of_list_to_search) {
                 bi_prediction_search(scs_ptr,
                                         context_ptr,
@@ -12595,7 +12995,9 @@ EbErrorType motion_estimate_sb(
                                         ref_type_table,
                                         pcs_ptr);
             }
+#endif
 
+#if !SHUT_ME_CAND_SORTING
             // Sorting of the ME candidates
             for (candidate_index = 0; candidate_index < total_me_candidate_index - 1;
                  ++candidate_index) {
@@ -12610,12 +13012,16 @@ EbErrorType motion_estimate_sb(
                     }
                 }
             }
-
+#endif
             MeSbResults *me_pu_result                        = pcs_ptr->me_results[sb_index];
             me_pu_result->total_me_candidate_index[pu_index] = total_me_candidate_index;
-
+#if REMOVE_MRP_MODE
+            me_pu_result->total_me_candidate_index[pu_index] =
+                MIN(total_me_candidate_index, MAX_PA_ME_CAND);
+#else
             me_pu_result->total_me_candidate_index[pu_index] =
                 MIN(total_me_candidate_index, ME_RES_CAND_MRP_MODE_0);
+#endif
             // Assining the ME candidates to the me Results buffer
             for (cand_index = 0; cand_index < total_me_candidate_index; ++cand_index) {
                 me_candidate = &(context_ptr->me_candidate[cand_index].pu[pu_index]);
@@ -12624,7 +13030,11 @@ EbErrorType motion_estimate_sb(
                     me_candidate->distortion;
 #endif
 #if  ME_MEM_OPT
+#if REMOVE_MRP_MODE
+                uint32_t me_cand_off = pu_index * MAX_PA_ME_CAND + cand_index;
+#else
                 uint32_t me_cand_off = pu_index * pcs_ptr->max_number_of_candidates_per_block + cand_index;
+#endif
                 pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].direction =
                     me_candidate->prediction_direction;
                 pcs_ptr->me_results[sb_index]->me_candidate_array[me_cand_off].ref_idx_l0 =
@@ -12669,12 +13079,20 @@ EbErrorType motion_estimate_sb(
                 for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index) {
 
 #if  ME_MEM_OPT
+#if REMOVE_MRP_MODE
+                    pcs_ptr->me_results[sb_index]->me_mv_array[pu_index*MAX_PA_ME_MV + (list_index  ? 4 : list_index ? 2 : 0) + ref_pic_index].x_mv =
+                        _MVXT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+
+                    pcs_ptr->me_results[sb_index]->me_mv_array[pu_index*MAX_PA_ME_MV + (list_index  ? 4 : list_index ? 2 : 0) + ref_pic_index].y_mv =
+                        _MVYT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+#else
                      uint32_t pu_stride = scs_ptr->mrp_mode == 0 ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1;
                      pcs_ptr->me_results[sb_index]->me_mv_array[pu_index*pu_stride + ((list_index && scs_ptr->mrp_mode == 0)? 4: list_index ? 2 : 0) + ref_pic_index].x_mv =
                          _MVXT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
 
                       pcs_ptr->me_results[sb_index]->me_mv_array[pu_index*pu_stride + ((list_index && scs_ptr->mrp_mode == 0) ? 4 : list_index ? 2 : 0) + ref_pic_index].y_mv =
                           _MVYT(context_ptr->p_sb_best_mv[list_index][ref_pic_index][n_idx]);
+#endif
 #else
                     pcs_ptr->me_results[sb_index]
                         ->me_mv_array[pu_index][((list_index && scs_ptr->mrp_mode == 0)

@@ -86,18 +86,39 @@ static void me_sb_results_dctor(EbPtr p) {
 #endif
     EB_FREE_ARRAY(obj->total_me_candidate_index);
 }
-
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+#if REMOVE_MRP_MODE
+EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr) {
+#else
+EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint8_t mrp_mode,
+                               uint32_t maxNumberOfMeCandidatesPerPU) {
+#endif
+#else
 EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint32_t max_number_of_blks_per_sb,
                                uint8_t mrp_mode, uint32_t maxNumberOfMeCandidatesPerPU) {
+#endif
     uint32_t pu_index;
-
+#if  !REMOVE_MRP_MODE
     size_t count                      = ((mrp_mode == 0) ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1);
+#endif
     obj_ptr->dctor                    = me_sb_results_dctor;
+#if !NSQ_REMOVAL_CODE_CLEAN_UP
     obj_ptr->max_number_of_pus_per_sb = max_number_of_blks_per_sb;
+#endif
 #if ME_MEM_OPT
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+#if REMOVE_MRP_MODE
+    EB_MALLOC_ARRAY(obj_ptr->me_mv_array, SQUARE_PU_COUNT * MAX_PA_ME_MV);
+    EB_MALLOC_ARRAY(obj_ptr->me_candidate_array, SQUARE_PU_COUNT * MAX_PA_ME_CAND);
+#else
+    EB_MALLOC_ARRAY(obj_ptr->me_mv_array, SQUARE_PU_COUNT * count);
+    EB_MALLOC_ARRAY(obj_ptr->me_candidate_array, SQUARE_PU_COUNT * maxNumberOfMeCandidatesPerPU);
+#endif
+#else
     EB_MALLOC_ARRAY(obj_ptr->me_mv_array, max_number_of_blks_per_sb * count);
     EB_MALLOC_ARRAY(obj_ptr->me_candidate_array,
         max_number_of_blks_per_sb * maxNumberOfMeCandidatesPerPU);
+#endif
 #else
     EB_MALLOC_ARRAY(obj_ptr->me_candidate, max_number_of_blks_per_sb);
     EB_MALLOC_ARRAY(obj_ptr->me_mv_array, max_number_of_blks_per_sb);
@@ -105,8 +126,23 @@ EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint32_t max_number_of_blks
                     max_number_of_blks_per_sb * maxNumberOfMeCandidatesPerPU);
     EB_MALLOC_ARRAY(obj_ptr->me_mv_array[0], max_number_of_blks_per_sb * count);
 #endif
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+    for (pu_index = 0; pu_index < SQUARE_PU_COUNT; ++pu_index) {
+#else
     for (pu_index = 0; pu_index < max_number_of_blks_per_sb; ++pu_index) {
+#endif
 #if  ME_MEM_OPT
+#if REMOVE_MRP_MODE
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 0].ref_idx_l0 = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 0].ref_idx_l1 = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 1].ref_idx_l0 = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 1].ref_idx_l1 = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 2].ref_idx_l0 = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 2].ref_idx_l1 = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 0].direction = 0;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 1].direction = 1;
+        obj_ptr->me_candidate_array[pu_index*MAX_PA_ME_CAND + 2].direction = 2;
+#else
         obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 0].ref_idx_l0 = 0;
         obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 0].ref_idx_l1 = 0;
         obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 1].ref_idx_l0 = 0;
@@ -116,6 +152,7 @@ EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint32_t max_number_of_blks
         obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 0].direction = 0;
         obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 1].direction = 1;
         obj_ptr->me_candidate_array[pu_index*maxNumberOfMeCandidatesPerPU + 2].direction = 2;
+#endif
 #else
         obj_ptr->me_candidate[pu_index] =
             &obj_ptr->me_candidate_array[pu_index * maxNumberOfMeCandidatesPerPU];
@@ -133,8 +170,11 @@ EbErrorType me_sb_results_ctor(MeSbResults *obj_ptr, uint32_t max_number_of_blks
         obj_ptr->me_mv_array[pu_index]               = obj_ptr->me_mv_array[0] + pu_index * count;
 #endif
     }
+#if NSQ_REMOVAL_CODE_CLEAN_UP
+    EB_MALLOC_ARRAY(obj_ptr->total_me_candidate_index, SQUARE_PU_COUNT);
+#else
     EB_MALLOC_ARRAY(obj_ptr->total_me_candidate_index, max_number_of_blks_per_sb);
-
+#endif
     return EB_ErrorNone;
 }
 
@@ -1417,21 +1457,31 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
 #endif
     }
 #endif
-
+#if !REMOVE_MRP_MODE
     object_ptr->max_number_of_candidates_per_block =
         (init_data_ptr->mrp_mode == 0)
             ? ME_RES_CAND_MRP_MODE_0
             : // [Single Ref = 7] + [BiDir = 12 = 3*4 ] + [UniDir = 4 = 3+1]
             ME_RES_CAND_MRP_MODE_1; // [BiDir = 1] + [UniDir = 2 = 1 + 1]
-
+#endif
     EB_ALLOC_PTR_ARRAY(object_ptr->me_results, object_ptr->sb_total_count);
 
     for (sb_index = 0; sb_index < object_ptr->sb_total_count; ++sb_index) {
+#if REMOVE_MRP_MODE
+        EB_NEW(object_ptr->me_results[sb_index],
+            me_sb_results_ctor);
+#elif NSQ_REMOVAL_CODE_CLEAN_UP
+        EB_NEW(object_ptr->me_results[sb_index],
+            me_sb_results_ctor,
+            init_data_ptr->mrp_mode,
+            object_ptr->max_number_of_candidates_per_block);
+#else
         EB_NEW(object_ptr->me_results[sb_index],
                me_sb_results_ctor,
                (init_data_ptr->nsq_present) ? MAX_ME_PU_COUNT : SQUARE_PU_COUNT,
                init_data_ptr->mrp_mode,
                object_ptr->max_number_of_candidates_per_block);
+#endif
     }
 
     EB_MALLOC_ARRAY(object_ptr->rc_me_distortion, object_ptr->sb_total_count);

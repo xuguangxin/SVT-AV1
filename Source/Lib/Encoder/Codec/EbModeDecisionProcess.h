@@ -160,6 +160,18 @@ typedef struct RefResults {
     EbBool valid_ref;
 #endif
 } RefResults;
+#if PRUNING_PER_INTER_TYPE
+typedef enum InterCandGroup {
+    PA_ME_GROUP         = 0,
+    UNI_3x3_GROUP       = 1,
+    BI_3x3_GROUP        = 2,
+    NRST_NEW_NEAR_GROUP = 3,
+    WARP_GROUP          = 4,
+    NRST_NEAR_GROUP     = 5,
+    PRED_ME_GROUP       = 6,
+    TOT_INTER_GROUP     = 7
+} InterCandGroup;
+#endif
 #endif
 #if OBMC_FAST
 typedef struct  ObmcControls {
@@ -206,7 +218,12 @@ typedef struct  InterCompoundControls {
 typedef struct RefPruningControls {
     uint8_t intra_to_inter_pruning_enabled;
     uint8_t inter_to_inter_pruning_enabled;
+#if PRUNING_PER_INTER_TYPE
+    uint8_t max_ref_to_tag[TOT_INTER_GROUP];
+    uint8_t test_d1_cand[TOT_INTER_GROUP];
+#else
     uint8_t max_ref_to_tag;
+#endif
 }RefPruningControls;
 #endif
 #if BLOCK_REDUCTION_ALGORITHM_1 || BLOCK_REDUCTION_ALGORITHM_2
@@ -226,6 +243,19 @@ typedef struct DepthReductionCtrls {
     int64_t h_v_to_h4_v4_th; // increase towards a more agressive level
 
 }DepthReductionCtrls;
+#endif
+#if ADD_MD_NSQ_SEARCH
+typedef struct MdNsqMvSearchCtrls {
+    uint8_t enabled;
+    uint8_t use_ssd;
+    uint8_t perform_sub_pel;
+    uint8_t full_pel_search_width;
+    uint8_t full_pel_search_height;
+    uint8_t half_pel_search_width;
+    uint8_t half_pel_search_height;
+    uint8_t quarter_pel_search_width;
+    uint8_t quarter_pel_search_height;
+}MdNsqMvSearchCtrls;
 #endif
 #if TXT_CONTROL
 typedef struct TxTSearchCtrls {
@@ -541,7 +571,9 @@ typedef struct ModeDecisionContext {
     uint32_t nsq_hv_level;
     // signal for enabling shortcut to skip search depths
     MD_COMP_TYPE compound_types_to_try;
+#if !PD0_INTER_CAND
     uint8_t      best_me_cand_only_flag;
+#endif
     uint8_t      dc_cand_only_flag;
     EbBool       disable_angle_z2_intra_flag;
     uint8_t      full_cost_shut_fast_rate_flag;
@@ -571,8 +603,14 @@ typedef struct ModeDecisionContext {
     uint8_t      block_based_depth_reduction_level;
     DepthReductionCtrls depth_reduction_ctrls;
 #endif
+#if ADD_MD_NSQ_SEARCH
+    uint8_t      md_nsq_mv_search_level ;
+    MdNsqMvSearchCtrls md_nsq_mv_search_ctrls;
+#endif
+#if !PRUNING_PER_INTER_TYPE
 #if ADD_BEST_CAND_COUNT_SIGNAL
     uint8_t bipred3x3_number_input_mv;
+#endif
 #endif
     uint8_t      md_max_ref_count;
     EbBool       md_skip_mvp_generation;
@@ -589,7 +627,11 @@ typedef struct ModeDecisionContext {
     InterCompoundControls inter_comp_ctrls;
 #endif
 #if MD_REFERENCE_MASKING
+#if PRUNING_PER_INTER_TYPE
+    RefResults ref_filtering_res[TOT_INTER_GROUP][MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#else
     RefResults ref_filtering_res[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
     RefPruningControls ref_pruning_ctrls;
 #endif
     // Signal to control initial and final pass PD setting(s)

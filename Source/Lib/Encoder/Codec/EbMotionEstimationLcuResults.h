@@ -11,10 +11,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #define MAX_ME_PU_COUNT \
     209 // Sum of all the possible partitions which have both deminsions greater than 4.
-
+#if REMOVE_MRP_MODE
+#define MAX_PA_ME_MV 7 // 1 per ref = up 7 = up 4+ up to 3
+#define MAX_PA_ME_CAND 23 // [Single Ref = 7] + [BiDir = 12 = 3*4 ] + [4 = 3+1]
+#else
 #define ME_RES_CAND_MRP_MODE_0 23 // [Single Ref = 7] + [BiDir = 12 = 3*4 ] + [UniDir = 4 = 3+1]
 #define ME_MV_MRP_MODE_0 7 // [7 = 4+3]
 
@@ -26,6 +28,7 @@ extern "C" {
      5) // Sum of all the possible partitions which have both deminsions greater or equal to 4.
 
 // i.e. no 4x4, 8x4, or 4x8 partitions
+#endif
 #define SQUARE_PU_COUNT 85
 typedef struct MeCandidate {
 #if SHUT_ME_DISTORTION
@@ -63,8 +66,9 @@ typedef struct MeSbResults {
 #endif
     // [PU][LAST, LAST2, LAST3, GOLD, BWD, ALT2, ALT] if MRP Mode 0,
     // [PU][LAST, LAST2, BWD, ALT2] if MRP Mode 1,
+#if !NSQ_REMOVAL_CODE_CLEAN_UP
     uint32_t max_number_of_pus_per_sb;
-
+#endif
 #if INTER_COMP_REDESIGN
     uint8_t do_comp[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 #endif

@@ -1156,7 +1156,11 @@ void tpl_mc_flow_dispenser(
                     int32_t best_rf_idx = -1;
                     int64_t best_inter_cost = INT64_MAX;
                     MV final_best_mv = {0, 0};
+#if REMOVE_MRP_MODE
+                    uint32_t max_inter_ref = MAX_PA_ME_MV;
+#else
                     uint32_t max_inter_ref = ((scs_ptr->mrp_mode == 0) ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1);
+#endif
                     OisMbResults *ois_mb_results_ptr = pcs_ptr->ois_mb_results[(mb_origin_y >> 4) * picture_width_in_mb + (mb_origin_x >> 4)];
                     int64_t best_intra_cost = ois_mb_results_ptr->intra_cost;
                     uint8_t best_mode = DC_PRED;
@@ -1167,10 +1171,15 @@ void tpl_mc_flow_dispenser(
                     blk_geom.origin_y = blk_stats_ptr->origin_y;
                     me_mb_offset = get_me_info_index(pcs_ptr->max_number_of_pus_per_sb, &blk_geom, 0, 0);
                     for(uint32_t rf_idx = 0; rf_idx < max_inter_ref; rf_idx++) {
+#if REMOVE_MRP_MODE
+                        uint32_t list_index = rf_idx < 4 ? 0 : 1;
+                        uint32_t ref_pic_index = rf_idx >= 4 ? (rf_idx - 4) : rf_idx;
+#else
                         uint32_t list_index = (scs_ptr->mrp_mode == 0) ? (rf_idx < 4 ? 0 : 1)
                                                                        : (rf_idx < 2 ? 0 : 1);
                         uint32_t ref_pic_index = (scs_ptr->mrp_mode == 0) ? (rf_idx >= 4 ? (rf_idx - 4) : rf_idx)
                                                                           : (rf_idx >= 2 ? (rf_idx - 2) : rf_idx);
+#endif
                         if(!pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index])
                             continue;
                         uint32_t ref_poc = pcs_ptr->ref_order_hint[rf_idx];
@@ -1193,9 +1202,14 @@ void tpl_mc_flow_dispenser(
 
                         const MeSbResults *me_results = pcs_ptr->me_results[sb_index];
 #if ME_MEM_OPT
+#if REMOVE_MRP_MODE
+                        x_curr_mv = me_results->me_mv_array[me_mb_offset * MAX_PA_ME_MV + (list_index ? 4 : 0) + ref_pic_index].x_mv << 1;
+                        y_curr_mv = me_results->me_mv_array[me_mb_offset * MAX_PA_ME_MV + (list_index ? 4 : 0) + ref_pic_index].y_mv << 1;
+#else
                         uint32_t pu_stride = scs_ptr->mrp_mode == 0 ? ME_MV_MRP_MODE_0 : ME_MV_MRP_MODE_1;
                         x_curr_mv = me_results->me_mv_array[me_mb_offset * pu_stride + (list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].x_mv << 1;
                         y_curr_mv = me_results->me_mv_array[me_mb_offset * pu_stride + (list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].y_mv << 1;
+#endif
 #else
                         x_curr_mv = me_results->me_mv_array[me_mb_offset][(list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].x_mv << 1;
                         y_curr_mv = me_results->me_mv_array[me_mb_offset][(list_index ? ((scs_ptr->mrp_mode == 0) ? 4 : 2) : 0) + ref_pic_index].y_mv << 1;

@@ -312,10 +312,12 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int new_nearest_comb_inject;
+#if !SHUT_ME_CAND_SORTING
     /* prune unipred at me
     *
     * Default is -1. */
     int prune_unipred_me;
+#endif
     /* prune ref frame for rec partitions
     *
     * Default is -1. */

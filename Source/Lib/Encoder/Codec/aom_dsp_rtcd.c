@@ -713,9 +713,11 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     SET_AVX2(ext_all_sad_calculation_8x8_16x16,
              ext_all_sad_calculation_8x8_16x16_c,
              ext_all_sad_calculation_8x8_16x16_avx2);
+#if !SHUT_ME_NSQ_SEARCH
     SET_AVX2(ext_eigth_sad_calculation_nsq,
              ext_eigth_sad_calculation_nsq_c,
              ext_eigth_sad_calculation_nsq_avx2);
+#endif
     SET_AVX2(ext_eight_sad_calculation_32x32_64x64,
              ext_eight_sad_calculation_32x32_64x64_c,
              ext_eight_sad_calculation_32x32_64x64_avx2);
