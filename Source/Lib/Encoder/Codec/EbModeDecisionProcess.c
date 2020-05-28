@@ -95,7 +95,12 @@ static void mode_decision_context_dctor(EbPtr p) {
 #if DEPTH_PART_CLEAN_UP
     EB_FREE_ARRAY(obj->mdc_sb_array);
 #endif
-
+#if UNIFY_TXT
+    for (uint32_t txt_itr = 0; txt_itr < TX_TYPES; ++txt_itr) {
+        EB_DELETE(obj->recon_coeff_ptr[txt_itr]);
+        EB_DELETE(obj->recon_ptr[txt_itr]);
+    }
+#endif
 #if CAND_MEM_OPT
     EB_DELETE(obj->prediction_ptr_temp);
     EB_DELETE(obj->cfl_temp_prediction_ptr);
@@ -466,8 +471,16 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
     thirty_two_width_picture_buffer_desc_init_data.bot_padding = 0;
     thirty_two_width_picture_buffer_desc_init_data.split_mode = EB_FALSE;
 
-
-
+#if UNIFY_TXT
+    for (uint32_t txt_itr = 0; txt_itr < TX_TYPES; ++txt_itr) {
+        EB_NEW(context_ptr->recon_coeff_ptr[txt_itr],
+            eb_picture_buffer_desc_ctor,
+            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
+        EB_NEW(context_ptr->recon_ptr[txt_itr],
+            eb_picture_buffer_desc_ctor,
+            (EbPtr)&picture_buffer_desc_init_data);
+    }
+#endif
     EB_NEW(context_ptr->residual_quant_coeff_ptr,
         eb_picture_buffer_desc_ctor,
         (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);

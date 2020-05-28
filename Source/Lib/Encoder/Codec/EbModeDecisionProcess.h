@@ -678,6 +678,12 @@ typedef struct ModeDecisionContext {
 #if SB64_MEM_OPT
     uint8_t sb_size;
 #endif
+
+#if UNIFY_TXT
+    EbPictureBufferDesc *recon_coeff_ptr[TX_TYPES];
+    EbPictureBufferDesc *recon_ptr[TX_TYPES];
+#endif
+
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,
