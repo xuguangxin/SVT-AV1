@@ -446,6 +446,7 @@ extern "C" {
 #else
 #define SB_BLK_MEM_OPT 0
 #endif
+#define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////

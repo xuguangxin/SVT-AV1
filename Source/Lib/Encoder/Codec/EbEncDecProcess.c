@@ -2192,8 +2192,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else {
         if (pcs_ptr->slice_type == I_SLICE)
             context_ptr->enable_area_based_cycles_allocation = 0;
+#if COEFF_BASED_BYPASS_OFF_480P
+        // Do not use cycles reduction algorithms in 480p and below
+        else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE)
+            context_ptr->enable_area_based_cycles_allocation = 0;
         else
             context_ptr->enable_area_based_cycles_allocation = 1;
+#else
+        else
+            context_ptr->enable_area_based_cycles_allocation = 1;
+#endif
     }
  #if MULTI_BAND_ACTIONS
     context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
