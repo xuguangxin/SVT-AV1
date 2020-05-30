@@ -4673,7 +4673,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_nsq_mv_search_level = 0;
     else
         if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
-            context_ptr->md_nsq_mv_search_level = 4; 
+            context_ptr->md_nsq_mv_search_level = 4;
         else if (enc_mode <= ENC_M0)
             context_ptr->md_nsq_mv_search_level = 3;
         else if (enc_mode <= ENC_M5)
@@ -4685,7 +4685,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
-        context_ptr->md_max_ref_count = 4; 
+        context_ptr->md_max_ref_count = 4;
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_max_ref_count = 1;
 #if M8_CAP_NUMBER_OF_REF_IN_MD
@@ -4755,7 +4755,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
     else
         context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
-#if !PD0_INTER_CAND 
+#if !PD0_INTER_CAND
     // Set best_me_cand_only_flag
     if (pd_pass == PD_PASS_0)
         context_ptr->best_me_cand_only_flag = EB_TRUE;
@@ -8192,6 +8192,10 @@ void *enc_dec_kernel(void *input_ptr) {
 #endif
 #else
             pcs_ptr->parent_pcs_ptr->av1x->rdmult = context_ptr->full_lambda;
+#endif
+#if DECOUPLE_ME_RES
+            eb_release_object(pcs_ptr->parent_pcs_ptr->me_data_wrapper_ptr);
+            pcs_ptr->parent_pcs_ptr->me_data_wrapper_ptr = (EbObjectWrapper *)EB_NULL;
 #endif
         }
 

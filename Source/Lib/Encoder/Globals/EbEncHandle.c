@@ -527,6 +527,9 @@ EbErrorType load_default_buffer_configuration_settings(
     scs_ptr->output_stream_buffer_fifo_init_count = PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH;
 
     uint32_t min_input, min_parent, min_child, min_paref, min_ref, min_overlay;
+#if DECOUPLE_ME_RES
+    uint32_t min_me;
+#endif
     {
         /*Look-Ahead. Picture-Decision outputs pictures by group of mini-gops so
           the needed pictures for a certain look-ahead distance (LAD) should be rounded up to the next multiple of MiniGopSize.*/
@@ -558,6 +561,9 @@ EbErrorType load_default_buffer_configuration_settings(
         //References. Min to sustain flow (RA-5L-MRP-ON) 7 pictures from previous MGs + 10 needed for curr mini-GoP
         min_ref = 17;
 
+#if DECOUPLE_ME_RES
+        min_me = scs_ptr->static_config.look_ahead_distance==0 ? 1 : min_parent;
+#endif
         //Pa-References.Min to sustain flow (RA-5L-MRP-ON) -->TODO: derive numbers for other GOP Structures.
 #if TPL_LA
         min_paref = 25 + scs_ptr->scd_delay + eos_delay + (scs_ptr->static_config.enable_tpl_la ? needed_lad_pictures : 0);
@@ -581,6 +587,9 @@ EbErrorType load_default_buffer_configuration_settings(
         scs_ptr->overlay_input_picture_buffer_init_count       = min_overlay;
 
         scs_ptr->output_recon_buffer_fifo_init_count = scs_ptr->reference_picture_buffer_init_count;
+#if DECOUPLE_ME_RES
+        scs_ptr->me_pool_init_count = min_me;
+#endif
     }
     else {
         scs_ptr->input_buffer_fifo_init_count              = MAX(min_input, scs_ptr->input_buffer_fifo_init_count);
@@ -589,6 +598,10 @@ EbErrorType load_default_buffer_configuration_settings(
         scs_ptr->reference_picture_buffer_init_count       = MAX(min_ref, scs_ptr->reference_picture_buffer_init_count);
         scs_ptr->picture_control_set_pool_init_count_child = MAX(min_child, scs_ptr->picture_control_set_pool_init_count_child);
         scs_ptr->overlay_input_picture_buffer_init_count   = MAX(min_overlay, scs_ptr->overlay_input_picture_buffer_init_count);
+
+#if DECOUPLE_ME_RES
+        scs_ptr->me_pool_init_count = MAX(min_me, scs_ptr->picture_control_set_pool_init_count);
+#endif
     }
 
     //#====================== Inter process Fifos ======================
@@ -773,7 +786,9 @@ static void eb_enc_handle_dctor(EbPtr p)
     EB_FREE_PTR_ARRAY(enc_handle_ptr->app_callback_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE(enc_handle_ptr->scs_pool_ptr);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
-
+#if DECOUPLE_ME_RES
+    EB_DELETE_PTR_ARRAY(enc_handle_ptr->me_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+#endif
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->picture_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->pa_reference_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
     EB_DELETE_PTR_ARRAY(enc_handle_ptr->overlay_input_picture_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
@@ -994,7 +1009,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
     * Picture Control Set: Parent
     ************************************/
     EB_ALLOC_PTR_ARRAY(enc_handle_ptr->picture_parent_control_set_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
-
+#if DECOUPLE_ME_RES
+    EB_ALLOC_PTR_ARRAY(enc_handle_ptr->me_pool_ptr_array, enc_handle_ptr->encode_instance_total_count);
+#endif
     for (instance_index = 0; instance_index < enc_handle_ptr->encode_instance_total_count; ++instance_index) {
         // The segment Width & Height Arrays are in units of SBs, not samples
         PictureControlSetInitData input_data;
@@ -1046,6 +1063,17 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
             picture_parent_control_set_creator,
             &input_data,
             NULL);
+#if DECOUPLE_ME_RES
+        EB_NEW(
+            enc_handle_ptr->me_pool_ptr_array[instance_index],
+            eb_system_resource_ctor,
+            enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->me_pool_init_count,
+            1,
+            0,
+            me_creator,
+            &input_data,
+            NULL);
+#endif
     }
 
     /************************************

@@ -81,9 +81,10 @@ typedef struct EncodeContext {
     uint32_t                      picture_decision_reorder_queue_head_index;
 
     // Picture Manager Reorder Queue
+#if !DECOUPLE_ME_RES
     PictureManagerReorderEntry **picture_manager_reorder_queue;
     uint32_t                     picture_manager_reorder_queue_head_index;
-
+#endif
     // Picture Manager Pre-Assignment Buffer
     uint32_t          pre_assignment_buffer_intra_count;
     uint32_t          pre_assignment_buffer_idr_count;

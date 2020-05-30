@@ -57,7 +57,9 @@ typedef struct PictureDecisionContext
     EbDctor      dctor;
     EbFifo       *picture_analysis_results_input_fifo_ptr;
     EbFifo       *picture_decision_results_output_fifo_ptr;
-
+#if DECOUPLE_ME_RES
+    EbFifo       *me_fifo_ptr;
+#endif
     uint64_t      last_solid_color_frame_poc;
 
     EbBool        reset_running_avg;
@@ -92,6 +94,12 @@ typedef struct PictureDecisionContext
 #if TF_LEVELS
     uint8_t tf_level;
     TfControls tf_ctrls;
+#endif
+#if DECOUPLE_ME_RES
+    PictureParentControlSet* mg_pictures_array[1<<MAX_TEMPORAL_LAYERS];
+    DepCntPicInfo updated_links_arr[UPDATED_LINKS];//if not empty, this picture is a depn-cnt-cleanUp triggering picture (I frame; or MG size change )
+                                                      //this array will store all others pictures needing a dep-cnt clean up.
+    uint32_t other_updated_links_cnt; //how many other pictures in the above array needing a dep-cnt clean-up
 #endif
 } PictureDecisionContext;
 
@@ -316,6 +324,10 @@ EbErrorType picture_decision_context_ctor(
     }
 
     context_ptr->reset_running_avg = EB_TRUE;
+#if DECOUPLE_ME_RES
+    context_ptr->me_fifo_ptr = eb_system_resource_get_producer_fifo(
+            enc_handle_ptr->me_pool_ptr_array[0], 0);
+#endif
 
     return EB_ErrorNone;
 }
@@ -614,6 +626,44 @@ EbErrorType handle_incomplete_picture_window_map(
 
     return return_error;
 }
+#if DECOUPLE_ME_RES
+/*
+   This function searches if the target input picture
+   is still in the pre-assign buffer, if yes it returns
+   its ppcs, else it returns Null
+*/
+PictureParentControlSet * is_pic_still_in_pre_assign_buffer(
+    EncodeContext                 *encode_context_ptr,
+    PictureDecisionContext        *context_ptr,
+    uint32_t                       mini_gop_index,
+    uint64_t                       target_pic)
+{
+    for (uint32_t pic_i = context_ptr->mini_gop_start_index[mini_gop_index]; pic_i <= context_ptr->mini_gop_end_index[mini_gop_index]; ++pic_i) {
+        PictureParentControlSet*pcs_i = (PictureParentControlSet*)encode_context_ptr->pre_assignment_buffer[pic_i]->object_ptr;
+        if (pcs_i->picture_number == target_pic)
+            return pcs_i;
+    }
+    return NULL;
+}
+/*
+   This function tells if a picture is part of a short
+   mg in RA configuration
+*/
+uint8_t is_pic_cutting_short_ra_mg(PictureDecisionContext   *context_ptr, PictureParentControlSet *pcs_ptr, uint32_t mg_idx)
+{
+    //if the size < complete MG or if there is usage of closed GOP
+    if ((context_ptr->mini_gop_length[mg_idx] < pcs_ptr->pred_struct_ptr->pred_struct_period || context_ptr->mini_gop_idr_count[mg_idx] > 0) &&
+        pcs_ptr->pred_struct_ptr->pred_type == EB_PRED_RANDOM_ACCESS &&
+        pcs_ptr->idr_flag == EB_FALSE &&
+        pcs_ptr->cra_flag == EB_FALSE) {
+
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+#endif
 /***************************************************************************************************
 * If a switch happens, then update the RPS of the base layer frame separating the 2 different prediction structures
 * Clean up the reference queue dependant counts of the base layer frame separating the 2 different prediction structures
@@ -647,6 +697,17 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
     // Get the 1st PCS mini GOP
     pcs_ptr = (PictureParentControlSet*)encode_context_ptr->pre_assignment_buffer[context_ptr->mini_gop_start_index[MinigopIndex]]->object_ptr;
 
+#if DECOUPLE_ME_RES
+    PictureParentControlSet  *trig_pcs; //triggering dep-cnt clean up picture, should be the first in dec order that goes to PicMgr
+    if ( is_pic_cutting_short_ra_mg(context_ptr, pcs_ptr, MinigopIndex)) {
+        trig_pcs = pcs_ptr;//this an LDP minigop so the first picture in minigop is the first in dec order
+    }
+    else {
+        //this an RA minigop so the last picture in minigop is the first in dec order
+        uint32_t  last_pic_in_mg = context_ptr->mini_gop_end_index[MinigopIndex];
+        trig_pcs = (PictureParentControlSet*)encode_context_ptr->pre_assignment_buffer[last_pic_in_mg]->object_ptr;
+    }
+#endif
     // Derive the temporal layer difference between the current mini GOP and the previous mini GOP
     pcs_ptr->hierarchical_layers_diff = (uint8_t)(encode_context_ptr->previous_mini_gop_hierarchical_levels - pcs_ptr->hierarchical_levels);
 
@@ -662,6 +723,9 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
         while (input_queue_index != encode_context_ptr->picture_decision_pa_reference_queue_tail_index) {
             input_entry_ptr = encode_context_ptr->picture_decision_pa_reference_queue[input_queue_index];
 
+#if DECOUPLE_ME_RES
+            int32_t diff_n = 0;
+#endif
             // Find the reference entry separating the 2 mini GOPs  (pcs_ptr->picture_number is the POC of the first isput in the mini GOP)
             if (input_entry_ptr->picture_number == (pcs_ptr->picture_number - 1)) {
                 // Update the positive dependant counts
@@ -701,6 +765,19 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
                         input_entry_ptr->list1.list[input_entry_ptr->list1.list_count++] = next_base_layer_pred_position_ptr->dep_list1.list[dep_idx];
                 }
 
+#if DECOUPLE_ME_RES
+                diff_n =
+                    (input_entry_ptr->list0.list_count + input_entry_ptr->list1.list_count) - //depCnt after clean up
+                    (input_entry_ptr->dep_list0_count + input_entry_ptr->dep_list1_count); //depCnt from org prediction struct
+
+
+                //these refs are defintely not in the pre-assignment buffer
+                if (diff_n) {
+                    //TODO: change triggereing picture from the firt pic to the last pic in the MG for RA ( first in dec-order = base layer)
+                    trig_pcs->updated_links_arr[trig_pcs->other_updated_links_cnt].pic_num = input_entry_ptr->picture_number;
+                    trig_pcs->updated_links_arr[trig_pcs->other_updated_links_cnt++].dep_cnt_diff = diff_n;
+                }
+#endif
                 // 3rd step: update the dependant count
                 dependant_list_removed_entries = input_entry_ptr->dep_list0_count + input_entry_ptr->dep_list1_count - input_entry_ptr->dependent_count;
                 input_entry_ptr->dep_list0_count = (input_entry_ptr->is_alt_ref) ? input_entry_ptr->list0.list_count + 1 : input_entry_ptr->list0.list_count;
@@ -708,6 +785,9 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
                 input_entry_ptr->dependent_count = input_entry_ptr->dep_list0_count + input_entry_ptr->dep_list1_count - dependant_list_removed_entries;
             }
             else {
+#if DECOUPLE_ME_RES
+                uint32_t org_depcnt = input_entry_ptr->dependent_count;
+#endif
                 // Modify Dependent List0
                 dep_list_count = input_entry_ptr->list0.list_count;
                 for (dep_idx = 0; dep_idx < dep_list_count; ++dep_idx) {
@@ -724,6 +804,9 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
 
                         // Decrement the Reference's reference_count
                         --input_entry_ptr->dependent_count;
+#if DECOUPLE_ME_RES
+                        diff_n--;
+#endif
                         CHECK_REPORT_ERROR(
                             (input_entry_ptr->dependent_count != ~0u),
                             encode_context_ptr->app_callback_ptr,
@@ -745,6 +828,9 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
                         input_entry_ptr->list1.list[dep_idx] = 0;
                         // Decrement the Reference's reference_count
                         --input_entry_ptr->dependent_count;
+#if DECOUPLE_ME_RES
+                        diff_n--;
+#endif
 
                         CHECK_REPORT_ERROR(
                             (input_entry_ptr->dependent_count != ~0u),
@@ -752,6 +838,14 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
                             EB_ENC_PD_ERROR3);
                     }
                 }
+
+#if DECOUPLE_ME_RES
+                //these refs are defintely not in the pre-ass buffer
+                if (diff_n) {
+                    trig_pcs->updated_links_arr[trig_pcs->other_updated_links_cnt].pic_num = input_entry_ptr->picture_number;
+                    trig_pcs->updated_links_arr[trig_pcs->other_updated_links_cnt++].dep_cnt_diff = diff_n;
+                }
+#endif
             }
             // Increment the input_queue_index Iterator
             input_queue_index = (input_queue_index == PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH - 1) ? 0 : input_queue_index + 1;
@@ -5217,6 +5311,32 @@ void derive_tf_window_params(
     return EB_ErrorNone;
 #endif
 }
+
+#if DECOUPLE_ME_RES
+PaReferenceQueueEntry * search_ref_in_ref_queue_pa(
+    EncodeContext *encode_context_ptr,
+    uint64_t ref_poc)
+{
+    PaReferenceQueueEntry * ref_entry_ptr = NULL;
+    uint32_t ref_queue_i = encode_context_ptr->picture_decision_pa_reference_queue_head_index;
+    // Find the Reference in the Reference Queue
+    do {
+        ref_entry_ptr =
+            encode_context_ptr->picture_decision_pa_reference_queue[ref_queue_i];
+        if (ref_entry_ptr->picture_number == ref_poc)
+            break;
+
+        // Increment the reference_queue_index Iterator
+        ref_queue_i = (ref_queue_i == REFERENCE_QUEUE_MAX_DEPTH - 1)
+            ? 0
+            : ref_queue_i + 1;
+
+    } while (ref_queue_i != encode_context_ptr->picture_decision_pa_reference_queue_tail_index);
+
+
+    return ref_entry_ptr;
+}
+#endif
 /* Picture Decision Kernel */
 
 /***************************************************************************************************
@@ -5327,6 +5447,9 @@ void* picture_decision_kernel(void *input_ptr)
 
     EncodeContext                 *encode_context_ptr;
     SequenceControlSet            *scs_ptr;
+#if DECOUPLE_ME_RES
+    EbObjectWrapper               *me_wrapper_ptr;
+#endif
 
     EbObjectWrapper               *in_results_wrapper_ptr;
     PictureAnalysisResults        *in_results_ptr;
@@ -5491,6 +5614,10 @@ void* picture_decision_kernel(void *input_ptr)
 
                 pcs_ptr->target_bit_rate = scs_ptr->static_config.target_bit_rate;
 
+#if DECOUPLE_ME_RES
+                pcs_ptr->self_updated_links = 0;
+                pcs_ptr->other_updated_links_cnt = 0;
+#endif
                 release_prev_picture_from_reorder_queue(
                     encode_context_ptr);
 
@@ -5617,10 +5744,14 @@ void* picture_decision_kernel(void *input_ptr)
                             pcs_ptr->pre_assignment_buffer_count = context_ptr->mini_gop_length[mini_gop_index];
 
                             // Update the Pred Structure if cutting short a Random Access period
+#if DECOUPLE_ME_RES
+                            if (is_pic_cutting_short_ra_mg(context_ptr, pcs_ptr, mini_gop_index))
+#else
                             if ((context_ptr->mini_gop_length[mini_gop_index] < pcs_ptr->pred_struct_ptr->pred_struct_period || context_ptr->mini_gop_idr_count[mini_gop_index] > 0) &&
                                 pcs_ptr->pred_struct_ptr->pred_type == EB_PRED_RANDOM_ACCESS &&
                                 pcs_ptr->idr_flag == EB_FALSE &&
                                 pcs_ptr->cra_flag == EB_FALSE)
+#endif
                             {
                                 // Correct the Pred Index before switching structures
                                 if (pre_assignment_buffer_first_pass_flag == EB_TRUE)
@@ -5929,6 +6060,9 @@ void* picture_decision_kernel(void *input_ptr)
                                     while (input_queue_index != encode_context_ptr->picture_decision_pa_reference_queue_tail_index) {
                                         input_entry_ptr = encode_context_ptr->picture_decision_pa_reference_queue[input_queue_index];
 
+#if DECOUPLE_ME_RES
+                                        int32_t diff_n = 0;
+#endif
                                         // Modify Dependent List0
                                         dep_list_count = input_entry_ptr->list0.list_count;
                                         for (dep_idx = 0; dep_idx < dep_list_count; ++dep_idx) {
@@ -5947,6 +6081,9 @@ void* picture_decision_kernel(void *input_ptr)
                                                 // Decrement the Reference's referenceCount
                                                 --input_entry_ptr->dependent_count;
 
+#if DECOUPLE_ME_RES
+                                                diff_n--;
+#endif
                                                 CHECK_REPORT_ERROR(
                                                     (input_entry_ptr->dependent_count != ~0u),
                                                     encode_context_ptr->app_callback_ptr,
@@ -5972,6 +6109,9 @@ void* picture_decision_kernel(void *input_ptr)
                                                 // Decrement the Reference's referenceCount
                                                 --input_entry_ptr->dependent_count;
 
+#if DECOUPLE_ME_RES
+                                                diff_n--;
+#endif
                                                 CHECK_REPORT_ERROR(
                                                     (input_entry_ptr->dependent_count != ~0u),
                                                     encode_context_ptr->app_callback_ptr,
@@ -5979,6 +6119,32 @@ void* picture_decision_kernel(void *input_ptr)
                                             }
                                         }
 
+#if DECOUPLE_ME_RES
+                                        if (diff_n) {
+
+                                            PictureParentControlSet * pcs_of_this_entry =
+                                                is_pic_still_in_pre_assign_buffer(
+                                                    encode_context_ptr,
+                                                    context_ptr,
+                                                    mini_gop_index,
+                                                    input_entry_ptr->picture_number);
+
+                                            if (pcs_of_this_entry != NULL) {
+                                               //The reference picture that needs a cut link is still in PD, it can do self clean-up later in picMgr.
+                                               //the dec order of this entry is usually > current pcs; so  if curr goes first to picMgr,
+                                               //then it will not find this entry in picMgr ref Q to clear it; so the ref has to do a self cleaning
+                                                pcs_of_this_entry->self_updated_links = diff_n;
+
+                                            }
+                                            else {
+                                               //picture has left PD, so pcs_ptr has to do the cleanup later in PicMgr (and should find it in picMgr ref Q)
+                                                //TODO: better to use first pic in MG as triggering picture
+                                               pcs_ptr->updated_links_arr[pcs_ptr->other_updated_links_cnt].pic_num = input_entry_ptr->picture_number;
+                                               pcs_ptr->updated_links_arr[pcs_ptr->other_updated_links_cnt++].dep_cnt_diff = diff_n;
+
+                                            }
+                                        }
+#endif
                                         // Increment the input_queue_index Iterator
                                         input_queue_index = (input_queue_index == PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH - 1) ? 0 : input_queue_index + 1;
                                     }
@@ -5995,7 +6161,9 @@ void* picture_decision_kernel(void *input_ptr)
                                     input_entry_ptr = encode_context_ptr->picture_decision_pa_reference_queue[encode_context_ptr->picture_decision_pa_reference_queue_tail_index];
                                     input_entry_ptr->input_object_ptr = pcs_ptr->pa_reference_picture_wrapper_ptr;
                                     input_entry_ptr->picture_number = pcs_ptr->picture_number;
+#if !DECOUPLE_ME_RES
                                     input_entry_ptr->reference_entry_index = encode_context_ptr->picture_decision_pa_reference_queue_tail_index;
+#endif
                                     input_entry_ptr->is_alt_ref = pcs_ptr->is_alt_ref;
                                     encode_context_ptr->picture_decision_pa_reference_queue_tail_index =
                                         (encode_context_ptr->picture_decision_pa_reference_queue_tail_index == PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH - 1) ? 0 : encode_context_ptr->picture_decision_pa_reference_queue_tail_index + 1;
@@ -6271,6 +6439,21 @@ void* picture_decision_kernel(void *input_ptr)
                                 uint8_t ref_pic_index;
                                 for (ref_pic_index = 0; ref_pic_index < pcs_ptr->ref_list0_count; ++ref_pic_index) {
                                     if (pcs_ptr->ref_list0_count) {
+#if DECOUPLE_ME_RES
+                                        if (pcs_ptr->is_overlay)
+                                        // hardcode the reference for the overlay frame
+                                            ref_poc = pcs_ptr->picture_number;
+                                        else
+                                            ref_poc = POC_CIRCULAR_ADD(
+                                                pcs_ptr->picture_number,
+                                                -input_entry_ptr->list0_ptr->reference_list[ref_pic_index]);
+
+                                        pa_reference_entry_ptr = search_ref_in_ref_queue_pa(encode_context_ptr, ref_poc);
+                                        assert(pa_reference_entry_ptr != 0);
+                                        CHECK_REPORT_ERROR((pa_reference_entry_ptr),
+                                            encode_context_ptr->app_callback_ptr,
+                                            EB_ENC_PM_ERROR10);
+#else
                                         // hardcode the reference for the overlay frame
                                         if(pcs_ptr->is_overlay){
                                             pa_reference_queue_index = (uint32_t)CIRCULAR_ADD(
@@ -6297,6 +6480,7 @@ void* picture_decision_kernel(void *input_ptr)
                                                 -input_entry_ptr->list0_ptr->reference_list[ref_pic_index] /*
                                                 scs_ptr->bits_for_picture_order_count*/);
                                         }
+#endif
                                             // Set the Reference Object
                                         pcs_ptr->ref_pa_pic_ptr_array[REF_LIST_0][ref_pic_index] = pa_reference_entry_ptr->input_object_ptr;
                                         pcs_ptr->ref_pic_poc_array[REF_LIST_0][ref_pic_index] = ref_poc;
@@ -6314,6 +6498,18 @@ void* picture_decision_kernel(void *input_ptr)
                                 uint8_t ref_pic_index;
                                 for (ref_pic_index = 0; ref_pic_index < pcs_ptr->ref_list1_count; ++ref_pic_index) {
                                     if (pcs_ptr->ref_list1_count) {
+#if DECOUPLE_ME_RES
+                                        ref_poc = POC_CIRCULAR_ADD(
+                                            pcs_ptr->picture_number,
+                                            -input_entry_ptr->list1_ptr->reference_list[ref_pic_index]);
+
+                                        pa_reference_entry_ptr = search_ref_in_ref_queue_pa(encode_context_ptr, ref_poc);
+
+                                        assert(pa_reference_entry_ptr != 0);
+                                        CHECK_REPORT_ERROR((pa_reference_entry_ptr),
+                                            encode_context_ptr->app_callback_ptr,
+                                            EB_ENC_PM_ERROR10);
+#else
                                         pa_reference_queue_index = (uint32_t)CIRCULAR_ADD(
                                             ((int32_t)input_entry_ptr->reference_entry_index) - input_entry_ptr->list1_ptr->reference_list[ref_pic_index],
                                             PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH);                                                                                             // Max
@@ -6325,6 +6521,7 @@ void* picture_decision_kernel(void *input_ptr)
                                             pcs_ptr->picture_number,
                                             -input_entry_ptr->list1_ptr->reference_list[ref_pic_index]/*,
                                             scs_ptr->bits_for_picture_order_count*/);
+#endif
                                         // Set the Reference Object
                                         pcs_ptr->ref_pa_pic_ptr_array[REF_LIST_1][ref_pic_index] = pa_reference_entry_ptr->input_object_ptr;
                                         pcs_ptr->ref_pic_poc_array[REF_LIST_1][ref_pic_index] = ref_poc;
@@ -6358,7 +6555,10 @@ void* picture_decision_kernel(void *input_ptr)
                             pcs_ptr->me_segments_row_count = (uint8_t)(scs_ptr->me_segment_row_count_array[pcs_ptr->temporal_layer_index]);
                             pcs_ptr->me_segments_total_count = (uint16_t)(pcs_ptr->me_segments_column_count  * pcs_ptr->me_segments_row_count);
                             pcs_ptr->me_segments_completion_mask = 0;
-
+#if DECOUPLE_ME_RES
+                            uint32_t pic_it = out_stride_diff64 - context_ptr->mini_gop_start_index[mini_gop_index];
+                            context_ptr->mg_pictures_array[pic_it] = pcs_ptr;
+#else
                             // Post the results to the ME processes
                             {
                                 uint32_t segment_index;
@@ -6381,7 +6581,7 @@ void* picture_decision_kernel(void *input_ptr)
                                     eb_post_full_object(out_results_wrapper_ptr);
                                 }
                             }
-
+#endif
                             if (out_stride_diff64 == context_ptr->mini_gop_end_index[mini_gop_index] + has_overlay) {
                                 // Increment the Decode Base Number
                                 encode_context_ptr->decode_base_number += context_ptr->mini_gop_length[mini_gop_index] + has_overlay;
@@ -6396,6 +6596,57 @@ void* picture_decision_kernel(void *input_ptr)
                                 encode_context_ptr->pre_assignment_buffer_eos_flag = EB_FALSE;
                             }
                         }
+#if DECOUPLE_ME_RES
+                        uint32_t mg_size = context_ptr->mini_gop_end_index[mini_gop_index] + has_overlay - context_ptr->mini_gop_start_index[mini_gop_index]+1;
+
+                        //sort based on decoder order
+                        {
+                            uint32_t  num_of_cand_to_sort = mg_size;
+                            uint32_t i, j;
+                            for (i = 0; i < num_of_cand_to_sort - 1; ++i) {
+                                for (j = i + 1; j < num_of_cand_to_sort; ++j) {
+                                    if (context_ptr->mg_pictures_array[j]->decode_order < context_ptr->mg_pictures_array[i]->decode_order) {
+                                        PictureParentControlSet* temp = context_ptr->mg_pictures_array[i];
+                                        context_ptr->mg_pictures_array[i] = context_ptr->mg_pictures_array[j];
+                                        context_ptr->mg_pictures_array[j] = temp;
+                                    }
+                                }
+                            }
+                        }
+
+
+                        for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i){
+
+                            pcs_ptr = context_ptr->mg_pictures_array[pic_i];
+
+                            //get a new ME data buffer
+                            eb_get_empty_object(context_ptr->me_fifo_ptr,
+                                &me_wrapper_ptr);
+                            pcs_ptr->me_data_wrapper_ptr = me_wrapper_ptr;
+
+                            pcs_ptr->pa_me_data = (MotionEstimationData *)me_wrapper_ptr->object_ptr;
+
+                            for (uint32_t segment_index = 0; segment_index < pcs_ptr->me_segments_total_count; ++segment_index) {
+                                // Get Empty Results Object
+                                eb_get_empty_object(
+                                    context_ptr->picture_decision_results_output_fifo_ptr,
+                                    &out_results_wrapper_ptr);
+
+                                out_results_ptr = (PictureDecisionResults*)out_results_wrapper_ptr->object_ptr;
+                                //if (pcs_ptr->is_overlay)
+                                    out_results_ptr->pcs_wrapper_ptr = pcs_ptr->p_pcs_wrapper_ptr;
+                                //else
+                               //     out_results_ptr->pcs_wrapper_ptr = encode_context_ptr->pre_assignment_buffer[out_stride_diff64];
+
+                                out_results_ptr->segment_index = segment_index;
+                                out_results_ptr->task_type = 0;
+                                // Post the Full Results Object
+                                eb_post_full_object(out_results_wrapper_ptr);
+                            }
+
+
+                        }
+#endif
                     } // End MINI GOPs loop
                 }
 

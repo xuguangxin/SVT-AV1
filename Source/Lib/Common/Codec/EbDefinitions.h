@@ -448,8 +448,15 @@ extern "C" {
 #endif
 #define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
 
+#define DECOUPLE_ME_RES                 1     // decouple ME results from parent pcs; remove reorder queue in PicMgr ; input and ref queue in Pic Decision/iRC  have pic in decode order
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
+
+#if DECOUPLE_ME_RES
+#define UPDATED_LINKS 100 //max number of pictures a dep-Cnt-cleanUp triggering picture can process
+#endif
+
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3

@@ -24,7 +24,9 @@ typedef struct InputQueueEntry {
     EbDctor          dctor;
     EbObjectWrapper *input_object_ptr;
     uint32_t         dependent_count;
+#if !DECOUPLE_ME_RES
     uint32_t         reference_entry_index;
+#endif
     ReferenceList *  list0_ptr;
     ReferenceList *  list1_ptr;
     uint32_t         use_count;
