@@ -423,18 +423,17 @@ extern "C" {
 
 #define MOVE_NSQ_MON_UNIPRED_ME_TO_MD 1 // Move non-sq/non-unipred ME to MD
 #if MOVE_NSQ_MON_UNIPRED_ME_TO_MD
-#define SHUT_ME_CAND_SORTING 1
-#define PRUNING_PER_INTER_TYPE 1
-#define PD0_INTER_CAND 1
-
-#define SHUT_ME_NSQ_SEARCH 1
-#define FIX_SHUT_ME_NSQ_SEARCH 1
-#define ADD_MD_NSQ_SEARCH 1
-#define NSQ_REMOVAL_CODE_CLEAN_UP 1 // should be lossless
-#define NSQ_ME_CONTEXT_CLEAN_UP 1
-#define REMOVE_ME_BIPRED_SEARCH 1
-#define REMOVE_MRP_MODE 1
-#define USE_SUB_BLOCK_MVC 1
+#define SHUT_ME_CAND_SORTING       1 // Bypass ME bipred search and shut ME cands sorting
+#define PRUNING_PER_INTER_TYPE     1 // Added the ability to signal best_refs per INTER type
+#define PD0_INTER_CAND             1 // Enable all PA_ME cands @ PD0
+#define SHUT_ME_NSQ_SEARCH         1 // Disable NSQ search @ ME, and use sub-block MV(s)/distortion(s) to derive MVs for NSQ blocks  
+#define FIX_SHUT_ME_NSQ_SEARCH     1 // Use the parent SQ MV as NSQ MV
+#define ADD_MD_NSQ_SEARCH          1 // Perform NSQ motion search @ MD
+#define NSQ_REMOVAL_CODE_CLEAN_UP  1 // Remove NSQ circuitry from ME
+#define NSQ_ME_CONTEXT_CLEAN_UP    1 // Remove NSQ variable(s) from ME context
+#define REMOVE_ME_BIPRED_SEARCH    1 // Remove ME bipred search circuitry
+#define REMOVE_MRP_MODE            1 // Remove mrp_mode
+#define USE_SUB_BLOCK_MVC          1 // Use up to 4 additional MVC (sub-block MV(s)) @ MD NSQ motion search
 #endif
 
 #define OUTPUT_MEM_OPT              1 // Memory reduction for output bitstream
@@ -449,6 +448,15 @@ extern "C" {
 #define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
 
 #define DECOUPLE_ME_RES                 1     // decouple ME results from parent pcs; remove reorder queue in PicMgr ; input and ref queue in Pic Decision/iRC  have pic in decode order
+
+#define MOVE_SUB_PEL_ME_TO_MD         1 // Move subpel ME to MD/TF
+#if MOVE_SUB_PEL_ME_TO_MD
+#define REMOVE_ME_SUBPEL_CODE      1 // Shut subpel ME
+#define PERFORM_SUB_PEL_TF         1 // Perform subpel @ TF
+#define PERFORM_SUB_PEL_MD         1 // Perform subpel @ MD
+#define FIX_IFS_OFF_CASE           1 // Bug fix: interpolation filter is hard-coded to regular when IFS is OFF (prevented testing bilinear @ PD0) 
+#define SEARCH_TOP_N               1 // Perform 1/2 Pel search @ MD for the top N Full-Pel position(s). Used N=5 for M0 and N=3 for M1
+#endif
 
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
@@ -477,11 +485,11 @@ extern "C" {
     ((AOM_BORDER_IN_PIXELS >> subsampling) - AOM_INTERP_EXTEND)
 #define AOM_LEFT_TOP_MARGIN_SCALED(subsampling) \
     (AOM_LEFT_TOP_MARGIN_PX(subsampling) << SCALE_SUBPEL_BITS)
-
+#if !REMOVE_ME_SUBPEL_CODE
 #define H_PEL_SEARCH_WIND_3 3  // 1/2-pel serach window 3
 #define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2
 #define HP_REF_OPT 1 // Remove redundant positions.
-
+#endif
 #define ENABLE_PME_SAD 0
 #define SWITCH_XY_LOOPS_PME_SAD_SSD 0
 #if SWITCH_XY_LOOPS_PME_SAD_SSD
@@ -489,12 +497,13 @@ extern "C" {
 #endif
 
 #define BOUNDARY_CHECK 1
-
+#if !REMOVE_ME_SUBPEL_CODE
 typedef enum MeHpMode {
     EX_HP_MODE        = 0, // Exhaustive  1/2-pel serach mode.
     REFINEMENT_HP_MODE = 1 // Refinement 1/2-pel serach mode.
     , SWITCHABLE_HP_MODE = 2 // Switch between EX_HP_MODE and REFINEMENT_HP_MODE mode.
 } MeHpMode;
+#endif
 typedef enum GM_LEVEL {
     GM_FULL      = 0, // Exhaustive search mode.
     GM_DOWN      = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension

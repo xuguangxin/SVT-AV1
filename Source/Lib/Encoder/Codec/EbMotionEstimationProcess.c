@@ -565,12 +565,13 @@ void* set_me_hme_params_oq(
             min_me_search_height[sc_content_detected][input_resolution][hmeMeLevel] ;
     }
 #endif
-
+#if !REMOVE_ME_SUBPEL_CODE
     assert(me_context_ptr->search_area_width  <= MAX_SEARCH_AREA_WIDTH  && "increase MAX_SEARCH_AREA_WIDTH" );
     assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
 #if ME_MEM_OPT2
     assert(me_context_ptr->max_me_search_width <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
     assert(me_context_ptr->max_me_search_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
+#endif
 #endif
     me_context_ptr->update_hme_search_center_flag = 1;
 
@@ -685,7 +686,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->max_me_search_height =
         max_me_search_height[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
 #endif
-
+#if !REMOVE_ME_SUBPEL_CODE
     if (pcs_ptr->sc_content_detected)
 #if MAR11_ADOPTIONS
         // fractional_search_method is not used if subpel is OFF
@@ -703,12 +704,13 @@ EbErrorType signal_derivation_me_kernel_oq(
         else
             context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
 #endif
+#endif
     // Set HME flags
     context_ptr->me_context_ptr->enable_hme_flag = pcs_ptr->enable_hme_flag;
     context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->enable_hme_level0_flag;
     context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->enable_hme_level1_flag;
     context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->enable_hme_level2_flag;
-
+#if !REMOVE_ME_SUBPEL_CODE
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (pcs_ptr->sc_content_detected)
@@ -766,7 +768,7 @@ EbErrorType signal_derivation_me_kernel_oq(
     }
     else
         context_ptr->me_context_ptr->fractional_search_model = 2;
-
+#endif
     // HME Search Method
     if (pcs_ptr->sc_content_detected)
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
@@ -1109,12 +1111,13 @@ void* tf_set_me_hme_params_oq(
     me_context_ptr->search_area_height =
         min_metf_search_height[sc_content_detected][input_resolution][hmeMeLevel];
 #endif
-
+#if !REMOVE_ME_SUBPEL_CODE
     assert(me_context_ptr->search_area_width <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
     assert(me_context_ptr->search_area_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
 #if ME_MEM_OPT2
     assert(me_context_ptr->max_me_search_width <= MAX_SEARCH_AREA_WIDTH && "increase MAX_SEARCH_AREA_WIDTH");
     assert(me_context_ptr->max_me_search_height <= MAX_SEARCH_AREA_HEIGHT && "increase MAX_SEARCH_AREA_HEIGHT");
+#endif
 #endif
     me_context_ptr->update_hme_search_center_flag = 1;
 
@@ -1224,7 +1227,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     context_ptr->me_context_ptr->max_me_search_height =
         max_metf_search_height[pcs_ptr->sc_content_detected][scs_ptr->input_resolution][hmeMeLevel];
 #endif
-
+#if !REMOVE_ME_SUBPEL_CODE
     if (pcs_ptr->sc_content_detected)
 #if MAR11_ADOPTIONS
         // fractional_search_method is irrelevant if subpel is OFF
@@ -1245,12 +1248,13 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         else
             context_ptr->me_context_ptr->fractional_search_method = FULL_SAD_SEARCH;
 #endif
-
+#endif
     // Set HME flags
     context_ptr->me_context_ptr->enable_hme_flag = pcs_ptr->tf_enable_hme_flag;
     context_ptr->me_context_ptr->enable_hme_level0_flag = pcs_ptr->tf_enable_hme_level0_flag;
     context_ptr->me_context_ptr->enable_hme_level1_flag = pcs_ptr->tf_enable_hme_level1_flag;
     context_ptr->me_context_ptr->enable_hme_level2_flag = pcs_ptr->tf_enable_hme_level2_flag;
+#if !REMOVE_ME_SUBPEL_CODE
     if (scs_ptr->static_config.enable_subpel == DEFAULT)
         // Set the default settings of subpel
         if (pcs_ptr->sc_content_detected)
@@ -1317,7 +1321,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     }
     else
         context_ptr->me_context_ptr->fractional_search_model = 2;
-
+#endif
     // HME Search Method
     if (pcs_ptr->sc_content_detected)
 #if MAR17_ADOPTIONS
@@ -1422,23 +1426,27 @@ static void motion_estimation_context_dctor(EbPtr p) {
 EbErrorType motion_estimation_context_ctor(EbThreadContext *  thread_context_ptr,
                                            const EbEncHandle *enc_handle_ptr, int index) {
     MotionEstimationContext_t *context_ptr;
+#if !REMOVE_ME_SUBPEL_CODE
     const SequenceControlSet * scs_ptr;
-
+#endif
     EB_CALLOC_ARRAY(context_ptr, 1);
     thread_context_ptr->priv  = context_ptr;
     thread_context_ptr->dctor = motion_estimation_context_dctor;
-
+#if !REMOVE_ME_SUBPEL_CODE
     scs_ptr = enc_handle_ptr->scs_instance_array[0]->scs_ptr;
-
+#endif
     context_ptr->picture_decision_results_input_fifo_ptr = eb_system_resource_get_consumer_fifo(
         enc_handle_ptr->picture_decision_results_resource_ptr, index);
     context_ptr->motion_estimation_results_output_fifo_ptr = eb_system_resource_get_producer_fifo(
         enc_handle_ptr->motion_estimation_results_resource_ptr, index);
-#if REMOVE_MRP_MODE
+#if REMOVE_ME_SUBPEL_CODE
     EB_NEW(context_ptr->me_context_ptr,
-           me_context_ctor,
-           scs_ptr->max_input_luma_width,
-           scs_ptr->max_input_luma_height);
+        me_context_ctor);
+#elif REMOVE_MRP_MODE
+    EB_NEW(context_ptr->me_context_ptr,
+        me_context_ctor,
+        scs_ptr->max_input_luma_width,
+        scs_ptr->max_input_luma_height);
 #elif NSQ_REMOVAL_CODE_CLEAN_UP
     EB_NEW(context_ptr->me_context_ptr,
         me_context_ctor,

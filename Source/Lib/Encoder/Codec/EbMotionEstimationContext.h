@@ -13,7 +13,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#if !REMOVE_ME_SUBPEL_CODE
 // Max Search Area
 #if ME_MEM_OPT2
 #define MAX_SEARCH_AREA_WIDTH 800
@@ -24,6 +24,7 @@ extern "C" {
 #endif
 #define MAX_SEARCH_AREA_WIDTH_CH MAX_SEARCH_AREA_WIDTH + PAD_VALUE
 #define MAX_SEARCH_AREA_HEIGHT_CH MAX_SEARCH_AREA_HEIGHT + PAD_VALUE
+#endif
 // 1-D interpolation shift value
 #define if_shift 6
 #define NUMBER_OF_SB_QUAD 4
@@ -322,7 +323,9 @@ typedef struct HmeResults {
 typedef struct MeContext {
     EbDctor dctor;
     // Search region stride
+#if !REMOVE_ME_SUBPEL_CODE
     uint32_t                  interpolated_stride;
+#endif
     uint32_t                  interpolated_full_stride[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
     MotionEstimationTierZero *me_candidate;
     // Intermediate SB-sized buffer to retain the input samples
@@ -337,9 +340,11 @@ typedef struct MeContext {
     uint32_t  sixteenth_sb_buffer_stride;
     uint8_t * integer_buffer_ptr[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
 #if REMOVE_ME_BIPRED_SEARCH
+#if !REMOVE_ME_SUBPEL_CODE
     uint8_t *pos_b_buffer;
     uint8_t *pos_h_buffer;
     uint8_t *pos_j_buffer;
+#endif
 #else
     uint8_t * pos_b_buffer[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
     uint8_t * pos_h_buffer[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
@@ -347,6 +352,7 @@ typedef struct MeContext {
     uint8_t * one_d_intermediate_results_buf0;
     uint8_t * one_d_intermediate_results_buf1;
 #endif
+#if !REMOVE_ME_SUBPEL_CODE
     int16_t   x_search_area_origin[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
     int16_t   y_search_area_origin[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
     // ME Parameters
@@ -358,7 +364,9 @@ typedef struct MeContext {
     *
     * Default depends on input resolution. */
     uint32_t sa_height[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX];
+
     uint8_t * avctemp_buffer;
+#endif
     uint32_t *p_best_sad_8x8;
     uint32_t *p_best_sad_16x16;
     uint32_t *p_best_sad_32x32;
@@ -392,11 +400,12 @@ typedef struct MeContext {
     EB_ALIGN(16) uint32_t p_sad32x32[4];
     EB_ALIGN(64) uint32_t p_sad16x16[16];
     EB_ALIGN(64) uint32_t p_sad8x8[64];
-
+#if !REMOVE_ME_SUBPEL_CODE
     uint8_t psub_pel_direction64x64;
     uint8_t psub_pel_direction32x32[4];
     uint8_t psub_pel_direction16x16[16];
     uint8_t psub_pel_direction8x8[64];
+#endif
 #if !NSQ_ME_CONTEXT_CLEAN_UP
     uint8_t psub_pel_direction64x32[2];
     uint8_t psub_pel_direction32x16[8];
@@ -412,8 +421,10 @@ typedef struct MeContext {
 #if NSQ_ME_CONTEXT_CLEAN_UP
     uint32_t  p_sb_best_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][SQUARE_PU_COUNT];
     uint32_t  p_sb_best_mv[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][SQUARE_PU_COUNT];
+#if !REMOVE_ME_SUBPEL_CODE
     uint32_t  p_sb_bipred_sad[SQUARE_PU_COUNT]; //needs to be upgraded to 209 pus
     uint32_t  p_sb_best_full_pel_mv[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][SQUARE_PU_COUNT];
+#endif
 #else
     uint32_t  p_sb_best_sad[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][MAX_ME_PU_COUNT];
     uint32_t  p_sb_best_mv[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][MAX_ME_PU_COUNT];
@@ -457,10 +468,8 @@ typedef struct MeContext {
     uint32_t *p_best_ssd8x32;
     uint32_t *p_best_ssd64x16;
     uint32_t *p_best_ssd16x64;
-#endif
     uint8_t * p_best_nsq8x8;
     uint8_t * p_best_nsq16x16;
-#if !NSQ_ME_CONTEXT_CLEAN_UP
     uint8_t * p_best_nsq32x32;
     uint8_t * p_best_nsq64x64;
 #endif
@@ -471,10 +480,11 @@ typedef struct MeContext {
     EbBitFraction *mvd_bits_array;
     uint64_t       lambda;
     uint8_t        hme_search_type;
-
+#if !REMOVE_ME_SUBPEL_CODE
     uint8_t fractional_search_method;
 
     uint8_t fractional_search_model;
+#endif
     uint8_t hme_search_method;
     uint8_t me_search_method;
 
@@ -482,10 +492,10 @@ typedef struct MeContext {
     EbBool enable_hme_level0_flag;
     EbBool enable_hme_level1_flag;
     EbBool enable_hme_level2_flag;
-
+#if !REMOVE_ME_SUBPEL_CODE
     EbBool use_subpel_flag;
     EbBool half_pel_mode;
-
+#endif
     EbBool compute_global_motion;
 #if ME_HME_PRUNING_CLEANUP
     MeHmeRefPruneCtrls me_hme_prune_ctrls;
@@ -537,7 +547,9 @@ typedef struct MeContext {
 #else
     uint32_t reduce_me_sr_flag[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
 #endif
+#if !REMOVE_ME_SUBPEL_CODE
     EbBool local_hp_mode[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
 #if MULTI_STAGE_HME
     int16_t x_hme_level0_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT][EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
     int16_t y_hme_level0_search_center[MAX_NUM_OF_REF_PIC_LIST][MAX_REF_IDX][EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT][EB_HME_SEARCH_AREA_ROW_MAX_COUNT];
@@ -560,7 +572,9 @@ typedef struct MeContext {
     // tf
     int tf_frame_index;
     int tf_index_center;
+#if !REMOVE_ME_SUBPEL_CODE
     uint8_t h_pel_search_wind;
+#endif
     signed short tf_16x16_mv_x[16];
     signed short tf_16x16_mv_y[16];
     uint64_t tf_16x16_block_error[16];
@@ -580,9 +594,11 @@ typedef struct MeContext {
 
 typedef uint64_t (*EB_ME_DISTORTION_FUNC)(uint8_t *src, uint32_t src_stride, uint8_t *ref,
                                           uint32_t ref_stride, uint32_t width, uint32_t height);
-#if REMOVE_MRP_MODE
+#if REMOVE_ME_SUBPEL_CODE
+extern EbErrorType me_context_ctor(MeContext *object_ptr);
+#elif REMOVE_MRP_MODE
 extern EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width,
-                                   uint16_t max_input_luma_height);
+    uint16_t max_input_luma_height);
 #elif NSQ_REMOVAL_CODE_CLEAN_UP
 extern EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width,
                                    uint16_t max_input_luma_height, uint8_t mrp_mode);

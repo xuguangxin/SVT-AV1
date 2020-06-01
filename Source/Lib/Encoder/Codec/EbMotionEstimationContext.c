@@ -26,9 +26,11 @@ static void me_context_dctor(EbPtr p) {
 
     EB_FREE_ARRAY(obj->mvd_bits_array);
 #if REMOVE_ME_BIPRED_SEARCH
+#if !REMOVE_ME_SUBPEL_CODE
     EB_FREE_ARRAY(obj->pos_b_buffer);
     EB_FREE_ARRAY(obj->pos_h_buffer);
     EB_FREE_ARRAY(obj->pos_j_buffer);
+#endif
 #else
     for (list_index = 0; list_index < MAX_NUM_OF_REF_PIC_LIST; list_index++) {
         for (ref_pic_index = 0; ref_pic_index < MAX_REF_IDX; ref_pic_index++) {
@@ -42,12 +44,16 @@ static void me_context_dctor(EbPtr p) {
     EB_FREE_ARRAY(obj->one_d_intermediate_results_buf1);
 #endif
     EB_FREE_ARRAY(obj->me_candidate);
+#if !REMOVE_ME_SUBPEL_CODE
     EB_FREE_ARRAY(obj->avctemp_buffer);
+#endif
     EB_FREE_ARRAY(obj->p_eight_pos_sad16x16);
     EB_FREE_ALIGNED_ARRAY(obj->sixteenth_sb_buffer);
     EB_FREE_ALIGNED_ARRAY(obj->sb_buffer);
 }
-#if REMOVE_MRP_MODE
+#if REMOVE_ME_SUBPEL_CODE
+EbErrorType me_context_ctor(MeContext *object_ptr) {
+#elif REMOVE_MRP_MODE
 EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width,
     uint16_t max_input_luma_height) {
 #elif NSQ_REMOVAL_CODE_CLEAN_UP
@@ -77,8 +83,10 @@ EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width
     object_ptr->sixteenth_sb_buffer_stride = (BLOCK_SIZE_64 >> 2);
     EB_MALLOC_ALIGNED_ARRAY(object_ptr->sixteenth_sb_buffer,
                             (BLOCK_SIZE_64 >> 2) * object_ptr->sixteenth_sb_buffer_stride);
+#if !REMOVE_ME_SUBPEL_CODE
     object_ptr->interpolated_stride =
         MIN((uint16_t)MAX_SEARCH_AREA_WIDTH, (uint16_t)(max_input_luma_width + (PAD_VALUE << 1)));
+
 #if ME_MEM_OPT2
     uint16_t max_search_area_height = MIN((uint16_t)MAX_SEARCH_AREA_HEIGHT,
         (uint16_t)(max_input_luma_height + (PAD_VALUE << 1)));
@@ -86,8 +94,10 @@ EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width
     uint16_t max_search_area_height = MIN((uint16_t)MAX_PICTURE_HEIGHT_SIZE,
                                           (uint16_t)(max_input_luma_height + (PAD_VALUE << 1)));
 #endif
+#endif
     EB_MEMSET(
         object_ptr->sb_buffer, 0, sizeof(uint8_t) * BLOCK_SIZE_64 * object_ptr->sb_buffer_stride);
+#if !REMOVE_ME_SUBPEL_CODE
     EB_MALLOC_ARRAY(object_ptr->mvd_bits_array, NUMBER_OF_MVD_CASES);
     // 15 intermediate buffers to retain the interpolated reference samples
 
@@ -129,10 +139,13 @@ EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width
     // O   O   O
     //   I   I
     // O   O   O
+#endif
 #if REMOVE_ME_BIPRED_SEARCH
+#if !REMOVE_ME_SUBPEL_CODE
     EB_MALLOC_ARRAY(object_ptr->pos_b_buffer, object_ptr->interpolated_stride * max_search_area_height);
     EB_MALLOC_ARRAY(object_ptr->pos_h_buffer, object_ptr->interpolated_stride * max_search_area_height);
     EB_MALLOC_ARRAY(object_ptr->pos_j_buffer, object_ptr->interpolated_stride * max_search_area_height);
+#endif
 #else
     for (list_index = 0; list_index < MAX_NUM_OF_REF_PIC_LIST; list_index++) {
         for (ref_pic_index = 0; ref_pic_index < MAX_REF_IDX; ref_pic_index++) {
@@ -173,9 +186,11 @@ EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width
                 &(object_ptr->me_candidate[me_candidate_index]).pu[pu_index]);
         }
     }
-
+    
+#if !REMOVE_ME_SUBPEL_CODE
     EB_MALLOC_ARRAY(object_ptr->avctemp_buffer,
                     object_ptr->interpolated_stride * max_search_area_height);
+#endif
     EB_MALLOC_ARRAY(object_ptr->p_eight_pos_sad16x16,
                     8 * 16); //16= 16 16x16 blocks in a SB.       8=8search points
 

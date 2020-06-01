@@ -374,11 +374,11 @@ void setup_common_rtcd_internal(CPU_FLAGS flags) {
     SET_SSE2(picture_average_kernel1_line,
              picture_average_kernel1_line_c,
              picture_average_kernel1_line_sse2_intrin);
-
+#if !REMOVE_ME_SUBPEL_CODE
     SET_SSSE3(avc_style_luma_interpolation_filter,
               avc_style_luma_interpolation_filter_helper_c,
               avc_style_luma_interpolation_filter_helper_ssse3);
-
+#endif
     SET_AVX2_AVX512(eb_av1_wiener_convolve_add_src,
                     eb_av1_wiener_convolve_add_src_c,
                     eb_av1_wiener_convolve_add_src_avx2,

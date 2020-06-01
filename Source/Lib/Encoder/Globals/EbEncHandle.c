@@ -2936,11 +2936,12 @@ static EbErrorType verify_settings(
       SVT_LOG("Error instance %u: Invalid spatial_sse_fl flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->spatial_sse_fl);
       return_error = EB_ErrorBadParameter;
     }
-
+#if !REMOVE_ME_SUBPEL_CODE
     if (config->enable_subpel != 0 && config->enable_subpel != 1 && config->enable_subpel != -1) {
       SVT_LOG("Error instance %u: Invalid enable_subpel flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->enable_subpel);
       return_error = EB_ErrorBadParameter;
     }
+#endif
 
     if (config->over_bndry_blk != 0 && config->over_bndry_blk != 1 && config->over_bndry_blk != -1) {
       SVT_LOG("Error instance %u: Invalid over_bndry_blk flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->over_bndry_blk);

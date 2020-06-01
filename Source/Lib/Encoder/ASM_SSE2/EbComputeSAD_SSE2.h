@@ -7,6 +7,10 @@
 #define EbComputeSAD_SSE2_h
 
 #include "EbDefinitions.h"
+
+#if REMOVE_ME_SUBPEL_CODE
+// To remove this file
+#else
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,3 +24,4 @@ extern uint32_t combined_averaging_4xm_sad_sse2_intrin(uint8_t *src, uint32_t sr
 }
 #endif
 #endif // EbComputeSAD_SSE2_h
+#endif

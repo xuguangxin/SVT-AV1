@@ -9,7 +9,7 @@
 #include "EbMemory_AVX2.h"
 #include "EbMemory_SSE4_1.h"
 #include "EbComputeSAD_SSE2.h"
-
+#if !REMOVE_ME_SUBPEL_CODE
 uint32_t combined_averaging_8xm_sad_avx2_intrin(uint8_t *src, uint32_t src_stride, uint8_t *ref1,
                                                 uint32_t ref1_stride, uint8_t *ref2,
                                                 uint32_t ref2_stride, uint32_t height,
@@ -250,6 +250,7 @@ uint64_t compute_mean8x8_avx2_intrin(
 }
 
 /********************************************************************************************************************************/
+#endif
 void compute_interm_var_four8x8_avx2_intrin(uint8_t *input_samples, uint16_t input_stride,
                                             uint64_t *mean_of8x8_blocks, // mean of four  8x8
                                             uint64_t *mean_of_squared8x8_blocks) // meanSquared
@@ -357,7 +358,7 @@ void compute_interm_var_four8x8_avx2_intrin(uint8_t *input_samples, uint16_t inp
 
     _mm256_storeu_si256((__m256i *)(mean_of_squared8x8_blocks), ymm_result);
 }
-
+#if !REMOVE_ME_SUBPEL_CODE
 uint32_t combined_averaging_ssd_avx2(uint8_t *src, ptrdiff_t src_stride, uint8_t *ref1,
                                      ptrdiff_t ref1_stride, uint8_t *ref2, ptrdiff_t ref2_stride,
                                      uint32_t height, uint32_t width) {
@@ -498,3 +499,4 @@ uint32_t nxm_sad_avg_kernel_helper_avx2(uint8_t *src, uint32_t src_stride, uint8
 
     return nxm_sad_avg;
 }
+#endif

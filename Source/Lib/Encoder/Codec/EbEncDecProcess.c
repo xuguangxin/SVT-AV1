@@ -1445,120 +1445,120 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
     switch (inter_inter_distortion_based_reference_pruning_mode) {
     case 0: ref_pruning_ctrls->inter_to_inter_pruning_enabled = 0; break;
     case 1:
-        ref_pruning_ctrls->inter_to_inter_pruning_enabled      = 1;
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
-        ref_pruning_ctrls->max_ref_to_tag[PA_ME_GROUP]         = 7;
-        ref_pruning_ctrls->max_ref_to_tag[UNI_3x3_GROUP]       = 2;
-        ref_pruning_ctrls->max_ref_to_tag[BI_3x3_GROUP]        = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEW_NEAR_GROUP] = 7;
-        ref_pruning_ctrls->max_ref_to_tag[WARP_GROUP]          = 7;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEAR_GROUP]     = 7;
-        ref_pruning_ctrls->max_ref_to_tag[PRED_ME_GROUP]       = 7;
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 7;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 7;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 7;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 7;
 
-        ref_pruning_ctrls->test_d1_cand[PA_ME_GROUP]         = 0;
-        ref_pruning_ctrls->test_d1_cand[UNI_3x3_GROUP]       = 0;
-        ref_pruning_ctrls->test_d1_cand[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEW_NEAR_GROUP] = 0;
-        ref_pruning_ctrls->test_d1_cand[WARP_GROUP]          = 0;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->test_d1_cand[PRED_ME_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
 
         break;
     case 2:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
-        ref_pruning_ctrls->max_ref_to_tag[PA_ME_GROUP]         = 6;
-        ref_pruning_ctrls->max_ref_to_tag[UNI_3x3_GROUP]       = 2;
-        ref_pruning_ctrls->max_ref_to_tag[BI_3x3_GROUP]        = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEW_NEAR_GROUP] = 6;
-        ref_pruning_ctrls->max_ref_to_tag[WARP_GROUP]          = 6;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEAR_GROUP]     = 6;
-        ref_pruning_ctrls->max_ref_to_tag[PRED_ME_GROUP]       = 6;
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 6;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 6;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 6;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 6;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 6;
 
-        ref_pruning_ctrls->test_d1_cand[PA_ME_GROUP]         = 0;
-        ref_pruning_ctrls->test_d1_cand[UNI_3x3_GROUP]       = 0;
-        ref_pruning_ctrls->test_d1_cand[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEW_NEAR_GROUP] = 0;
-        ref_pruning_ctrls->test_d1_cand[WARP_GROUP]          = 0;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->test_d1_cand[PRED_ME_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
         break;
     case 3:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
-        ref_pruning_ctrls->max_ref_to_tag[PA_ME_GROUP]         = 5;
-        ref_pruning_ctrls->max_ref_to_tag[UNI_3x3_GROUP]       = 2;
-        ref_pruning_ctrls->max_ref_to_tag[BI_3x3_GROUP]        = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEW_NEAR_GROUP] = 5;
-        ref_pruning_ctrls->max_ref_to_tag[WARP_GROUP]          = 5;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEAR_GROUP]     = 5;
-        ref_pruning_ctrls->max_ref_to_tag[PRED_ME_GROUP]       = 5;
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 5;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 5;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 5;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 5;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 5;
 
-        ref_pruning_ctrls->test_d1_cand[PA_ME_GROUP]         = 0;
-        ref_pruning_ctrls->test_d1_cand[UNI_3x3_GROUP]       = 0;
-        ref_pruning_ctrls->test_d1_cand[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEW_NEAR_GROUP] = 0;
-        ref_pruning_ctrls->test_d1_cand[WARP_GROUP]          = 0;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->test_d1_cand[PRED_ME_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
         break;
     case 4:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
-        ref_pruning_ctrls->max_ref_to_tag[PA_ME_GROUP]         = 4;
-        ref_pruning_ctrls->max_ref_to_tag[UNI_3x3_GROUP]       = 2;
-        ref_pruning_ctrls->max_ref_to_tag[BI_3x3_GROUP]        = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEW_NEAR_GROUP] = 4;
-        ref_pruning_ctrls->max_ref_to_tag[WARP_GROUP]          = 4;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEAR_GROUP]     = 4;
-        ref_pruning_ctrls->max_ref_to_tag[PRED_ME_GROUP]       = 4;
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 4;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 4;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 4;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 4;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 4;
 
-        ref_pruning_ctrls->test_d1_cand[PA_ME_GROUP]         = 0;
-        ref_pruning_ctrls->test_d1_cand[UNI_3x3_GROUP]       = 0;
-        ref_pruning_ctrls->test_d1_cand[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEW_NEAR_GROUP] = 0;
-        ref_pruning_ctrls->test_d1_cand[WARP_GROUP]          = 0;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->test_d1_cand[PRED_ME_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
         break;
     case 5:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
-        ref_pruning_ctrls->max_ref_to_tag[PA_ME_GROUP]         = 3;
-        ref_pruning_ctrls->max_ref_to_tag[UNI_3x3_GROUP]       = 2;
-        ref_pruning_ctrls->max_ref_to_tag[BI_3x3_GROUP]        = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEW_NEAR_GROUP] = 3;
-        ref_pruning_ctrls->max_ref_to_tag[WARP_GROUP]          = 3;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEAR_GROUP]     = 3;
-        ref_pruning_ctrls->max_ref_to_tag[PRED_ME_GROUP]       = 3;
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 3;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 3;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 3;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 3;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 3;
 
-        ref_pruning_ctrls->test_d1_cand[PA_ME_GROUP]         = 0;
-        ref_pruning_ctrls->test_d1_cand[UNI_3x3_GROUP]       = 0;
-        ref_pruning_ctrls->test_d1_cand[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEW_NEAR_GROUP] = 0;
-        ref_pruning_ctrls->test_d1_cand[WARP_GROUP]          = 0;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->test_d1_cand[PRED_ME_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
 
         break;
     case 6:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
 
-        ref_pruning_ctrls->max_ref_to_tag[PA_ME_GROUP]         = 2;
-        ref_pruning_ctrls->max_ref_to_tag[UNI_3x3_GROUP]       = 2;
-        ref_pruning_ctrls->max_ref_to_tag[BI_3x3_GROUP]        = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEW_NEAR_GROUP] = 2;
-        ref_pruning_ctrls->max_ref_to_tag[WARP_GROUP]          = 2;
-        ref_pruning_ctrls->max_ref_to_tag[NRST_NEAR_GROUP]     = 2;
-        ref_pruning_ctrls->max_ref_to_tag[PRED_ME_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 2;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 2;
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 2;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 2;
 
-        ref_pruning_ctrls->test_d1_cand[PA_ME_GROUP]         = 0;
-        ref_pruning_ctrls->test_d1_cand[UNI_3x3_GROUP]       = 0;
-        ref_pruning_ctrls->test_d1_cand[BI_3x3_GROUP]        = 1;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEW_NEAR_GROUP] = 0;
-        ref_pruning_ctrls->test_d1_cand[WARP_GROUP]          = 0;
-        ref_pruning_ctrls->test_d1_cand[NRST_NEAR_GROUP]     = 1;
-        ref_pruning_ctrls->test_d1_cand[PRED_ME_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
 
         break;
     default: assert(0); break;
@@ -1573,29 +1573,32 @@ void set_inter_inter_distortion_based_reference_pruning_controls(ModeDecisionCon
     {
     case 0:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 0;
-        ref_pruning_ctrls->max_ref_to_tag = 7;
+        ref_pruning_ctrls->best_refs = 7;
         break;
     case 1:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
-        ref_pruning_ctrls->max_ref_to_tag = 6;
+        ref_pruning_ctrls->best_refs = 6;
         break;
     case 2:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
-        ref_pruning_ctrls->max_ref_to_tag = 5;
+        ref_pruning_ctrls->best_refs = 5;
         break;
     case 3:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
-        ref_pruning_ctrls->max_ref_to_tag = 4;
+        ref_pruning_ctrls->best_refs = 4;
+
 
         break;
     case 4:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
-        ref_pruning_ctrls->max_ref_to_tag = 3;
+        ref_pruning_ctrls->best_refs = 3;
+
 
         break;
     case 5:
         ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
-        ref_pruning_ctrls->max_ref_to_tag = 2;
+        ref_pruning_ctrls->best_refs = 2;
+
 
         break;
     default:
@@ -1681,63 +1684,175 @@ void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8
 }
 #endif
 #if ADD_MD_NSQ_SEARCH
-void md_nsq_mv_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_mv_search_level) {
+void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_mv_search_level) {
 
-    MdNsqMvSearchCtrls *md_nsq_mv_search_ctrls = &mdctxt->md_nsq_mv_search_ctrls;
+    MdNsqMotionSearchCtrls *md_nsq_motion_search_ctrls = &mdctxt->md_nsq_motion_search_ctrls;
 
     switch (md_nsq_mv_search_level)
     {
     case 0:
-        md_nsq_mv_search_ctrls->enabled = 0;
+        md_nsq_motion_search_ctrls->enabled = 0;
         break;
     case 1:
-        md_nsq_mv_search_ctrls->enabled = 1;
-        md_nsq_mv_search_ctrls->use_ssd = 0;
-        md_nsq_mv_search_ctrls->full_pel_search_width = 7;
-        md_nsq_mv_search_ctrls->full_pel_search_height = 7;
-        md_nsq_mv_search_ctrls->perform_sub_pel = 1;
-        md_nsq_mv_search_ctrls->half_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->half_pel_search_height = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->enabled = 1;
+        md_nsq_motion_search_ctrls->use_ssd = 0;
+        md_nsq_motion_search_ctrls->full_pel_search_width = 31;
+        md_nsq_motion_search_ctrls->full_pel_search_height = 31;
+#if !PERFORM_SUB_PEL_MD 
+        md_nsq_motion_search_ctrls->perform_sub_pel = 1;
+        md_nsq_motion_search_ctrls->half_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->half_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_height = 3;
+#endif
         break;
+
     case 2:
-        md_nsq_mv_search_ctrls->enabled = 1;
-        md_nsq_mv_search_ctrls->use_ssd = 0;
-        md_nsq_mv_search_ctrls->full_pel_search_width = 11;
-        md_nsq_mv_search_ctrls->full_pel_search_height = 11;
-        md_nsq_mv_search_ctrls->perform_sub_pel = 1;
-        md_nsq_mv_search_ctrls->half_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->half_pel_search_height = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->enabled = 1;
+        md_nsq_motion_search_ctrls->use_ssd = 0;
+        md_nsq_motion_search_ctrls->full_pel_search_width = 15;
+        md_nsq_motion_search_ctrls->full_pel_search_height = 15;
+#if !PERFORM_SUB_PEL_MD 
+        md_nsq_motion_search_ctrls->perform_sub_pel = 1;
+        md_nsq_motion_search_ctrls->half_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->half_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_height = 3;
+#endif
         break;
     case 3:
-        md_nsq_mv_search_ctrls->enabled = 1;
-        md_nsq_mv_search_ctrls->use_ssd = 0;
-        md_nsq_mv_search_ctrls->full_pel_search_width = 15;
-        md_nsq_mv_search_ctrls->full_pel_search_height = 15;
-        md_nsq_mv_search_ctrls->perform_sub_pel = 1;
-        md_nsq_mv_search_ctrls->half_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->half_pel_search_height = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->enabled = 1;
+        md_nsq_motion_search_ctrls->use_ssd = 0;
+        md_nsq_motion_search_ctrls->full_pel_search_width = 11;
+        md_nsq_motion_search_ctrls->full_pel_search_height = 11;
+#if !PERFORM_SUB_PEL_MD 
+        md_nsq_motion_search_ctrls->perform_sub_pel = 1;
+        md_nsq_motion_search_ctrls->half_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->half_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_height = 3;
+#endif
         break;
     case 4:
-        md_nsq_mv_search_ctrls->enabled = 1;
-        md_nsq_mv_search_ctrls->use_ssd = 0;
-        md_nsq_mv_search_ctrls->full_pel_search_width = 31;
-        md_nsq_mv_search_ctrls->full_pel_search_height = 31;
-        md_nsq_mv_search_ctrls->perform_sub_pel = 1;
-        md_nsq_mv_search_ctrls->half_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->half_pel_search_height = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_width = 3;
-        md_nsq_mv_search_ctrls->quarter_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->enabled = 1;
+        md_nsq_motion_search_ctrls->use_ssd = 0;
+        md_nsq_motion_search_ctrls->full_pel_search_width = 7;
+        md_nsq_motion_search_ctrls->full_pel_search_height = 7;
+#if !PERFORM_SUB_PEL_MD 
+        md_nsq_motion_search_ctrls->perform_sub_pel = 1;
+        md_nsq_motion_search_ctrls->half_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->half_pel_search_height = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_width = 3;
+        md_nsq_motion_search_ctrls->quarter_pel_search_height = 3;
+#endif
         break;
     default:
         assert(0);
         break;
     }
+}
+#endif
+#if PERFORM_SUB_PEL_MD
+void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level) {
+    MdSubPelSearchCtrls *md_subpel_search_ctrls = &mdctxt->md_subpel_search_ctrls;
+
+    switch (md_subpel_search_level) {
+    case 0: md_subpel_search_ctrls->enabled = 0; break;
+    case 1:
+        md_subpel_search_ctrls->enabled = 1;
+        md_subpel_search_ctrls->use_ssd = 0;
+
+        md_subpel_search_ctrls->do_4x4 = 1;
+        md_subpel_search_ctrls->do_nsq = 1;
+
+        md_subpel_search_ctrls->half_pel_search_enabled = 1;
+        md_subpel_search_ctrls->half_pel_search_scan    = 0;
+#if SEARCH_TOP_N
+        md_subpel_search_ctrls->half_pel_search_pos_cnt = 5;
+#endif
+
+        md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
+        md_subpel_search_ctrls->quarter_pel_search_scan    = 0;
+
+        md_subpel_search_ctrls->eight_pel_search_enabled = 1;
+        md_subpel_search_ctrls->eight_pel_search_scan    = 0;
+
+        break;
+    case 2:
+        md_subpel_search_ctrls->enabled = 1;
+        md_subpel_search_ctrls->use_ssd = 0;
+
+        md_subpel_search_ctrls->do_4x4 = 1;
+        md_subpel_search_ctrls->do_nsq = 1;
+
+        md_subpel_search_ctrls->half_pel_search_enabled = 1;
+        md_subpel_search_ctrls->half_pel_search_scan = 0;
+#if SEARCH_TOP_N
+        md_subpel_search_ctrls->half_pel_search_pos_cnt = 3;
+#endif
+
+        md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
+        md_subpel_search_ctrls->quarter_pel_search_scan = 0;
+
+        md_subpel_search_ctrls->eight_pel_search_enabled = 1;
+        md_subpel_search_ctrls->eight_pel_search_scan = 0;
+
+        break;
+    case 3:
+        md_subpel_search_ctrls->enabled = 1;
+        md_subpel_search_ctrls->use_ssd = 0;
+
+        md_subpel_search_ctrls->do_4x4 = 1;
+        md_subpel_search_ctrls->do_nsq = 1;
+
+        md_subpel_search_ctrls->half_pel_search_enabled = 1;
+        md_subpel_search_ctrls->half_pel_search_scan    = 0;
+#if SEARCH_TOP_N
+        md_subpel_search_ctrls->half_pel_search_pos_cnt = 1;
+#endif
+
+        md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
+        md_subpel_search_ctrls->quarter_pel_search_scan    = 0;
+
+        md_subpel_search_ctrls->eight_pel_search_enabled = 1;
+        md_subpel_search_ctrls->eight_pel_search_scan    = 0;
+
+        break;
+    case 4:
+        md_subpel_search_ctrls->enabled = 1;
+        md_subpel_search_ctrls->use_ssd = 0;
+
+        md_subpel_search_ctrls->do_4x4 = 1;
+        md_subpel_search_ctrls->do_nsq = 1;
+
+        md_subpel_search_ctrls->half_pel_search_enabled = 1;
+        md_subpel_search_ctrls->half_pel_search_scan    = 1;
+#if SEARCH_TOP_N
+        md_subpel_search_ctrls->half_pel_search_pos_cnt = 1;
+#endif
+        md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
+        md_subpel_search_ctrls->quarter_pel_search_scan    = 1;
+
+        md_subpel_search_ctrls->eight_pel_search_enabled = 0;
+
+        break;
+
+    default: assert(0); break;
+    }
+
+    // Common setting(s)
+    md_subpel_search_ctrls->half_pel_search_width = 3;
+    md_subpel_search_ctrls->half_pel_search_height = 3;
+    md_subpel_search_ctrls->half_pel_interpolation = 0;
+
+    md_subpel_search_ctrls->quarter_pel_search_width = 3;
+    md_subpel_search_ctrls->quarter_pel_search_height = 3;
+    md_subpel_search_ctrls->quarter_pel_interpolation = 0;
+
+    md_subpel_search_ctrls->eight_pel_search_width = 3;
+    md_subpel_search_ctrls->eight_pel_search_height = 3;
+    md_subpel_search_ctrls->eight_pel_interpolation = 0;
+
 }
 #endif
 #if SB_CLASSIFIER
@@ -4673,15 +4788,31 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_nsq_mv_search_level = 0;
     else
         if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
-            context_ptr->md_nsq_mv_search_level = 4;
+            context_ptr->md_nsq_mv_search_level = 1; 
         else if (enc_mode <= ENC_M0)
-            context_ptr->md_nsq_mv_search_level = 3;
-        else if (enc_mode <= ENC_M5)
             context_ptr->md_nsq_mv_search_level = 2;
+        else if (enc_mode <= ENC_M5)
+            context_ptr->md_nsq_mv_search_level = 3;
         else
-            context_ptr->md_nsq_mv_search_level = 1;
+            context_ptr->md_nsq_mv_search_level = 4;
 
-    md_nsq_mv_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
+    md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
+#endif
+#if PERFORM_SUB_PEL_MD
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_subpel_search_level = 4;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_subpel_search_level = 0;
+    else
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->md_subpel_search_level = 3;
+        else if (enc_mode <= ENC_M0)
+            context_ptr->md_subpel_search_level = 1;
+        else if (enc_mode <= ENC_M1)
+            context_ptr->md_subpel_search_level = 2;
+        else
+            context_ptr->md_subpel_search_level = 3;
+    md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level);
 #endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
@@ -4790,7 +4921,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->skip_depth =
         pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
 #endif
-
+#if !PERFORM_SUB_PEL_MD
     // Set perform_me_mv_1_8_pel_ref
     if (pd_pass == PD_PASS_0)
         context_ptr->perform_me_mv_1_8_pel_ref = EB_FALSE;
@@ -4800,7 +4931,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->perform_me_mv_1_8_pel_ref =
         (pcs_ptr->parent_pcs_ptr->frm_hdr
             .allow_high_precision_mv);
-
+#endif
     return return_error;
 }
 #else
@@ -7915,6 +8046,7 @@ void *enc_dec_kernel(void *input_ptr) {
 #endif
 
                     }
+
                     // Configure the SB
                     mode_decision_configure_sb(
 #if QP2QINDEX

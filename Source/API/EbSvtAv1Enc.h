@@ -300,10 +300,12 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int spatial_sse_fl;
+#if !REMOVE_ME_SUBPEL_CODE
     /* subpel
     *
     * Default is -1. */
     int enable_subpel;
+#endif
     /* over boundry block
     *
     * Default is -1. */

@@ -440,6 +440,7 @@ extern "C" {
         const BlockGeom *blk_geom,
         uint32_t         geom_offset_x,
         uint32_t         geom_offset_y);
+#if !REMOVE_ME_SUBPEL_CODE
     void half_pel_refinement_sb(
         PictureParentControlSet *pcs_ptr,
         MeContext *context_ptr,  // input/output parameter, ME context Ptr, used
@@ -462,7 +463,7 @@ extern "C" {
         uint8_t list_index,
         uint8_t ref_pic_index,
         uint32_t integer_mv);         // input parameter, integer MV
-
+#endif
 #ifdef __cplusplus
 }
 #endif
