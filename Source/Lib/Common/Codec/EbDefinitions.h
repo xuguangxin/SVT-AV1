@@ -440,11 +440,7 @@ extern "C" {
 
 #define ENBALE_RDOQ_SSSE_TXT        1 // Enable RDOQ and SSSE in TXT search
 #define UNIFY_TXT                   1 // Unify TXT search path and default path + fix bug in TXT search
-#if SB_MEM_OPT
 #define SB_BLK_MEM_OPT 1              // Memory reduction for total counts of final_blk_arr
-#else
-#define SB_BLK_MEM_OPT 0
-#endif
 #define COEFF_BASED_BYPASS_OFF_480P 1 // Turn off coeff-based NSQ bypass for <= 480p
 
 #define DECOUPLE_ME_RES                 1     // decouple ME results from parent pcs; remove reorder queue in PicMgr ; input and ref queue in Pic Decision/iRC  have pic in decode order
