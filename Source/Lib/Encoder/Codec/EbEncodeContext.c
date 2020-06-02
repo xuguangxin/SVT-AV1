@@ -18,9 +18,9 @@ static void encode_context_dctor(EbPtr p) {
     EB_DESTROY_MUTEX(obj->shared_reference_mutex);
     EB_DESTROY_MUTEX(obj->stat_file_mutex);
     EB_DELETE(obj->prediction_structure_group_ptr);
-#if !DECOUPLE_ME_RES
     EB_DELETE_PTR_ARRAY(obj->picture_decision_reorder_queue,
                         PICTURE_DECISION_REORDER_QUEUE_MAX_DEPTH);
+#if !DECOUPLE_ME_RES
     EB_DELETE_PTR_ARRAY(obj->picture_manager_reorder_queue,
                         PICTURE_MANAGER_REORDER_QUEUE_MAX_DEPTH);
 #endif
