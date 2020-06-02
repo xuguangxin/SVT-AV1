@@ -12478,6 +12478,74 @@ void block_based_depth_reduction(
 #endif
 #if COEFF_BASED_BYPASS_NSQ
 #if MERGED_COEFF_BAND
+#if NSQ_CYCLES_REDUCTION
+uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr, int32_t sb_size) {
+    uint8_t skip_nsq = 0;
+    uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)context_ptr->blk_geom->sq_size);
+    if (context_ptr->coeff_area_based_bypass_nsq_th) {
+        if (context_ptr->blk_geom->shape != PART_N) {
+            if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag) {
+                uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].count_non_zero_coeffs;
+                uint32_t total_samples = (context_ptr->blk_geom->bwidth*context_ptr->blk_geom->bheight);
+                uint8_t band_idx = 0;
+                uint64_t band_width = (sq_size_idx == 0) ? 100 : (sq_size_idx == 1) ? 50 : 20;
+                if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                    band_idx = 9;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
+                    band_idx = 8;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
+                    band_idx = 7;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
+                    band_idx = 6;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
+                    band_idx = 5;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
+                    band_idx = 4;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                    band_idx = 3;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
+                    band_idx = 2;
+                }
+                else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                    band_idx = 1;
+                }
+                else {
+                    band_idx = 0;
+                }
+
+                if (sq_size_idx == 0)
+                    band_idx = band_idx == 0 ? 0 : band_idx <= 2 ? 1 : 2;
+                else if (sq_size_idx == 1)
+                    band_idx = band_idx == 0 ? 0 : band_idx <= 3 ? 1 : 2;
+                else
+                    band_idx = band_idx == 0 ? 0 : band_idx <= 8 ? 1 : 2;
+#if SSE_BASED_SPLITTING
+                uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag ?
+                    context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape] : 1;
+                uint64_t nsq_prob = allowed_part_weight[sq_size_idx][context_ptr->blk_geom->shape][band_idx];
+                nsq_prob = sse_gradian_band == 0 ? (((100 * nsq_prob) - (nsq_prob * sse_grad_weight[sq_size_idx][context_ptr->blk_geom->shape][band_idx])) / (uint64_t)100) : nsq_prob;
+                if (nsq_prob < context_ptr->coeff_area_based_bypass_nsq_th) {
+                    skip_nsq = 1;
+                }
+#else
+                if (allowed_part_weight[depth_idx][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
+                    skip_nsq = 1;
+#endif
+
+            }
+        }
+    }
+    return skip_nsq;
+}
+
+#else
 uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     uint8_t skip_nsq = 0;
     if (context_ptr->coeff_area_based_bypass_nsq_th) {
@@ -12559,6 +12627,7 @@ uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
     }
     return skip_nsq;
 }
+#endif
 #else
 uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     uint8_t skip_nsq = 0;
@@ -13013,7 +13082,11 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
 #if COEFF_BASED_BYPASS_NSQ
+#if NSQ_CYCLES_REDUCTION
+            uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr, scs_ptr->seq_header.sb_size);
+#else
             uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr);
+#endif
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq &&
                 !sq_weight_based_nsq_skip &&
@@ -13120,6 +13193,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                 depth_cost[scs_ptr->static_config.super_block_size == 128
                                ? context_ptr->blk_geom->depth
                                : context_ptr->blk_geom->depth + 1] += nsq_cost[nsq_shape_table[0]];
+#if !CLEANUP_CYCLE_ALLOCATION
 #if SB_CLASSIFIER
                 if (context_ptr->skip_depth && scs_ptr->sb_geom[sb_addr].is_complete_sb) {
 #else
@@ -13150,6 +13224,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                         }
                     }
                 }
+#endif
             }
 
             uint32_t last_blk_index_mds =

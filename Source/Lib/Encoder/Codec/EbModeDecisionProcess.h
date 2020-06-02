@@ -195,7 +195,19 @@ typedef struct PicComplexControls {
     uint8_t use_th_qp_offset;// Flag to indicate whether a qp-based offset will be added to the base_threshold
 } PicComplexControls;
 #endif
-#if SB_CLASSIFIER
+#if NSQ_CYCLES_REDUCTION
+typedef struct  NsqCycleRControls {
+    uint8_t enabled; // On/Off feature control
+    uint16_t th;  // Threshold to bypass nsq <the higher th the higher speed>
+}NsqCycleRControls;
+#endif
+#if DEPTH_CYCLES_REDUCTION
+typedef struct  DepthCycleRControls {
+    uint8_t enabled; // On/Off feature control 
+    uint16_t th;  // Threshold to bypass depth <the higher th the higher speed>
+}DepthCycleRControls; 
+#endif
+#if SB_CLASSIFIER && !CLEANUP_CYCLE_ALLOCATION
 typedef struct SbClassControls {
 #if NEW_CYCLE_ALLOCATION
     uint8_t sb_class_th[NUMBER_OF_SB_CLASS]; // treshold for sb classification
@@ -523,7 +535,9 @@ typedef struct ModeDecisionContext {
 #endif
     uint8_t              inject_inter_candidates;
     uint8_t              intra_similar_mode;
+#if !CLEANUP_CYCLE_ALLOCATION
     uint8_t              skip_depth;
+#endif
     uint8_t *            cfl_temp_luma_recon;
     uint16_t *           cfl_temp_luma_recon16bit;
     EbBool               spatial_sse_full_loop;
@@ -704,6 +718,12 @@ typedef struct ModeDecisionContext {
     uint8_t reduce_complex_clip_cycles_level;
     PicComplexControls pic_complexity_ctrls;
 #endif
+#if NSQ_CYCLES_REDUCTION
+    NsqCycleRControls nsq_cycles_red_ctrls;
+#endif
+#if DEPTH_CYCLES_REDUCTION
+    DepthCycleRControls depth_cycles_red_ctrls;
+#endif
 #if M8_4x4
     uint8_t disallow_4x4;
 #endif
@@ -722,9 +742,13 @@ typedef struct ModeDecisionContext {
 #endif
 #if SB_CLASSIFIER
     uint8_t enable_area_based_cycles_allocation;
+#if !CLEANUP_CYCLE_ALLOCATION
     uint8_t coeffcients_area_based_cycles_allocation_level;
+#endif
     uint8_t sb_class;
+#if !CLEANUP_CYCLE_ALLOCATION
     SbClassControls sb_class_ctrls;
+#endif
 #endif
 #if COEFF_BASED_BYPASS_NSQ
     uint16_t coeff_area_based_bypass_nsq_th;

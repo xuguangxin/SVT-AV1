@@ -1859,6 +1859,7 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
 /******************************************************
 * Derive SB classifier thresholds
 ******************************************************/
+#if !CLEANUP_CYCLE_ALLOCATION
 #if NEW_CYCLE_ALLOCATION
 #if MULTI_BAND_ACTIONS
 void set_sb_class_controls(ModeDecisionContext *context_ptr) {
@@ -2176,6 +2177,7 @@ void set_sb_class_controls(ModeDecisionContext *context_ptr) {
 }
 #endif
 #endif
+#endif
 
 #if MULTI_BAND_ACTIONS
 #if NON_UNIFORM_NSQ_BANDING
@@ -2270,6 +2272,77 @@ uint8_t m1_nsq_cycles_reduction_th[21] = {
 };
 #endif
 #endif
+#if NSQ_CYCLES_REDUCTION
+void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_cycles_red_mode) {
+
+    NsqCycleRControls*nsq_cycle_red_ctrls = &mdctxt->nsq_cycles_red_ctrls;
+
+    switch (nsq_cycles_red_mode)
+    {
+    case 0: // nsq_cycles_reduction Off
+        nsq_cycle_red_ctrls->enabled = 0;
+        nsq_cycle_red_ctrls->th = 0;
+        break;
+    case 1:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 1;
+        break;
+    case 2:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 3;
+        break;
+    case 3:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 5;
+    case 4:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 8;
+    case 5:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 10;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
+
+#if DEPTH_CYCLES_REDUCTION
+void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t depth_cycles_red_mode) {
+
+    DepthCycleRControls*depth_cycle_red_ctrls = &mdctxt->depth_cycles_red_ctrls;
+
+    switch (depth_cycles_red_mode)
+    {
+    case 0: // depth_cycles_reduction Off
+        depth_cycle_red_ctrls->enabled = 0;
+        depth_cycle_red_ctrls->th = 0;
+        break;
+    case 1:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 2;
+        break;
+    case 2:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 3;
+        break;
+    case 3:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 5;
+    case 4:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 8;
+    case 5:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 10;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -2319,7 +2392,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     }
  #if MULTI_BAND_ACTIONS
+#if !CLEANUP_CYCLE_ALLOCATION
     context_ptr->coeffcients_area_based_cycles_allocation_level = 1;
+#endif
 #else
     if (MR_MODE) {
         if (pcs_ptr->parent_pcs_ptr->input_resolution >= INPUT_SIZE_4K_RANGE)
@@ -4226,6 +4301,31 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
 #endif
+
+
+#if NSQ_CYCLES_REDUCTION
+    // NSQ cycles reduction level: TBD
+    uint8_t nsq_cycles_red_mode = 0;
+    if (pd_pass == PD_PASS_0)
+        nsq_cycles_red_mode = 0;
+    else if (pd_pass == PD_PASS_1)
+        nsq_cycles_red_mode = 0;
+    else
+         nsq_cycles_red_mode = 0;
+
+    set_nsq_cycle_redcution_controls(context_ptr, nsq_cycles_red_mode);
+
+    NsqCycleRControls*nsq_cycle_red_ctrls = &context_ptr->nsq_cycles_red_ctrls;
+    // Overwrite allcation action when nsq_cycles_reduction th is higher.
+    if(nsq_cycle_red_ctrls->enabled)
+        context_ptr->coeff_area_based_bypass_nsq_th = MAX(nsq_cycle_red_ctrls->th,context_ptr->coeff_area_based_bypass_nsq_th);
+#endif
+#if DEPTH_CYCLES_REDUCTION
+    // Depth cycles reduction level: TBD
+    uint8_t depth_cycles_red_mode = 0; 
+    depth_cycles_red_mode = pcs_ptr->slice_type != I_SLICE ? 0 : 0;
+    set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
+#endif
     // Weighting (expressed as a percentage) applied to
     // square shape costs for determining if a and b
     // shapes should be skipped. Namely:
@@ -4895,6 +4995,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->best_me_cand_only_flag = EB_FALSE;
 #endif
+#if !CLEANUP_CYCLE_ALLOCATION
     // Set skip_depth
     if (pd_pass == PD_PASS_0)
         context_ptr->skip_depth = 0;
@@ -4920,6 +5021,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->skip_depth =
         pcs_ptr->parent_pcs_ptr->sc_content_detected ? 1 : 0;
+#endif
 #endif
 #if !PERFORM_SUB_PEL_MD
     // Set perform_me_mv_1_8_pel_ref
@@ -6779,6 +6881,10 @@ static uint64_t generate_best_part_cost(
     return best_part_cost;
 }
 #if SB_CLASSIFIER
+#if CLEANUP_CYCLE_ALLOCATION
+const uint32_t sb_class_th[NUMBER_OF_SB_CLASS] = { 0,85,75,65,60,55,50,45,40,
+                                                   35,30,25,20,17,14,10,6,3,0 };
+#endif
 static uint8_t determine_sb_class(
     SequenceControlSet  *scs_ptr,
     PictureControlSet   *pcs_ptr,
@@ -6788,7 +6894,9 @@ static uint8_t determine_sb_class(
     uint64_t total_samples = 0;
     uint64_t count_non_zero_coeffs = 0;
     uint8_t sb_class = NONE_CLASS;
+#if !CLEANUP_CYCLE_ALLOCATION
     SbClassControls *sb_class_ctrls = &context_ptr->sb_class_ctrls;
+#endif
     EbBool split_flag;
     while (blk_index < scs_ptr->max_block_cnt) {
         const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
@@ -6811,7 +6919,44 @@ static uint8_t determine_sb_class(
             d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
             ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
     }
-
+#if CLEANUP_CYCLE_ALLOCATION
+    if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_1]) / 100))
+        sb_class = SB_CLASS_1;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_2]) / 100))
+        sb_class = SB_CLASS_2;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_3]) / 100))
+        sb_class = SB_CLASS_3;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_4]) / 100))
+        sb_class = SB_CLASS_4;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_5]) / 100))
+        sb_class = SB_CLASS_5;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_6]) / 100))
+        sb_class = SB_CLASS_6;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_7]) / 100))
+        sb_class = SB_CLASS_7;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_8]) / 100))
+        sb_class = SB_CLASS_8;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_9]) / 100))
+        sb_class = SB_CLASS_9;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_10]) / 100))
+        sb_class = SB_CLASS_10;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_11]) / 100))
+        sb_class = SB_CLASS_11;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_12]) / 100))
+        sb_class = SB_CLASS_12;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_13]) / 100))
+        sb_class = SB_CLASS_13;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_14]) / 100))
+        sb_class = SB_CLASS_14;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_15]) / 100))
+        sb_class = SB_CLASS_15;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_16]) / 100))
+        sb_class = SB_CLASS_16;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_17]) / 100))
+        sb_class = SB_CLASS_17;
+    else if (count_non_zero_coeffs >= ((total_samples * sb_class_th[SB_CLASS_18]) / 100))
+        sb_class = SB_CLASS_18;
+#else
 #if MULTI_BAND_ACTIONS
 #if NON_UNIFORM_NSQ_BANDING
     if (count_non_zero_coeffs >= ((total_samples * sb_class_ctrls->sb_class_th[SB_CLASS_1]) / 100))
@@ -6904,8 +7049,104 @@ static uint8_t determine_sb_class(
         sb_class = VERY_LOW_COMPLEX_CLASS;
 #endif
 #endif
+#endif
     return sb_class;
 }
+#endif
+#if DEPTH_CYCLES_REDUCTION
+#define DEPTH_MAX_PROB 300 // max probabilty value for depth 100 -> 10%
+// Depth probabilies per sq_size, pedicted depth and frequency band 
+// for sc content
+const uint16_t depth_cycles_reduction_sc_th[6][5][4] = {
+{
+{ 0,0,0,0},
+{ 0,0,0,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 0,0,0,0},
+{ 0,0,0,0}
+},
+{
+{ 0,0,0,0},
+{ 0,4,14,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 0,2,6,0},
+{ 1,4,6,0}
+},
+{
+{ 0,0,0,0},
+{ 0,2,13,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 17,13,20,0},
+{ 26,5,3,0}
+},
+{
+{ 0,0,0,0},
+{ 10,17,62,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 79,44,44,0},
+{ 45,12,11,0}
+},
+{
+{ 0,0,0,0},
+{ 72,63,112,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 79,29,22,0},
+{ 0,0,0,0}
+},
+{
+{ 0,0,0,0},
+{ 78,47,38,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 0,0,0,0},
+{ 0,0,0,0}
+}
+};
+// Depth probabilies per sq_size, pedicted depth and frequency band 
+// for non-sc content
+uint16_t depth_cycles_reduction_th[6][5][4] = {
+{
+{ 0,0,0,0},
+{ 0,0,0,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 0,3,6,30},
+{ 0,1,1,1},
+},
+{
+{ 0,0,0,0},
+{ 1,11,26,234},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 7,19,10,12},
+{ 6,3,1,0},
+},
+{
+{ 0,0,0,0},
+{ 11,44,82,108},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 29,14,5,2},
+{ 7,0,0,0},
+},
+{
+{ 0,0,0,0},
+{ 24,90,73,32},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 28,6,1,0},
+{ 2,0,0,0},
+},
+{
+{ 0,0,0,0},
+{ 26,24,8,1},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 4,1,0,0},
+{ 0,0,0,0},
+},
+{
+{ 0,0,0,0},
+{ 4,1,0,0},
+{DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB,DEPTH_MAX_PROB},
+{ 0,0,0,0},
+{ 0,0,0,0}
+}
+};
 #endif
 static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
                                           ModeDecisionContext *context_ptr, uint32_t sb_index) {
@@ -7152,6 +7393,38 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                                blk_geom);
 
                         }
+#if DEPTH_CYCLES_REDUCTION
+                        DepthCycleRControls*depth_cycle_red_ctrls = &context_ptr->depth_cycles_red_ctrls;
+                        uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)context_ptr->blk_geom->sq_size);
+                        if (depth_cycle_red_ctrls->enabled) {
+                            int8_t addj_s_depth = 0;
+                            int8_t addj_e_depth = 0;
+                            if (context_ptr->sb_class) {
+                                uint8_t frequency_band = context_ptr->sb_class <= 11 ? 0 : context_ptr->sb_class <= 18 ? 1 : context_ptr->sb_class <= 23 ? 2 : 3;
+                                if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                                    if (depth_cycle_red_ctrls->th) {
+                                        addj_s_depth = depth_cycles_reduction_sc_th[sq_size_idx][0][frequency_band] < depth_cycle_red_ctrls->th ? 0 : -2;
+                                        if (addj_s_depth == 0)
+                                            addj_s_depth = depth_cycles_reduction_sc_th[sq_size_idx][1][frequency_band] < depth_cycle_red_ctrls->th ? 0 : -1;
+                                        addj_e_depth = depth_cycles_reduction_sc_th[sq_size_idx][4][frequency_band] < depth_cycle_red_ctrls->th ? 0 : 2;
+                                        if (addj_e_depth == 0)
+                                            addj_e_depth = depth_cycles_reduction_sc_th[sq_size_idx][3][frequency_band] < depth_cycle_red_ctrls->th ? 0 : 1;
+                                    }
+                                }else{
+                                    if (depth_cycle_red_ctrls->th) {
+                                        addj_s_depth = depth_cycles_reduction_th[sq_size_idx][0][frequency_band] < depth_cycle_red_ctrls->th ? 0 : -2;
+                                        if (addj_s_depth == 0)
+                                            addj_s_depth = depth_cycles_reduction_th[sq_size_idx][1][frequency_band] < depth_cycle_red_ctrls->th ? 0 : -1;
+                                        addj_e_depth = depth_cycles_reduction_th[sq_size_idx][4][frequency_band] < depth_cycle_red_ctrls->th ? 0 : 2;
+                                        if (addj_e_depth == 0)
+                                            addj_e_depth = depth_cycles_reduction_th[sq_size_idx][3][frequency_band] < depth_cycle_red_ctrls->th ? 0 : 1;
+                                    }
+                                }
+                            }
+                            s_depth = MAX(s_depth, addj_s_depth);
+                            e_depth = MIN(e_depth, addj_e_depth);
+                        }
+#endif
                     } else if (context_ptr->pd_pass == PD_PASS_1) {
 
 
@@ -7388,6 +7661,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         e_depth = (context_ptr->sb_class == HIGH_COMPLEX_CLASS || context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : e_depth;
                     }
 #endif
+
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
                     // which restrict allowable depths
@@ -8125,7 +8399,9 @@ void *enc_dec_kernel(void *input_ptr) {
                                          context_ptr->md_context);
 #if SB_CLASSIFIER
                         if (pcs_ptr->slice_type != I_SLICE) {
+#if !CLEANUP_CYCLE_ALLOCATION
                             set_sb_class_controls(context_ptr->md_context);
+#endif
                             context_ptr->md_context->sb_class = determine_sb_class(
                                 scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
                         }
