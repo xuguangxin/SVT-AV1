@@ -419,7 +419,7 @@ extern "C" {
 #define MD_CTX_CLEAN_UP             1 // Memory reduction for MdEncPassCuData
 #define BLK_MEM_CLEAN_UP            1 // Memory reduction for BlkStruct
 #define SB64_MEM_OPT                1 // Memory reduction for SB size 64
-#define M0_DEPTH_REFINEMENT_ADOPTS  1 // Expand the M0/MR depth refinement
+#define M0_DEPTH_REFINEMENT_ADOPTS  0 // Expand the M0/MR depth refinement
 
 #define MOVE_NSQ_MON_UNIPRED_ME_TO_MD 1 // Move non-sq/non-unipred ME to MD
 #if MOVE_NSQ_MON_UNIPRED_ME_TO_MD
@@ -460,6 +460,7 @@ extern "C" {
 #define NSQ_CYCLES_REDUCTION 1
 #define DEPTH_CYCLES_REDUCTION 1
 #define CLEANUP_CYCLE_ALLOCATION 1
+#define MR_DEPTH_REFINEMENT 1 // Change MR depth refinement levels
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

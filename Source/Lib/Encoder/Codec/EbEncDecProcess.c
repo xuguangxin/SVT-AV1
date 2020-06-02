@@ -7230,6 +7230,21 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                         if (MR_MODE_MULTI_PASS_PD || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0)) {
 #endif
 #if MAY19_ADOPTIONS
+#if MR_DEPTH_REFINEMENT
+                            if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE ||
+                                pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                e_depth = 2;
+                            }
+                            else if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_720p_RANGE) {
+                                s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+                            }
+                            else {
+                                s_depth = -2;
+                                e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+                            }
+#else
                             if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
                                 s_depth = -2;
                                 e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
@@ -7238,6 +7253,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
                                 e_depth = 2;
                             }
+#endif
 #else
                             s_depth = -2;
                             e_depth = 2;
