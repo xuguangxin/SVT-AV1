@@ -47,8 +47,9 @@ EbErrorType largest_coding_unit_ctor(SuperBlock *larget_coding_unit_ptr, uint8_t
     larget_coding_unit_ptr->origin_y = sb_origin_y;
 
     larget_coding_unit_ptr->index = sb_index;
-
+#if !SB_BLK_MEM_OPT
     uint32_t cu_i;
+#endif
     uint32_t tot_blk_num                    = sb_size_pix == 128 ? 1024 : 256;
     EB_MALLOC_ARRAY(larget_coding_unit_ptr->final_blk_arr, tot_blk_num);
 #if SB_MEM_OPT

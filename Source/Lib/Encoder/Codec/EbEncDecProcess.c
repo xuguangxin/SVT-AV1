@@ -2294,9 +2294,11 @@ void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_c
     case 3:
         nsq_cycle_red_ctrls->enabled = 1;
         nsq_cycle_red_ctrls->th = 5;
+        break;
     case 4:
         nsq_cycle_red_ctrls->enabled = 1;
         nsq_cycle_red_ctrls->th = 8;
+        break;
     case 5:
         nsq_cycle_red_ctrls->enabled = 1;
         nsq_cycle_red_ctrls->th = 10;
@@ -2330,9 +2332,11 @@ void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t dep
     case 3:
         depth_cycle_red_ctrls->enabled = 1;
         depth_cycle_red_ctrls->th = 5;
+        break;
     case 4:
         depth_cycle_red_ctrls->enabled = 1;
         depth_cycle_red_ctrls->th = 8;
+        break;
     case 5:
         depth_cycle_red_ctrls->enabled = 1;
         depth_cycle_red_ctrls->th = 10;
@@ -4293,13 +4297,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
     else if (pd_pass == PD_PASS_1)
         context_ptr->coeff_area_based_bypass_nsq_th = 0;
-    else if (pd_pass == PD_PASS_2)
+    else if (pd_pass == PD_PASS_2) {
         if (enc_mode == ENC_M0)
-            context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m0_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
+            context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m0_nsq_cycles_reduction_th[context_ptr->sb_class] : 0;
         else if (enc_mode <= ENC_M1)
-            context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
+            context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th[context_ptr->sb_class] : 0;
         else
-            context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th [context_ptr->sb_class] : 0;
+            context_ptr->coeff_area_based_bypass_nsq_th = context_ptr->enable_area_based_cycles_allocation ? m1_nsq_cycles_reduction_th[context_ptr->sb_class] : 0;
+    }
 #endif
 
 

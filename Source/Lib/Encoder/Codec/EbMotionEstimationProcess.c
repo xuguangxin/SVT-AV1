@@ -105,10 +105,10 @@ void* set_me_hme_params_oq(
     EbInputResolution                 input_resolution)
 {
     UNUSED(scs_ptr);
-
+#if !REFACTOR_ME_HME
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
+#endif
     // HME/ME default settings
     me_context_ptr->number_hme_search_region_in_width = 2;
     me_context_ptr->number_hme_search_region_in_height = 2;
@@ -666,9 +666,10 @@ EbErrorType signal_derivation_me_kernel_oq(
     uint8_t  enc_mode = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
     // Set ME/HME search regions
+#if !REFACTOR_ME_HME
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
+#endif
     if (scs_ptr->static_config.use_default_me_hme)
         set_me_hme_params_oq(
             context_ptr->me_context_ptr,
@@ -990,16 +991,16 @@ void* tf_set_me_hme_params_oq(
     EbInputResolution        input_resolution)
 {
     UNUSED(scs_ptr);
-
+#if !REFACTOR_ME_HME || !MAR12_ADOPTIONS
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
+#endif
     // HME/ME default settings
     me_context_ptr->number_hme_search_region_in_width = 2;
     me_context_ptr->number_hme_search_region_in_height = 2;
-
+#if !REFACTOR_ME_HME
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
-
+#endif
 #if !MAR12_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M2)
         hmeMeLevel = ENC_M0;
@@ -1207,8 +1208,9 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     uint8_t  enc_mode = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
 
+#if !REFACTOR_ME_HME ||  !MAR12_ADOPTIONS
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
-
+#endif
 #if !MAR12_ADOPTIONS
     if (hmeMeLevel <= ENC_M2 && pcs_ptr->sc_content_detected == 0)
         hmeMeLevel = ENC_M0;

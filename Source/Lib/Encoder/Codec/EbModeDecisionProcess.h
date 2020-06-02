@@ -423,7 +423,11 @@ typedef struct ModeDecisionContext {
     uint16_t         pu_width;
     uint16_t         pu_height;
     uint8_t          hbd_mode_decision;
+#if FIX_WARNINGS_WIN
+    uint8_t         qp_index;
+#else
     uint16_t         qp_index;
+#endif
     uint64_t         three_quad_energy;
     uint32_t         txb_1d_offset;
 #if REFACTOR_SIGNALS

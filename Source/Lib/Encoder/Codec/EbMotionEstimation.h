@@ -442,7 +442,9 @@ extern "C" {
         uint32_t         geom_offset_y);
 #if !REMOVE_ME_SUBPEL_CODE
     void half_pel_refinement_sb(
+#if !SHUT_ME_NSQ_SEARCH
         PictureParentControlSet *pcs_ptr,
+#endif
         MeContext *context_ptr,  // input/output parameter, ME context Ptr, used
                                  // to get/update ME results
         uint8_t *refBuffer, uint32_t ref_stride,
@@ -460,8 +462,10 @@ extern "C" {
                                        // to reference samples
         uint32_t search_area_height,  // input parameter, search area height
         uint32_t search_area_width,  // input parameter, search area width
+#if !SHUT_ME_NSQ_SEARCH
         uint8_t list_index,
         uint8_t ref_pic_index,
+#endif
         uint32_t integer_mv);         // input parameter, integer MV
 #endif
 #ifdef __cplusplus

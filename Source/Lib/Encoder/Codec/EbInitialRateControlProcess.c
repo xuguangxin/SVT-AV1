@@ -1188,7 +1188,11 @@ void tpl_mc_flow_dispenser(
                             continue;
                         uint32_t ref_poc = pcs_ptr->ref_order_hint[rf_idx];
                         uint32_t ref_frame_idx = 0;
+#if FIX_WARNINGS_WIN
+                        while(ref_frame_idx < MAX_TPL_LA_SW && encode_context_ptr->poc_map_idx[ref_frame_idx] != ref_poc)
+#else
                         while(ref_frame_idx < MAX_TPL_LA_SW && encode_context_ptr->poc_map_idx[ref_frame_idx] != (int32_t)ref_poc)
+#endif
                             ref_frame_idx++;
                         if(ref_frame_idx == MAX_TPL_LA_SW || (int32_t)ref_frame_idx >= frame_idx) {
                             continue;
@@ -1270,7 +1274,11 @@ void tpl_mc_flow_dispenser(
                         // inter recon with rec_picture as reference pic
                         uint32_t ref_poc = pcs_ptr->ref_order_hint[best_rf_idx];
                         uint32_t ref_frame_idx = 0;
+#if FIX_WARNINGS_WIN
+                        while(ref_frame_idx < MAX_TPL_LA_SW && encode_context_ptr->poc_map_idx[ref_frame_idx] != ref_poc)
+#else
                         while(ref_frame_idx < MAX_TPL_LA_SW && encode_context_ptr->poc_map_idx[ref_frame_idx] != (int32_t)ref_poc)
+#endif
                             ref_frame_idx++;
                         assert(ref_frame_idx != MAX_TPL_LA_SW);
 

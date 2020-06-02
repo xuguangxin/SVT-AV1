@@ -452,6 +452,10 @@ extern "C" {
 #define PERFORM_SUB_PEL_MD         1 // Perform subpel @ MD
 #define FIX_IFS_OFF_CASE           1 // Bug fix: interpolation filter is hard-coded to regular when IFS is OFF (prevented testing bilinear @ PD0) 
 #define SEARCH_TOP_N               1 // Perform 1/2 Pel search @ MD for the top N Full-Pel position(s). Used N=5 for M0 and N=3 for M1
+
+#define FIX_WARNINGS                    1     // fix build warnings
+#define FIX_WARNINGS_WIN                1     // fix build warnings
+
 #endif
 #define NSQ_CYCLES_REDUCTION 1
 #define DEPTH_CYCLES_REDUCTION 1

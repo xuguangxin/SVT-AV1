@@ -162,7 +162,6 @@ void update_dep_cnt_of_pictures_in_ref_queue(
     PictureParentControlSet * pcs)
 {
     ReferenceQueueEntry * ref_entry_ptr = NULL;
-    uint32_t ref_queue_i = encode_context_ptr->reference_picture_queue_head_index;
 
     for (uint32_t pic_i = 0; pic_i < pcs->other_updated_links_cnt; pic_i++) {
 
@@ -175,8 +174,6 @@ void update_dep_cnt_of_pictures_in_ref_queue(
         ref_entry_ptr->dependent_count += pcs->updated_links_arr[pic_i].dep_cnt_diff;
 
         assert(ref_entry_ptr->dependent_count >= 0);
-        if(ref_entry_ptr->dependent_count<0)
-            SVT_ERROR("\n dependent_count < 0 @ pointer update_dep_cnt_of_pictures_in_ref_queue \n ");
     }
 
 }
@@ -621,8 +618,6 @@ void *picture_manager_kernel(void *input_ptr) {
                         reference_entry_ptr->dep_list0_count + reference_entry_ptr->dep_list1_count;
 
 #if DECOUPLE_ME_RES
-                    int new_cnt = (int)reference_entry_ptr->dependent_count + pcs_ptr->self_updated_links;
-
                     //remove dependency to alredy knowmn broken links from PD
                     reference_entry_ptr->dependent_count += pcs_ptr->self_updated_links;
 

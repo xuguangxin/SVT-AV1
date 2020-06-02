@@ -136,11 +136,12 @@ Output  : Pre-Analysis signal(s)
 EbErrorType signal_derivation_pre_analysis_oq(SequenceControlSet *     scs_ptr,
                                               PictureParentControlSet *pcs_ptr) {
     EbErrorType return_error     = EB_ErrorNone;
+#if !REFACTOR_ME_HME
     uint8_t     input_resolution = scs_ptr->input_resolution;
-
     // HME Flags updated @ signal_derivation_multi_processes_oq
     uint8_t hme_me_level =
         scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
+#endif
     // Derive HME Flag
     if (scs_ptr->static_config.use_default_me_hme) {
 #if REFACTOR_ME_HME

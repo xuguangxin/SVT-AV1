@@ -1827,8 +1827,9 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             deq_8bit);
         // Hsan: collapse spare code
         MdRateEstimationContext *md_rate_estimation_array;
+#if !MD_FRAME_CONTEXT_MEM_OPT
         uint32_t                 entropy_coding_qp;
-
+#endif
         // QP
         context_ptr->qp = pcs_ptr->picture_qp;
 
@@ -1853,9 +1854,9 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             context_ptr->is_md_rate_estimation_ptr_owner = EB_FALSE;
         }
         context_ptr->md_rate_estimation_ptr = md_rate_estimation_array;
-
+#if !MD_FRAME_CONTEXT_MEM_OPT
         entropy_coding_qp = frm_hdr->quantization_params.base_q_idx;
-
+#endif
 #if MD_FRAME_CONTEXT_MEM_OPT
         if (pcs_ptr->parent_pcs_ptr->frm_hdr.primary_ref_frame != PRIMARY_REF_NONE)
             memcpy(&pcs_ptr->md_frame_context,

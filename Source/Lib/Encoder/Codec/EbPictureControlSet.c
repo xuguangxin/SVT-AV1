@@ -417,7 +417,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     object_ptr->recon_picture16bit_ptr = (EbPictureBufferDesc *)EB_NULL;
     object_ptr->recon_picture_ptr      = (EbPictureBufferDesc *)EB_NULL;
     object_ptr->color_format           = init_data_ptr->color_format;
-
+#if !PCS_MEM_OPT
     EbPictureBufferDescInitData coeff_buffer_desc_32bit_init_data;
     coeff_buffer_desc_32bit_init_data.max_width          = init_data_ptr->picture_width;
     coeff_buffer_desc_32bit_init_data.max_height         = init_data_ptr->picture_height;
@@ -429,7 +429,7 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     coeff_buffer_desc_32bit_init_data.top_padding        = 0;
     coeff_buffer_desc_32bit_init_data.bot_padding        = 0;
     coeff_buffer_desc_32bit_init_data.split_mode         = EB_FALSE;
-#if !PCS_MEM_OPT
+
     object_ptr->recon_picture32bit_ptr = (EbPictureBufferDesc *)EB_NULL;
     EB_NEW(object_ptr->recon_picture32bit_ptr,
            eb_recon_picture_buffer_desc_ctor,
@@ -1453,7 +1453,7 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
         const uint16_t picture_height_in_mb = (uint16_t)((init_data_ptr->picture_height + 15) / 16);
         object_ptr->r0 = 0;
         object_ptr->is_720p_or_larger = AOMMIN(init_data_ptr->picture_width, init_data_ptr->picture_height) >= 720;
-        EB_MALLOC_2D(object_ptr->ois_mb_results, picture_width_in_mb * picture_height_in_mb, 1);
+        EB_MALLOC_2D(object_ptr->ois_mb_results, (uint32_t)(picture_width_in_mb * picture_height_in_mb), 1);
         EB_MALLOC_2D(object_ptr->tpl_stats, (uint32_t)((picture_width_in_mb << (1 - object_ptr->is_720p_or_larger)) * (picture_height_in_mb << (1 - object_ptr->is_720p_or_larger))), 1);
         EB_MALLOC_ARRAY(object_ptr->tpl_beta, object_ptr->sb_total_count);
 #if TPL_LA_LAMBDA_SCALING

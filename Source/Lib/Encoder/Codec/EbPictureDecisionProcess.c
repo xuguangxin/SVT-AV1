@@ -785,9 +785,6 @@ EbErrorType update_base_layer_reference_queue_dependent_count(
                 input_entry_ptr->dependent_count = input_entry_ptr->dep_list0_count + input_entry_ptr->dep_list1_count - dependant_list_removed_entries;
             }
             else {
-#if DECOUPLE_ME_RES
-                uint32_t org_depcnt = input_entry_ptr->dependent_count;
-#endif
                 // Modify Dependent List0
                 dep_list_count = input_entry_ptr->list0.list_count;
                 for (dep_idx = 0; dep_idx < dep_list_count; ++dep_idx) {
@@ -936,11 +933,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
 
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
-
+#if !REFACTOR_ME_HME
     // Set HME Settings (1st time)
     uint8_t enc_mode_hme = scs_ptr->use_output_stat_file
         ? pcs_ptr->snd_pass_enc_mode
         : pcs_ptr->enc_mode;
+#endif
 #if REFACTOR_ME_HME
     // If enabled here, the hme enable flags should also be enabled in ResourceCoordinationProcess
     // to ensure that resources are allocated for the downsampled pictures used in HME
@@ -2313,7 +2311,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 }
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
 //set the ref frame types used for this picture,
+#if  !REMOVE_MRP_MODE || !MRP_CTRL
 static void set_all_ref_frame_type(SequenceControlSet *scs_ptr, PictureParentControlSet  *parent_pcs_ptr, MvReferenceFrame ref_frame_arr[], uint8_t* tot_ref_frames)
+#else
+static void set_all_ref_frame_type(PictureParentControlSet  *parent_pcs_ptr, MvReferenceFrame ref_frame_arr[], uint8_t* tot_ref_frames)
+#endif
 {
     MvReferenceFrame rf[2];
     *tot_ref_frames = 0;
@@ -5471,8 +5473,9 @@ void* picture_decision_kernel(void *input_ptr)
     uint32_t                           input_queue_index;
 
     PaReferenceQueueEntry         *pa_reference_entry_ptr;
+#if !DECOUPLE_ME_RES
     uint32_t                           pa_reference_queue_index;
-
+#endif
     uint64_t                           ref_poc;
 
     uint32_t                           dep_idx;
@@ -6549,7 +6552,11 @@ void* picture_decision_kernel(void *input_ptr)
                             }
 
                             //set the ref frame types used for this picture,
+#if  !REMOVE_MRP_MODE || !MRP_CTRL
                             set_all_ref_frame_type(scs_ptr, pcs_ptr, pcs_ptr->ref_frame_type_arr, &pcs_ptr->tot_ref_frame_types);
+#else
+                            set_all_ref_frame_type(pcs_ptr, pcs_ptr->ref_frame_type_arr, &pcs_ptr->tot_ref_frame_types);
+#endif
                             // Initialize Segments
                             pcs_ptr->me_segments_column_count = (uint8_t)(scs_ptr->me_segment_column_count_array[pcs_ptr->temporal_layer_index]);
                             pcs_ptr->me_segments_row_count = (uint8_t)(scs_ptr->me_segment_row_count_array[pcs_ptr->temporal_layer_index]);

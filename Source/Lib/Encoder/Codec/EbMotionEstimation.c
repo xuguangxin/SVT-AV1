@@ -3260,6 +3260,7 @@ static void open_loop_me_get_search_point_results_block(
 #endif
 }
 #if !REMOVE_ME_SUBPEL_CODE
+#if !NSQ_ME_CONTEXT_CLEAN_UP
 /*******************************************
  * get_search_point_results
  *******************************************/
@@ -3874,6 +3875,7 @@ static void full_pel_search_sb(MeContext *context_ptr, uint32_t list_index, uint
         }
     }
 }
+#endif
 
 /*******************************************
  * half_pel_refinement_block
@@ -4171,7 +4173,9 @@ static void half_pel_refinement_block(
  *   performs Half Pel refinement for the 85 PUs
  *******************************************/
 void half_pel_refinement_sb(
+#if !SHUT_ME_NSQ_SEARCH
     PictureParentControlSet *pcs_ptr,
+#endif
     MeContext *              context_ptr, // input/output parameter, ME context Ptr, used to
     // get/update ME results
     uint8_t *refBuffer, uint32_t ref_stride,
@@ -4189,8 +4193,10 @@ void half_pel_refinement_sb(
     // reference samples
     uint32_t search_area_height, // input parameter, search area height
     uint32_t search_area_width, // input parameter, search area width
+#if !SHUT_ME_NSQ_SEARCH
     uint8_t list_index,
     uint8_t ref_pic_index,
+#endif
     uint32_t inetger_mv) {
     uint32_t idx;
     uint32_t pu_index;
@@ -4688,11 +4694,17 @@ void half_pel_refinement_sb(
  * open_loop_me_half_pel_search_sblock
  *******************************************/
 static void open_loop_me_half_pel_search_sblock(
+#if SHUT_ME_NSQ_SEARCH
+    MeContext *context_ptr, uint32_t list_index,
+#else
     PictureParentControlSet *pcs_ptr, MeContext *context_ptr, uint32_t list_index,
+#endif
     uint32_t ref_pic_index, int16_t x_search_area_origin, int16_t y_search_area_origin,
     uint32_t search_area_width, uint32_t search_area_height) {
     half_pel_refinement_sb(
+#if !SHUT_ME_NSQ_SEARCH
         pcs_ptr,
+#endif
         context_ptr,
         context_ptr->integer_buffer_ptr[list_index][ref_pic_index] + (ME_FILTER_TAP >> 1) +
             ((ME_FILTER_TAP >> 1) *
@@ -4713,8 +4725,10 @@ static void open_loop_me_half_pel_search_sblock(
         y_search_area_origin,
         search_area_height,
         search_area_width,
+#if !SHUT_ME_NSQ_SEARCH
         list_index,
         ref_pic_index,
+#endif
         0);
 #if !SHUT_ME_NSQ_SEARCH
     uint8_t gather_nsq_flag = 0;
@@ -4894,8 +4908,10 @@ static void AvcStyleInterpolation(uint8_t *srcOne, // input parameter, input sam
 void interpolate_search_region_avc(
     MeContext *context_ptr, // input/output parameter, ME context ptr, used to
     // get/set interpolated search area Ptr
+#if !REMOVE_ME_BIPRED_SEARCH
     uint32_t list_index, // Refrence picture list index
     uint32_t ref_pic_index,
+#endif
     uint8_t *searchRegionBuffer, // input parameter, search region index, used
     // to point to reference samples
     uint32_t luma_stride, // input parameter, reference Picture stride
@@ -5548,7 +5564,9 @@ static void pu_half_pel_refinement(
  *   performs Half Pel refinement for the 85 PUs
  *******************************************/
 void half_pel_search_sb(SequenceControlSet *scs_ptr, // input parameter, Sequence control set Ptr
+#if !SHUT_ME_NSQ_SEARCH
                         PictureParentControlSet *pcs_ptr,
+#endif
                         MeContext *context_ptr, // input/output parameter, ME context Ptr, used to
                         // get/update ME results
                         uint8_t *refBuffer, uint32_t ref_stride,
@@ -8326,9 +8344,11 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
                  uint32_t sb_width, // input parameter, SB pwidth - full resolution
                  uint32_t sb_height, // input parameter, SB height - full resolution
                  EbPictureBufferDesc *ref_pic_ptr, // input parameter, reference Picture Ptr
+#if !ADD_HME_DECIMATION_SIGNAL && !PRUNE_HME_L1
                  uint32_t search_region_number_in_width, // input parameter, search region
                  // number in the horizontal direction
                  uint32_t search_region_number_in_height, // input parameter, search region
+#endif
 #if ADD_HME_DECIMATION_SIGNAL
                 int16_t hme_level2_search_area_in_width,
                 int16_t hme_level2_search_area_in_height,
@@ -8339,7 +8359,9 @@ void hme_level_2(PictureParentControlSet *pcs_ptr, // input parameter, Picture c
                 uint32_t hme_sr_factor_x,
                 uint32_t hme_sr_factor_y,
 #endif
+ #if !ADD_HME_DECIMATION_SIGNAL && !PRUNE_HME_L1
                  // number in the vertical direction
+#endif
                  int16_t xLevel1SearchCenter, // input parameter, best Level1 xMV
                  // at(search_region_number_in_width,
                  // search_region_number_in_height)
@@ -8655,8 +8677,7 @@ static void quarder_pel_compensation(uint32_t pu_index, //[IN]
 
     return;
 }
-#endif
-#if !REMOVE_ME_BIPRED_SEARCH
+
 /*******************************************************************************
  * Requirement: pu_width      = 8, 16, 24, 32, 48 or 64
  * Requirement: pu_height % 2 = 0
@@ -9645,6 +9666,7 @@ EbErrorType su_pel_enable(MeContext *context_ptr, PictureParentControlSet *pcs_p
     return return_error;
 }
 
+#if !DISABLE_HME_PRE_CHECK
 static void hme_mv_center_check(EbPictureBufferDesc *ref_pic_ptr, MeContext *context_ptr,
                                 int16_t *xsc, int16_t *ysc, uint32_t list_index, int16_t origin_x,
                                 int16_t origin_y, uint32_t sb_width, uint32_t sb_height) {
@@ -9866,6 +9888,8 @@ static void hme_mv_center_check(EbPictureBufferDesc *ref_pic_ptr, MeContext *con
     *xsc = search_center_x;
     *ysc = search_center_y;
 }
+
+#endif
 /*
  swap the content of two MePredUnit structures
 */
@@ -10563,10 +10587,14 @@ void hme_level0_sb(
         *referenceObject;  // input parameter, reference Object Ptr
     uint8_t ref_pic_index;
     uint8_t num_of_ref_pic_to_search;
+#if !DISABLE_HME_PRE_CHECK
     EbPictureBufferDesc *refPicPtr;
+#endif
     EbPictureBufferDesc *sixteenthRefPicPtr;
+#if !FIX_WARNINGS
     uint64_t ref0Poc = 0;
     uint64_t ref1Poc = 0;
+#endif
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level0_flag = context_ptr->enable_hme_level0_flag;
 #if DISABLE_HME_L0_FOR_240P && !RE_ENABLE_HME_L0_240p
@@ -10598,7 +10626,9 @@ void hme_level0_sb(
                 : pcs_ptr->ref_list1_count;
 
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
+#if !FIX_WARNINGS
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
+#endif
         }
 
         // Ref Picture Loop
@@ -10616,7 +10646,9 @@ void hme_level0_sb(
                         ->ref_pa_pic_ptr_array[1][0]
                         ->object_ptr;
 #endif
+#if !FIX_WARNINGS
                     ref1Poc = pcs_ptr->ref_pic_poc_array[1][0];
+#endif
                 }
 
                 referenceObject =
@@ -10624,7 +10656,9 @@ void hme_level0_sb(
                     ->ref_pa_pic_ptr_array[list_index][ref_pic_index]
                     ->object_ptr;
             }
+#if !DISABLE_HME_PRE_CHECK
             refPicPtr = (EbPictureBufferDesc*)referenceObject->input_padded_picture_ptr;
+#endif
             // 1/16 ME reference buffer(s); filtered or decimated
             sixteenthRefPicPtr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
                 (EbPictureBufferDesc*)referenceObject->sixteenth_filtered_picture_ptr :
@@ -10763,9 +10797,11 @@ void hme_level1_sb(
     // HME
     uint32_t search_region_number_in_width = 0;
     uint32_t search_region_number_in_height = 0;
+#if !FIX_WARNINGS
     // Final ME Search Center
     int16_t x_search_center = 0;
     int16_t y_search_center = 0;
+#endif
     uint32_t num_of_list_to_search;
     uint32_t list_index;
     EbPaReferenceObject
@@ -10773,10 +10809,14 @@ void hme_level1_sb(
     uint8_t ref_pic_index;
     uint8_t num_of_ref_pic_to_search;
     //MePredUnit *me_candidate;
+#if !FIX_WARNINGS
     EbPictureBufferDesc *refPicPtr;
+#endif
     EbPictureBufferDesc *quarterRefPicPtr;
+#if !FIX_WARNINGS
     uint64_t ref0Poc = 0;
     uint64_t ref1Poc = 0;
+#endif
     int16_t hmeLevel1SearchAreaInWidth;
     int16_t hmeLevel1SearchAreaInHeight;
     // Configure HME level 0, level 1 and level 2 from static config parameters
@@ -10809,7 +10849,9 @@ void hme_level1_sb(
                 : pcs_ptr->ref_list1_count;
 
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
+#if !FIX_WARNINGS
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
+#endif
         }
         // Ref Picture Loop
         for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search;++ref_pic_index){
@@ -10824,12 +10866,16 @@ void hme_level1_sb(
                         ->ref_pa_pic_ptr_array[1][0]
                         ->object_ptr;
 #endif
+#if !FIX_WARNINGS
                     ref1Poc = pcs_ptr->ref_pic_poc_array[1][0];
+#endif
                 }
 
                 referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]->object_ptr;
             }
+#if !FIX_WARNINGS
             refPicPtr = (EbPictureBufferDesc*)referenceObject->input_padded_picture_ptr;
+#endif
             // Set 1/4 ME reference buffer(s); filtered or decimated
             quarterRefPicPtr = (scs_ptr->down_sampling_method_me_search == ME_FILTERED_DOWNSAMPLED) ?
                 (EbPictureBufferDesc*)referenceObject->quarter_filtered_picture_ptr :
@@ -10942,7 +10988,9 @@ void hme_level2_sb(
     MeContext                 *context_ptr,
     EbPictureBufferDesc       *input_ptr
 ) {
+#if !FIX_WARNINGS
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+#endif
     uint32_t sb_width = (input_ptr->width - sb_origin_x) < BLOCK_SIZE_64
                             ? input_ptr->width - sb_origin_x
                             : BLOCK_SIZE_64;
@@ -10955,10 +11003,11 @@ void hme_level2_sb(
     uint32_t search_region_number_in_width = 0;
     uint32_t search_region_number_in_height = 0;
 
+#if !FIX_WARNINGS
     // Final ME Search Center
     int16_t x_search_center = 0;
     int16_t y_search_center = 0;
-
+#endif
     uint32_t num_of_list_to_search;
     uint32_t list_index;
     EbPaReferenceObject *referenceObject;  // input parameter, reference Object Ptr
@@ -10966,8 +11015,10 @@ void hme_level2_sb(
     uint8_t ref_pic_index;
     uint8_t num_of_ref_pic_to_search;
     EbPictureBufferDesc *refPicPtr;
+#if !FIX_WARNINGS
     uint64_t ref0Poc = 0;
     uint64_t ref1Poc = 0;
+#endif
     // Configure HME level 0, level 1 and level 2 from static config parameters
     EbBool enable_hme_level2_flag = context_ptr->enable_hme_level2_flag;
 #if ADD_HME_DECIMATION_SIGNAL
@@ -10994,7 +11045,9 @@ void hme_level2_sb(
                 : pcs_ptr->ref_list1_count;
 
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
+#if !FIX_WARNINGS
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
+#endif
         }
         // Ref Picture Loop
         for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index){
@@ -11009,7 +11062,9 @@ void hme_level2_sb(
                         ->ref_pa_pic_ptr_array[1][0]
                         ->object_ptr;
 #endif
+#if !FIX_WARNINGS
                     ref1Poc = pcs_ptr->ref_pic_poc_array[1][0];
+#endif
                 }
 
                 referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]->object_ptr;
@@ -11084,8 +11139,10 @@ void hme_level2_sb(
                                     sb_width,
                                     sb_height,
                                     refPicPtr,
+#if !ADD_HME_DECIMATION_SIGNAL && !PRUNE_HME_L1
                                     search_region_number_in_width,
                                     search_region_number_in_height,
+#endif
 #if ADD_HME_DECIMATION_SIGNAL
                                     hmeLevel2_search_area_in_width,
                                     hmeLevel2_search_area_in_height,
@@ -11122,11 +11179,18 @@ void hme_level2_sb(
  *******************************************/
 void set_final_seach_centre_sb(
     PictureParentControlSet   *pcs_ptr,
+#if !MULTI_STAGE_HME || !FIX_WARNINGS
     uint32_t                   sb_origin_x,
     uint32_t                   sb_origin_y,
+#endif
+#if !MULTI_STAGE_HME ||  !DISABLE_HME_L0_FOR_240P || !RE_ENABLE_HME_L0_240p
     MeContext                 *context_ptr,
     EbPictureBufferDesc       *input_ptr
+#else
+    MeContext                 *context_ptr
+#endif
 ) {
+#if !MULTI_STAGE_HME
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     uint32_t sb_width = (input_ptr->width - sb_origin_x) < BLOCK_SIZE_64
                             ? input_ptr->width - sb_origin_x
@@ -11134,8 +11198,11 @@ void set_final_seach_centre_sb(
     uint32_t sb_height = (input_ptr->height - sb_origin_y) < BLOCK_SIZE_64
                              ? input_ptr->height - sb_origin_y
                              : BLOCK_SIZE_64;
+#endif
+#if !FIX_WARNINGS
     int16_t origin_x = (int16_t)sb_origin_x;
     int16_t origin_y = (int16_t)sb_origin_y;
+#endif
     // HME
     uint32_t search_region_number_in_width = 0;
     uint32_t search_region_number_in_height = 0;
@@ -11169,7 +11236,9 @@ void set_final_seach_centre_sb(
     uint32_t quadIndex;
     uint32_t nextQuadIndex;
     uint64_t tempXHmeSad;
+#if !FIX_WARNINGS
     EbPaReferenceObject *referenceObject;  // input parameter, reference Object Ptr
+#endif
     uint64_t ref0Poc = 0;
     uint64_t ref1Poc = 0;
     // Configure HME level 0, level 1 and level 2 from static config parameters
@@ -11214,27 +11283,33 @@ void set_final_seach_centre_sb(
                 : (list_index == REF_LIST_0)
                 ? pcs_ptr->ref_list0_count
                 : pcs_ptr->ref_list1_count;
-
+#if !FIX_WARNINGS
             referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[0][0]->object_ptr;
+#endif
             ref0Poc = pcs_ptr->ref_pic_poc_array[0][0];
         }
         // Ref Picture Loop
         for (ref_pic_index = 0; ref_pic_index < num_of_ref_pic_to_search; ++ref_pic_index){
             if (context_ptr->me_alt_ref == EB_TRUE) {
+#if !FIX_WARNINGS
                 referenceObject = (EbPaReferenceObject *)context_ptr->alt_ref_reference_ptr;
+#endif
             }
             else {
                 if (num_of_list_to_search) {
+#if !FIX_WARNINGS
 #if !LOW_DELAY_TUNE
                     referenceObject =
                         (EbPaReferenceObject *)pcs_ptr
                         ->ref_pa_pic_ptr_array[1][0]
                         ->object_ptr;
 #endif
+#endif
                     ref1Poc = pcs_ptr->ref_pic_poc_array[1][0];
                 }
-
+#if !FIX_WARNINGS
                 referenceObject = (EbPaReferenceObject *)pcs_ptr->ref_pa_pic_ptr_array[list_index][ref_pic_index]->object_ptr;
+#endif
             }
 
             if (pcs_ptr->temporal_layer_index > 0 || list_index == 0) {
@@ -11496,10 +11571,16 @@ void hme_sb(
     // set final mv centre
     set_final_seach_centre_sb(
         pcs_ptr,
+#if !MULTI_STAGE_HME || !FIX_WARNINGS
         sb_origin_x,
         sb_origin_y,
+#endif
+#if !MULTI_STAGE_HME ||  !DISABLE_HME_L0_FOR_240P || !RE_ENABLE_HME_L0_240p
         context_ptr,
         input_ptr);
+#else
+        context_ptr);
+#endif
 #else
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
     uint32_t sb_width = (input_ptr->width - sb_origin_x) < BLOCK_SIZE_64
@@ -12638,8 +12719,10 @@ EbErrorType motion_estimate_sb(
                             // Refinements H - AVC Style
                             interpolate_search_region_avc(
                                 context_ptr,
+#if !REMOVE_ME_BIPRED_SEARCH
                                 list_index,
                                 ref_pic_index,
+#endif
                                 context_ptr->integer_buffer_ptr[list_index][ref_pic_index] +
                                     (ME_FILTER_TAP >> 1) +
                                     ((ME_FILTER_TAP >> 1) *
@@ -12717,7 +12800,11 @@ EbErrorType motion_estimate_sb(
                                                                     [ME_TIER_ZERO_PU_16x64_0]);
 #endif
                             // half-Pel search
+#if SHUT_ME_NSQ_SEARCH
+                            open_loop_me_half_pel_search_sblock(
+#else
                             open_loop_me_half_pel_search_sblock(pcs_ptr,
+#endif
                                                                 context_ptr,
                                                                 list_index,
                                                                 ref_pic_index,
@@ -12815,8 +12902,10 @@ EbErrorType motion_estimate_sb(
                         context_ptr->local_hp_mode[list_index][ref_pic_index] == REFINEMENT_HP_MODE) {
                         interpolate_search_region_avc(
                             context_ptr,
+#if !REMOVE_ME_BIPRED_SEARCH
                             list_index,
                             ref_pic_index,
+#endif
                             context_ptr->integer_buffer_ptr[list_index][ref_pic_index] +
                                 (ME_FILTER_TAP >> 1) +
                                 ((ME_FILTER_TAP >> 1) *
@@ -12834,7 +12923,9 @@ EbErrorType motion_estimate_sb(
                         // Half-Pel Refinement [8 search positions]
                         half_pel_search_sb(
                             scs_ptr,
+#if !SHUT_ME_NSQ_SEARCH
                             pcs_ptr,
+#endif
                             context_ptr,
                             context_ptr->integer_buffer_ptr[list_index][ref_pic_index] +
                                 (ME_FILTER_TAP >> 1) +
@@ -13521,4 +13612,3 @@ EbErrorType open_loop_intra_search_mb(
     return return_error;
 }
 #endif
-

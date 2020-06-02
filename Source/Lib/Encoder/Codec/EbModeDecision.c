@@ -1351,7 +1351,9 @@ void bipred_3x3_candidates_injection(const SequenceControlSet *scs_ptr, PictureC
     uint32_t     mi_row                 = context_ptr->blk_origin_y >> MI_SIZE_LOG2;
     uint32_t     mi_col                 = context_ptr->blk_origin_x >> MI_SIZE_LOG2;
     MD_COMP_TYPE cur_type; //BIP 3x3
+#if !INTER_COMP_REDESIGN
     BlockSize    bsize          = context_ptr->blk_geom->bsize;
+#endif
 #if INTER_COMP_REDESIGN
     MD_COMP_TYPE       tot_comp_types = context_ptr->compound_types_to_try;
 #else
@@ -6231,14 +6233,12 @@ void  inject_filter_intra_candidates(
 }
 
 #if INJECT_BACKUP_CANDIDATE
-void inject_zz_backup_candidate(const SequenceControlSet *  scs_ptr,
-    struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
+void inject_zz_backup_candidate(
+    struct ModeDecisionContext *context_ptr,
     uint32_t *candidate_total_cnt) {
     ModeDecisionCandidate *cand_array = context_ptr->fast_candidate_array;
     IntMv                  best_pred_mv[2] = { {0}, {0} };
     uint32_t               cand_total_cnt = (*candidate_total_cnt);
-
-    MacroBlockD *xd = context_ptr->blk_ptr->av1xd;
 
     cand_array[cand_total_cnt].type = INTER_MODE;
     cand_array[cand_total_cnt].distortion_ready = 0;
@@ -6428,8 +6428,9 @@ EbErrorType generate_md_stage_0_cand(
     uint32_t            *candidate_total_count_ptr,
     PictureControlSet   *pcs_ptr)
 {
-
+#if !SHUT_PALETTE_BC_PD_PASS_0_1
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
+#endif
     const SequenceControlSet *scs_ptr = (SequenceControlSet*)pcs_ptr->scs_wrapper_ptr->object_ptr;
     const EB_SLICE slice_type = pcs_ptr->slice_type;
     uint32_t cand_total_cnt = 0;
@@ -6521,9 +6522,8 @@ EbErrorType generate_md_stage_0_cand(
     // For I_SLICE, DC is always injected, and therefore there is no a risk of no candidates @ md_syage_0()
     // For non I_SLICE, there is a risk of no candidates @ md_stage_0() because of the INTER candidates pruning techniques
     if (slice_type != I_SLICE && cand_total_cnt == 0) {
-        inject_zz_backup_candidate(scs_ptr,
+        inject_zz_backup_candidate(
             context_ptr,
-            pcs_ptr,
             &cand_total_cnt);
     }
 #endif

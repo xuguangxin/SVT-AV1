@@ -1567,8 +1567,9 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 
 void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                          uint32_t fastCandidateTotalCount) {
+#if !REMOVE_OLD_NICS
     SequenceControlSet *scs = (SequenceControlSet *)(pcs_ptr->scs_wrapper_ptr->object_ptr);
-
+#endif
     // Step 1: derive bypass_stage1 flags
     if (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
         context_ptr->md_staging_mode == MD_STAGING_MODE_2)
@@ -6060,7 +6061,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             }
         }
     }
-
+#if !FIX_WARNINGS
     if (context_ptr->pd_pass == PD_PASS_2) {
         uint8_t  BIGGER_THAN_TH = 100;
         uint64_t best = context_ptr->pme_res[0][0].dist;
@@ -6072,6 +6073,7 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
             }
         }
     }
+#endif
 #endif
 
 }
@@ -10283,11 +10285,15 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
             const int cols = block_size_wide[context_ptr->blk_geom->bsize];
             angle_estimation(src_buf, src_pic->stride_y, rows, cols, /*context_ptr->blk_geom->bsize,*/directional_mode_skip_mask);
         }
+#if !FIX_WARNINGS
         uint8_t     angle_delta_shift = 1;
+#endif
         if (context_ptr->disable_angle_z2_intra_flag) {
             disable_angle_prediction = 1;
             angle_delta_candidate_count = 1;
+#if !FIX_WARNINGS
             angle_delta_shift = 1;
+#endif
             disable_z2_prediction = 1;
         }
         else
@@ -10297,14 +10303,18 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                         context_ptr->md_enable_smooth ? SMOOTH_H_PRED : D67_PRED;
                     angle_delta_candidate_count = use_angle_delta ? 5 : 1;
                     disable_angle_prediction = 0;
+#if !FIX_WARNINGS
                     angle_delta_shift = 2;
+#endif
                     disable_z2_prediction = 0;
                 }
                 else {
                     uv_mode_end = DC_PRED;
                     disable_angle_prediction = 1;
                     angle_delta_candidate_count = 1;
+#if !FIX_WARNINGS
                     angle_delta_shift = 1;
+#endif
                     disable_z2_prediction = 0;
                 }
             }
@@ -11005,7 +11015,12 @@ EbBool is_block_allowed(PictureControlSet *pcs_ptr, ModeDecisionContext *context
 }
 #endif
 #if SSE_BASED_SPLITTING
+#if FIX_WARNINGS
+void distortion_based_modulator(ModeDecisionContext *context_ptr,
+#else
 void distortion_based_modulator(PictureControlSet *pcs_ptr,ModeDecisionContext *context_ptr,
+
+#endif
     EbPictureBufferDesc *input_picture_ptr, uint32_t input_origin_index,
     EbPictureBufferDesc *recon_ptr, uint32_t blk_origin_index)
 {
@@ -11692,7 +11707,11 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 #if CLEAN_UP_SB_DATA_3
         if (!context_ptr->hbd_mode_decision) {
 #if SSE_BASED_SPLITTING
+#if FIX_WARNINGS
+            distortion_based_modulator(context_ptr,input_picture_ptr, input_origin_index,
+#else
             distortion_based_modulator(pcs_ptr, context_ptr,input_picture_ptr, input_origin_index,
+#endif
                 recon_ptr, blk_origin_index);
 #endif
             memcpy(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].neigh_top_recon[0],
@@ -11927,7 +11946,12 @@ void md_encode_block(PictureControlSet *pcs_ptr,
  *
  * Returns TRUE if the blocks should be skipped; FALSE otherwise.
  */
-uint8_t update_skip_nsq_shapes(ModeDecisionContext *context_ptr) {
+#if !REMOVE_SQ_WEIGHT_QP_CHECK && !SHUT_SQ_WEIGHT_INTRA_FILTER
+uint8_t update_skip_nsq_shapes(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr,
+#else
+uint8_t update_skip_nsq_shapes(
+#endif
+                               ModeDecisionContext *context_ptr) {
     uint8_t skip_nsq = 0;
     uint32_t sq_weight = context_ptr->sq_weight;
 
@@ -12479,7 +12503,11 @@ void block_based_depth_reduction(
 #if COEFF_BASED_BYPASS_NSQ
 #if MERGED_COEFF_BAND
 #if NSQ_CYCLES_REDUCTION
-uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr, int32_t sb_size) {
+#if !MERGED_COEFF_BAND
+uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
+#else
+uint8_t get_allowed_block(ModeDecisionContext *context_ptr) {
+#endif
     uint8_t skip_nsq = 0;
     uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)context_ptr->blk_geom->sq_size);
     if (context_ptr->coeff_area_based_bypass_nsq_th) {
@@ -13076,17 +13104,22 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             // skip until we reach the next block @ the parent block depth
             if (blk_ptr->mds_idx >= next_non_skip_blk_idx_mds && skip_next_sq == 1)
                 skip_next_sq = 0;
-
+            
+#if !REMOVE_SQ_WEIGHT_QP_CHECK && !SHUT_SQ_WEIGHT_INTRA_FILTER
+            uint8_t sq_weight_based_nsq_skip = update_skip_nsq_shapes(scs_ptr, pcs_ptr, context_ptr);
+#else
             uint8_t sq_weight_based_nsq_skip = update_skip_nsq_shapes(context_ptr);
+#endif
 #if !CLEAN_UP_SB_DATA_6
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
 #if COEFF_BASED_BYPASS_NSQ
-#if NSQ_CYCLES_REDUCTION
-            uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr, scs_ptr->seq_header.sb_size);
-#else
+#if !MERGED_COEFF_BAND
             uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr);
+#else
+            uint8_t skip_nsq = get_allowed_block(context_ptr);
 #endif
+
             if (pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[blk_ptr->mds_idx] &&
                 !skip_next_nsq && !skip_next_sq &&
                 !sq_weight_based_nsq_skip &&

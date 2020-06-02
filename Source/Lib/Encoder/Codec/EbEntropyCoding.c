@@ -1830,7 +1830,6 @@ static void write_inter_mode(FRAME_CONTEXT *frame_context, AomWriter *ec_writer,
 //extern INLINE int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
 #if SB_MEM_OPT
 void write_drl_idx(FRAME_CONTEXT *frame_context, AomWriter *ec_writer, BlkStruct *blk_ptr) {
-    MacroBlockD *xd = blk_ptr->av1xd;
     const int32_t new_mv = blk_ptr->pred_mode == NEWMV || blk_ptr->pred_mode == NEW_NEWMV;
     if (new_mv) {
         int32_t idx;
