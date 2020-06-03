@@ -147,6 +147,9 @@ typedef struct MdBlkStruct {
 #if SSE_BASED_SPLITTING
     uint8_t sse_gradian_band[NUMBER_OF_SHAPES];
 #endif
+#if TRACK_PER_DEPTH_DELTA
+    int8_t pred_depth_refinement;
+#endif
 } MdBlkStruct;
 
 struct ModeDecisionCandidate;
@@ -203,9 +206,23 @@ typedef struct  NsqCycleRControls {
 #endif
 #if DEPTH_CYCLES_REDUCTION
 typedef struct  DepthCycleRControls {
-    uint8_t enabled; // On/Off feature control 
+    uint8_t enabled; // On/Off feature control
     uint16_t th;  // Threshold to bypass depth <the higher th the higher speed>
-}DepthCycleRControls; 
+}DepthCycleRControls;
+#endif
+#if COEFF_BASED_TXT_BYPASS
+typedef struct  TxtCycleRControls {
+    uint8_t enabled;    // On/Off feature control
+    uint16_t intra_th;  // Threshold to bypass intra TXT <the higher th the higher speed>
+    uint16_t inter_th;  // Threshold to bypass inter TXT <the higher th the higher speed>
+}TxtCycleRControls;
+#endif
+#if COEFF_BASED_TXS_BYPASS
+typedef struct  TxsCycleRControls {
+    uint8_t enabled;    // On/Off feature control
+    uint16_t intra_th;  // Threshold to bypass intra TXS <the higher th the higher speed>
+    uint16_t inter_th;  // Threshold to bypass inter TXS <the higher th the higher speed>
+}TxsCycleRControls;
 #endif
 #if SB_CLASSIFIER && !CLEANUP_CYCLE_ALLOCATION
 typedef struct SbClassControls {
@@ -728,6 +745,12 @@ typedef struct ModeDecisionContext {
 #if DEPTH_CYCLES_REDUCTION
     DepthCycleRControls depth_cycles_red_ctrls;
 #endif
+#if COEFF_BASED_TXT_BYPASS
+    TxtCycleRControls txt_cycles_red_ctrls;
+#endif
+#if COEFF_BASED_TXS_BYPASS
+    TxsCycleRControls txs_cycles_red_ctrls;
+#endif
 #if M8_4x4
     uint8_t disallow_4x4;
 #endif
@@ -765,7 +788,6 @@ typedef struct ModeDecisionContext {
     EbPictureBufferDesc *recon_coeff_ptr[TX_TYPES];
     EbPictureBufferDesc *recon_ptr[TX_TYPES];
 #endif
-
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

@@ -461,6 +461,11 @@ extern "C" {
 #define DEPTH_CYCLES_REDUCTION 1
 #define CLEANUP_CYCLE_ALLOCATION 1
 #define MR_DEPTH_REFINEMENT 1 // Change MR depth refinement levels
+
+#define TRACK_PER_DEPTH_DELTA  1 // Keep track of the distance of a given depth to the PD0 predicted depth
+#define COEFF_BASED_TXT_BYPASS 1 // Use TXT statistics to bypass certain tx types
+#define COEFF_BASED_TXS_BYPASS 1 // Use TXS statistics to bypass certain tx search sizes
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

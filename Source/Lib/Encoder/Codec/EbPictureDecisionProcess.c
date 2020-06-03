@@ -2004,7 +2004,6 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->txs_in_inter_classes = 0;
 #endif
 #endif
-
 #if !INTER_COMP_REDESIGN
     // Set Wedge mode      Settings
     // 0                 FULL: Full search

@@ -2347,6 +2347,82 @@ void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t dep
     }
 }
 #endif
+#if COEFF_BASED_TXT_BYPASS
+void set_txt_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txt_cycles_red_mode) {
+
+    TxtCycleRControls* txt_cycle_red_ctrls = &mdctxt->txt_cycles_red_ctrls;
+
+    switch (txt_cycles_red_mode)
+    {
+    case 0: // txt_cycles_reduction Off
+        txt_cycle_red_ctrls->enabled = 0;
+        txt_cycle_red_ctrls->intra_th = 0;
+        txt_cycle_red_ctrls->inter_th = 0;
+        break;
+    case 1:
+        txt_cycle_red_ctrls->enabled = 1;
+        txt_cycle_red_ctrls->intra_th = 0;
+        txt_cycle_red_ctrls->inter_th = 1;
+        break;
+    case 2:
+        txt_cycle_red_ctrls->enabled = 1;
+        txt_cycle_red_ctrls->intra_th = 1;
+        txt_cycle_red_ctrls->inter_th = 3;
+        break;
+    case 3:
+        txt_cycle_red_ctrls->enabled = 1;
+        txt_cycle_red_ctrls->intra_th = 1;
+        txt_cycle_red_ctrls->inter_th = 5;
+        break;
+    case 4:
+        txt_cycle_red_ctrls->enabled = 1;
+        txt_cycle_red_ctrls->intra_th = 3;
+        txt_cycle_red_ctrls->inter_th = 7;
+        break;
+    case 5:
+        txt_cycle_red_ctrls->enabled = 1;
+        txt_cycle_red_ctrls->intra_th = 5;
+        txt_cycle_red_ctrls->inter_th = 8;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
+#if COEFF_BASED_TXS_BYPASS
+void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_cycles_red_mode) {
+
+    TxsCycleRControls* txs_cycle_red_ctrls = &mdctxt->txs_cycles_red_ctrls;
+
+    switch (txs_cycles_red_mode)
+    {
+    case 0: // txt_cycles_reduction Off
+        txs_cycle_red_ctrls->enabled = 0;
+        txs_cycle_red_ctrls->intra_th = 0;
+        txs_cycle_red_ctrls->inter_th = 0;
+        break;
+    case 1:
+        txs_cycle_red_ctrls->enabled = 1;
+        txs_cycle_red_ctrls->intra_th = 0;
+        txs_cycle_red_ctrls->inter_th = 30;
+        break;
+    case 2:
+        txs_cycle_red_ctrls->enabled = 1;
+        txs_cycle_red_ctrls->intra_th = 15;
+        txs_cycle_red_ctrls->inter_th = 50;
+        break;
+    case 3:
+        txs_cycle_red_ctrls->enabled = 1;
+        txs_cycle_red_ctrls->intra_th = 25;
+        txs_cycle_red_ctrls->inter_th = 75;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 /******************************************************
 * Derive EncDec Settings for OQ
 Input   : encoder mode and pd pass
@@ -2725,6 +2801,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->tx_search_reduced_set = 0;
     else
         context_ptr->tx_search_reduced_set = 1;
+#endif
+#if COEFF_BASED_TXT_BYPASS
+    uint8_t txt_cycles_reduction_level = 0;
+    set_txt_cycle_reduction_controls(context_ptr, txt_cycles_reduction_level);
 #endif
     // Interpolation search Level                     Settings
     // 0                                              OFF
@@ -4208,7 +4288,6 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->md_stage_2_3_cand_prune_th = 5;
 #endif
-
     // md_stage_2_3_class_prune_th (for class removal)
     // Remove class if deviation to the best is higher than
     // md_stage_2_3_class_prune_th
@@ -4711,6 +4790,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_tx_size_search_mode = 0;
     else
         context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
+
+#if COEFF_BASED_TXS_BYPASS
+    uint8_t txs_cycles_reduction_level = 0;
+    set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
+#endif
 #if OPT_BLOCK_INDICES_GEN_2 && !NEW_CYCLE_ALLOCATION
     // Update txs settings based on the sb_class
     context_ptr->md_tx_size_search_mode = (context_ptr->enable_area_based_cycles_allocation && context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : context_ptr->md_tx_size_search_mode;
@@ -6392,6 +6476,9 @@ void copy_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionContext *cont
                            uint32_t sb_org_y);
 
 static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
+#if TRACK_PER_DEPTH_DELTA
+                                        int8_t pred_depth,
+#endif
                                         int8_t depth_step) {
     uint32_t         parent_depth_idx_mds, block_1d_idx;
     const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
@@ -6407,15 +6494,25 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
                 ? 17
                 : parent_blk_geom->sq_size > 8 ? 25 : parent_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < parent_tot_d1_blocks; block_1d_idx++) {
+#if TRACK_PER_DEPTH_DELTA
+            results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].pred_depth_refinement = parent_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].consider_block = 1;
         }
 
         if (depth_step < -1)
+#if TRACK_PER_DEPTH_DELTA
+            set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, depth_step + 1);
+#else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, depth_step + 1);
+#endif
     }
 }
 #if MULTI_PASS_PD_FOR_INCOMPLETE
 static void set_child_to_be_considered(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr, MdcSbData *results_ptr, uint32_t blk_index, uint32_t sb_index, int32_t sb_size,
+#if TRACK_PER_DEPTH_DELTA
+    int8_t pred_depth,
+#endif
     int8_t depth_step) {
 #else
 static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_index, int32_t sb_size,
@@ -6441,13 +6538,20 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 
         for (block_1d_idx = 0; block_1d_idx < child1_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].consider_block = 1;
+#if TRACK_PER_DEPTH_DELTA
+            results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].pred_depth_refinement = child1_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_1])
+#if TRACK_PER_DEPTH_DELTA
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_1, sb_size, depth_step - 1);
@@ -6462,6 +6566,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 : child2_blk_geom->sq_size > 8 ? 25 : child2_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < child2_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].consider_block = 1;
+#if TRACK_PER_DEPTH_DELTA
+            results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].pred_depth_refinement = child2_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6469,7 +6576,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_2])
+#if TRACK_PER_DEPTH_DELTA
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_2, sb_size, depth_step - 1);
@@ -6485,6 +6596,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 
         for (block_1d_idx = 0; block_1d_idx < child3_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].consider_block = 1;
+#if TRACK_PER_DEPTH_DELTA
+            results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].pred_depth_refinement = child3_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6492,7 +6606,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_3])
+#if TRACK_PER_DEPTH_DELTA
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_3, sb_size, depth_step - 1);
@@ -6507,13 +6625,20 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
                 : child4_blk_geom->sq_size > 8 ? 25 : child4_blk_geom->sq_size == 8 ? 5 : 1;
         for (block_1d_idx = 0; block_1d_idx < child4_tot_d1_blocks; block_1d_idx++) {
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].consider_block = 1;
+#if TRACK_PER_DEPTH_DELTA
+            results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].pred_depth_refinement = child4_blk_geom->depth - pred_depth;
+#endif
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
 #if MULTI_PASS_PD_FOR_INCOMPLETE
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_4])
+#if TRACK_PER_DEPTH_DELTA
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
         if (depth_step > 1)
             set_child_to_be_considered(results_ptr, child_block_idx_4, sb_size, depth_step - 1);
@@ -6591,6 +6716,11 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
 
                     results_ptr->leaf_data_array[results_ptr->leaf_count].mds_idx = blk_index;
                     results_ptr->leaf_data_array[results_ptr->leaf_count].tot_d1_blocks = tot_d1_blocks;
+#if TRACK_PER_DEPTH_DELTA
+                    results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement = results_ptr->leaf_data_array[blk_index].pred_depth_refinement;
+                    if (results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement == -8)
+                        printf("final_pred_depth_refinement error\n");
+#endif
                     results_ptr->leaf_data_array[results_ptr->leaf_count++].split_flag = results_ptr->leaf_data_array[blk_index].refined_split_flag;
 
                 }
@@ -6885,6 +7015,7 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+
 #if SB_CLASSIFIER
 #if CLEANUP_CYCLE_ALLOCATION
 const uint32_t sb_class_th[NUMBER_OF_SB_CLASS] = { 0,85,75,65,60,55,50,45,40,
@@ -7170,6 +7301,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
         results_ptr->leaf_data_array[blk_index].refined_split_flag =
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
+#if TRACK_PER_DEPTH_DELTA
+        results_ptr->leaf_data_array[blk_index].pred_depth_refinement = -8;
+#endif
         blk_index++;
     }
 
@@ -7706,22 +7840,34 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     // Add current pred depth block(s)
                     for (block_1d_idx = 0; block_1d_idx < tot_d1_blocks; block_1d_idx++) {
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].consider_block = 1;
+#if TRACK_PER_DEPTH_DELTA
+                        results_ptr->leaf_data_array[blk_index + block_1d_idx].pred_depth_refinement = 0;
+#endif
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].refined_split_flag =
                             EB_FALSE;
                     }
 
                     // Add block indices of upper depth(s)
                     if (s_depth != 0)
+#if TRACK_PER_DEPTH_DELTA
+                        set_parent_to_be_considered(
+                            results_ptr, blk_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth, s_depth);
+#else
                         set_parent_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, s_depth);
+#endif
 
                     // Add block indices of lower depth(s)
                     if (e_depth != 0)
+#if TRACK_PER_DEPTH_DELTA
+                        set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth, e_depth);
+#else
 #if MULTI_PASS_PD_FOR_INCOMPLETE
                         set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size, e_depth);
 #else
                         set_child_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, e_depth);
+#endif
 #endif
                 }
             }

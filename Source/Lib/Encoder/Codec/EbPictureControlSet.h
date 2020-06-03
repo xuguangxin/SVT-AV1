@@ -159,6 +159,10 @@ typedef struct EbMdcLeafData {
     EbBool   split_flag;
     uint8_t  consider_block;
     uint8_t  refined_split_flag;
+#if TRACK_PER_DEPTH_DELTA
+    int8_t  pred_depth_refinement;
+    int8_t  final_pred_depth_refinement;
+#endif
 } EbMdcLeafData;
 
 typedef struct MdcSbData {
