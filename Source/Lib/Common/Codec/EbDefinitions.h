@@ -476,6 +476,7 @@ extern "C" {
 #define IFS_MD_STAGE_1            1 // Move ifs from md_stage_3() to md_stage_1()
 #define SHUT_MERGE_1D_INTER_BLOCK 1 // Remove merge 1D feature
 
+#define QP63_MISMATCH_FIX      1 // Fix the enc/dec mismatch for QP63
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
