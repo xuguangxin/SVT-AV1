@@ -11,7 +11,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#if !REMOVE_UNUSED_CODE
 void avc_style_luma_interpolation_filter_pose_ssse3(EbByte ref_pic, uint32_t src_stride, EbByte dst,
                                                     uint32_t dst_stride, uint32_t pu_width,
                                                     uint32_t pu_height, EbByte temp_buf,
@@ -73,7 +73,7 @@ void avc_style_luma_interpolation_filter_helper_ssse3(EbByte ref_pic, uint32_t s
                                                       EbByte temp_buf, EbBool skip,
                                                       uint32_t frac_pos,
                                                       uint8_t  fractional_position);
-
+#endif
 #ifdef __cplusplus
 }
 #endif

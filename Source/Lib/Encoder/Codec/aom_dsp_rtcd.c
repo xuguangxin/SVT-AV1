@@ -649,10 +649,13 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
 
     SET_AVX2_AVX512(
         search_one_dual, search_one_dual_c, search_one_dual_avx2, search_one_dual_avx512);
+
+#if !REMOVE_UNUSED_CODE
     SET_SSE41_AVX2(sad_loop_kernel_sparse,
                    sad_loop_kernel_sparse_c,
                    sad_loop_kernel_sparse_sse4_1_intrin,
                    sad_loop_kernel_sparse_avx2_intrin);
+#endif
     SET_SSE41_AVX2_AVX512(sad_loop_kernel,
                           sad_loop_kernel_c,
                           sad_loop_kernel_sse4_1_intrin,
@@ -662,6 +665,7 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
                    sad_loop_kernel_c,
                    sad_loop_kernel_sse4_1_hme_l0_intrin,
                    sad_loop_kernel_avx2_hme_l0_intrin);
+#if !REMOVE_UNUSED_CODE
     SET_AVX2(
         noise_extract_luma_weak, noise_extract_luma_weak_c, noise_extract_luma_weak_avx2_intrin);
     SET_AVX2(noise_extract_luma_weak_sb,
@@ -676,6 +680,7 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     SET_AVX2(noise_extract_chroma_weak,
              noise_extract_chroma_weak_c,
              noise_extract_chroma_weak_avx2_intrin);
+#endif
     SET_SSE41(
         svt_av1_apply_filtering, svt_av1_apply_filtering_c, svt_av1_apply_temporal_filter_sse4_1);
 #if TF_X86_KERNEL_FIX
@@ -706,12 +711,14 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
     SET_SSE41(ext_sad_calculation_32x32_64x64,
               ext_sad_calculation_32x32_64x64_c,
               ext_sad_calculation_32x32_64x64_sse4_intrin);
+#if !REMOVE_UNUSED_CODE
     SET_SSE2(sad_calculation_8x8_16x16,
              sad_calculation_8x8_16x16_c,
              sad_calculation_8x8_16x16_sse2_intrin);
     SET_SSE2(sad_calculation_32x32_64x64,
              sad_calculation_32x32_64x64_c,
              sad_calculation_32x32_64x64_sse2_intrin);
+#endif
     SET_AVX2(ext_all_sad_calculation_8x8_16x16,
              ext_all_sad_calculation_8x8_16x16_c,
              ext_all_sad_calculation_8x8_16x16_avx2);
@@ -724,7 +731,7 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
              ext_eight_sad_calculation_32x32_64x64_c,
              ext_eight_sad_calculation_32x32_64x64_avx2);
     SET_AVX2(eb_sad_kernel4x4, fast_loop_nxm_sad_kernel, eb_compute4x_m_sad_avx2_intrin);
-
+#if !REMOVE_UNUSED_CODE
     SET_SSE41_AVX2_AVX512(get_eight_horizontal_search_point_results_8x8_16x16_pu,
                           get_eight_horizontal_search_point_results_8x8_16x16_pu_c,
                           get_eight_horizontal_search_point_results_8x8_16x16_pu_sse41_intrin,
@@ -735,6 +742,7 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
                    get_eight_horizontal_search_point_results_32x32_64x64_pu_c,
                    get_eight_horizontal_search_point_results_32x32_64x64_pu_sse41_intrin,
                    get_eight_horizontal_search_point_results_32x32_64x64_pu_avx2_intrin);
+#endif
     SET_SSE2(
         initialize_buffer_32bits, initialize_buffer_32bits_c, initialize_buffer_32bits_sse2_intrin);
     SET_AVX2(nxm_sad_kernel_sub_sampled,

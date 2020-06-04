@@ -5,7 +5,7 @@
 
 //#include "EbUtility.h"
 #include "EbDefinitions.h"
-
+#if !REMOVE_UNUSED_CODE
 void av1_upsample_intra_edge_high_c_old(uint8_t *p, int32_t sz, int32_t bd) {
     // interpolate half-sample positions
     assert(sz <= MAX_UPSAMPLE_SZ);
@@ -28,6 +28,7 @@ void av1_upsample_intra_edge_high_c_old(uint8_t *p, int32_t sz, int32_t bd) {
         p[2 * i] = in[i + 2];
     }
 }
+#endif
 
 
 void eb_av1_upsample_intra_edge_high_c(uint16_t *p, int32_t sz, int32_t bd) {

@@ -1,3 +1,4 @@
+
 /*
  * Copyright(c) 2019 Intel Corporation
  * SPDX - License - Identifier: BSD - 2 - Clause - Patent
@@ -12,7 +13,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#if !REMOVE_UNUSED_CODE
 void transpose_8bit_16x16_reg128bit_instance_avx2(const __m128i *const in, __m128i *const out);
 
 void transpose_32bit_8x8_reg256bit_instance_avx2(const __m256i *const in, __m256i *const out);
@@ -26,7 +27,7 @@ void transpose_64bit_4x8_reg256bit_instance_avx2(const __m256i *const in, __m256
 #ifdef __cplusplus
 }
 #endif
-
+#endif
 static INLINE __m256i _mm256_unpacklo_epi128(const __m256i in0, const __m256i in1) {
     return _mm256_inserti128_si256(in0, _mm256_extracti128_si256(in1, 0), 1);
 }
@@ -34,7 +35,7 @@ static INLINE __m256i _mm256_unpacklo_epi128(const __m256i in0, const __m256i in
 static INLINE __m256i _mm256_unpackhi_epi128(const __m256i in0, const __m256i in1) {
     return _mm256_inserti128_si256(in1, _mm256_extracti128_si256(in0, 1), 0);
 }
-
+#if !REMOVE_UNUSED_CODE
 static INLINE void transpose_8bit_16x16_reg128bit_avx2(const __m128i *const in,
     __m128i *const out) {
     // Combine to 256 bit registers. Goes from:
@@ -162,7 +163,7 @@ static INLINE void transpose_8bit_16x16_reg128bit_avx2(const __m128i *const in,
     out[15] = _mm256_extracti128_si256(e7, 1);
 }
 /* clang-format on */
-
+#endif
 static INLINE void transpose_32bit_8x8_avx2(const __m256i *const in, __m256i *const out) {
     // Unpack 32 bit elements. Goes from:
     // in[0]: 00 01 02 03  04 05 06 07

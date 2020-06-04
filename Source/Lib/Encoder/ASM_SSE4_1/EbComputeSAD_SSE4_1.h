@@ -11,6 +11,7 @@
 extern "C" {
 #endif
 
+#if !REMOVE_UNUSED_CODE
 void sad_loop_kernel_sparse_sse4_1_intrin(
     uint8_t * src, // input parameter, source samples Ptr
     uint32_t  src_stride, // input parameter, source stride
@@ -21,7 +22,7 @@ void sad_loop_kernel_sparse_sse4_1_intrin(
     uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center,
     uint32_t src_stride_raw, // input parameter, source stride (no line skipping)
     int16_t search_area_width, int16_t search_area_height);
-
+#endif
 void sad_loop_kernel_sse4_1_hme_l0_intrin(
     uint8_t * src, // input parameter, source samples Ptr
     uint32_t  src_stride, // input parameter, source stride
@@ -32,7 +33,7 @@ void sad_loop_kernel_sse4_1_hme_l0_intrin(
     uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center,
     uint32_t src_stride_raw, // input parameter, source stride (no line skipping)
     int16_t search_area_width, int16_t search_area_height);
-
+#if !REMOVE_UNUSED_CODE
 void get_eight_horizontal_search_point_results_8x8_16x16_pu_sse41_intrin(
     uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride, uint32_t *p_best_sad_8x8,
     uint32_t *p_best_mv8x8, uint32_t *p_best_sad_16x16, uint32_t *p_best_mv16x16, uint32_t mv,
@@ -42,6 +43,7 @@ void get_eight_horizontal_search_point_results_32x32_64x64_pu_sse41_intrin(
     uint16_t *p_sad16x16, uint32_t *p_best_sad_32x32, uint32_t *p_best_sad_64x64,
     uint32_t *p_best_mv32x32, uint32_t *p_best_mv64x64, uint32_t mv);
 
+#endif
 void ext_sad_calculation_8x8_16x16_c(uint8_t *src, uint32_t src_stride, uint8_t *ref,
                                      uint32_t ref_stride, uint32_t *p_best_sad_8x8,
                                      uint32_t *p_best_sad_16x16, uint32_t *p_best_mv8x8,

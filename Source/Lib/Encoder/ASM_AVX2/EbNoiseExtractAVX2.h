@@ -1,3 +1,5 @@
+
+
 /*
 * Copyright(c) 2019 Intel Corporation
 * SPDX - License - Identifier: BSD - 2 - Clause - Patent
@@ -12,7 +14,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#if !REMOVE_UNUSED_CODE
 /*******************************************
     * noise_extract_luma_weak
     *  weak filter Luma and store noise.
@@ -38,7 +40,7 @@ void noise_extract_chroma_weak_avx2_intrin(EbPictureBufferDesc *input_picture_pt
 void noise_extract_luma_strong_avx2_intrin(EbPictureBufferDesc *input_picture_ptr,
                                            EbPictureBufferDesc *denoised_picture_ptr,
                                            uint32_t sb_origin_y, uint32_t sb_origin_x);
-
+#endif
 #ifdef __cplusplus
 }
 #endif

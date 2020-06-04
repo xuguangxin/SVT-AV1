@@ -1,3 +1,4 @@
+
 /*
 * Copyright(c) 2019 Intel Corporation
 * SPDX - License - Identifier: BSD - 2 - Clause - Patent
@@ -7,7 +8,7 @@
 #include "EbDefinitions.h"
 #include "immintrin.h"
 #include "EbUtility.h"
-
+#if !REMOVE_UNUSED_CODE
 EB_EXTERN EB_ALIGN(16) const uint8_t filter_type[] = {
     1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4, 1, 4};
 
@@ -1794,3 +1795,5 @@ void noise_extract_chroma_weak_avx2_intrin(EbPictureBufferDesc *input_picture_pt
         }
     }
 }
+
+#endif

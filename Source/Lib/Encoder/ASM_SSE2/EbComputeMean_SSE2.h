@@ -18,13 +18,13 @@ uint64_t compute_sub_mean8x8_sse2_intrin(
 uint64_t compute_subd_mean_of_squared_values8x8_sse2_intrin(
     uint8_t* input_samples, // input parameter, input samples Ptr
     uint16_t input_stride);
-
+#if !REMOVE_UNUSED_CODE
 uint64_t compute_mean8x8_sse2_intrin(
     uint8_t* input_samples, // input parameter, input samples Ptr
     uint32_t input_stride, // input parameter, input stride
     uint32_t input_area_width, // input parameter, input area width
     uint32_t input_area_height); // input parameter, input area height
-
+#endif
 uint64_t compute_mean_of_squared_values8x8_sse2_intrin(
     uint8_t* input_samples, // input parameter, input samples Ptr
     uint32_t input_stride, // input parameter, input stride

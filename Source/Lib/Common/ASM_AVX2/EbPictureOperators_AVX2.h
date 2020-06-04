@@ -45,6 +45,7 @@ void full_distortion_kernel32_bits_avx2(int32_t *coeff, uint32_t coeff_stride, i
                                         uint64_t distortion_result[DIST_CALC_TOTAL],
                                         uint32_t area_width, uint32_t area_height);
 
+#if !REMOVE_UNUSED_CODE
 uint64_t spatial_full_distortion_kernel4x_n_avx2_intrin(uint8_t *input, uint32_t input_offset,
                                                         uint32_t input_stride, uint8_t *recon,
 #if INT_RECON_OFFSET_FIX
@@ -64,6 +65,7 @@ uint64_t spatial_full_distortion_kernel8x_n_avx2_intrin(uint8_t *input, uint32_t
 #endif
                                                         uint32_t recon_stride, uint32_t area_width,
                                                         uint32_t area_height);
+
 
 uint64_t spatial_full_distortion_kernel16x_n_avx2_intrin(uint8_t *input, uint32_t input_offset,
                                                          uint32_t input_stride, uint8_t *recon,
@@ -101,6 +103,7 @@ uint64_t spatial_full_distortion_kernel128x_n_avx2_intrin(
     int32_t recon_offset, uint32_t recon_stride, uint32_t area_width, uint32_t area_height);
 #else
     uint32_t recon_offset, uint32_t recon_stride, uint32_t area_width, uint32_t area_height);
+#endif
 #endif
 void convert_8bit_to_16bit_avx2(uint8_t *src, uint32_t src_stride, uint16_t *dst,
     uint32_t dst_stride, uint32_t width, uint32_t height);

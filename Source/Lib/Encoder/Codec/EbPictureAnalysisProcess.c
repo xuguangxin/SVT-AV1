@@ -274,6 +274,7 @@ void calculate_histogram(uint8_t * input_samples, // input parameter, input samp
 
     return;
 }
+#if !REMOVE_UNUSED_CODE
 /*******************************************
  * compute_mean
  *   returns the mean of a block
@@ -295,7 +296,7 @@ uint64_t compute_mean_c(uint8_t *input_samples, /**< input parameter, input samp
 
     return block_mean;
 }
-
+#endif
 /*******************************************
  * compute_mean_squared_values_c
  *   returns the Mean of Squared Values
@@ -440,6 +441,7 @@ uint8_t get_filtered_types(uint8_t *ptr, uint32_t stride, uint8_t filter_type) {
     return (uint8_t)CLIP3EQ(0, 255, a);
 }
 
+#if !REMOVE_UNUSED_CODE
 /*******************************************
 * noise_extract_luma_strong
 *  strong filter Luma.
@@ -794,7 +796,7 @@ void noise_extract_luma_weak_sb_c(EbPictureBufferDesc *input_picture_ptr,
         }
     }
 }
-
+#endif
 EbErrorType zero_out_chroma_block_mean(
     PictureParentControlSet *pcs_ptr, // input parameter, Picture Control Set Ptr
     uint32_t                 sb_coding_order // input parameter, SB address

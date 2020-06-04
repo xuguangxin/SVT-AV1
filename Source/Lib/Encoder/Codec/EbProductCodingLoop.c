@@ -837,7 +837,7 @@ static INLINE uint16_t highbd_clip_pixel_add(uint16_t dest, TranHigh trans, int3
     trans = HIGHBD_WRAPLOW(trans, bd);
     return clip_pixel_highbd(dest + (int32_t)trans, bd);
 }
-
+#if !REMOVE_UNUSED_CODE
 /*********************************
 * Picture Single Channel Kernel
 *********************************/
@@ -909,7 +909,7 @@ void picture_addition_kernel16_bit(uint16_t *pred_ptr, uint32_t pred_stride, int
     //    SVT_LOG("\n");
     return;
 }
-
+#endif
 void av1_perform_inverse_transform_recon_luma(PictureControlSet *          pcs_ptr,
                                               ModeDecisionContext *        context_ptr,
                                               ModeDecisionCandidateBuffer *candidate_buffer) {

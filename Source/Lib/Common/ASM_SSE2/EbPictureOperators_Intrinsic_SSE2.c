@@ -219,6 +219,7 @@ static INLINE __m128i distortion_sse2_intrin(const __m128i input, const __m128i 
     return _mm_add_epi32(sum, dist);
 }
 
+#if !REMOVE_UNUSED_CODE
 uint64_t spatial_full_distortion_kernel4x_n_sse2_intrin(uint8_t *input, uint32_t input_offset,
                                                         uint32_t input_stride, uint8_t *recon,
 #if INT_RECON_OFFSET_FIX
@@ -397,3 +398,4 @@ uint64_t spatial_full_distortion_kernel128x_n_sse2_intrin(
 
     return hadd32_sse2_intrin(sum);
 }
+#endif

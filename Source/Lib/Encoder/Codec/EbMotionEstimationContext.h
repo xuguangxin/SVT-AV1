@@ -30,8 +30,10 @@ extern "C" {
 #define NUMBER_OF_SB_QUAD 4
 #define VARIANCE_PRECISION 16
 #define MEAN_PRECISION (VARIANCE_PRECISION >> 1)
+#if !REMOVE_UNUSED_CODE
 #define HME_RECTANGULAR 0
 #define HME_SPARSE 1
+#endif
 #define HME_DECIM_FILTER_TAP 9
 
 // Quater pel refinement methods
@@ -479,7 +481,9 @@ typedef struct MeContext {
     EB_ALIGN(64) uint16_t p_eight_sad8x8[64][8];
     EbBitFraction *mvd_bits_array;
     uint64_t       lambda;
+#if !REMOVE_UNUSED_CODE
     uint8_t        hme_search_type;
+#endif
 #if !REMOVE_ME_SUBPEL_CODE
     uint8_t fractional_search_method;
 

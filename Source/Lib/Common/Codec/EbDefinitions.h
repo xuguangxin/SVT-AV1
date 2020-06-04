@@ -453,10 +453,11 @@ extern "C" {
 #define FIX_IFS_OFF_CASE           1 // Bug fix: interpolation filter is hard-coded to regular when IFS is OFF (prevented testing bilinear @ PD0) 
 #define SEARCH_TOP_N               1 // Perform 1/2 Pel search @ MD for the top N Full-Pel position(s). Used N=5 for M0 and N=3 for M1
 
+
+#endif
 #define FIX_WARNINGS                    1     // fix build warnings
 #define FIX_WARNINGS_WIN                1     // fix build warnings
 
-#endif
 #define NSQ_CYCLES_REDUCTION 1
 #define DEPTH_CYCLES_REDUCTION 1
 #define CLEANUP_CYCLE_ALLOCATION 1
@@ -466,6 +467,7 @@ extern "C" {
 #define COEFF_BASED_TXT_BYPASS 1 // Use TXT statistics to bypass certain tx types
 #define COEFF_BASED_TXS_BYPASS 1 // Use TXS statistics to bypass certain tx search sizes
 
+#define REMOVE_UNUSED_CODE              1 // Remove unused code
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

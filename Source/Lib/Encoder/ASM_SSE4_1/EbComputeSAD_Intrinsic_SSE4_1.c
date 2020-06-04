@@ -1741,6 +1741,7 @@ void sad_loop_kernel_sse4_1_intrin(
     *y_search_center = y_best;
 }
 
+#if !REMOVE_UNUSED_CODE
 void sad_loop_kernel_sparse_sse4_1_intrin(
     uint8_t * src, // input parameter, source samples Ptr
     uint32_t  src_stride, // input parameter, source stride
@@ -3408,7 +3409,7 @@ void sad_loop_kernel_sparse_sse4_1_intrin(
     *x_search_center = x_best;
     *y_search_center = y_best;
 }
-
+#endif
 /*******************************************************************************
 * Requirement: width   = 4, 8, 16, 24, 32, 48 or 64
 * Requirement: block_height <= 64
@@ -4333,7 +4334,7 @@ void sad_loop_kernel_sse4_1_hme_l0_intrin(
     *x_search_center = x_best;
     *y_search_center = y_best;
 }
-
+#if !REMOVE_UNUSED_CODE
 static INLINE void sad_eight_8x4_sse41_intrin(const uint8_t *src, const uint32_t src_stride,
                                               const uint8_t *ref, const uint32_t ref_stride,
                                               __m128i *sad) {
@@ -4925,3 +4926,5 @@ void get_eight_horizontal_search_point_results_32x32_64x64_pu_sse41_intrin(
         p_best_mv64x64[0]   = ((uint16_t)y_mv << 16) | ((uint16_t)x_mv);
     }
 }
+
+#endif

@@ -1420,7 +1420,7 @@ void residual_kernel8bit_avx2(uint8_t *input, uint32_t input_stride, uint8_t *pr
         break;
     }
 }
-
+#if !REMOVE_UNUSED_CODE
 uint64_t spatial_full_distortion_kernel4x_n_avx2_intrin(uint8_t *input, uint32_t input_offset,
                                                         uint32_t input_stride, uint8_t *recon,
 #if INT_RECON_OFFSET_FIX
@@ -1590,7 +1590,7 @@ uint64_t spatial_full_distortion_kernel128x_n_avx2_intrin(
 
     return hadd32_avx2_intrin(sum);
 }
-
+#endif
 uint64_t spatial_full_distortion_kernel_avx2(uint8_t *input, uint32_t input_offset,
                                              uint32_t input_stride, uint8_t *recon,
 #if INT_RECON_OFFSET_FIX

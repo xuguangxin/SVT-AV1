@@ -1717,8 +1717,9 @@ void *motion_estimation_kernel(void *input_ptr) {
                                            input_picture_ptr->stride_y +
                                        input_picture_ptr->origin_x + sb_origin_x;
 
+#if !REMOVE_UNUSED_CODE
                         context_ptr->me_context_ptr->hme_search_type = HME_RECTANGULAR;
-
+#endif
                         for (sb_row = 0; sb_row < BLOCK_SIZE_64; sb_row++) {
                             EB_MEMCPY(
                                 (&(context_ptr->me_context_ptr->sb_buffer[sb_row * BLOCK_SIZE_64])),

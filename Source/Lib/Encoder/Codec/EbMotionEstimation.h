@@ -311,6 +311,7 @@ extern "C" {
         uint32_t  src_stride,                      // input parameter, source stride
         uint8_t  *ref,                            // input parameter, reference samples Ptr
         uint32_t  ref_stride);
+#if !REMOVE_UNUSED_CODE
     /*******************************************
     * GetEightHorizontalSearchPointResults_8x8_16x16_PU
     *******************************************/
@@ -371,6 +372,7 @@ extern "C" {
         uint32_t  *p_best_mv64x64,
         uint32_t   mv);
 
+#endif
     extern void ext_all_sad_calculation_8x8_16x16_c(
         uint8_t *src,
         uint32_t src_stride,

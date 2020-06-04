@@ -108,6 +108,7 @@ void ext_sad_calculation_8x8_16x16_avx2_intrin(uint8_t *src, uint32_t src_stride
     }
 }
 
+#if !REMOVE_UNUSED_CODE
 void sad_loop_kernel_sparse_avx2_intrin(
     uint8_t * src, // input parameter, source samples Ptr
     uint32_t  src_stride, // input parameter, source stride
@@ -1900,7 +1901,7 @@ void sad_loop_kernel_sparse_avx2_intrin(
     *x_search_center = x_best;
     *y_search_center = y_best;
 }
-
+#endif
 /*******************************************************************************
  * Requirement: width   = 4, 8, 16, 24, 32, 48 or 64
  * Requirement: block_height <= 64
@@ -4001,6 +4002,7 @@ uint32_t eb_compute128x_m_sad_avx2_intrin(
     return compute128x_m_sad_avx2(src, src_stride, ref, ref_stride, height);
 }
 
+#if !REMOVE_UNUSED_CODE
 static INLINE void sad_eight_8x2x2_avx2(const uint8_t *src, const uint32_t src_stride,
                                         const uint8_t *ref, const uint32_t ref_stride,
                                         __m256i d[2]) {
@@ -4012,6 +4014,7 @@ static INLINE void sad_eight_8x2x2_avx2(const uint8_t *src, const uint32_t src_s
     d[1]             = _mm256_adds_epu16(d[1], _mm256_mpsadbw_epu8(r1, s, 0x12)); // 010 010
     d[1]             = _mm256_adds_epu16(d[1], _mm256_mpsadbw_epu8(r1, s, 0x3F)); // 111 111
 }
+#endif
 
 /*
 NOTE: Slower than avx2. Abandoned.
@@ -4060,7 +4063,7 @@ sad_eight_8x2x2_avx512(src + 7 * src_stride, 8 * src_stride,
 s_256[0] = _mm512_castsi512_si256(s_512);
 s_256[1] = _mm512_extracti64x4_epi64(s_512, 1);
 */
-
+#if !REMOVE_UNUSED_CODE
 /*******************************************************************************
 * Requirement: p_best_sad_8x8[i] must be less than 0x7FFFFFFF because signed comparison is used.
 *******************************************************************************/
@@ -4180,7 +4183,7 @@ void get_eight_horizontal_search_point_results_8x8_16x16_pu_avx2_intrin(
     best_mv_128 = _mm_or_si128(best_mv_128, mv_128);
     _mm_storeu_si128((__m128i *)p_best_mv8x8, best_mv_128);
 }
-
+#endif
 static INLINE __m256i add_4_sad_avx2(const uint16_t *const p_sad16x16) {
     const __m128i s0 = _mm_loadu_si128((__m128i *)(p_sad16x16 + 0 * 8));
     const __m128i s1 = _mm_loadu_si128((__m128i *)(p_sad16x16 + 1 * 8));
@@ -4198,6 +4201,7 @@ static INLINE __m256i add_4_sad_avx2(const uint16_t *const p_sad16x16) {
     return _mm256_add_epi32(s_256[0], s_256[2]);
 }
 
+#if !REMOVE_UNUSED_CODE
 static INLINE void update_best_sse2(const __m128i sad, const uint32_t mv,
                                     uint32_t *const p_best_sad_32x32,
                                     uint32_t *const p_best_mv32x32) {
@@ -4433,7 +4437,7 @@ void get_eight_horizontal_search_point_results_32x32_64x64_pu_avx2_intrin(
         _mm_storeu_si128((__m128i *)p_best_mv32x32, s3);
     }
 }
-
+#endif
 /*******************************************************************************
 * Requirement: width   = 4, 8, 16, 24, 32, 48 or 64
 * Requirement: block_height <= 64
