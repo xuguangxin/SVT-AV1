@@ -468,6 +468,8 @@ extern "C" {
 #define COEFF_BASED_TXS_BYPASS 1 // Use TXS statistics to bypass certain tx search sizes
 
 #define REMOVE_UNUSED_CODE              1 // Remove unused code
+#define PRESET_SHIFITNG                 1 // Shift presets (new encoderMode  <- old encoderMode)
+                                          // M: (0 <- 0);(1 <- 1);(2 <- 3);(3 <- 5);(4 <- 6);(5 <- 7);(6 <- 8);(7 <- 8);(8 <- 8);
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
