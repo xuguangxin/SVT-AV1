@@ -1698,7 +1698,7 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
         md_nsq_motion_search_ctrls->use_ssd = 0;
         md_nsq_motion_search_ctrls->full_pel_search_width = 31;
         md_nsq_motion_search_ctrls->full_pel_search_height = 31;
-#if !PERFORM_SUB_PEL_MD 
+#if !PERFORM_SUB_PEL_MD
         md_nsq_motion_search_ctrls->perform_sub_pel = 1;
         md_nsq_motion_search_ctrls->half_pel_search_width = 3;
         md_nsq_motion_search_ctrls->half_pel_search_height = 3;
@@ -1712,7 +1712,7 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
         md_nsq_motion_search_ctrls->use_ssd = 0;
         md_nsq_motion_search_ctrls->full_pel_search_width = 15;
         md_nsq_motion_search_ctrls->full_pel_search_height = 15;
-#if !PERFORM_SUB_PEL_MD 
+#if !PERFORM_SUB_PEL_MD
         md_nsq_motion_search_ctrls->perform_sub_pel = 1;
         md_nsq_motion_search_ctrls->half_pel_search_width = 3;
         md_nsq_motion_search_ctrls->half_pel_search_height = 3;
@@ -1725,7 +1725,7 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
         md_nsq_motion_search_ctrls->use_ssd = 0;
         md_nsq_motion_search_ctrls->full_pel_search_width = 11;
         md_nsq_motion_search_ctrls->full_pel_search_height = 11;
-#if !PERFORM_SUB_PEL_MD 
+#if !PERFORM_SUB_PEL_MD
         md_nsq_motion_search_ctrls->perform_sub_pel = 1;
         md_nsq_motion_search_ctrls->half_pel_search_width = 3;
         md_nsq_motion_search_ctrls->half_pel_search_height = 3;
@@ -1738,7 +1738,7 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
         md_nsq_motion_search_ctrls->use_ssd = 0;
         md_nsq_motion_search_ctrls->full_pel_search_width = 7;
         md_nsq_motion_search_ctrls->full_pel_search_height = 7;
-#if !PERFORM_SUB_PEL_MD 
+#if !PERFORM_SUB_PEL_MD
         md_nsq_motion_search_ctrls->perform_sub_pel = 1;
         md_nsq_motion_search_ctrls->half_pel_search_width = 3;
         md_nsq_motion_search_ctrls->half_pel_search_height = 3;
@@ -4499,7 +4499,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if DEPTH_CYCLES_REDUCTION
     // Depth cycles reduction level: TBD
-    uint8_t depth_cycles_red_mode = 0; 
+    uint8_t depth_cycles_red_mode = 0;
     depth_cycles_red_mode = pcs_ptr->slice_type != I_SLICE ? 0 : 0;
     set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
 #endif
@@ -5076,7 +5076,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_nsq_mv_search_level = 0;
     else
         if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
-            context_ptr->md_nsq_mv_search_level = 1; 
+            context_ptr->md_nsq_mv_search_level = 1;
         else if (enc_mode <= ENC_M0)
             context_ptr->md_nsq_mv_search_level = 2;
 #if PRESET_SHIFITNG
@@ -7294,7 +7294,7 @@ static uint8_t determine_sb_class(
 #endif
 #if DEPTH_CYCLES_REDUCTION
 #define DEPTH_MAX_PROB 300 // max probabilty value for depth 100 -> 10%
-// Depth probabilies per sq_size, pedicted depth and frequency band 
+// Depth probabilies per sq_size, pedicted depth and frequency band
 // for sc content
 const uint16_t depth_cycles_reduction_sc_th[6][5][4] = {
 {
@@ -7340,7 +7340,7 @@ const uint16_t depth_cycles_reduction_sc_th[6][5][4] = {
 { 0,0,0,0}
 }
 };
-// Depth probabilies per sq_size, pedicted depth and frequency band 
+// Depth probabilies per sq_size, pedicted depth and frequency band
 // for non-sc content
 uint16_t depth_cycles_reduction_th[6][5][4] = {
 {

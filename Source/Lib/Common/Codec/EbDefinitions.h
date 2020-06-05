@@ -426,7 +426,7 @@ extern "C" {
 #define SHUT_ME_CAND_SORTING       1 // Bypass ME bipred search and shut ME cands sorting
 #define PRUNING_PER_INTER_TYPE     1 // Added the ability to signal best_refs per INTER type
 #define PD0_INTER_CAND             1 // Enable all PA_ME cands @ PD0
-#define SHUT_ME_NSQ_SEARCH         1 // Disable NSQ search @ ME, and use sub-block MV(s)/distortion(s) to derive MVs for NSQ blocks  
+#define SHUT_ME_NSQ_SEARCH         1 // Disable NSQ search @ ME, and use sub-block MV(s)/distortion(s) to derive MVs for NSQ blocks
 #define FIX_SHUT_ME_NSQ_SEARCH     1 // Use the parent SQ MV as NSQ MV
 #define ADD_MD_NSQ_SEARCH          1 // Perform NSQ motion search @ MD
 #define NSQ_REMOVAL_CODE_CLEAN_UP  1 // Remove NSQ circuitry from ME
@@ -450,7 +450,7 @@ extern "C" {
 #define REMOVE_ME_SUBPEL_CODE      1 // Shut subpel ME
 #define PERFORM_SUB_PEL_TF         1 // Perform subpel @ TF
 #define PERFORM_SUB_PEL_MD         1 // Perform subpel @ MD
-#define FIX_IFS_OFF_CASE           1 // Bug fix: interpolation filter is hard-coded to regular when IFS is OFF (prevented testing bilinear @ PD0) 
+#define FIX_IFS_OFF_CASE           1 // Bug fix: interpolation filter is hard-coded to regular when IFS is OFF (prevented testing bilinear @ PD0)
 #define SEARCH_TOP_N               1 // Perform 1/2 Pel search @ MD for the top N Full-Pel position(s). Used N=5 for M0 and N=3 for M1
 
 

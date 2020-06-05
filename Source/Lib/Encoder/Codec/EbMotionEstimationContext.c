@@ -186,7 +186,7 @@ EbErrorType me_context_ctor(MeContext *object_ptr, uint16_t max_input_luma_width
                 &(object_ptr->me_candidate[me_candidate_index]).pu[pu_index]);
         }
     }
-    
+
 #if !REMOVE_ME_SUBPEL_CODE
     EB_MALLOC_ARRAY(object_ptr->avctemp_buffer,
                     object_ptr->interpolated_stride * max_search_area_height);

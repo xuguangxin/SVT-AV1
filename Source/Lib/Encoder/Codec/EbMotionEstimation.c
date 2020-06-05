@@ -12495,7 +12495,7 @@ EbErrorType motion_estimate_sb(
         input_ptr);
 #if ME_HME_PRUNING_CLEANUP
 #if REMOVE_ME_SUBPEL_CODE
-    // prune the refrence frames 
+    // prune the refrence frames
     if (prune_ref && context_ptr->me_hme_prune_ctrls.enable_me_hme_ref_pruning)
     {
         me_prune_ref(
