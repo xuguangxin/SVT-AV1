@@ -4935,8 +4935,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
 #if MAY23_M0_ADOPTIONS
 #if PRUNING_PER_INTER_TYPE
+#if !REDUCE_MR_COMP_CANDS
         else if (MR_MODE)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
         else if (enc_mode <= ENC_M0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;
         else
