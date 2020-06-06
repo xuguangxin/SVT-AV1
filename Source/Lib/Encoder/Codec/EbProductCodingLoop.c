@@ -3936,6 +3936,9 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                         int16_t search_position_start_x, int16_t search_position_end_x,
                         int16_t search_position_start_y, int16_t search_position_end_y,
                         int16_t search_step,
+#if SEARCH_TOP_N
+                        uint8_t track_best_fp_pos,
+#endif
                         int16_t *best_mvx, int16_t *best_mvy, uint32_t *best_distortion) {
     uint8_t hbd_mode_decision = context_ptr->hbd_mode_decision == EB_DUAL_BIT_MD
                                     ? EB_8_BIT_MD
@@ -4163,6 +4166,25 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
                                                    context_ptr->blk_geom->bwidth);
                 }
             }
+#if SEARCH_TOP_N
+            if (track_best_fp_pos) {
+                // Find the pos that holds the max dist
+                uint32_t max_dist = 0;
+                uint8_t max_dist_fp_pos_idx = 0;
+                for (uint8_t fp_pos_idx = 0; fp_pos_idx < MD_MAX_BEST_FP_POS; fp_pos_idx++) {
+                    if (context_ptr->md_best_fp_pos[fp_pos_idx].dist > max_dist) {
+                        max_dist = context_ptr->md_best_fp_pos[fp_pos_idx].dist;
+                        max_dist_fp_pos_idx = fp_pos_idx;
+                    }
+                }
+                // Update max_dist_fp_pos_idx spot if better distortion
+                if (distortion < max_dist) {
+                    context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].mvx = mvx + (refinement_pos_x * search_step);
+                    context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].mvy = mvy + (refinement_pos_y * search_step);
+                    context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].dist = distortion;
+                }
+            }
+#endif
             if (distortion < *best_distortion) {
                 *best_mvx = mvx + (refinement_pos_x * search_step);
                 *best_mvy = mvy + (refinement_pos_y * search_step);
@@ -4567,6 +4589,9 @@ void md_nsq_motion_search(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
             0,
             0,
             8,
+#if SEARCH_TOP_N
+            context_ptr->md_subpel_search_ctrls.half_pel_search_pos_cnt > 1,
+#endif
             &search_center_mvx,
             &search_center_mvy,
             &search_center_distortion);
@@ -4647,6 +4672,9 @@ void md_nsq_motion_search(PictureControlSet *pcs_ptr, ModeDecisionContext *conte
         -(context_ptr->md_nsq_motion_search_ctrls.full_pel_search_height >> 1),
         +(context_ptr->md_nsq_motion_search_ctrls.full_pel_search_height >> 1),
         8,
+#if SEARCH_TOP_N
+        context_ptr->md_subpel_search_ctrls.half_pel_search_pos_cnt > 1,
+#endif
         &best_search_mvx,
         &best_search_mvy,
         &best_search_distortion);
@@ -5871,6 +5899,9 @@ void    predictive_me_search(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                                    -(context_ptr->pred_me_full_pel_search_height >> 1),
                                    +(context_ptr->pred_me_full_pel_search_height >> 1),
                                    8,
+#if SEARCH_TOP_N
+                                   0,
+#endif
                                    &best_search_mvx,
                                    &best_search_mvy,
                                    &best_search_distortion);
@@ -9955,7 +9986,7 @@ void md_stage_1(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #else
         context_ptr->md_staging_skip_full_pred            = EB_FALSE;
 #endif
-#if IFS_MD_STAGE_3
+#if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
         context_ptr->md_staging_skip_interpolation_search = EB_TRUE;
 #else
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
@@ -10205,7 +10236,7 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #else
         context_ptr->md_staging_skip_full_pred = context_ptr->md_staging_mode == MD_STAGING_MODE_0;
 #endif
-#if IFS_MD_STAGE_3
+#if IFS_MD_STAGE_3 && !IFS_MD_STAGE_1
         context_ptr->md_staging_skip_interpolation_search = EB_FALSE;
 #else
         context_ptr->md_staging_skip_interpolation_search =

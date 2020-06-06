@@ -472,6 +472,10 @@ extern "C" {
                                           // M: (0 <- 0);(1 <- 1);(2 <- 3);(3 <- 5);(4 <- 6);(5 <- 7);(6 <- 8);(7 <- 8);(8 <- 8);
 #define REDUCE_MR_COMP_CANDS    1 // Bug fix: Adopt the M0 level of inter_inter_distortion_based_reference_pruning to reduce compound candidates in MR
 #define QPS_240P_UPDATE          1 // Modify the QPS of 240P to be similar to other resolution
+
+#define IFS_MD_STAGE_1            1 // Move ifs from md_stage_3() to md_stage_1()
+#define SHUT_MERGE_1D_INTER_BLOCK 1 // Remove merge 1D feature
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
