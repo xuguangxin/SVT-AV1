@@ -5450,8 +5450,9 @@ static int cqp_qindex_calc(
     RATE_CONTROL                *rc,
     int                          qindex) {
     SequenceControlSet        *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
+#if !QPS_240P_UPDATE
     const Av1Common  *const cm = pcs_ptr->parent_pcs_ptr->av1_cm;
-
+#endif
     int active_best_quality = 0;
     int active_worst_quality = qindex;
     double q_val;
@@ -5467,8 +5468,9 @@ static int cqp_qindex_calc(
 
     if (frame_is_intra_only(pcs_ptr->parent_pcs_ptr)) {
         // Not forced keyframe.
+#if !QPS_240P_UPDATE
         double q_adj_factor = 1.0;
-
+#endif
         rc->worst_quality = MAXQ;
         rc->best_quality = MINQ;
 
@@ -5477,15 +5479,16 @@ static int cqp_qindex_calc(
         // Baseline value derived from cpi->active_worst_quality and kf boost.
         active_best_quality =
             get_kf_active_quality_cqp(rc, active_worst_quality, bit_depth);
+#if !QPS_240P_UPDATE
         // Allow somewhat lower kf minq with small image formats.
         if ((cm->frm_size.frame_width * cm->frm_size.frame_height) <= (352 * 288))
             q_adj_factor -= 0.25;
-
         // Convert the adjustment factor to a qindex delta
         // on active_best_quality.
         q_val = eb_av1_convert_qindex_to_q(active_best_quality, bit_depth);
         active_best_quality +=
             eb_av1_compute_qdelta(q_val, q_val * q_adj_factor, bit_depth);
+#endif
     }
     else{
         const  double delta_rate_new[7][6] =
