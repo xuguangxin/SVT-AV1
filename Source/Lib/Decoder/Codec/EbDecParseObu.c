@@ -2659,6 +2659,9 @@ EbErrorType decode_multiple_obu(EbDecHandle *dec_handle_ptr, uint8_t **data, siz
     return status;
 }
 
+#ifdef __GNUC__
+__attribute__((visibility("default")))
+#endif
 EB_API EbErrorType eb_get_sequence_info(const uint8_t *obu_data, size_t size,
                                         SeqHeader *sequence_info) {
     if (obu_data == NULL || size == 0 || sequence_info == NULL) return EB_ErrorBadParameter;
