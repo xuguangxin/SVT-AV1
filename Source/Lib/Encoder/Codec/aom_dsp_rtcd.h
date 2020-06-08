@@ -1000,7 +1000,9 @@ extern "C" {
 #if !REMOVE_UNUSED_CODE
     RTCD_EXTERN void(*sad_loop_kernel_sparse)(uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride, uint32_t block_height, uint32_t block_width, uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center, uint32_t src_stride_raw, int16_t search_area_width, int16_t search_area_height);
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
     RTCD_EXTERN void(*sad_loop_kernel_hme_l0)(uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride, uint32_t block_height, uint32_t block_width, uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center, uint32_t src_stride_raw, int16_t search_area_width, int16_t search_area_height);
+#endif
     #if !REMOVE_UNUSED_CODE
     void get_eight_horizontal_search_point_results_8x8_16x16_pu_avx512_intrin(
     uint8_t *src, uint32_t src_stride, uint8_t *ref, uint32_t ref_stride, uint32_t *p_best_sad_8x8,

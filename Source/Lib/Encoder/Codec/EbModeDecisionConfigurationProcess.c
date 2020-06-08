@@ -640,6 +640,7 @@ void sb_forward_sq_blocks_to_md(SequenceControlSet *scs_ptr, PictureControlSet *
     pcs_ptr->parent_pcs_ptr->average_qp = (uint8_t)pcs_ptr->parent_pcs_ptr->picture_qp;
 }
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 /******************************************************
 * Derive MD parameters
 ******************************************************/
@@ -657,6 +658,7 @@ void set_md_settings(SequenceControlSet *scs_ptr, PictureControlSet *pcs_ptr) {
     pcs_ptr->limit_intra             = EB_FALSE;
     pcs_ptr->intra_md_open_loop_flag = EB_FALSE;
 }
+#endif
 /******************************************************
 * Load the cost of the different partitioning method into a local array and derive sensitive picture flag
     Input   : the offline derived cost per search method, detection signals
@@ -2127,12 +2129,12 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
             eb_av1_init3smotion_compensation(
                 &pcs_ptr->ss_cfg, pcs_ptr->parent_pcs_ptr->enhanced_picture_ptr->stride_y);
         }
-
+#if !REMOVE_UNUSED_CODE_PH2
         // Derive MD parameters
         set_md_settings( // HT Done
             scs_ptr,
             pcs_ptr);
-
+#endif
         // Post the results to the MD processes
 
         uint16_t tg_count =

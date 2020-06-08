@@ -118,7 +118,7 @@ extern "C" {
 #define INTRA_COMPOUND_OPT         1  // new fast mode
 #define ME_REFACTOR_FOR_CLEANUP    1 // refactor HME/ME code and improve resolution granularity for future cleanup and features
 #define MAR30_ADOPTIONS            1 // Adoptions in all modes; create a new M1
-#define REDUCE_COMPLEX_CLIP_CYCLES    1 // Add picture classifier
+#define REDUCE_COMPLEX_CLIP_CYCLES    0 // Add picture classifier
 #define BLOCK_REDUCTION_ALGORITHM_1   1 // block_based_depth_reduction (1)
 #define BLOCK_REDUCTION_ALGORITHM_2   1 // block_based_depth_reduction (2)
 #define REMOVE_SQ_WEIGHT_QP_CHECK     1
@@ -477,6 +477,7 @@ extern "C" {
 #define SHUT_MERGE_1D_INTER_BLOCK 1 // Remove merge 1D feature
 
 #define QP63_MISMATCH_FIX      1 // Fix the enc/dec mismatch for QP63
+#define REMOVE_UNUSED_CODE_PH2          1 // Remove unused code
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -509,12 +510,17 @@ extern "C" {
 #define H_PEL_SEARCH_WIND_2 2  // 1/2-pel serach window 2
 #define HP_REF_OPT 1 // Remove redundant positions.
 #endif
+#if REMOVE_UNUSED_CODE_PH2
+#define ENABLE_PME_SAD              0
+#define SWITCH_XY_LOOPS_PME_SAD_SSD 0
+#define RESTRUCTURE_SAD             0
+#else
 #define ENABLE_PME_SAD 0
 #define SWITCH_XY_LOOPS_PME_SAD_SSD 0
 #if SWITCH_XY_LOOPS_PME_SAD_SSD
 #define RESTRUCTURE_SAD 1
 #endif
-
+#endif
 #define BOUNDARY_CHECK 1
 #if !REMOVE_ME_SUBPEL_CODE
 typedef enum MeHpMode {
@@ -1003,7 +1009,9 @@ typedef struct InterpFilterParams {
 
 typedef enum TxSearchLevel {
     TX_SEARCH_OFF,
+#if !REMOVE_UNUSED_CODE_PH2
     TX_SEARCH_ENC_DEC,
+#endif
     TX_SEARCH_INTER_DEPTH,
     TX_SEARCH_FULL_LOOP
 } TxSearchLevel;
@@ -3232,9 +3240,12 @@ static const uint8_t intra_area_th_class_1[MAX_HIERARCHICAL_LEVEL][MAX_TEMPORAL_
 #define EB_CHROMA_LEVEL uint8_t
 #define CHROMA_MODE_0  0 // Full chroma search @ MD
 #define CHROMA_MODE_1  1 // Fast chroma search @ MD
+#if REMOVE_UNUSED_CODE_PH2
+#define CHROMA_MODE_2  2 // Chroma blind @ MD
+#else
 #define CHROMA_MODE_2  2 // Chroma blind @ MD + CFL @ EP
 #define CHROMA_MODE_3  3 // Chroma blind @ MD + no CFL @ EP
-
+#endif
 typedef enum EbCleanUpMode
 {
     CLEAN_UP_MODE_0 = 0,

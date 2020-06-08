@@ -5428,7 +5428,7 @@ static INLINE TxType av1_get_tx_type(BlockSize sb_type, int32_t is_inter, Predic
     if (!av1_ext_tx_used[tx_set_type][tx_type]) return DCT_DCT;
     return tx_type;
 }
-
+#if !REMOVE_UNUSED_CODE_PH2
 void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                                  SuperBlock *sb_ptr, uint32_t *candidate_total_cnt) {
     uint8_t                intra_candidate_counter;
@@ -5552,7 +5552,7 @@ void inject_intra_candidates_ois(PictureControlSet *pcs_ptr, ModeDecisionContext
 
     return;
 }
-
+#endif
 double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
 
 // Values are now correlated to quantizer.
@@ -6449,6 +6449,7 @@ EbErrorType generate_md_stage_0_cand(
     //----------------------
     // Intra
     if (context_ptr->blk_geom->sq_size < 128) {
+#if !REMOVE_UNUSED_CODE_PH2
         if (!context_ptr->dc_cand_only_flag && !coeff_based_nsq_cand_reduction && pcs_ptr->parent_pcs_ptr->intra_pred_mode >= 5 && context_ptr->blk_geom->sq_size > 4 && context_ptr->blk_geom->shape == PART_N)
             inject_intra_candidates_ois(
                 pcs_ptr,
@@ -6456,6 +6457,7 @@ EbErrorType generate_md_stage_0_cand(
                 sb_ptr,
                 &cand_total_cnt);
         else
+#endif
                 inject_intra_candidates(
                     pcs_ptr,
                     context_ptr,

@@ -1043,7 +1043,9 @@ EB_API EbErrorType eb_init_encoder(EbComponentType *svt_enc_component)
         input_data.log2_tile_rows = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.tile_rows;
         input_data.log2_tile_cols = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.tile_columns;
         input_data.log2_sb_sz = (scs_init.sb_size == 128) ? 5 : 4;
+#if !REMOVE_UNUSED_CODE_PH2
         input_data.allocate_ois_struct = 0;
+#endif
         input_data.is_16bit_pipeline = enc_handle_ptr->scs_instance_array[instance_index]->scs_ptr->static_config.encoder_16bit_pipeline;
 
 #if NON8_FIX_REST

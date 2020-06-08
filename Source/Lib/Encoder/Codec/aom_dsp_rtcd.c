@@ -661,10 +661,12 @@ void setup_rtcd_internal(CPU_FLAGS flags) {
                           sad_loop_kernel_sse4_1_intrin,
                           sad_loop_kernel_avx2_intrin,
                           sad_loop_kernel_avx512_intrin);
+#if !REMOVE_UNUSED_CODE_PH2
     SET_SSE41_AVX2(sad_loop_kernel_hme_l0,
                    sad_loop_kernel_c,
                    sad_loop_kernel_sse4_1_hme_l0_intrin,
                    sad_loop_kernel_avx2_hme_l0_intrin);
+#endif
 #if !REMOVE_UNUSED_CODE
     SET_AVX2(
         noise_extract_luma_weak, noise_extract_luma_weak_c, noise_extract_luma_weak_avx2_intrin);

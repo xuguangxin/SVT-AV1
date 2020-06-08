@@ -4438,6 +4438,7 @@ void get_eight_horizontal_search_point_results_32x32_64x64_pu_avx2_intrin(
     }
 }
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 /*******************************************************************************
 * Requirement: width   = 4, 8, 16, 24, 32, 48 or 64
 * Requirement: block_height <= 64
@@ -5377,7 +5378,7 @@ void sad_loop_kernel_avx2_hme_l0_intrin(
     *x_search_center = x_best;
     *y_search_center = y_best;
 }
-
+#endif
 #if RESTRUCTURE_SAD
 #define UPDATE_BEST_PME(s, k, offset)                                               \
     tem_sum_1 = _mm_extract_epi32(s, k);                                            \

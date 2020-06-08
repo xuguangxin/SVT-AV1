@@ -381,8 +381,10 @@ typedef struct PictureControlSet {
     EbReflist colocated_pu_ref_list;
     EbBool    is_low_delay;
     EbEncMode enc_mode;
+#if !REMOVE_UNUSED_CODE_PH2
     EbBool    intra_md_open_loop_flag;
     EbBool    limit_intra;
+#endif
     int32_t     cdef_preset[MAX_TILE_CNTS][4];
     WienerInfo  wiener_info[MAX_TILE_CNTS][MAX_MB_PLANE];
     SgrprojInfo sgrproj_info[MAX_TILE_CNTS][MAX_MB_PLANE];
@@ -618,10 +620,11 @@ typedef struct PictureParentControlSet {
     uint32_t *intra_sad_interval_index;
     uint32_t *inter_sad_interval_index;
     EbHandle  rc_distortion_histogram_mutex;
-
+#if !REMOVE_UNUSED_CODE_PH2
     // Open loop Intra candidate Search Results
     OisSbResults **ois_sb_results;
     OisCandidate **ois_candicate;
+#endif
 #if TPL_LA
     OisMbResults **ois_mb_results;
     TplStats     **tpl_stats;
@@ -672,7 +675,9 @@ typedef struct PictureParentControlSet {
     // Multi-modes signal(s)
 #if DEPTH_PART_CLEAN_UP
     MultiPassPdLevel multi_pass_pd_level;
+#if !REMOVE_UNUSED_CODE_PH2
     EbBool sb_64x64_simulated;
+#endif
 #if !M8_4x4
     EbBool disallow_4x4;
 #endif
@@ -913,7 +918,9 @@ typedef struct PictureControlSetInitData {
     uint8_t log2_tile_rows; //from command line
     uint8_t log2_tile_cols;
     uint8_t log2_sb_sz; //in mi unit
+#if !REMOVE_UNUSED_CODE_PH2
     uint8_t allocate_ois_struct; //allocate ois results
+#endif
     EbBool is_16bit_pipeline;
 
 #if NON8_FIX_REST

@@ -1262,6 +1262,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         ? SQUARE_PU_COUNT
         : MAX_ME_PU_COUNT;
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
     // Set sb_64x64_simulated - only allow when SB size is not already 64x64
 #if MAR23_ADOPTIONS
     if (scs_ptr->static_config.super_block_size != 64) {
@@ -1283,6 +1284,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     else {
         pcs_ptr->sb_64x64_simulated = EB_FALSE;
     }
+#endif
 #endif
 #if !M8_4x4
     // Set disallow_4x4

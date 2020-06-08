@@ -148,15 +148,20 @@ const EbAv1FullCostFunc av1_product_full_cost_func_table[3] = {
 * Update Recon Samples Neighbor Arrays
 ***************************************************/
 void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
+#if REMOVE_UNUSED_CODE_PH2
+                                          ModeDecisionContext *context_ptr, uint32_t index_mds) {
+#else
                                           ModeDecisionContext *context_ptr, uint32_t index_mds,
                                           EbBool intraMdOpenLoop, EbBool intra4x4Selected) {
+#endif
     uint32_t bwdith  = context_ptr->blk_geom->bwidth;
     uint32_t bheight = context_ptr->blk_geom->bheight;
 
     uint32_t origin_x = context_ptr->blk_origin_x;
     uint32_t origin_y = context_ptr->blk_origin_y;
+#if !REMOVE_UNUSED_CODE_PH2
     (void)intra4x4Selected;
-
+#endif
     uint32_t blk_origin_x_uv = context_ptr->round_origin_x >> 1;
     uint32_t blk_origin_y_uv = context_ptr->round_origin_y >> 1;
     uint32_t bwdith_uv      = context_ptr->blk_geom->bwidth_uv;
@@ -359,7 +364,9 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                    NEIGHBOR_ARRAY_UNIT_TOP_AND_LEFT_ONLY_MASK);
 
     if (!context_ptr->hbd_mode_decision) {
+#if !REMOVE_UNUSED_CODE_PH2
         if (intraMdOpenLoop == EB_FALSE) {
+#endif
             update_recon_neighbor_array(context_ptr->luma_recon_neighbor_array,
 #if CLEAN_UP_SB_DATA_3
                                         context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].neigh_top_recon[0],
@@ -401,9 +408,10 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                     context_ptr->blk_geom->bwidth,
                     context_ptr->blk_geom->bheight);
             }
+#if !REMOVE_UNUSED_CODE_PH2
         }
-
         if (intraMdOpenLoop == EB_FALSE) {
+#endif
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
                 update_recon_neighbor_array(context_ptr->cb_recon_neighbor_array,
 #if CLEAN_UP_SB_DATA_3
@@ -430,9 +438,13 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                                             bwdith_uv,
                                             bwheight_uv);
             }
+#if !REMOVE_UNUSED_CODE_PH2
         }
+#endif
     } else {
+#if !REMOVE_UNUSED_CODE_PH2
         if (intraMdOpenLoop == EB_FALSE)
+#endif
             update_recon_neighbor_array16bit(context_ptr->luma_recon_neighbor_array16bit,
 #if CLEAN_UP_SB_DATA_3
                                              context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].neigh_top_recon_16bit[0],
@@ -474,9 +486,12 @@ void mode_decision_update_neighbor_arrays(PictureControlSet *  pcs_ptr,
                 context_ptr->blk_geom->bwidth,
                 context_ptr->blk_geom->bheight);
         }
-
+#if REMOVE_UNUSED_CODE_PH2
+        if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
+#else
         if (intraMdOpenLoop == EB_FALSE && context_ptr->blk_geom->has_uv &&
             context_ptr->chroma_level <= CHROMA_MODE_1) {
+#endif
             update_recon_neighbor_array16bit(context_ptr->cb_recon_neighbor_array16bit,
 #if CLEAN_UP_SB_DATA_3
                                             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].neigh_top_recon_16bit[1],
@@ -746,10 +761,13 @@ void md_update_all_neighbour_arrays(PictureControlSet *pcs_ptr, ModeDecisionCont
 
     context_ptr->blk_ptr = &context_ptr->md_blk_arr_nsq[last_blk_index_mds];
     uint8_t avail_blk_flag = context_ptr->md_local_blk_unit[last_blk_index_mds].avail_blk_flag;
-
+#if REMOVE_UNUSED_CODE_PH2
+    mode_decision_update_neighbor_arrays(
+        pcs_ptr, context_ptr, last_blk_index_mds);
+#else
     mode_decision_update_neighbor_arrays(
         pcs_ptr, context_ptr, last_blk_index_mds, pcs_ptr->intra_md_open_loop_flag, EB_FALSE);
-
+#endif
     update_mi_map(context_ptr,
                   context_ptr->blk_ptr,
                   context_ptr->blk_origin_x,
@@ -910,9 +928,14 @@ void picture_addition_kernel16_bit(uint16_t *pred_ptr, uint32_t pred_stride, int
     return;
 }
 #endif
+#if REMOVE_UNUSED_CODE_PH2
+void av1_perform_inverse_transform_recon_luma(ModeDecisionContext *        context_ptr,
+                                              ModeDecisionCandidateBuffer *candidate_buffer) {
+#else
 void av1_perform_inverse_transform_recon_luma(PictureControlSet *          pcs_ptr,
                                               ModeDecisionContext *        context_ptr,
                                               ModeDecisionCandidateBuffer *candidate_buffer) {
+#endif
     uint32_t txb_width;
     uint32_t txb_height;
     uint32_t txb_origin_x;
@@ -920,8 +943,9 @@ void av1_perform_inverse_transform_recon_luma(PictureControlSet *          pcs_p
     uint32_t txb_origin_index;
     uint32_t tu_total_count;
     uint32_t txb_itr;
-
+#if !REMOVE_UNUSED_CODE_PH2
     if (pcs_ptr->intra_md_open_loop_flag == EB_FALSE) {
+#endif
         uint8_t tx_depth       = candidate_buffer->candidate_ptr->tx_depth;
         tu_total_count         = context_ptr->blk_geom->txb_count[tx_depth];
         txb_itr                = 0;
@@ -982,8 +1006,17 @@ void av1_perform_inverse_transform_recon_luma(PictureControlSet *          pcs_p
                              context_ptr->blk_geom->tx_height[tx_depth][txb_itr];
             ++txb_itr;
         } while (txb_itr < tu_total_count);
+#if !REMOVE_UNUSED_CODE_PH2
     }
+#endif
 }
+#if REMOVE_UNUSED_CODE_PH2
+void av1_perform_inverse_transform_recon(ModeDecisionContext *        context_ptr,
+                                         ModeDecisionCandidateBuffer *candidate_buffer){
+#if !CLEAN_UP_SB_DATA_8
+                                         BlkStruct *blk_ptr,
+#endif                            
+#else
 void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
                                          ModeDecisionContext *        context_ptr,
                                          ModeDecisionCandidateBuffer *candidate_buffer,
@@ -991,6 +1024,7 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
                                          BlkStruct *blk_ptr,
 #endif
                                          const BlockGeom *blk_geom) {
+#endif
     uint32_t       txb_width;
     uint32_t       txb_height;
     uint32_t       txb_origin_x;
@@ -1002,9 +1036,11 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
 #if !CLEAN_UP_SB_DATA_8
     TransformUnit *txb_ptr;
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
     UNUSED(blk_geom);
-
+    
     if (pcs_ptr->intra_md_open_loop_flag == EB_FALSE) {
+#endif
         uint8_t tx_depth       = candidate_buffer->candidate_ptr->tx_depth;
         tu_total_count         = context_ptr->blk_geom->txb_count[tx_depth];
         txb_index              = 0;
@@ -1161,7 +1197,9 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
             ++txb_index;
             ++txb_itr;
         } while (txb_itr < tu_total_count);
+#if !REMOVE_UNUSED_CODE_PH2
     }
+#endif
 }
 
 /*******************************************
@@ -3764,15 +3802,21 @@ void md_stage_0(
     uint32_t blk_chroma_origin_index, uint32_t candidate_buffer_start_index, uint32_t max_buffers,
     EbBool scratch_buffer_pesent_flag) {
     int32_t  fast_loop_cand_index;
+#if !REMOVE_UNUSED_CODE_PH2
     uint64_t luma_fast_distortion;
+#endif
     uint32_t highest_cost_index;
     uint64_t highest_cost;
+#if !REMOVE_UNUSED_CODE_PH2
     uint64_t best_first_fast_cost_search_candidate_cost  = MAX_CU_COST;
     int32_t  best_first_fast_cost_search_candidate_index = INVALID_FAST_CANDIDATE_INDEX;
+#endif
     EbBool   use_ssd = EB_FALSE;
+#if !REMOVE_UNUSED_CODE_PH2
     uint32_t fast_lambda =  context_ptr->hbd_mode_decision ?
         context_ptr->fast_lambda_md[EB_10_BIT_MD] :
         context_ptr->fast_lambda_md[EB_8_BIT_MD];
+#endif
     // Set MD Staging fast_loop_core settings
     context_ptr->md_staging_skip_interpolation_search =
         (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
@@ -3803,6 +3847,7 @@ void md_stage_0(
                                             context_ptr->md_staging_mode == MD_STAGING_MODE_2)
                                                ? EB_TRUE
                                                : EB_FALSE;
+#if !REMOVE_UNUSED_CODE_PH2
     // 1st fast loop: src-to-src
     fast_loop_cand_index = fast_candidate_end_index;
     while (fast_loop_cand_index >= fast_candidate_start_index) {
@@ -3868,8 +3913,8 @@ void md_stage_0(
         }
         --fast_loop_cand_index;
     }
-
     // 2nd fast loop: src-to-recon
+#endif
     highest_cost_index   = candidate_buffer_start_index;
     fast_loop_cand_index = fast_candidate_end_index;
     while (fast_loop_cand_index >= fast_candidate_start_index) {
@@ -3880,8 +3925,12 @@ void md_stage_0(
                 &fast_candidate_array[fast_loop_cand_index];
             // Initialize tx_depth
             candidate_buffer->candidate_ptr->tx_depth = 0;
+#if REMOVE_UNUSED_CODE_PH2
+            if (!candidate_ptr->distortion_ready) {
+#else
             if (!candidate_ptr->distortion_ready ||
                 fast_loop_cand_index == best_first_fast_cost_search_candidate_index) {
+#endif
                 // Prediction
                 fast_loop_core(candidate_buffer,
                                pcs_ptr,
@@ -6542,6 +6591,7 @@ void md_cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffe
     }
 }
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *candidate_buffer,
                        SuperBlock *sb_ptr, ModeDecisionContext *context_ptr,
                        EbPictureBufferDesc *input_picture_ptr, uint32_t input_cb_origin_in_index,
@@ -6705,7 +6755,7 @@ void cfl_rd_pick_alpha(PictureControlSet *pcs_ptr, ModeDecisionCandidateBuffer *
         candidate_buffer->candidate_ptr->cfl_alpha_signs = best_joint_sign;
     }
 }
-
+#endif
 // If mode is CFL:
 // 1: recon the Luma
 // 2: Form the pred_buf_q3
@@ -6717,8 +6767,11 @@ static void cfl_prediction(PictureControlSet *          pcs_ptr,
                            uint32_t input_cb_origin_in_index, uint32_t blk_chroma_origin_index) {
     if (context_ptr->blk_geom->has_uv) {
         // 1: recon the Luma
+#if REMOVE_UNUSED_CODE_PH2
+        av1_perform_inverse_transform_recon_luma(context_ptr, candidate_buffer);
+#else
         av1_perform_inverse_transform_recon_luma(pcs_ptr, context_ptr, candidate_buffer);
-
+#endif
         uint32_t rec_luma_offset =
             ((context_ptr->blk_geom->origin_y >> 3) << 3) * candidate_buffer->recon_ptr->stride_y +
             ((context_ptr->blk_geom->origin_x >> 3) << 3);
@@ -10789,6 +10842,7 @@ EbErrorType signal_derivation_block(
     return return_error;
 }
 
+#if !REMOVE_UNUSED_CODE_PH2
 /****************************************************
 * generate the the size in pixel for partition code
 ****************************************************/
@@ -10866,7 +10920,7 @@ Part get_partition_shape(PartitionContextType above, PartitionContextType left, 
         SVT_LOG("error: unsupported above_size && left_size\n");
     return part;
 };
-
+#endif
 void init_chroma_mode(ModeDecisionContext   *context_ptr) {
 #if !REFACTOR_SIGNALS
     context_ptr->uv_search_path = EB_TRUE;
@@ -12316,14 +12370,20 @@ void md_encode_block(PictureControlSet *pcs_ptr,
 
         context_ptr->parent_sq_pred_mode[sq_index] = candidate_buffer->candidate_ptr->pred_mode;
     }
-
+#if REMOVE_UNUSED_CODE_PH2
     av1_perform_inverse_transform_recon(
+        context_ptr, candidate_buffer);
+#if !CLEAN_UP_SB_DATA_8
+        blk_ptr,
+#endif
+#else
+        av1_perform_inverse_transform_recon(
         pcs_ptr, context_ptr, candidate_buffer,
 #if !CLEAN_UP_SB_DATA_8
         blk_ptr,
 #endif
         context_ptr->blk_geom);
-
+#endif
     if (!context_ptr->blk_geom->has_uv) {
         // Store the luma data for 4x* and *x4 blocks to be used for CFL
         EbPictureBufferDesc *recon_ptr       = candidate_buffer->recon_ptr;

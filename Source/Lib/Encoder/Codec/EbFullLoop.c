@@ -2287,6 +2287,7 @@ uint8_t allowed_tx_set_b[TX_SIZES_ALL][TX_TYPES] = {
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}};
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 void encode_pass_tx_search(PictureControlSet *pcs_ptr, EncDecContext *context_ptr,
                            SuperBlock *sb_ptr,
 #if QP2QINDEX
@@ -2733,6 +2734,7 @@ void encode_pass_tx_search_hbd(
     if (is_inter) txb_ptr->transform_type[PLANE_TYPE_UV] = txb_ptr->transform_type[PLANE_TYPE_Y];
 }
 
+#endif
 void inv_transform_recon_wrapper(uint8_t *pred_buffer, uint32_t pred_offset, uint32_t pred_stride,
                                  uint8_t *rec_buffer, uint32_t rec_offset, uint32_t rec_stride,
                                  int32_t *rec_coeff_buffer, uint32_t coeff_offset, EbBool hbd,

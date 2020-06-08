@@ -3410,6 +3410,7 @@ void sad_loop_kernel_sparse_sse4_1_intrin(
     *y_search_center = y_best;
 }
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 /*******************************************************************************
 * Requirement: width   = 4, 8, 16, 24, 32, 48 or 64
 * Requirement: block_height <= 64
@@ -4334,6 +4335,7 @@ void sad_loop_kernel_sse4_1_hme_l0_intrin(
     *x_search_center = x_best;
     *y_search_center = y_best;
 }
+#endif
 #if !REMOVE_UNUSED_CODE
 static INLINE void sad_eight_8x4_sse41_intrin(const uint8_t *src, const uint32_t src_stride,
                                               const uint8_t *ref, const uint32_t ref_stride,

@@ -1292,8 +1292,9 @@ static void picture_parent_control_set_dctor(EbPtr p) {
         }
         EB_FREE_PTR_ARRAY(obj->picture_histogram, MAX_NUMBER_OF_REGIONS_IN_WIDTH);
     }
-
+#if !REMOVE_UNUSED_CODE_PH2
     EB_FREE_2D(obj->ois_sb_results);
+#endif
 #if TPL_LA
     if (obj->ois_mb_results)
         EB_FREE_2D(obj->ois_mb_results);
@@ -1308,7 +1309,9 @@ static void picture_parent_control_set_dctor(EbPtr p) {
         EB_FREE_ARRAY(obj->tpl_sb_rdmult_scaling_factors);
 #endif
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
     EB_FREE_2D(obj->ois_candicate);
+#endif
     EB_FREE_ARRAY(obj->rc_me_distortion);
     // ME and OIS Distortion Histograms
     EB_FREE_ARRAY(obj->me_distortion_histogram);
@@ -1365,7 +1368,9 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
         (init_data_ptr->picture_height + init_data_ptr->sb_sz - 1) / init_data_ptr->sb_sz);
     const uint16_t subsampling_x = (init_data_ptr->color_format == EB_YUV444 ? 1 : 2) - 1;
     const uint16_t subsampling_y = (init_data_ptr->color_format >= EB_YUV422 ? 1 : 2) - 1;
+#if !REMOVE_UNUSED_CODE_PH2
     uint16_t       sb_index;
+#endif
     uint32_t       region_in_picture_width_index;
     uint32_t       region_in_picture_height_index;
 
@@ -1432,6 +1437,7 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
         }
     }
 
+#if !REMOVE_UNUSED_CODE_PH2
     if (init_data_ptr->allocate_ois_struct) {
         EB_MALLOC_2D(object_ptr->ois_sb_results, object_ptr->sb_total_count, 1);
         EB_MALLOC_2D(
@@ -1447,6 +1453,7 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
     else {
         object_ptr->ois_sb_results = NULL;
     }
+#endif
 #if TPL_LA
     if(init_data_ptr->enable_tpl_la) {
         const uint16_t picture_width_in_mb  = (uint16_t)((init_data_ptr->picture_width + 15) / 16);

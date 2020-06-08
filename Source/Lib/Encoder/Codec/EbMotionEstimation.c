@@ -23,8 +23,9 @@
 #include "EbLambdaRateTables.h"
 
 #include "EbLog.h"
-
+#if !REMOVE_UNUSED_CODE_PH2
 #define AVCCODEL
+#endif
 /********************************************
  * Constants
  ********************************************/
@@ -4789,7 +4790,7 @@ static void open_loop_me_fullpel_search_sblock(MeContext *context_ptr, uint32_t 
         generate_nsq_mv(context_ptr);
 #endif
 }
-
+#if !REMOVE_UNUSED_CODE_PH2
 #ifndef AVCCODEL
 /*******************************************
  * HorizontalPelInterpolation
@@ -4823,7 +4824,7 @@ static void HorizontalPelInterpolation(
 
     return;
 }
-
+#endif
 /*******************************************
  * VerticalPelInterpolation
  *   interpolates the serach region in the vertical direction
@@ -8084,6 +8085,7 @@ void hme_level_0(
         x_top_left_search_region + y_top_left_search_region * sixteenth_ref_pic_ptr->stride_y;
 
     if (((sb_width & 7) == 0) || (sb_width == 4)) {
+#if !REMOVE_UNUSED_CODE_PH2
         if ((search_area_width & 15) == 0) {
             // Only width equals 16 (SB equals 64) is updated
             // other width sizes work with the old code as the one
@@ -8106,6 +8108,7 @@ void hme_level_0(
                 search_area_width,
                 search_area_height);
         } else {
+#endif
             // Put the first search location into level0 results
             sad_loop_kernel(
                 &context_ptr->sixteenth_sb_buffer[0],
@@ -8124,7 +8127,9 @@ void hme_level_0(
                 sixteenth_ref_pic_ptr->stride_y,
                 search_area_width,
                 search_area_height);
+#if !REMOVE_UNUSED_CODE_PH2
         }
+#endif
     } else {
         sad_loop_kernel_c(
             &context_ptr->sixteenth_sb_buffer[0],
@@ -13331,7 +13336,7 @@ EbErrorType motion_estimate_sb(
 
     return return_error;
 }
-
+#if !REMOVE_UNUSED_CODE_PH2
 EbErrorType open_loop_intra_search_sb(PictureParentControlSet *pcs_ptr, uint32_t sb_index,
                                       MotionEstimationContext_t *context_ptr,
                                       EbPictureBufferDesc *      input_ptr) {
@@ -13499,7 +13504,7 @@ EbErrorType open_loop_intra_search_sb(PictureParentControlSet *pcs_ptr, uint32_t
     }
     return return_error;
 }
-
+#endif
 #if TPL_LA
 void wht_fwd_txfm(int16_t *src_diff, int bw,
                   int32_t *coeff, TxSize tx_size,

@@ -80,7 +80,7 @@ uint32_t eb_compute128x_m_sad_avx2_intrin(
     uint32_t       ref_stride, // input parameter, reference stride
     uint32_t       height, // input parameter, block height (M)
     uint32_t       width); // input parameter, block width (N)
-
+#if !REMOVE_UNUSED_CODE_PH2
 void sad_loop_kernel_avx2_hme_l0_intrin(
     uint8_t * src, // input parameter, source samples Ptr
     uint32_t  src_stride, // input parameter, source stride
@@ -91,7 +91,7 @@ void sad_loop_kernel_avx2_hme_l0_intrin(
     uint64_t *best_sad, int16_t *x_search_center, int16_t *y_search_center,
     uint32_t src_stride_raw, // input parameter, source stride (no line skipping)
     int16_t search_area_width, int16_t search_area_height);
-
+#endif
 #if RESTRUCTURE_SAD
 void pme_sad_loop_kernel_avx2(uint8_t * src, // input parameter, source samples Ptr
     uint32_t  src_stride, // input parameter, source stride

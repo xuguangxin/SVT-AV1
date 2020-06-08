@@ -2582,6 +2582,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->tx_search_level = TX_SEARCH_OFF;
     else if (pd_pass == PD_PASS_1)
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+#if REMOVE_UNUSED_CODE_PH2
+    else
+        context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+#else
     else if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR2_M8_ADOPTIONS
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
@@ -2595,6 +2599,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if MAR25_ADOPTIONS
     else if (enc_mode <= ENC_M8)
+
 #else
 #if MAR17_ADOPTIONS
     else if (enc_mode <= ENC_M7)
@@ -2603,6 +2608,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
         context_ptr->tx_search_level = TX_SEARCH_FULL_LOOP;
+
 #if MAR2_M8_ADOPTIONS
     else {
         if (pcs_ptr->temporal_layer_index == 0)
@@ -2620,7 +2626,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->tx_search_level = TX_SEARCH_ENC_DEC;
 #endif
-
+#endif
 #if TXT_CONTROL
     // Set MD tx_level
     // md_txt_search_level                            Settings
@@ -2870,7 +2876,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M0)
 #endif
                 context_ptr->chroma_level = CHROMA_MODE_0;
+#if REMOVE_UNUSED_CODE_PH2
+            else
+#else
             else if (enc_mode <= ENC_M8)
+#endif
 #else
             if (enc_mode <= ENC_M8)
 #endif
@@ -2881,6 +2891,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M6)
 #endif
                 context_ptr->chroma_level = CHROMA_MODE_1;
+#if !REMOVE_UNUSED_CODE_PH2
             else if (pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0)
                 context_ptr->chroma_level = CHROMA_MODE_1;
             else
@@ -2888,6 +2899,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 (sequence_control_set_ptr->encoder_bit_depth == EB_8BIT)
                 ? CHROMA_MODE_2
                 : CHROMA_MODE_3;
+#endif
 #if PRESETS_SHIFT
 #if PRESET_SHIFITNG
         else if (enc_mode <= ENC_M2)
@@ -6764,7 +6776,11 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
 
         // SQ/NSQ block(s) filter based on the SQ size
         uint8_t is_block_tagged =
+#if REMOVE_UNUSED_CODE_PH2
+            (blk_geom->sq_size == 128 && pcs_ptr->slice_type == I_SLICE)
+#else
             (blk_geom->sq_size == 128 && (pcs_ptr->slice_type == I_SLICE || pcs_ptr->parent_pcs_ptr->sb_64x64_simulated))
+#endif
             ? 0
             : 1;
 
@@ -7915,7 +7931,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             if (context_ptr->md_blk_arr_nsq[blk_index].best_d1_blk == blk_index) {
 #endif
 #if DEPTH_PART_CLEAN_UP // refinement rest
+#if REMOVE_UNUSED_CODE_PH2
+                            s_depth = -1;
+#else
                             s_depth = (blk_geom->sq_size == 64 && pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) ? 0 : -1;
+#endif
 #else
                             s_depth = -1;
 #endif
@@ -7943,12 +7963,14 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if ADOPT_SKIPPING_PD1
                     // Check that the start and end depth are in allowed range, given other features
                     // which restrict allowable depths
+#if !REMOVE_UNUSED_CODE_PH2
                     if (pcs_ptr->parent_pcs_ptr->sb_64x64_simulated) {
                         s_depth = (blk_geom->sq_size == 64) ? 0
                                 : (blk_geom->sq_size == 32) ? MAX(-1, s_depth)
                                 : (blk_geom->sq_size == 16) ? MAX(-2, s_depth)
                                 : s_depth;
                     }
+#endif
 #if OPT_BLOCK_INDICES_GEN_1
                     if (context_ptr->disallow_4x4) {
 #else
@@ -8015,7 +8037,11 @@ static void build_starting_cand_block_array(SequenceControlSet *scs_ptr, Picture
 
         // SQ/NSQ block(s) filter based on the SQ size
         uint8_t is_block_tagged =
+#if REMOVE_UNUSED_CODE_PH2
+            (blk_geom->sq_size == 128 && pcs_ptr->slice_type == I_SLICE) ||
+#else
             (blk_geom->sq_size == 128 && (pcs_ptr->slice_type == I_SLICE || pcs_ptr->parent_pcs_ptr->sb_64x64_simulated)) ||
+#endif
             (blk_geom->sq_size == 4 && context_ptr->disallow_4x4)
             ? 0
             : 1;

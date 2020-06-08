@@ -599,6 +599,7 @@ typedef struct BlkStruct {
     uint8_t        do_not_process_block;
 } BlkStruct;
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 typedef struct OisCandidate {
     union {
         struct {
@@ -611,13 +612,12 @@ typedef struct OisCandidate {
     };
     int32_t angle_delta;
 } OisCandidate;
-
 typedef struct OisSbResults {
     uint8_t       total_ois_intra_candidate[CU_MAX_COUNT];
     OisCandidate *ois_candidate_array[CU_MAX_COUNT];
     int8_t        best_distortion_index[CU_MAX_COUNT];
 } OisSbResults;
-
+#endif
 #if TPL_LA
 typedef struct TplStats {
     int64_t srcrf_dist;

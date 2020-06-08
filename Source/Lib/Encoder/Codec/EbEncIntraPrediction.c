@@ -1234,7 +1234,7 @@ EbErrorType  intra_luma_prediction_for_interintra(
     return return_error;
 }
 
-
+#if !REMOVE_UNUSED_CODE_PH2
 EbErrorType update_neighbor_samples_array_open_loop(
         uint8_t                           *above_ref,
         uint8_t                            *left_ref,
@@ -1301,7 +1301,7 @@ EbErrorType update_neighbor_samples_array_open_loop(
 
     return return_error;
 }
-
+#endif
 #if TPL_LA
 #define USE_PADDING_FIX 1
 EbErrorType update_neighbor_samples_array_open_loop_mb(
@@ -1400,7 +1400,7 @@ EbErrorType update_neighbor_samples_array_open_loop_mb(
     return return_error;
 }
 #endif
-
+#if !REMOVE_UNUSED_CODE_PH2
 /** intra_prediction_open_loop()
         performs Open-loop Intra candidate Search for a CU
  */
@@ -1432,3 +1432,5 @@ EbErrorType intra_prediction_open_loop(
     }
     return return_error;
 }
+#endif
+

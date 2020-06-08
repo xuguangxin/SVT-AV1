@@ -23,12 +23,13 @@ extern EbErrorType eb_av1_intra_prediction_cl(uint8_t                      hbd_m
                                               struct ModeDecisionContext * context_ptr,
                                               PictureControlSet *          pcs_ptr,
                                               ModeDecisionCandidateBuffer *candidate_buffer_ptr);
-
+#if !REMOVE_UNUSED_CODE_PH2
 extern EbErrorType update_neighbor_samples_array_open_loop(uint8_t *above_ref, uint8_t *left_ref,
                                                            EbPictureBufferDesc *input_ptr,
                                                            uint32_t stride, uint32_t srcOriginX,
                                                            uint32_t srcOriginY, uint8_t bwidth,
                                                            uint8_t bheight);
+#endif
 #if TPL_LA
 extern EbErrorType update_neighbor_samples_array_open_loop_mb(uint8_t *above_ref, uint8_t *left_ref,
                                                            EbPictureBufferDesc *input_ptr,
@@ -36,11 +37,12 @@ extern EbErrorType update_neighbor_samples_array_open_loop_mb(uint8_t *above_ref
                                                            uint32_t srcOriginY, uint8_t bwidth,
                                                            uint8_t bheight);
 #endif
+#if !REMOVE_UNUSED_CODE_PH2
 extern EbErrorType intra_prediction_open_loop(
         int32_t p_angle, uint8_t ois_intra_mode, uint32_t srcOriginX, uint32_t srcOriginY,
         TxSize tx_size, uint8_t *above_row, uint8_t *left_col,
         MotionEstimationContext_t *context_ptr); // input parameter, ME context
-
+#endif
 
 
 void eb_av1_predict_intra_block(TileInfo *tile, STAGE stage, const BlockGeom *blk_geom,

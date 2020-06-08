@@ -1877,6 +1877,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     }
                 }
             }
+#if !REMOVE_UNUSED_CODE_PH2
             if (pcs_ptr->intra_pred_mode > 4)
             // *** OPEN LOOP INTRA CANDIDATE SEARCH CODE ***
             {
@@ -1893,7 +1894,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     }
                 }
             }
-
+#endif
 #if TPL_LA
             if (scs_ptr->static_config.look_ahead_distance != 0 && scs_ptr->static_config.enable_tpl_la) {
                 for (y_sb_index = y_sb_start_index; y_sb_index < y_sb_end_index; ++y_sb_index) {
