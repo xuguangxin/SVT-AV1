@@ -3632,9 +3632,9 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
 #if !REMOVE_UNUSED_CODE_PH2
                         //EbBool doLumaMC = EB_TRUE;
                         EbBool do_mv_pred = EB_TRUE;
-#endif
                         //if QP M and Segments are used, First Cu in SB row should have at least one coeff.
                         EbBool is_first_blk_in_row = EB_FALSE;
+#endif
 #if !CLEAN_UP_SB_DATA_7
                         zero_luma_cbf_md = (EbBool)(
                             check_zero_luma_cbf &&
