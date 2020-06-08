@@ -23,11 +23,11 @@ void transpose_64bit_4x4_reg256bit_instance_avx2(const __m256i *const in, __m256
 void transpose_64bit_4x6_reg256bit_instance_avx2(const __m256i *const in, __m256i *const out);
 
 void transpose_64bit_4x8_reg256bit_instance_avx2(const __m256i *const in, __m256i *const out);
-
+#endif
 #ifdef __cplusplus
 }
 #endif
-#endif
+
 static INLINE __m256i _mm256_unpacklo_epi128(const __m256i in0, const __m256i in1) {
     return _mm256_inserti128_si256(in0, _mm256_extracti128_si256(in1, 0), 1);
 }

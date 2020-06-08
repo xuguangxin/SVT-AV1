@@ -29,6 +29,8 @@ extern "C" {
 #include "EbPictureAnalysisProcess.h"
 }
 
+#if !REMOVE_UNUSED_CODE
+
 static void eb_picture_buffer_desc_dctor(EbPtr p) {
     EbPictureBufferDesc *obj = (EbPictureBufferDesc *)p;
     if (obj->buffer_enable_mask & PICTURE_BUFFER_DESC_Y_FLAG) {
@@ -322,3 +324,5 @@ TEST_F(ExtractFilterTest, ChromaWeakNoiseTest) {
 TEST_F(ExtractFilterTest, ChromaStrongNoiseTest) {
     run_chroma_strong_test();
 }
+
+#endif

@@ -258,6 +258,7 @@ typedef struct TestParam {
     SpatialFullDistortionKernelFunc avx2_test_func;
     SpatialFullDistortionKernelFunc avx512_test_func;
 } TestParam;
+#if !REMOVE_UNUSED_CODE
 #ifndef NON_AVX512_SUPPORT
 TestParam SPATIAL_TEST_PARAM[] = {
     {AreaSize(128, 128),
@@ -310,6 +311,7 @@ TestParam SPATIAL_TEST_PARAM[] = {
      spatial_full_distortion_kernel4x_n_sse2_intrin,
      spatial_full_distortion_kernel4x_n_avx2_intrin,
      nullptr}};
+#endif
 #endif
 typedef std::tuple<TestParam, TestPattern> SpatialTestParam;
 
@@ -407,10 +409,12 @@ TEST_P(SpatialFullDistortionFuncTest, SpatialFuncTest) {
     RunCheckOutput();
 }
 
+#if !REMOVE_UNUSED_CODE
 INSTANTIATE_TEST_CASE_P(
     SpatialFunc, SpatialFullDistortionFuncTest,
     ::testing::Combine(::testing::ValuesIn(SPATIAL_TEST_PARAM),
                        ::testing::ValuesIn(TEST_PATTERNS)));
+#endif
 
 AreaSize TEST_AREA_SIZES[] = {
     AreaSize(4, 4),    AreaSize(4, 8),    AreaSize(8, 4),   AreaSize(8, 8),

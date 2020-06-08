@@ -215,7 +215,6 @@ extern "C" {
 #define OPT_BLOCK_INDICES_GEN_3 1 // apply disallow_all_nsq_blocks_below_8x8, disallow_all_nsq_blocks_below_16x16, ..
 #endif
 #define TF_LEVELS               1 // Defined levels for temporal filtering based on the filtering window size
-#define TF_X86_KERNEL_FIX       1 // call x86 instead of C
 #define M8_SETTINGS             1 // M8 settings
 #if M8_SETTINGS
 // Part
@@ -488,6 +487,7 @@ extern "C" {
 #define JUNE9_ADOPTIONS     1 // M1 adoptions
 #define RESTRICT_INTER_TXS_DEPTH 1 // Restrict the max tx depth for INTER TXS
 #define M0_SQ_WEIGHT_ADOPTION    1 // Change the M0 sq_weight level
+#define PR_1316            1 //AVX2 kernel svt_av1_apply_temporal_filter_planewise_hbd_avx2()
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

@@ -46,6 +46,8 @@
 #include "util.h"
 #include "EbUtility.h"
 
+#if !REMOVE_UNUSED_CODE
+
 void *eb_aom_memalign(size_t align, size_t size);
 void  eb_aom_free(void *memblk);
 
@@ -429,3 +431,5 @@ INSTANTIATE_TEST_CASE_P(AVCMCPSearchRegionHelper,
                                            ::testing::ValuesIn(TEST_PATTERNS)));
 
 }  // namespace
+#endif
+
