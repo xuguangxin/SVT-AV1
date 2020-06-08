@@ -2708,6 +2708,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
     }
+#if SHUT_FEATURE_INTERACTIONS
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_txt_search_level = 0;
+#endif
 #else
     // Set tx search skip weights (MAX_MODE_COST: no skipping; 0: always skipping)
     if (pd_pass == PD_PASS_0)
@@ -3255,6 +3259,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
      context_ptr->disallow_4x4 = pcs_ptr->enc_mode <= ENC_M5 ? EB_FALSE : EB_TRUE;
 #endif
+#endif
+#if SHUT_FEATURE_INTERACTIONS
+     context_ptr->disallow_4x4 = EB_FALSE;
 #endif
      // If SB non-multiple of 4, then disallow_4x4 could not be used
      // SB Stats
@@ -4197,6 +4204,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->prune_ref_frame_for_rec_partitions =
             sequence_control_set_ptr->static_config.prune_ref_rec_part;
 
+#if SHUT_FEATURE_INTERACTIONS
+    context_ptr->prune_ref_frame_for_rec_partitions = 0;
+#endif
 #if !INTER_COMP_REDESIGN
     // Derive INTER/INTER WEDGE variance TH
     // Phoenix: Active only when inter/inter compound is on
@@ -4362,6 +4372,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_stage_2_3_cand_prune_th = 5;
     else
+#if ADD_MRS_MODE
+        if (MRS_MODE)
+            context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+        else
+#endif
 #if MAY23_M0_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
             if (enc_mode <= ENC_M0)
@@ -4560,6 +4575,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->sq_weight = 100;
 
     else
+#if ADD_MRS_MODE
+        if (MRS_MODE)
+            context_ptr->sq_weight = (uint32_t)~0;
+        else
+#endif
         if (MR_MODE)
 #if MAY19_ADOPTIONS
             context_ptr->sq_weight = 115;
@@ -4770,7 +4790,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->nsq_hv_level = 2;
         assert(context_ptr->sq_weight != (uint32_t)~0);
     }
-
+#if SHUT_FEATURE_INTERACTIONS
+    context_ptr->nsq_hv_level = 0;
+#endif
     // Set pred ME full search area
     if (pd_pass == PD_PASS_0) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
@@ -5001,7 +5023,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (MR_MODE)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
 #endif
+#if SHUT_FEATURE_INTERACTIONS
+        else if (EB_TRUE)
+#else
         else if (enc_mode <= ENC_M0)
+#endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;
         else
             context_ptr->inter_inter_distortion_based_reference_pruning = 4;
@@ -5133,6 +5159,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->block_based_depth_reduction_level = 2;
 #endif
 #endif
+#if SHUT_FEATURE_INTERACTIONS
+    context_ptr->block_based_depth_reduction_level = 0;
+#endif
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
 #endif
 #if ADD_MD_NSQ_SEARCH
@@ -5141,10 +5170,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_nsq_mv_search_level = 0;
     else
+#if ADD_MRS_MODE
+        if (MRS_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
 #if JUNE8_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #else
         if (MR_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
 #endif
             context_ptr->md_nsq_mv_search_level = 1;
         else if (enc_mode <= ENC_M0)
@@ -7664,9 +7697,17 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                 s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
 #if MAY16_7PM_ADOPTIONS
                                 e_depth = pcs_ptr->slice_type == I_SLICE ? 2 :
+#if SHUT_LAYER_BASED_FEATURES
+                                    1;
+#else
+#if SHUT_RESOLUTION_CHECKS
+                                    (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag)
+#else
                                     (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag && pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_1080p_RANGE)
+#endif
                                     ? 1
                                     : 0;
+#endif
 #else
                                 e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
 #endif
@@ -7690,8 +7731,13 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #else
                                 if (pcs_ptr->enc_mode <= ENC_M7) {
 #endif
+#if SHUT_LAYER_BASED_FEATURES
+                                    s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                                    e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 0;
+#else
                                     s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? -1 : 0;
                                     e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 1 : 0;
+#endif
                                 }
                                 else {
 #if REVERT_WHITE // MPPD
@@ -7757,6 +7803,10 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                                blk_geom);
 
                         }
+#if SHUT_FEATURE_INTERACTIONS
+                        s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
+                        e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
+#endif
 #if DEPTH_CYCLES_REDUCTION
                         DepthCycleRControls*depth_cycle_red_ctrls = &context_ptr->depth_cycles_red_ctrls;
                         uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)context_ptr->blk_geom->sq_size);

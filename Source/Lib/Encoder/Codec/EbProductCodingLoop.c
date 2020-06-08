@@ -11630,7 +11630,9 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                     *(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[0]]->full_cost_ptr);
 #if CLASS_PRUNE
                 // class pruning
+#if !MRS_MODE
                 class_pruning(pcs_ptr,context_ptr, best_md_stage_cost , class_best_cost, cand_class_it);
+#endif
 #else
                 // inter class pruning
                 if (best_md_stage_cost && class_best_cost &&

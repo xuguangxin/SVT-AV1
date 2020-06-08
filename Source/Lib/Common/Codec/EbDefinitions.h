@@ -479,6 +479,15 @@ extern "C" {
 #define QP63_MISMATCH_FIX      1 // Fix the enc/dec mismatch for QP63
 #define REMOVE_UNUSED_CODE_PH2          1 // Remove unused code
 #define JUNE8_ADOPTIONS         1 // Adoptions in MR-M2
+
+#define SHUT_FEATURE_INTERACTIONS 0 // Orange: Turn off any feature that interacts with NSQ, depth, TXT, TXS, or MRP
+#define SHUT_LAYER_BASED_FEATURES 0 // Blue: Turn off any layer checks for feature levels (use safer level always)
+#define SHUT_RESOLUTION_CHECKS    0 // Green: Turn off any resolution checks (use lower resolution level)
+
+#define ADD_MRS_MODE        1 // A slow MR mode, intended to have no TH values (should have all speed features OFF)
+#if ADD_MRS_MODE
+#define MRS_MODE 0
+#endif
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -489,7 +498,11 @@ extern "C" {
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3
+#if MRS_MODE
+#define MR_MODE 1
+#else
 #define MR_MODE 0
+#endif
 #define ALT_REF_QP_THRESH 20
 #define HIGH_PRECISION_MV_QTHRESH 150
 #define NON8_FIX_REST 1

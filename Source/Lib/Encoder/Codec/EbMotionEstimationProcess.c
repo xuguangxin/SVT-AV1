@@ -254,7 +254,11 @@ void* set_me_hme_params_oq(
 #endif
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 64;
 #if MAY17_ADOPTIONS
+#if SHUT_RESOLUTION_CHECKS
+    me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 192;
+#else
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = (input_resolution <= INPUT_SIZE_1080p_RANGE) ? 192 : 256;
+#endif
 #else
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 256;
 #endif
@@ -302,7 +306,11 @@ void* set_me_hme_params_oq(
 #if MAY12_ADOPTIONS
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 64;
 #if MAY17_ADOPTIONS
+#if SHUT_RESOLUTION_CHECKS
+    me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 192;
+#else
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = (input_resolution <= INPUT_SIZE_1080p_RANGE) ? 192 : 256;
+#endif
 #else
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 256;
 #endif
@@ -446,8 +454,13 @@ void* set_me_hme_params_oq(
 #endif
 #endif
 #if HME_4K_ADOPTIONS
+#if SHUT_RESOLUTION_CHECKS
+            me_context_ptr->hme_level0_total_search_area_width =  120;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
+#else
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = input_resolution <= INPUT_SIZE_1080p_RANGE ? 120 : 240;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
+#endif
 #else
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 120;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
@@ -533,7 +546,11 @@ void* set_me_hme_params_oq(
 #else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
 #endif
+#if SHUT_RESOLUTION_CHECKS
+    else
+#else
     else if (input_resolution <= INPUT_SIZE_720p_RANGE)
+#endif
 #if PRESETS_SHIFT
 #if M2_COMBO_1
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M1 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
@@ -547,8 +564,10 @@ void* set_me_hme_params_oq(
 #else
         me_context_ptr->hme_decimation = pcs_ptr->enc_mode <= ENC_M3 ? ONE_DECIMATION_HME : TWO_DECIMATION_HME;
 #endif
+#if !SHUT_RESOLUTION_CHECKS
     else
         me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
+#endif
 #else
     me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
 #endif
@@ -817,12 +836,22 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->fractional_search_model = 2;
 #endif
     // HME Search Method
+#if ADD_MRS_MODE
+    if (MRS_MODE)
+        context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
+    else
+#endif
     if (pcs_ptr->sc_content_detected)
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
     else
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
 
     // ME Search Method
+#if ADD_MRS_MODE
+    if (MRS_MODE)
+        context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
+    else
+#endif
     if (pcs_ptr->sc_content_detected)
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
     else
