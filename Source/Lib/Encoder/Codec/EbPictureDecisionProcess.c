@@ -1931,6 +1931,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
         if (sc_content_detected)
+#if JUNE8_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if APR24_M3_ADOPTIONS
 #if PRESET_SHIFITNG
             if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1951,6 +1954,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -1979,6 +1983,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->intra_pred_mode = 4;
 #endif
+#if JUNE8_ADOPTIONS
+        else if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if APR23_ADOPTIONS_2
 #if PRESET_SHIFITNG
         else if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1996,6 +2003,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
         else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -2137,10 +2145,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->enable_inter_intra = 0;
         else
 #endif
+#if JUNE8_ADOPTIONS
+        pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#else
 #if PRESET_SHIFITNG
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M1 ? 2 : 3;
 #else
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
+#endif
 #endif
 #else
 #if MAR30_ADOPTIONS
@@ -2179,15 +2191,18 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
+#if JUNE8_ADOPTIONS
+                pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
+#else
 #if SHIFT_M5_SC_TO_M3
 #if PRESET_SHIFITNG
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M1 ? 2 : 0;
 #else
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
-
 #endif
 #else
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
             else
 #endif

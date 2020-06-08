@@ -478,6 +478,7 @@ extern "C" {
 
 #define QP63_MISMATCH_FIX      1 // Fix the enc/dec mismatch for QP63
 #define REMOVE_UNUSED_CODE_PH2          1 // Remove unused code
+#define JUNE8_ADOPTIONS         1 // Adoptions in MR-M2
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

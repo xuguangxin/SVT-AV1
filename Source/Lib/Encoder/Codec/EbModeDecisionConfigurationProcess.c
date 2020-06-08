@@ -1147,6 +1147,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if APR23_ADOPTIONS_2
     if (scs_ptr->seq_header.enable_filter_intra) {
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if JUNE8_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if MAY12_ADOPTIONS
 #if PRESET_SHIFITNG
             if (pcs_ptr->enc_mode <= ENC_M1)
@@ -1158,6 +1161,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             if (pcs_ptr->enc_mode <= ENC_M0)
 #else
             if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #endif
 #endif
                 pcs_ptr->pic_filter_intra_mode = 1;
@@ -1206,6 +1210,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #if M8_WM
 #if UPGRADE_M6_M7_M8
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#if JUNE8_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2) {
+#else
 #if SHIFT_M5_SC_TO_M3
 #if PRESET_SHIFITNG
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1) {
@@ -1214,6 +1221,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #else
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
+#endif
 #endif
             enable_wm = EB_TRUE;
         }
@@ -1233,6 +1241,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         }
     } else
 #endif
+#if JUNE8_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2) {
+#else
 #if MAY12_ADOPTIONS
 #if PRESET_SHIFITNG
     if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1) {
@@ -1241,6 +1252,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #else
     if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4) {
+#endif
 #endif
         enable_wm = EB_TRUE;
 #if UPGRADE_M8
@@ -1343,6 +1355,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     if (scs_ptr->static_config.enable_obmc) {
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if JUNE8_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if SHIFT_M5_SC_TO_M3
 #if PRESET_SHIFITNG
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1)
@@ -1360,6 +1375,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
 #else
             if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
