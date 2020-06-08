@@ -4792,7 +4792,7 @@ EB_EXTERN void av1_encode_pass(SequenceControlSet *scs_ptr, PictureControlSet *p
                         } // 2nd Partition Loop
 
                         // Update Recon Samples Neighbor Arrays -INTER-
-                        
+
 #if !REMOVE_UNUSED_CODE_PH2
                         if (do_recon) {
 #endif

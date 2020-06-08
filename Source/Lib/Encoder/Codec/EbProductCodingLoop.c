@@ -1015,7 +1015,7 @@ void av1_perform_inverse_transform_recon(ModeDecisionContext *        context_pt
                                          ModeDecisionCandidateBuffer *candidate_buffer){
 #if !CLEAN_UP_SB_DATA_8
                                          BlkStruct *blk_ptr,
-#endif                            
+#endif
 #else
 void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
                                          ModeDecisionContext *        context_ptr,
@@ -1038,7 +1038,7 @@ void av1_perform_inverse_transform_recon(PictureControlSet *          pcs_ptr,
 #endif
 #if !REMOVE_UNUSED_CODE_PH2
     UNUSED(blk_geom);
-    
+
     if (pcs_ptr->intra_md_open_loop_flag == EB_FALSE) {
 #endif
         uint8_t tx_depth       = candidate_buffer->candidate_ptr->tx_depth;
