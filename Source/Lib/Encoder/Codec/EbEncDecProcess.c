@@ -4259,7 +4259,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_1_cand_prune_th = 75;
     else
 #if JUNE8_ADOPTIONS
+#if JUNE9_ADOPTIONS
+        if (enc_mode <= ENC_M1 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M2))
+#else
         if (enc_mode <= ENC_M0 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && enc_mode <= ENC_M2))
+#endif
             context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
 #else
 #if MAY16_7PM_ADOPTIONS
@@ -4820,6 +4824,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_7;
         }
         else {
+#if JUNE9_ADOPTIONS
+            context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+            context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
 #if JUNE8_ADOPTIONS
             context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
@@ -4857,6 +4865,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
             context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
             context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M0 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
 #endif
 #endif
 #endif
@@ -5180,7 +5189,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
             context_ptr->md_nsq_mv_search_level = 1;
+#if JUNE9_ADOPTIONS
+        else if (enc_mode <= ENC_M1)
+#else
         else if (enc_mode <= ENC_M0)
+#endif
             context_ptr->md_nsq_mv_search_level = 2;
 #if PRESET_SHIFITNG
         else if (enc_mode <= ENC_M3)
@@ -5201,10 +5214,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
             context_ptr->md_subpel_search_level = 3;
+#if JUNE9_ADOPTIONS
+        else if (enc_mode <= ENC_M1)
+            context_ptr->md_subpel_search_level = 1;
+#else
         else if (enc_mode <= ENC_M0)
             context_ptr->md_subpel_search_level = 1;
         else if (enc_mode <= ENC_M1)
             context_ptr->md_subpel_search_level = 2;
+#endif
         else
             context_ptr->md_subpel_search_level = 3;
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level);

@@ -485,9 +485,7 @@ extern "C" {
 #define SHUT_RESOLUTION_CHECKS    0 // Green: Turn off any resolution checks (use lower resolution level)
 
 #define ADD_MRS_MODE        1 // A slow MR mode, intended to have no TH values (should have all speed features OFF)
-#if ADD_MRS_MODE
-#define MRS_MODE 0
-#endif
+#define JUNE9_ADOPTIONS     1 // M1 adoptions
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -498,11 +496,18 @@ extern "C" {
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3
+
+// MR_MODE  = M0 + MR_MODE (ON); Research mode with higher quality than M0
+// MRS_MODE = MR + MRS_MODE (ON); Highest quality research mode (slowest)
+#if ADD_MRS_MODE
+#define MRS_MODE 0
+#endif
 #if MRS_MODE
 #define MR_MODE 1
 #else
 #define MR_MODE 0
 #endif
+
 #define ALT_REF_QP_THRESH 20
 #define HIGH_PRECISION_MV_QTHRESH 150
 #define NON8_FIX_REST 1

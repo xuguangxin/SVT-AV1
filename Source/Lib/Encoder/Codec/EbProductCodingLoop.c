@@ -11502,7 +11502,11 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
     uint64_t band3_cost_th = (class_best_cost * 20);
 
     uint8_t class_pruning_scaling_level ;
+#if JUNE9_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M1)
+#else
     if (pcs_ptr->enc_mode  <= ENC_M0)
+#endif
 #if MAY17_ADOPTIONS
         class_pruning_scaling_level = sc_content_detected ? 1 : 0;
 #else
