@@ -111,6 +111,11 @@ typedef struct EncodeContext {
     // Initial Rate Control Reorder Queue
     InitialRateControlReorderEntry **initial_rate_control_reorder_queue;
     uint32_t                         initial_rate_control_reorder_queue_head_index;
+#if DECOUPLE_ME_RES
+    uint32_t        dep_q_head;
+    uint32_t        dep_q_tail;
+    PicQueueEntry **dep_cnt_picture_queue; //buffer to sotre all pictures needing dependent-count clean-up in PicMgr
+#endif
 
     // High Level Rate Control Histogram Queue
     HlRateControlHistogramEntry **hl_rate_control_historgram_queue;

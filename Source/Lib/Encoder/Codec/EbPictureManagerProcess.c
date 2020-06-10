@@ -132,6 +132,10 @@ void copy_buffer_info(EbPictureBufferDesc *src_ptr, EbPictureBufferDesc *dst_ptr
 void set_tile_info(PictureParentControlSet *pcs_ptr);
 
 #if DECOUPLE_ME_RES
+/*
+  walk the ref queue, and looks for a particular pic
+  return NULL if not found.
+*/
 ReferenceQueueEntry * search_ref_in_ref_queue(
     EncodeContext *encode_context_ptr,
     uint64_t ref_poc)
@@ -143,7 +147,7 @@ ReferenceQueueEntry * search_ref_in_ref_queue(
         ref_entry_ptr =
             encode_context_ptr->reference_picture_queue[ref_queue_i];
         if (ref_entry_ptr->picture_number == ref_poc)
-            break;
+            return ref_entry_ptr;
 
         // Increment the reference_queue_index Iterator
         ref_queue_i = (ref_queue_i == REFERENCE_QUEUE_MAX_DEPTH - 1)
@@ -152,28 +156,69 @@ ReferenceQueueEntry * search_ref_in_ref_queue(
 
     } while (ref_queue_i != encode_context_ptr->reference_picture_queue_tail_index);
 
-
-    return ref_entry_ptr;
+    return NULL;
 }
-#endif
-#if DECOUPLE_ME_RES
-void update_dep_cnt_of_pictures_in_ref_queue(
-    EncodeContext *encode_context_ptr,
+/*
+  update dependent count of any existing pic in the ref queue.
+  if the picture is not in the ref queue, subesequent calls
+  will attempt to do the cleaning
+*/
+void clean_pictures_in_ref_queue(EncodeContext *ctx)
+{
+    PicQueueEntry **queue = ctx->dep_cnt_picture_queue;
+    ReferenceQueueEntry * ref_entry_ptr = NULL;
+
+    //all pictures needing the clean-up are stored in dep cnt queue
+    //go through all of elements, search it in the ref queue, and clean
+    //it if found
+    uint32_t  q_idx = ctx->dep_q_head;
+    while (q_idx != ctx->dep_q_tail) {
+        if (queue[q_idx]->is_done == 0){
+            ref_entry_ptr = search_ref_in_ref_queue(ctx, queue[q_idx]->pic_num);
+            if (ref_entry_ptr != NULL) {
+                int new_dep_cnt = (int)ref_entry_ptr->dependent_count + queue[q_idx]->dep_cnt_diff;
+                if (new_dep_cnt < 0)
+                    SVT_ERROR(" PicMgr: Negative dep count\n");
+                //printf(" search %I64i  ====Pic-MGR-Dep-Cnt-reduce found: %I64i  %i --> %i\n",
+                //    queue[q_idx]->pic_num, ref_entry_ptr->picture_number, ref_entry_ptr->dependent_count, new_dep_cnt);
+                ref_entry_ptr->dependent_count += queue[q_idx]->dep_cnt_diff;
+                queue[q_idx]->is_done = 1;
+            }
+        }
+
+        // Increment the head_index if the head is done
+        if (queue[ctx->dep_q_head]->is_done)
+            ctx->dep_q_head = (ctx->dep_q_head == REFERENCE_QUEUE_MAX_DEPTH - 1) ? 0 : ctx->dep_q_head + 1;
+
+        //Increment the queue_index Iterator
+        q_idx = (q_idx == REFERENCE_QUEUE_MAX_DEPTH - 1) ? 0 : q_idx + 1;
+    }
+}
+
+/*
+  Pic Mgr maintains a queue of pic to clear dep cnt
+  if a picture comes from PD, it copies its clean-up list to the queue
+*/
+void copy_dep_cnt_cleaning_list(
+    EncodeContext *ctx,
     PictureParentControlSet * pcs)
 {
-    ReferenceQueueEntry * ref_entry_ptr = NULL;
+    //triggering picture hands list to PicMgr, which will do the clearing
+    PicQueueEntry **queue = ctx->dep_cnt_picture_queue;
 
     for (uint32_t pic_i = 0; pic_i < pcs->other_updated_links_cnt; pic_i++) {
 
-        ref_entry_ptr = search_ref_in_ref_queue(encode_context_ptr, pcs->updated_links_arr[pic_i].pic_num);
+        //place pic to be cleared in queue
+        //the spot should be empty
+        if (queue[ctx->dep_q_tail]->is_done == 0)
+            SVT_ERROR("\n pic %I64i  ERR  DepCount Queue is done\n", queue[ctx->dep_q_tail]->pic_num);
 
-        assert(ref_entry_ptr != 0);
-        if(ref_entry_ptr==0)
-            SVT_ERROR("\n NULL @ pointer update_dep_cnt_of_pictures_in_ref_queue \n ");
+        queue[ctx->dep_q_tail]->pic_num = pcs->updated_links_arr[pic_i].pic_num;
+        queue[ctx->dep_q_tail]->dep_cnt_diff = pcs->updated_links_arr[pic_i].dep_cnt_diff;
+        queue[ctx->dep_q_tail]->is_done = 0;
 
-        ref_entry_ptr->dependent_count += pcs->updated_links_arr[pic_i].dep_cnt_diff;
-
-        assert(ref_entry_ptr->dependent_count >= 0);
+        //advance the queue
+        ctx->dep_q_tail = (ctx->dep_q_tail == REFERENCE_QUEUE_MAX_DEPTH - 1) ? 0 : ctx->dep_q_tail + 1;
     }
 
 }
@@ -298,7 +343,9 @@ void *picture_manager_kernel(void *input_ptr) {
 
 #if DECOUPLE_ME_RES
 
-                update_dep_cnt_of_pictures_in_ref_queue(encode_context_ptr, pcs_ptr);
+                copy_dep_cnt_cleaning_list(encode_context_ptr, pcs_ptr);
+
+                clean_pictures_in_ref_queue(encode_context_ptr);
 
 #else
                 // If there was a change in the number of temporal layers, then cleanup the Reference Queue's Dependent Counts
@@ -660,7 +707,9 @@ void *picture_manager_kernel(void *input_ptr) {
 
             scs_ptr = (SequenceControlSet *)input_picture_demux_ptr->scs_wrapper_ptr->object_ptr;
             encode_context_ptr = scs_ptr->encode_context_ptr;
-
+#if DECOUPLE_ME_RES
+            clean_pictures_in_ref_queue(scs_ptr->encode_context_ptr);
+#endif
             // Check if Reference Queue is full
             CHECK_REPORT_ERROR((encode_context_ptr->reference_picture_queue_head_index !=
                                 encode_context_ptr->reference_picture_queue_tail_index),
@@ -704,6 +753,11 @@ void *picture_manager_kernel(void *input_ptr) {
         case EB_PIC_FEEDBACK:
             scs_ptr = (SequenceControlSet *)input_picture_demux_ptr->scs_wrapper_ptr->object_ptr;
             encode_context_ptr    = scs_ptr->encode_context_ptr;
+
+#if DECOUPLE_ME_RES
+            clean_pictures_in_ref_queue(scs_ptr->encode_context_ptr);
+#endif
+
             reference_queue_index = encode_context_ptr->reference_picture_queue_head_index;
             // Find the Reference in the Reference Queue
             do {
@@ -776,10 +830,7 @@ void *picture_manager_kernel(void *input_ptr) {
                                     -input_entry_ptr->list0_ptr->reference_list[ref_idx]);
 
                             reference_entry_ptr = search_ref_in_ref_queue(encode_context_ptr, ref_poc);
-                            assert(reference_entry_ptr != 0);
-                            CHECK_REPORT_ERROR((reference_entry_ptr),
-                                encode_context_ptr->app_callback_ptr,
-                                EB_ENC_PM_ERROR10);
+
 #else
                             // hardcode the reference for the overlay frame
                             if (entry_pcs_ptr->is_overlay) {
@@ -822,7 +873,9 @@ void *picture_manager_kernel(void *input_ptr) {
                             //current_input_poc += ((current_input_poc < ref_poc) && (input_entry_ptr->list0_ptr->reference_list[ref_idx] > 0)) ?
                             //    (1 << entry_scs_ptr->bits_for_picture_order_count) :
                             //    0;
-
+#if DECOUPLE_ME_RES
+                            if (reference_entry_ptr != NULL){
+#endif
                             availability_flag =
                                 (availability_flag == EB_FALSE) ? EB_FALSE
                                                                 : // Don't update if already False
@@ -842,6 +895,11 @@ void *picture_manager_kernel(void *input_ptr) {
                                                         ? EB_TRUE
                                                         : // The Reference has been completed
                                                         EB_FALSE; // The Reference has not been completed
+#if DECOUPLE_ME_RES
+                            }else{
+                                availability_flag = EB_FALSE;
+                            }
+#endif
                         }
                     }
                     // Check RefList1 Availability
@@ -861,10 +919,7 @@ void *picture_manager_kernel(void *input_ptr) {
 
                                     reference_entry_ptr = search_ref_in_ref_queue(encode_context_ptr, ref_poc);
 
-                                    assert(reference_entry_ptr != 0);
-                                    CHECK_REPORT_ERROR((reference_entry_ptr),
-                                        encode_context_ptr->app_callback_ptr,
-                                        EB_ENC_PM_ERROR10);
+
 #else
                                     reference_queue_index = (uint32_t)CIRCULAR_ADD(
                                         ((int32_t)input_entry_ptr->reference_entry_index) - // Base
@@ -891,6 +946,9 @@ void *picture_manager_kernel(void *input_ptr) {
                                     //    (1 << entry_scs_ptr->bits_for_picture_order_count) :
                                     //    0;
 
+#if DECOUPLE_ME_RES
+                                    if (reference_entry_ptr != NULL){
+#endif
                                     availability_flag =
                                         (availability_flag == EB_FALSE)
                                             ? EB_FALSE
@@ -913,6 +971,11 @@ void *picture_manager_kernel(void *input_ptr) {
                                                                 ? EB_TRUE
                                                                 : // The Reference has been completed
                                                                 EB_FALSE; // The Reference has not been completed
+
+#if DECOUPLE_ME_RES
+                                    }else{
+                                        availability_flag = EB_FALSE; }
+#endif
                                 }
                             }
                         }

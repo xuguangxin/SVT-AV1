@@ -5496,7 +5496,7 @@ PaReferenceQueueEntry * search_ref_in_ref_queue_pa(
         ref_entry_ptr =
             encode_context_ptr->picture_decision_pa_reference_queue[ref_queue_i];
         if (ref_entry_ptr->picture_number == ref_poc)
-            break;
+            return ref_entry_ptr;
 
         // Increment the reference_queue_index Iterator
         ref_queue_i = (ref_queue_i == REFERENCE_QUEUE_MAX_DEPTH - 1)
@@ -5506,7 +5506,7 @@ PaReferenceQueueEntry * search_ref_in_ref_queue_pa(
     } while (ref_queue_i != encode_context_ptr->picture_decision_pa_reference_queue_tail_index);
 
 
-    return ref_entry_ptr;
+    return NULL;
 }
 #endif
 /* Picture Decision Kernel */
@@ -6815,6 +6815,16 @@ void* picture_decision_kernel(void *input_ptr)
                         for (uint32_t pic_i = 0; pic_i < mg_size; ++pic_i){
 
                             pcs_ptr = context_ptr->mg_pictures_array[pic_i];
+
+
+                            EbObjectWrapper *reference_picture_wrapper_ptr;
+                            // Get Empty Reference Picture Object
+                            eb_get_empty_object(
+                                scs_ptr->encode_context_ptr->reference_picture_pool_fifo_ptr,
+                                &reference_picture_wrapper_ptr);
+                            pcs_ptr->reference_picture_wrapper_ptr = reference_picture_wrapper_ptr;
+                            // Give the new Reference a nominal live_count of 1
+                            eb_object_inc_live_count(pcs_ptr->reference_picture_wrapper_ptr, 1);
 
                             //get a new ME data buffer
                             eb_get_empty_object(context_ptr->me_fifo_ptr,

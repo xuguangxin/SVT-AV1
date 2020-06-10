@@ -1368,7 +1368,7 @@ EbErrorType picture_parent_control_set_ctor(PictureParentControlSet *object_ptr,
         (init_data_ptr->picture_height + init_data_ptr->sb_sz - 1) / init_data_ptr->sb_sz);
     const uint16_t subsampling_x = (init_data_ptr->color_format == EB_YUV444 ? 1 : 2) - 1;
     const uint16_t subsampling_y = (init_data_ptr->color_format >= EB_YUV422 ? 1 : 2) - 1;
-#if !REMOVE_UNUSED_CODE_PH2
+#if !REMOVE_UNUSED_CODE_PH2 || !DECOUPLE_ME_RES
     uint16_t       sb_index;
 #endif
     uint32_t       region_in_picture_width_index;
