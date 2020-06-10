@@ -5044,6 +5044,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if SHUT_FEATURE_INTERACTIONS
         else if (EB_TRUE)
 #else
+#if NEW_MRP_SETTINGS
+        else if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
         else if (enc_mode <= ENC_M0)
 #endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;

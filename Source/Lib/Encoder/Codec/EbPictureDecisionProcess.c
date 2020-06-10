@@ -2073,6 +2073,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 1                 ON
 #if MAR4_M6_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
+#if NEW_TXS_SETTINGS
+        if (pcs_ptr->enc_mode <= ENC_M0)
+            pcs_ptr->tx_size_search_mode = 1;
+        else
+#endif
 #if MAR10_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M8)
 #else
@@ -2110,6 +2115,10 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->slice_type != I_SLICE)
         ? 0
         : 1;
+#endif
+#if NEW_TXS_SETTINGS
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+        pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
 #endif
     else
         pcs_ptr->tx_size_search_mode = 0;
@@ -2227,7 +2236,8 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set compound mode      Settings
     // 0                      OFF: No compond mode search : AVG only
     // 1                      ON: Full
-    // 2                      ON: Fast : MRP pruning/ similar based disable
+    // 2                      ON: Fast : similar based disable
+    // 3                      ON: Fast : MRP pruning/ similar based disable
 
 
     if (scs_ptr->static_config.compound_level == DEFAULT) {
@@ -2237,6 +2247,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
+#if NEW_MRP_SETTINGS
+                pcs_ptr->compound_mode = MR_MODE ? 1 :
+                                            pcs_ptr->enc_mode <= ENC_M0 ? 2 :
+                                            pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
+#else
 #if JUNE8_ADOPTIONS
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
 #else
@@ -2250,14 +2265,20 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
 #endif
 #endif
+#endif
             else
 #endif
 #if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
+#if NEW_MRP_SETTINGS
+                pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
+                                            pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
+#else
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
 #if PRESET_SHIFITNG
                 pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
 #else
                 pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
 #else
             pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M3 ? 1 :
@@ -6358,6 +6379,24 @@ void* picture_decision_kernel(void *input_ptr)
                                 //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
 #if UPGRADE_M6_M7_M8
                                 if (pcs_ptr->sc_content_detected) {
+#if NEW_MRP_SETTINGS
+                                    if (MRS_MODE) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 3);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+                                    }
+                                    else if (MR_MODE) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 3);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
+                                    }
+                                    else if (pcs_ptr->enc_mode <= ENC_M5) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
+                                    }
+                                    else {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+                                    }
+#else
 #if MAY12_ADOPTIONS
 #if PRESET_SHIFITNG
                                     if (pcs_ptr->enc_mode <= ENC_M1) {
@@ -6413,6 +6452,7 @@ void* picture_decision_kernel(void *input_ptr)
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
                                     }
+#endif
                                 }
                                 else {
 #if MRP_ADOPTIONS
@@ -6428,6 +6468,11 @@ void* picture_decision_kernel(void *input_ptr)
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
                                     }
 #if APR25_12AM_ADOPTIONS
+#if NEW_MRP_SETTINGS
+                                    else if (pcs_ptr->enc_mode <= ENC_M6) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
+#else
 #if PRESET_SHIFITNG
                                     else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
@@ -6439,6 +6484,7 @@ void* picture_decision_kernel(void *input_ptr)
 #else
                                         pcs_ptr->ref_list0_count_try = pcs_ptr->is_used_as_reference_flag ? MIN(pcs_ptr->ref_list0_count, 4) : MIN(pcs_ptr->ref_list0_count, 1);
                                         pcs_ptr->ref_list1_count_try = pcs_ptr->is_used_as_reference_flag ? MIN(pcs_ptr->ref_list1_count, 3) : MIN(pcs_ptr->ref_list1_count, 1);
+#endif
 #endif
                                     }
 #endif

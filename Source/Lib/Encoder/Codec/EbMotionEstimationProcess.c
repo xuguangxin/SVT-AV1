@@ -971,10 +971,17 @@ EbErrorType signal_derivation_me_kernel_oq(
     if (MR_MODE)
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
     else if (pcs_ptr->sc_content_detected)
+#if NEW_MRP_SETTINGS
+        if (enc_mode <= ENC_M0)
+            set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
+        else
+            set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 1);
+#else
 #if ADOPT_SC_HME_PRUNING
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 1);
 #else
         set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
+#endif
 #endif
 #if JUNE8_ADOPTIONS
     else if (enc_mode <= ENC_M2)
