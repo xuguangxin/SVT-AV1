@@ -4609,6 +4609,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if PRESETS_SHIFT
 #if NEW_M1_CAND
 #if JUNE8_ADOPTIONS
+#if M0_SQ_WEIGHT_ADOPTION
+                    if (enc_mode <= ENC_M0)
+                        context_ptr->sq_weight = 110;
+                    else
+#endif
                     if (enc_mode <= ENC_M1)
 #else
 #if M1_C2_ADOPTIONS
@@ -4699,11 +4704,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if COEFF_BASED_BYPASS_NSQ && !REMOVE_SQ_WEIGHT_TOGGLING
                 context_ptr->sq_weight =(uint32_t)~0;
 #else
+#if M0_SQ_WEIGHT_ADOPTION
+                context_ptr->sq_weight = 110;
+#else
 #if MAY15_M0_ADOPTIONS
                 context_ptr->sq_weight = 105;
 #else
                 context_ptr->sq_weight =
                 sequence_control_set_ptr->static_config.sq_weight + 10;
+#endif
 #endif
 #endif
 #else

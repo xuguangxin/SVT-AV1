@@ -486,6 +486,8 @@ extern "C" {
 
 #define ADD_MRS_MODE        1 // A slow MR mode, intended to have no TH values (should have all speed features OFF)
 #define JUNE9_ADOPTIONS     1 // M1 adoptions
+#define RESTRICT_INTER_TXS_DEPTH 1 // Restrict the max tx depth for INTER TXS
+#define M0_SQ_WEIGHT_ADOPTION    1 // Change the M0 sq_weight level
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

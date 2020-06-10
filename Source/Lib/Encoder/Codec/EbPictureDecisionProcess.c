@@ -2120,6 +2120,15 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - TXS in intra classes only
     // 1 ON - TXS in all classes
+    // 2 ON - INTER TXS restricted to max 1 depth
+#if RESTRICT_INTER_TXS_DEPTH
+    if (MR_MODE)
+        pcs_ptr->txs_in_inter_classes = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+        pcs_ptr->txs_in_inter_classes = 2;
+    else
+        pcs_ptr->txs_in_inter_classes = 0;
+#else
 #if MAY16_7PM_ADOPTIONS
     pcs_ptr->txs_in_inter_classes = 0;
 #else
@@ -2129,6 +2138,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->txs_in_inter_classes = (pcs_ptr->is_used_as_reference_flag && pcs_ptr->input_resolution <= INPUT_SIZE_480p_RANGE) ? 1 : 0;
     else
         pcs_ptr->txs_in_inter_classes = 0;
+#endif
 #endif
 #endif
 #if SHUT_FEATURE_INTERACTIONS

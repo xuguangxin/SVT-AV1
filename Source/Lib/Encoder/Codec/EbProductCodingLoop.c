@@ -9799,6 +9799,10 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         }
 #endif
     }
+#if RESTRICT_INTER_TXS_DEPTH
+    if (is_inter && (pcs_ptr->parent_pcs_ptr->txs_in_inter_classes == 2))
+        end_tx_depth = MIN(1, end_tx_depth);
+#endif
 #if !FIX_CFL_OFF
     // Transform partitioning path (INTRA Luma)
         int32_t is_inter = (candidate_buffer->candidate_ptr->type == INTER_MODE ||
