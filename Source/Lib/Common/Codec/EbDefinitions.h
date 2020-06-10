@@ -511,6 +511,7 @@ extern "C" {
 #define FIX_IFS_RATE                      1 // Update fast_luma_rate to take into account switchable_rate
 #define M0_NIC                            1 // Use nic level 0 for M0
 
+#define MEM_OPT_10bit       1 // Memory optimization for 10bit
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
