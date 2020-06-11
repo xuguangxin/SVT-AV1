@@ -7583,7 +7583,11 @@ void generate_statistics_txt(
                             // and split_flag are updated in the SQ block as the best
                             const BlockGeom * best_blk_geom = get_blk_geom_mds(curr_idx);
                             uint8_t tx_depth = context_ptr->md_blk_arr_nsq[curr_idx].tx_depth;
+#if STATS_TX_TYPES_FIX
+                            for (uint8_t txb_itr = 0; txb_itr < best_blk_geom->txb_count[tx_depth]; txb_itr++) {
+#else
                             for (uint8_t txb_itr = 0; txb_itr < best_blk_geom[curr_idx].txb_count[tx_depth]; txb_itr++) {
+#endif
                                 uint8_t tx_type = context_ptr->md_blk_arr_nsq[curr_idx].txb_array[txb_itr].transform_type[PLANE_TYPE_Y];
                                 uint32_t count_unit = (best_blk_geom->tx_width[tx_depth][txb_itr] * best_blk_geom->tx_height[tx_depth][txb_itr]); // count the area, not just the occurence
                                 part_cnt[pred_depth_refinement][tx_type] += count_unit;

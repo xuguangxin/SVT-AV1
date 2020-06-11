@@ -498,6 +498,7 @@ extern "C" {
 #endif
 #define ADABTIVE_DEPTH_CR 1
 #define ADABTIVE_TXT_CR 1 // Add code for generating TXS statistics
+#define STATS_TX_TYPES_FIX 1 // Fix the statistic txt crash
 #if ADABTIVE_TXT_CR
 #define STATS_TX_TYPES  TX_TYPES // 16 TXT levels (# of tx types)
 #define STATS_DELTAS    3 // negative, pred, positive
