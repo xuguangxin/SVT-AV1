@@ -411,6 +411,10 @@ typedef struct ModeDecisionContext {
 #endif
     uint32_t fast_lambda_md[2];
     uint32_t full_lambda_md[2];
+#if TPL_LAMBDA_IMP
+    uint32_t full_lambda_md_org[2];
+    EbBool       blk_lambda_tuning;
+#endif
     //  Context Variables---------------------------------
     SuperBlock *     sb_ptr;
 #if !CLEAN_UP_SB_DATA_8

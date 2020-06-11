@@ -516,6 +516,9 @@ extern "C" {
 #define TPL_IMP             1 // tpl improvement changes
 
 #define JUNE11_ADOPTIONS    1 // M0 and M1 adoptions
+#define TPL_240P_IMP        1 // TPL improvement for 240P
+#define TPL_LAMBDA_IMP      1 // Do lambda modulation for fast lambda
+                              // Interdepth decision uses SB lambda
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

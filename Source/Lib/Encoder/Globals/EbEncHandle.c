@@ -1998,8 +1998,15 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     derive_input_resolution(
         &scs_ptr->input_resolution,
         scs_ptr->seq_header.max_frame_width*scs_ptr->seq_header.max_frame_height);
+#if TPL_240P_IMP
+    // In two pass encoding, the first pass uses sb size=64. Also when tpl is used
+    // in 240P resolution, sb size is set to 64
+    if (scs_ptr->use_output_stat_file ||
+        (scs_ptr->static_config.enable_tpl_la && scs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE))
+#else
     // In two pass encoding, the first pass uses sb size=64
     if (scs_ptr->use_output_stat_file)
+#endif
         scs_ptr->static_config.super_block_size = 64;
     else
 #if MAR10_ADOPTIONS
@@ -2055,6 +2062,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #else
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 1) ? 64 : scs_ptr->static_config.super_block_size;
 #endif
+
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
     // Configure the padding
     scs_ptr->left_padding = BLOCK_SIZE_64 + 4;

@@ -6732,16 +6732,37 @@ uint32_t product_full_mode_decision(
     }
 
     candidate_ptr = buffer_ptr_array[lowest_cost_index]->candidate_ptr;
-
+#if TPL_LAMBDA_IMP
+    if (context_ptr->blk_lambda_tuning){
+        uint32_t full_lambda = context_ptr->hbd_mode_decision ?
+            context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
+            context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost =
+            RDCOST(full_lambda,
+                buffer_ptr_array[lowest_cost_index]->candidate_ptr->total_rate,
+                ((uint64_t)buffer_ptr_array[lowest_cost_index]->candidate_ptr->full_distortion));
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].default_cost = context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost;
+    }
+    else {
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].default_cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);
+        context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = (context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost - buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion) + buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion_inter_depth;
+    }
+#else
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].default_cost = *(buffer_ptr_array[lowest_cost_index]->full_cost_ptr);
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost = (context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost - buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion) + buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion_inter_depth;
+#endif
     context_ptr->md_ep_pipe_sb[blk_ptr->mds_idx].merge_cost = *buffer_ptr_array[lowest_cost_index]->full_cost_merge_ptr;
     context_ptr->md_ep_pipe_sb[blk_ptr->mds_idx].skip_cost = *buffer_ptr_array[lowest_cost_index]->full_cost_skip_ptr;
 
     if (candidate_ptr->type == INTER_MODE && candidate_ptr->merge_flag == EB_TRUE)
         context_ptr->md_ep_pipe_sb[blk_ptr->mds_idx].chroma_distortion = buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion;
+#if TPL_LAMBDA_IMP
+    context_ptr->md_local_blk_unit[blk_ptr->mds_idx].full_distortion = (uint32_t)buffer_ptr_array[lowest_cost_index]->candidate_ptr->full_distortion;
+#else
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].full_distortion = buffer_ptr_array[lowest_cost_index]->candidate_ptr->full_distortion;
+#endif
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].chroma_distortion = (uint32_t)buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion;
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].chroma_distortion_inter_depth = (uint32_t)buffer_ptr_array[lowest_cost_index]->candidate_ptr->chroma_distortion_inter_depth;
 

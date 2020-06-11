@@ -75,10 +75,17 @@ typedef struct ModeDecisionCandidate {
     MdRateEstimationContext *md_rate_estimation_ptr; // 64 bits
     uint64_t                 fast_luma_rate;
     uint64_t                 fast_chroma_rate;
+#if TPL_LAMBDA_IMP
+    uint64_t                 total_rate;
+#endif
     uint64_t                 chroma_distortion;
     uint64_t                 chroma_distortion_inter_depth;
     uint32_t                 luma_fast_distortion;
+#if TPL_LAMBDA_IMP
+    uint64_t                 full_distortion;
+#else
     uint32_t                 full_distortion;
+#endif
     EbPtr                    prediction_context_ptr;
     PictureControlSet *      pcs_ptr;
     EbPredDirection          prediction_direction

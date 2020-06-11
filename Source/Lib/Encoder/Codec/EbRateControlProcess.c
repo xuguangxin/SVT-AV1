@@ -5153,9 +5153,14 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
 #endif
 #if QPS_UPDATE
         // Allow somewhat lower kf minq with small image formats.
+#if TPL_240P_IMP
+        if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE)
+            q_adj_factor -= 0.15;
+#else
         if ((pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width *
              pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height) <= (352 * 288))
             q_adj_factor -= 0.25;
+#endif
 #endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=
@@ -5194,7 +5199,10 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
         rc->gfu_boost = combine_prior_with_tpl_boost(rc->gfu_boost, new_gfu_boost, frames_to_key);
 
         q = active_worst_quality;
-
+#if TPL_240P_IMP
+        if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE)
+            rc->arf_boost_factor += (float_t) 0.15;
+#endif
         // non ref frame or repeated frames with re-encode
         if (!refresh_alt_ref_frame && !is_intrl_arf_boost)
             active_best_quality = cq_level;
@@ -5299,9 +5307,14 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
 #endif
 #if QPS_UPDATE
         // Allow somewhat lower kf minq with small image formats.
+#if TPL_240P_IMP
+        if (pcs_ptr->parent_pcs_ptr->input_resolution <= INPUT_SIZE_240p_RANGE)
+            q_adj_factor -= 0.15;
+#else
         if ((pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width *
              pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height) <= (352 * 288))
             q_adj_factor -= 0.25;
+#endif
 #endif
         // Make a further adjustment based on the kf zero motion measure.
         q_adj_factor +=

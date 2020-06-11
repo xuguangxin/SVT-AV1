@@ -3351,8 +3351,13 @@ uint64_t d1_non_square_block_decision(ModeDecisionContext *context_ptr, uint32_t
     EbBool   merge_block_flag = EB_FALSE;
 #endif
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
+#if TPL_LAMBDA_IMP
+        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
+        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+#else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     for (blk_it = 0; blk_it < context_ptr->blk_geom->totns; blk_it++) {
         tot_cost += context_ptr->md_local_blk_unit[first_blk_idx + blk_it].cost;
 #if !SHUT_MERGE_1D_INTER_BLOCK
@@ -3405,8 +3410,13 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
                          uint32_t curr_depth_mds, uint32_t above_depth_mds, uint32_t step,
                          uint64_t *above_depth_cost, uint64_t *curr_depth_cost) {
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
+#if TPL_LAMBDA_IMP
+        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
+        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+#else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     uint64_t above_non_split_rate = 0;
     uint64_t above_split_rate     = 0;
 
@@ -3600,8 +3610,13 @@ void compute_depth_costs_md_skip(ModeDecisionContext *context_ptr, SequenceContr
                                  uint32_t above_depth_mds, uint32_t step,
                                  uint64_t *above_depth_cost, uint64_t *curr_depth_cost) {
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
+#if TPL_LAMBDA_IMP
+        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
+        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+#else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
+#endif
     uint64_t above_non_split_rate = 0;
     uint64_t above_split_rate     = 0;
     *curr_depth_cost              = 0;
