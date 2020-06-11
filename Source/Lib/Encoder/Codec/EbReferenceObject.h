@@ -43,6 +43,15 @@ typedef struct EbReferenceObject {
     uint8_t coef_coded_area;
     uint8_t below32_coded_area;
 #endif
+#if ADABTIVE_NSQ_CR
+    uint32_t ref_part_cnt[10][3][2];
+#endif
+#if ADABTIVE_DEPTH_CR
+    uint32_t ref_pred_depth_count[5];
+#endif
+#if ADABTIVE_TXT_CR
+    uint32_t ref_txt_cnt[STATS_DELTAS][STATS_TX_TYPES];
+#endif
 } EbReferenceObject;
 
 typedef struct EbReferenceObjectDescInitData {

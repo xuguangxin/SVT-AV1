@@ -7834,7 +7834,7 @@ void copy_txt_data(ModeDecisionCandidateBuffer* candidate_buffer,
 }
 
 #endif
-#if COEFF_BASED_TXT_BYPASS
+#if COEFF_BASED_TXT_BYPASS && ! ADABTIVE_TXT_CR
 uint8_t inter_txt_cycles_reduction_th[2/*depth*/][3/*depth refinement*/][3/*tx_size*/][2/*freq band*/][15/*tx_type*/] =
 {
     { // Depth 3
@@ -8149,7 +8149,24 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             else {
                 freq_band = 0;
             }
-
+#if ADABTIVE_TXT_CR
+            if (pcs_ptr->slice_type == I_SLICE) {
+                if (is_inter) { // INTER path
+                    if (inter_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
+                        < context_ptr->txt_cycles_red_ctrls.inter_th)
+                        continue;
+                }
+                else { // INTRA path
+                    if (intra_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
+                        < context_ptr->txt_cycles_red_ctrls.intra_th)
+                        continue;
+                }
+            }
+            else {
+                if(context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.inter_th)
+                    continue;
+            }
+#else
             if (is_inter) { // INTER path
                 if (inter_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
                     < context_ptr->txt_cycles_red_ctrls.inter_th)
@@ -8160,6 +8177,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                     < context_ptr->txt_cycles_red_ctrls.intra_th)
                     continue;
             }
+#endif
         }
 #endif
 #if !UNIFY_TXT
@@ -13263,14 +13281,18 @@ void block_based_depth_reduction(
 #if COEFF_BASED_BYPASS_NSQ
 #if MERGED_COEFF_BAND
 #if NSQ_CYCLES_REDUCTION
-#if !MERGED_COEFF_BAND
+#if !MERGED_COEFF_BAND || ADABTIVE_NSQ_CR
 uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #else
 uint8_t get_allowed_block(ModeDecisionContext *context_ptr) {
 #endif
     uint8_t skip_nsq = 0;
     uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)context_ptr->blk_geom->sq_size);
+#if DECOUPLE_FROM_ALLOCATION
+    if (context_ptr->coeff_area_based_bypass_nsq_th || context_ptr->nsq_cycles_reduction_th) {
+#else
     if (context_ptr->coeff_area_based_bypass_nsq_th) {
+#endif
         if (context_ptr->blk_geom->shape != PART_N) {
             if (context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag) {
                 uint32_t count_non_zero_coeffs = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].count_non_zero_coeffs;
@@ -13317,11 +13339,36 @@ uint8_t get_allowed_block(ModeDecisionContext *context_ptr) {
 #if SSE_BASED_SPLITTING
                 uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag ?
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape] : 1;
+#if ADABTIVE_NSQ_CR
+#if DECOUPLE_FROM_ALLOCATION
+                uint64_t nsq_prob_cycles_allocation;
+                uint64_t nsq_prob_nsq_cycles_reduction;
+                if (context_ptr->nsq_cycles_reduction_th) {
+                    nsq_prob_nsq_cycles_reduction = pcs_ptr->slice_type != I_SLICE ?
+                        context_ptr->part_prob[context_ptr->blk_geom->shape][band_idx][sse_gradian_band] :
+                        block_prob_intra_tab[sq_size_idx][context_ptr->blk_geom->shape][band_idx][sse_gradian_band];
+                    if (nsq_prob_nsq_cycles_reduction < context_ptr->nsq_cycles_reduction_th)
+                        skip_nsq = 1;
+
+                }
+                if (context_ptr->coeff_area_based_bypass_nsq_th) {
+                    nsq_prob_cycles_allocation = block_prob_tab[sq_size_idx][context_ptr->blk_geom->shape][band_idx][sse_gradian_band];
+                    if ((nsq_prob_cycles_allocation < context_ptr->coeff_area_based_bypass_nsq_th))
+                        skip_nsq = 1;
+
+                }
+#else
+                uint64_t nsq_prob = pcs_ptr->slice_type != I_SLICE ? context_ptr->part_prob[0][context_ptr->blk_geom->shape][band_idx][sse_gradian_band] : block_prob_intra_tab[sq_size_idx][context_ptr->blk_geom->shape][band_idx][sse_gradian_band];
+#endif
+#else
                 uint64_t nsq_prob = allowed_part_weight[sq_size_idx][context_ptr->blk_geom->shape][band_idx];
                 nsq_prob = sse_gradian_band == 0 ? (((100 * nsq_prob) - (nsq_prob * sse_grad_weight[sq_size_idx][context_ptr->blk_geom->shape][band_idx])) / (uint64_t)100) : nsq_prob;
+#endif
+#if !DECOUPLE_FROM_ALLOCATION
                 if (nsq_prob < context_ptr->coeff_area_based_bypass_nsq_th) {
                     skip_nsq = 1;
                 }
+#endif
 #else
                 if (allowed_part_weight[depth_idx][context_ptr->blk_geom->shape][band_idx] < context_ptr->coeff_area_based_bypass_nsq_th)
                     skip_nsq = 1;
@@ -13678,6 +13725,9 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if TRACK_PER_DEPTH_DELTA
         context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth_refinement = leaf_data_ptr->final_pred_depth_refinement;
 #endif
+#if ADABTIVE_DEPTH_CR
+        context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth = leaf_data_ptr->final_pred_depth;
+#endif
 
         context_ptr->md_blk_arr_nsq[blk_geom->sqi_mds].split_flag =
             (uint16_t)leaf_data_ptr->split_flag;
@@ -13877,7 +13927,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
 #if COEFF_BASED_BYPASS_NSQ
-#if !MERGED_COEFF_BAND
+#if !MERGED_COEFF_BAND || ADABTIVE_NSQ_CR
             uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr);
 #else
             uint8_t skip_nsq = get_allowed_block(context_ptr);

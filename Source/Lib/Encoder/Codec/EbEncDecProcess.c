@@ -1351,6 +1351,29 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
         (100 * pcs_ptr->below32_coded_area) /
         (pcs_ptr->parent_pcs_ptr->aligned_width * pcs_ptr->parent_pcs_ptr->aligned_height);
 #endif
+#if ADABTIVE_NSQ_CR
+    for (uint8_t partidx = 0; partidx < 10; partidx++) {
+        for (uint8_t band = 0; band < 3; band++) {
+            for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
+                ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+                    ->ref_part_cnt[partidx][band][sse_idx] = pcs_ptr->part_cnt[partidx][band][sse_idx];
+            }
+        }
+    }
+#endif
+#if ADABTIVE_DEPTH_CR
+    for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++)
+        ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+            ->ref_pred_depth_count[pred_depth] = pcs_ptr->pred_depth_count[pred_depth];
+#endif
+#if ADABTIVE_TXT_CR
+    for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
+        for (uint8_t txs_idx = 0; txs_idx < STATS_TX_TYPES; txs_idx++) {
+            ((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+                ->ref_txt_cnt[depth_delta][txs_idx] = pcs_ptr->txt_cnt[depth_delta][txs_idx];
+        }
+    }
+#endif
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->intra_coded_area = 0;
 #if REDUCE_COMPLEX_CLIP_CYCLES
     if (pcs_ptr->slice_type == I_SLICE) pcs_ptr->coef_coded_area = 0;
@@ -2273,6 +2296,78 @@ uint8_t m1_nsq_cycles_reduction_th[21] = {
 #endif
 #endif
 #if NSQ_CYCLES_REDUCTION
+#if ADABTIVE_NSQ_CR
+void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint16_t nsq_cycles_red_mode) {
+    NsqCycleRControls*nsq_cycle_red_ctrls = &mdctxt->nsq_cycles_red_ctrls;
+
+    switch (nsq_cycles_red_mode)
+    {
+    case 0: // nsq_cycles_reduction Off
+        nsq_cycle_red_ctrls->enabled = 0;
+        nsq_cycle_red_ctrls->th = 0;
+        break;
+    case 1:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 1;
+        break;
+    case 2:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 2;
+        break;
+    case 3:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 3;
+        break;
+    case 4:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 4;
+        break;
+    case 5:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 5;
+        break;
+    case 6:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 6;
+        break;
+    case 7:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 7;
+        break;
+    case 8:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 8;
+        break;
+    case 9:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 9;
+        break;
+    case 10:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 10;
+        break;
+    case 11:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 11;
+        break;
+    case 12:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 12;
+        break;
+    case 13:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 13;
+        break;
+    case 14:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 14;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#else
 void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_cycles_red_mode) {
 
     NsqCycleRControls*nsq_cycle_red_ctrls = &mdctxt->nsq_cycles_red_ctrls;
@@ -2303,11 +2398,28 @@ void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_c
         nsq_cycle_red_ctrls->enabled = 1;
         nsq_cycle_red_ctrls->th = 10;
         break;
+    case 6:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 15;
+        break;
+    case 7:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 20;
+        break;
+    case 8:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 30;
+        break;
+    case 9:
+        nsq_cycle_red_ctrls->enabled = 1;
+        nsq_cycle_red_ctrls->th = 50;
+        break;
     default:
         assert(0);
         break;
     }
 }
+#endif
 #endif
 
 #if DEPTH_CYCLES_REDUCTION
@@ -2323,23 +2435,35 @@ void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t dep
         break;
     case 1:
         depth_cycle_red_ctrls->enabled = 1;
-        depth_cycle_red_ctrls->th = 2;
+        depth_cycle_red_ctrls->th = 1;
         break;
     case 2:
         depth_cycle_red_ctrls->enabled = 1;
-        depth_cycle_red_ctrls->th = 3;
+        depth_cycle_red_ctrls->th = 5;
         break;
     case 3:
         depth_cycle_red_ctrls->enabled = 1;
-        depth_cycle_red_ctrls->th = 5;
+        depth_cycle_red_ctrls->th = 10;
         break;
     case 4:
         depth_cycle_red_ctrls->enabled = 1;
-        depth_cycle_red_ctrls->th = 8;
+        depth_cycle_red_ctrls->th = 15;
         break;
     case 5:
         depth_cycle_red_ctrls->enabled = 1;
-        depth_cycle_red_ctrls->th = 10;
+        depth_cycle_red_ctrls->th = 20;
+        break;
+     case 6:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 25;
+        break;
+     case 7:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 30;
+        break;
+     case 8:
+        depth_cycle_red_ctrls->enabled = 1;
+        depth_cycle_red_ctrls->th = 40;
         break;
     default:
         assert(0);
@@ -3260,7 +3384,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
      context_ptr->disallow_4x4 = pcs_ptr->enc_mode <= ENC_M5 ? EB_FALSE : EB_TRUE;
 #endif
 #endif
-#if SHUT_FEATURE_INTERACTIONS
+#if SHUT_FEATURE_INTERACTIONS || SHUT_FEATURE_GREY
      context_ptr->disallow_4x4 = EB_FALSE;
 #endif
      // If SB non-multiple of 4, then disallow_4x4 could not be used
@@ -4553,19 +4677,36 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         nsq_cycles_red_mode = 0;
     else
+#if ADABTIVE_NSQ_CR
+        nsq_cycles_red_mode = (pcs_ptr->slice_type == I_SLICE ) ?  0 :  0;
+#else
          nsq_cycles_red_mode = 0;
+#endif
 
     set_nsq_cycle_redcution_controls(context_ptr, nsq_cycles_red_mode);
 
     NsqCycleRControls*nsq_cycle_red_ctrls = &context_ptr->nsq_cycles_red_ctrls;
     // Overwrite allcation action when nsq_cycles_reduction th is higher.
+#if DECOUPLE_FROM_ALLOCATION
+
+    if (nsq_cycle_red_ctrls->enabled)
+        context_ptr->nsq_cycles_reduction_th = nsq_cycle_red_ctrls->th;
+    else
+        context_ptr->nsq_cycles_reduction_th = 0;
+
+#else
     if(nsq_cycle_red_ctrls->enabled)
         context_ptr->coeff_area_based_bypass_nsq_th = MAX(nsq_cycle_red_ctrls->th,context_ptr->coeff_area_based_bypass_nsq_th);
+#endif
 #endif
 #if DEPTH_CYCLES_REDUCTION
     // Depth cycles reduction level: TBD
     uint8_t depth_cycles_red_mode = 0;
+#if ADABTIVE_DEPTH_CR
     depth_cycles_red_mode = pcs_ptr->slice_type != I_SLICE ? 0 : 0;
+#else
+    depth_cycles_red_mode = pcs_ptr->slice_type != I_SLICE ? 0 : 0;
+#endif
     set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
 #endif
     // Weighting (expressed as a percentage) applied to
@@ -5182,6 +5323,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if SHUT_FEATURE_INTERACTIONS
+    context_ptr->block_based_depth_reduction_level = 0;
+#endif
+#if SHUT_FEATURE_GREY
     context_ptr->block_based_depth_reduction_level = 0;
 #endif
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
@@ -6716,6 +6860,9 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
 #if TRACK_PER_DEPTH_DELTA
                                         int8_t pred_depth,
 #endif
+#if ADABTIVE_DEPTH_CR
+                                        uint8_t pred_sq_idx,
+#endif
                                         int8_t depth_step) {
     uint32_t         parent_depth_idx_mds, block_1d_idx;
     const BlockGeom *blk_geom = get_blk_geom_mds(blk_index);
@@ -6734,12 +6881,19 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
 #if TRACK_PER_DEPTH_DELTA
             results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].pred_depth_refinement = parent_blk_geom->depth - pred_depth;
 #endif
+#if ADABTIVE_DEPTH_CR
+            results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].pred_depth = pred_sq_idx;
+#endif
             results_ptr->leaf_data_array[parent_depth_idx_mds + block_1d_idx].consider_block = 1;
         }
 
         if (depth_step < -1)
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+            set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, pred_sq_idx, depth_step + 1);
+#else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, pred_depth, depth_step + 1);
+#endif
 #else
             set_parent_to_be_considered(results_ptr, parent_depth_idx_mds, sb_size, depth_step + 1);
 #endif
@@ -6749,6 +6903,9 @@ static void set_parent_to_be_considered(MdcSbData *results_ptr, uint32_t blk_ind
 static void set_child_to_be_considered(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr, MdcSbData *results_ptr, uint32_t blk_index, uint32_t sb_index, int32_t sb_size,
 #if TRACK_PER_DEPTH_DELTA
     int8_t pred_depth,
+#endif
+#if ADABTIVE_DEPTH_CR
+    uint8_t pred_sq_idx,
 #endif
     int8_t depth_step) {
 #else
@@ -6778,6 +6935,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if TRACK_PER_DEPTH_DELTA
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].pred_depth_refinement = child1_blk_geom->depth - pred_depth;
 #endif
+#if ADABTIVE_DEPTH_CR
+            results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].pred_depth = pred_sq_idx;
+#endif
             results_ptr->leaf_data_array[child_block_idx_1 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6785,7 +6945,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_1])
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, pred_depth, pred_sq_idx , depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_1, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
 #endif
@@ -6806,6 +6970,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if TRACK_PER_DEPTH_DELTA
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].pred_depth_refinement = child2_blk_geom->depth - pred_depth;
 #endif
+#if ADABTIVE_DEPTH_CR
+            results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].pred_depth = pred_sq_idx;
+#endif
             results_ptr->leaf_data_array[child_block_idx_2 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6814,7 +6981,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_2])
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, pred_depth, pred_sq_idx , depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_2, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
 #endif
@@ -6836,6 +7007,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if TRACK_PER_DEPTH_DELTA
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].pred_depth_refinement = child3_blk_geom->depth - pred_depth;
 #endif
+#if ADABTIVE_DEPTH_CR
+            results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].pred_depth = pred_sq_idx;
+#endif
             results_ptr->leaf_data_array[child_block_idx_3 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6844,7 +7018,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_3])
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, pred_depth, pred_sq_idx , depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_3, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
 #endif
@@ -6865,6 +7043,9 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
 #if TRACK_PER_DEPTH_DELTA
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].pred_depth_refinement = child4_blk_geom->depth - pred_depth;
 #endif
+#if ADABTIVE_DEPTH_CR
+            results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].pred_depth = pred_sq_idx;
+#endif
             results_ptr->leaf_data_array[child_block_idx_4 + block_1d_idx].refined_split_flag =
                 EB_FALSE;
         }
@@ -6872,7 +7053,11 @@ static void set_child_to_be_considered(MdcSbData *results_ptr, uint32_t blk_inde
         // Add children blocks if more depth to consider (depth_step is > 1), or block not allowed (add next depth)
         if (depth_step > 1 || !pcs_ptr->parent_pcs_ptr->sb_geom[sb_index].block_is_allowed[child_block_idx_4])
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+            set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, pred_depth, pred_sq_idx , depth_step > 1 ? depth_step - 1 : 1);
+#else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, pred_depth, depth_step > 1 ? depth_step - 1 : 1);
+#endif
 #else
             set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, child_block_idx_4, sb_index, sb_size, depth_step > 1 ? depth_step - 1 : 1);
 #endif
@@ -6961,6 +7146,12 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
                     results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement = results_ptr->leaf_data_array[blk_index].pred_depth_refinement;
                     if (results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement == -8)
                         printf("final_pred_depth_refinement error\n");
+#endif
+#if ADABTIVE_DEPTH_CR
+                    results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth = results_ptr->leaf_data_array[blk_index].pred_depth;
+                    if (results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth == -8)
+                        printf("final_pred_depth error\n");
+
 #endif
                     results_ptr->leaf_data_array[results_ptr->leaf_count++].split_flag = results_ptr->leaf_data_array[blk_index].refined_split_flag;
 
@@ -7227,7 +7418,6 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
     *e_depth = MIN((pcs_ptr->parent_pcs_ptr->disallow_4x4 ? 4 :5) - blk_geom->depth, *e_depth);
 #endif
 }
-
 static uint64_t generate_best_part_cost(
     SequenceControlSet  *scs_ptr,
     PictureControlSet   *pcs_ptr,
@@ -7256,7 +7446,372 @@ static uint64_t generate_best_part_cost(
     }
     return best_part_cost;
 }
+#if ADABTIVE_TXT_CR
+void generate_statistics_txt(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t blk_index = 0;
+    uint32_t part_cnt[STATS_DELTAS][STATS_TX_TYPES] = { {0},{0} };
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] && is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    if (context_ptr->md_local_blk_unit[blk_index].avail_blk_flag) {
+                        uint8_t part_idx = context_ptr->md_blk_arr_nsq[blk_index].part;
+                        int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].pred_depth_refinement;
+                        // Set the bounds of pred_depth_refinement for array indexing
+                        pred_depth_refinement = MIN(pred_depth_refinement, 1);
+                        pred_depth_refinement = MAX(pred_depth_refinement, -1);
+                        // Add one b/c starts at -1 (need proper offset for array)
+                        // Only track whether the refinement is positive or negative
+                        pred_depth_refinement++;
+                        if (pred_depth_refinement < 0 || pred_depth_refinement >(STATS_DELTAS - 1))
+                            printf("pred_depth_refinement array idx error\t%d\n", pred_depth_refinement);
+                        // Select the best partition, blk_index refers to the SQ block
+                        uint32_t best_idx = 0;
+                        uint32_t blks_in_best = 0;
+                        switch (part_idx) {
+                        case PARTITION_NONE:
+                            best_idx = blk_index;
+                            blks_in_best = 1;
+                            break;
+                        case PARTITION_HORZ:
+                            best_idx = blk_index + 1;
+                            blks_in_best = 2;
+                            break;
+                        case PARTITION_VERT:
+                            best_idx = blk_index + 3;
+                            blks_in_best = 2;
+                            break;
+                        case PARTITION_HORZ_A:
+                            best_idx = blk_index + 5;
+                            blks_in_best = 3;
+                            break;
+                        case PARTITION_HORZ_B:
+                            best_idx = blk_index + 8;
+                            blks_in_best = 3;
+                            break;
+                        case PARTITION_VERT_A:
+                            best_idx = blk_index + 11;
+                            blks_in_best = 3;
+                            break;
+                        case PARTITION_VERT_B:
+                            best_idx = blk_index + 14;
+                            blks_in_best = 3;
+                            break;
+                        case PARTITION_HORZ_4:
+                            best_idx = blk_index + 17;
+                            blks_in_best = 4;
+                            break;
+                        case PARTITION_VERT_4:
+                            best_idx = blk_index + 21;
+                            blks_in_best = 4;
+                            break;
+                        default:
+                            assert(0);
+                            break;
+                        }
+                        // Loop over the blocks in the best partition
+                        for (uint32_t curr_idx = best_idx; curr_idx < best_idx + blks_in_best; curr_idx++) {
+                            // Use the info of the best partition, not the square (only partition, cost,
+                            // and split_flag are updated in the SQ block as the best
+                            const BlockGeom * best_blk_geom = get_blk_geom_mds(curr_idx);
+                            uint8_t tx_depth = context_ptr->md_blk_arr_nsq[curr_idx].tx_depth;
+                            for (uint8_t txb_itr = 0; txb_itr < best_blk_geom[curr_idx].txb_count[tx_depth]; txb_itr++) {
+                                uint8_t tx_type = context_ptr->md_blk_arr_nsq[curr_idx].txb_array[txb_itr].transform_type[PLANE_TYPE_Y];
+                                uint32_t count_unit = (best_blk_geom->tx_width[tx_depth][txb_itr] * best_blk_geom->tx_height[tx_depth][txb_itr]); // count the area, not just the occurence
+                                part_cnt[pred_depth_refinement][tx_type] += count_unit;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+    for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++)
+        for (uint8_t txs_idx = 0; txs_idx < STATS_TX_TYPES; txs_idx++)
+            context_ptr->txt_cnt[depth_delta][txs_idx] += part_cnt[depth_delta][txs_idx];
+}
+#endif
+#if ADABTIVE_NSQ_CR || ADABTIVE_DEPTH_CR
+Part part_to_shape[10] = {
+    PART_N,
+    PART_H,
+    PART_V,
+    PART_S,
+    PART_HA,
+    PART_HB,
+    PART_VA,
+    PART_VB,
+    PART_H4,
+    PART_V4
+};
+#endif
+#if ADABTIVE_DEPTH_CR
+void generate_statistics_depth(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t blk_index = 0;
+    // init stat
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    if (context_ptr->md_local_blk_unit[blk_index].avail_blk_flag) {
+                        int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].pred_depth_refinement;
+                        pred_depth_refinement = MIN(pred_depth_refinement, 1);
+                        pred_depth_refinement = MAX(pred_depth_refinement, -1);
+                        context_ptr->pred_depth_count[pred_depth_refinement + 2] += (blk_geom->bwidth*blk_geom->bheight);
+                    }
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+}
+#endif
+#if ADABTIVE_DEPTH_CR
+/******************************************************
+* Generate probabilities for the depth_cycles_reduction
+******************************************************/
+void generate_depth_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_ptr)
+{
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE) {
+        uint32_t pred_depth_count[5] = { 0 };
+        uint32_t samples_num = 0;
+        // Sum statistics from reference list0
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
+            for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++) {
+                pred_depth_count[pred_depth] += ref_obj_l0->ref_pred_depth_count[pred_depth];
+                samples_num += ref_obj_l0->ref_pred_depth_count[pred_depth];
+            }
+        }
+        // Sum statistics from reference list1
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l1 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
+            for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++) {
+                pred_depth_count[pred_depth] += ref_obj_l1->ref_pred_depth_count[pred_depth];
+                samples_num += ref_obj_l1->ref_pred_depth_count[pred_depth];
+            }
+        }
+        // Generate the selection %
+        for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++)
+            context_ptr->depth_prob[pred_depth] = (uint32_t)((pred_depth_count[pred_depth] * (uint32_t)100) / (uint32_t)samples_num);
 
+    }
+}
+#endif
+#if ADABTIVE_NSQ_CR
+/******************************************************
+* Generate probabilities for the nsq_cycles_reduction
+******************************************************/
+void generate_nsq_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_ptr)
+{
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE) {
+        uint32_t part_cnt[10][3][2];
+        uint8_t band, partidx, sse_idx;
+        uint64_t samples_num = 0;
+        // init stat
+        for (partidx = 0; partidx < 9; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    part_cnt[partidx][band][sse_idx] = 0;
+                }
+            }
+        }
+        // Sum statistics from reference list0
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
+            for (partidx = 0; partidx < 9; partidx++) {
+                for (band = 0; band < 3; band++) {
+                    for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
+                        part_cnt[partidx][band][sse_idx] += ref_obj_l0->ref_part_cnt[partidx][band][sse_idx];
+                        samples_num += ref_obj_l0->ref_part_cnt[partidx][band][sse_idx];
+                    }
+                }
+            }
+        }
+        // Sum statistics from reference list1
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l1 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
+            for (partidx = 0; partidx < 9; partidx++) {
+                for (band = 0; band < 3; band++) {
+                    for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
+                        part_cnt[partidx][band][sse_idx] += ref_obj_l1->ref_part_cnt[partidx][band][sse_idx];
+                        samples_num += ref_obj_l1->ref_part_cnt[partidx][band][sse_idx];
+                    }
+                }
+            }
+        }
+        for (partidx = 0; partidx < 9; partidx++) {
+            for (band = 0; band < 3; band++) {
+                for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    context_ptr->part_prob[partidx][band][sse_idx] = samples_num ? (uint16_t)((part_cnt[partidx][band][sse_idx] * 1000) / samples_num) :
+                        block_prob_tab[0][partidx][band][sse_idx];
+                }
+            }
+        }
+    }
+}
+#endif
+#if ADABTIVE_NSQ_CR
+void generate_statistics_nsq(
+    SequenceControlSet  *scs_ptr,
+    PictureControlSet   *pcs_ptr,
+    ModeDecisionContext *context_ptr,
+    uint32_t             sb_index) {
+    uint32_t blk_index = 0;
+    uint32_t total_samples = 0;
+    uint32_t count_non_zero_coeffs = 0;
+    uint32_t part_cnt[10][3][2];
+    uint8_t band,partidx,sse_idx;
+    for (partidx = 0; partidx < 10; partidx++) {
+        for (band = 0; band < 3; band++) {
+            for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                part_cnt[partidx][band][sse_idx] = 0;
+            }
+        }
+    }
+    EbBool split_flag;
+    while (blk_index < scs_ptr->max_block_cnt) {
+        const BlockGeom * blk_geom = get_blk_geom_mds(blk_index);
+        uint8_t is_blk_allowed = pcs_ptr->slice_type != I_SLICE ? 1 :
+            (blk_geom->sq_size < 128) ? 1 : 0;
+        split_flag = context_ptr->md_blk_arr_nsq[blk_index].split_flag;
+        if (scs_ptr->sb_geom[sb_index].block_is_inside_md_scan[blk_index] &&
+            is_blk_allowed) {
+            if (blk_geom->shape == PART_N) {
+                if (context_ptr->md_blk_arr_nsq[blk_index].split_flag == EB_FALSE) {
+                    if (context_ptr->md_local_blk_unit[blk_index].avail_blk_flag) {
+                        uint8_t band_idx = 0;
+                        uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)blk_geom->sq_size);
+                        uint64_t band_width = (sq_size_idx == 0) ? 100 : (sq_size_idx == 1) ? 50 : 20;
+                        uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
+                        uint8_t sse_g_band = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].avail_blk_flag ?
+                            context_ptr->md_local_blk_unit[blk_geom->sqi_mds].sse_gradian_band[part_idx] : 1;
+                        count_non_zero_coeffs = context_ptr->md_local_blk_unit[blk_index].count_non_zero_coeffs;
+                        total_samples = (blk_geom->bwidth*blk_geom->bheight);
+                        if (count_non_zero_coeffs >= ((total_samples * 18) / band_width)) {
+                            band_idx = 9;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 16) / band_width)) {
+                            band_idx = 8;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 14) / band_width)) {
+                            band_idx = 7;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 12) / band_width)) {
+                            band_idx = 6;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 10) / band_width)) {
+                            band_idx = 5;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 8) / band_width)) {
+                            band_idx = 4;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 6) / band_width)) {
+                            band_idx = 3;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 4) / band_width)) {
+                            band_idx = 2;
+                        }
+                        else if (count_non_zero_coeffs >= ((total_samples * 2) / band_width)) {
+                            band_idx = 1;
+                        }
+                        else {
+                            band_idx = 0;
+                        }
+                        if (sq_size_idx == 0)
+                            band_idx = band_idx == 0 ? 0 : band_idx <= 2 ? 1 : 2;
+                        else if (sq_size_idx == 1)
+                            band_idx = band_idx == 0 ? 0 : band_idx <= 3 ? 1 : 2;
+                        else
+                            band_idx = band_idx == 0 ? 0 : band_idx <= 8 ? 1 : 2;
+
+                        part_cnt[part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part]][band_idx][sse_g_band] += (blk_geom->bwidth*blk_geom->bheight);
+
+                    }
+                }
+            }
+        }
+        blk_index += split_flag ?
+            d1_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth] :
+            ns_depth_offset[scs_ptr->seq_header.sb_size == BLOCK_128X128][blk_geom->depth];
+    }
+    for (partidx = 0; partidx < 10; partidx++) {
+        for (band = 0; band < 3; band++) {
+            for (sse_idx = 0; sse_idx < 2; sse_idx++) {
+                context_ptr->part_cnt[partidx][band][sse_idx] += part_cnt[partidx][band][sse_idx];
+            }
+        }
+    }
+}
+#endif
+#if ADABTIVE_TXT_CR
+
+/******************************************************
+* Generate probabilities for the txt_cycles_reduction
+******************************************************/
+void generate_txt_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_ptr)
+{
+    if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE) {
+        uint32_t txt_cnt[STATS_DELTAS][STATS_TX_TYPES] = { {0,0} };
+        uint32_t samples_num = 0;
+        // Sum statistics from reference list0
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l0 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
+            for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
+                for (uint8_t txs_idx = 0; txs_idx < STATS_TX_TYPES; txs_idx++) {
+                    txt_cnt[depth_delta][txs_idx] += ref_obj_l0->ref_txt_cnt[depth_delta][txs_idx];
+                    samples_num += ref_obj_l0->ref_txt_cnt[depth_delta][txs_idx];
+                }
+            }
+        }
+        // Sum statistics from reference list1
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+            EbReferenceObject *ref_obj_l1 =
+                (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
+            for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
+                for (uint8_t txs_idx = 1; txs_idx < STATS_TX_TYPES; txs_idx++) {
+                    txt_cnt[depth_delta][txs_idx] += ref_obj_l1->ref_txt_cnt[depth_delta][txs_idx];
+                    samples_num += ref_obj_l1->ref_txt_cnt[depth_delta][txs_idx];
+                }
+            }
+        }
+        for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
+            for (uint8_t txs_idx = 1; txs_idx < STATS_TX_TYPES; txs_idx++) {
+                context_ptr->txt_prob[depth_delta][txs_idx] = (uint32_t)((txt_cnt[depth_delta][txs_idx] * (uint32_t)10000) / (uint32_t)samples_num);
+            }
+        }
+    }
+}
+#endif
 #if SB_CLASSIFIER
 #if CLEANUP_CYCLE_ALLOCATION
 const uint32_t sb_class_th[NUMBER_OF_SB_CLASS] = { 0,85,75,65,60,55,50,45,40,
@@ -7544,6 +8099,9 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
             blk_geom->sq_size > 4 ? EB_TRUE : EB_FALSE;
 #if TRACK_PER_DEPTH_DELTA
         results_ptr->leaf_data_array[blk_index].pred_depth_refinement = -8;
+#endif
+#if ADABTIVE_DEPTH_CR
+        results_ptr->leaf_data_array[blk_index].pred_depth = -8;
 #endif
         blk_index++;
     }
@@ -7834,11 +8392,31 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                                                blk_geom);
 
                         }
-#if SHUT_FEATURE_INTERACTIONS
+#if SHUT_FEATURE_INTERACTIONS || SHUT_FEATURE_GREY
                         s_depth = pcs_ptr->slice_type == I_SLICE ? -2 : -1;
                         e_depth = pcs_ptr->slice_type == I_SLICE ? 2 : 1;
 #endif
 #if DEPTH_CYCLES_REDUCTION
+ #if ADABTIVE_DEPTH_CR
+                        DepthCycleRControls*depth_cycle_red_ctrls = &context_ptr->depth_cycles_red_ctrls;
+                        if (depth_cycle_red_ctrls->enabled) {
+                            int8_t addj_s_depth = 0;
+                            int8_t addj_e_depth = 0;
+                            if (context_ptr->sb_class) {
+
+                                if (depth_cycle_red_ctrls->th) {
+                                    addj_s_depth = context_ptr->depth_prob[0] < depth_cycle_red_ctrls->th ? 0 : -2;
+                                    if (addj_s_depth == 0)
+                                        addj_s_depth = context_ptr->depth_prob[1] < depth_cycle_red_ctrls->th ? 0 : -1;
+                                    addj_e_depth = context_ptr->depth_prob[4] < depth_cycle_red_ctrls->th ? 0 : 2;
+                                    if (addj_e_depth == 0)
+                                        addj_e_depth = context_ptr->depth_prob[3] < depth_cycle_red_ctrls->th ? 0 : 1;
+                                }
+                                s_depth = MAX(s_depth, addj_s_depth);
+                                e_depth = MIN(e_depth, addj_e_depth);
+                            }
+                        }
+#else
                         DepthCycleRControls*depth_cycle_red_ctrls = &context_ptr->depth_cycles_red_ctrls;
                         uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)context_ptr->blk_geom->sq_size);
                         if (depth_cycle_red_ctrls->enabled) {
@@ -7869,6 +8447,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                             s_depth = MAX(s_depth, addj_s_depth);
                             e_depth = MIN(e_depth, addj_e_depth);
                         }
+#endif
 #endif
                     } else if (context_ptr->pd_pass == PD_PASS_1) {
 
@@ -8139,15 +8718,25 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if TRACK_PER_DEPTH_DELTA
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].pred_depth_refinement = 0;
 #endif
+#if ADABTIVE_DEPTH_CR
+                        results_ptr->leaf_data_array[blk_index + block_1d_idx].pred_depth = (int8_t)blk_geom->depth;
+#endif
                         results_ptr->leaf_data_array[blk_index + block_1d_idx].refined_split_flag =
                             EB_FALSE;
                     }
-
+#if ADABTIVE_DEPTH_CR
+                    uint8_t sq_size_idx = 7 - (uint8_t)Log2f((uint8_t)blk_geom->sq_size);
+#endif
                     // Add block indices of upper depth(s)
                     if (s_depth != 0)
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+                        set_parent_to_be_considered(
+                            results_ptr, blk_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth,sq_size_idx,  s_depth);
+#else
                         set_parent_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth, s_depth);
+#endif
 #else
                         set_parent_to_be_considered(
                             results_ptr, blk_index, scs_ptr->seq_header.sb_size, s_depth);
@@ -8156,7 +8745,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
                     // Add block indices of lower depth(s)
                     if (e_depth != 0)
 #if TRACK_PER_DEPTH_DELTA
+#if ADABTIVE_DEPTH_CR
+                        set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth,sq_size_idx, e_depth);
+#else
                         set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size, (int8_t)blk_geom->depth, e_depth);
+#endif
 #else
 #if MULTI_PASS_PD_FOR_INCOMPLETE
                         set_child_to_be_considered(pcs_ptr, context_ptr, results_ptr, blk_index, sb_index, scs_ptr->seq_header.sb_size, e_depth);
@@ -8511,26 +9104,26 @@ void *enc_dec_kernel(void *input_ptr) {
         eb_get_full_object(context_ptr->mode_decision_input_fifo_ptr, &enc_dec_tasks_wrapper_ptr);
 
         enc_dec_tasks_ptr = (EncDecTasks *)enc_dec_tasks_wrapper_ptr->object_ptr;
-        pcs_ptr           = (PictureControlSet *)enc_dec_tasks_ptr->pcs_wrapper_ptr->object_ptr;
-        scs_ptr           = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+        pcs_ptr = (PictureControlSet *)enc_dec_tasks_ptr->pcs_wrapper_ptr->object_ptr;
+        scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
         context_ptr->tile_group_index = enc_dec_tasks_ptr->tile_group_index;
-        context_ptr->coded_sb_count   = 0;
+        context_ptr->coded_sb_count = 0;
         segments_ptr = pcs_ptr->enc_dec_segment_ctrl[context_ptr->tile_group_index];
         last_sb_flag = EB_FALSE;
-        is_16bit     = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
+        is_16bit = (EbBool)(scs_ptr->static_config.encoder_bit_depth > EB_8BIT);
         (void)is_16bit;
         (void)end_of_row_flag;
         // SB Constants
-        sb_sz              = (uint8_t)scs_ptr->sb_size_pix;
-        sb_size_log2       = (uint8_t)Log2f(sb_sz);
+        sb_sz = (uint8_t)scs_ptr->sb_size_pix;
+        sb_size_log2 = (uint8_t)Log2f(sb_sz);
         context_ptr->sb_sz = sb_sz;
-        pic_width_in_sb    = (pcs_ptr->parent_pcs_ptr->aligned_width + sb_sz - 1) >> sb_size_log2;
+        pic_width_in_sb = (pcs_ptr->parent_pcs_ptr->aligned_width + sb_sz - 1) >> sb_size_log2;
         tile_group_width_in_sb =
             pcs_ptr->parent_pcs_ptr->tile_group_info[context_ptr->tile_group_index]
-                .tile_group_width_in_sb;
-        end_of_row_flag    = EB_FALSE;
+            .tile_group_width_in_sb;
+        end_of_row_flag = EB_FALSE;
         sb_row_index_start = sb_row_index_count = 0;
-        context_ptr->tot_intra_coded_area       = 0;
+        context_ptr->tot_intra_coded_area = 0;
 
 #if REDUCE_COMPLEX_CLIP_CYCLES
         context_ptr->tot_coef_coded_area = 0;
@@ -8538,9 +9131,31 @@ void *enc_dec_kernel(void *input_ptr) {
         set_pic_complexity_controls(pcs_ptr, context_ptr->md_context);
         context_ptr->md_context->pic_class = context_ptr->md_context->reduce_complex_clip_cycles_level ?
             get_pic_class(context_ptr->md_context, pcs_ptr,
-            scs_ptr) : 0;
+                scs_ptr) : 0;
 #endif
-
+#if ADABTIVE_NSQ_CR
+        for (uint8_t partidx = 0; partidx < 10; partidx++) {
+            for (uint8_t band = 0; band < 3; band++) {
+                for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    context_ptr->md_context->part_cnt[partidx][band][sse_idx] = 0;
+                }
+            }
+        }
+        generate_nsq_prob(pcs_ptr, context_ptr->md_context);
+#endif
+#if ADABTIVE_DEPTH_CR
+        for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++)
+            context_ptr->md_context->pred_depth_count[pred_depth] = 0;
+        generate_depth_prob(pcs_ptr, context_ptr->md_context);
+#endif
+#if ADABTIVE_TXT_CR
+        for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
+            for (uint8_t txs_idx = 0; txs_idx < STATS_TX_TYPES; txs_idx++) {
+                context_ptr->md_context->txt_cnt[depth_delta][txs_idx] = 0;
+            }
+        }
+    generate_txt_prob(pcs_ptr, context_ptr->md_context);
+#endif
         // Segment-loop
         while (assign_enc_dec_segments(segments_ptr,
                                        &segment_index,
@@ -8865,7 +9480,11 @@ void *enc_dec_kernel(void *input_ptr) {
                                          sb_index,
                                          context_ptr->md_context);
 #if SB_CLASSIFIER
+#if ADABTIVE_DEPTH_CR
+                        if (1) {
+#else
                         if (pcs_ptr->slice_type != I_SLICE) {
+#endif
 #if !CLEANUP_CYCLE_ALLOCATION
                             set_sb_class_controls(context_ptr->md_context);
 #endif
@@ -8987,7 +9606,15 @@ void *enc_dec_kernel(void *input_ptr) {
                                      sb_origin_y,
                                      sb_index,
                                      context_ptr->md_context);
-
+#if ADABTIVE_NSQ_CR
+                    generate_statistics_nsq(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
+#if ADABTIVE_DEPTH_CR
+                    generate_statistics_depth(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
+#if ADABTIVE_TXT_CR
+                    generate_statistics_txt(scs_ptr, pcs_ptr, context_ptr->md_context, sb_index);
+#endif
                     //Jing: Skip configure SB for encdec
                     //      Currently EDcontext only stores frame_level lambda/qp
 #if !QP2QINDEX
@@ -9027,6 +9654,28 @@ void *enc_dec_kernel(void *input_ptr) {
         pcs_ptr->coef_coded_area += (uint32_t)context_ptr->tot_coef_coded_area;
         pcs_ptr->below32_coded_area += (uint32_t)context_ptr->tot_below32_coded_area;
 #endif
+#if ADABTIVE_NSQ_CR
+        for (uint8_t partidx = 0; partidx < 10; partidx++) {
+            for (uint8_t band = 0; band < 3; band++) {
+                for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
+                    pcs_ptr->part_cnt[partidx][band][sse_idx] += context_ptr->md_context->part_cnt[partidx][band][sse_idx];
+                }
+            }
+        }
+
+#endif
+#if ADABTIVE_DEPTH_CR
+        for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++)
+            pcs_ptr->pred_depth_count[pred_depth] += context_ptr->md_context->pred_depth_count[pred_depth];
+#endif
+#if ADABTIVE_TXT_CR
+        for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
+            for (uint8_t txs_idx = 0; txs_idx < STATS_TX_TYPES; txs_idx++) {
+                pcs_ptr->txt_cnt[depth_delta][txs_idx] += context_ptr->md_context->txt_cnt[depth_delta][txs_idx];
+            }
+        }
+#endif
+
         pcs_ptr->enc_dec_coded_sb_count += (uint32_t)context_ptr->coded_sb_count;
         last_sb_flag = (pcs_ptr->sb_total_count_pix == pcs_ptr->enc_dec_coded_sb_count);
         eb_release_mutex(pcs_ptr->intra_mutex);

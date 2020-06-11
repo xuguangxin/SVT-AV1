@@ -490,6 +490,18 @@ extern "C" {
 #define PR_1316            1 //AVX2 kernel svt_av1_apply_temporal_filter_planewise_hbd_avx2()
 #define NEW_MRP_SETTINGS   1 // New MRP settings for all modes
 #define NEW_TXS_SETTINGS   1 // New TXS settings
+
+#define SHUT_FEATURE_GREY 0
+#define ADABTIVE_NSQ_CR 1
+#if ADABTIVE_NSQ_CR
+#define DECOUPLE_FROM_ALLOCATION 1
+#endif
+#define ADABTIVE_DEPTH_CR 1
+#define ADABTIVE_TXT_CR 1 // Add code for generating TXS statistics
+#if ADABTIVE_TXT_CR
+#define STATS_TX_TYPES  TX_TYPES // 16 TXT levels (# of tx types)
+#define STATS_DELTAS    3 // negative, pred, positive
+#endif
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
