@@ -1473,7 +1473,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 7;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = MR_MODE ? 7 : 0;
+#else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 7;
+#endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 7;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 7;
@@ -1481,7 +1485,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
         ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
         ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
         ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
@@ -1493,7 +1501,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 6;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 6;
+#endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 6;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 6;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 6;
@@ -1501,7 +1513,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
         ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
         ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
         ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
@@ -1512,7 +1528,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 5;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 5;
+#endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 5;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 5;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 5;
@@ -1520,7 +1540,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
         ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
         ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
         ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
@@ -1531,7 +1555,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 4;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 4;
+#endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 4;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 4;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 4;
@@ -1539,7 +1567,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
         ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
         ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
         ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
@@ -1550,7 +1582,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 3;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 3;
+#endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 3;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 3;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 3;
@@ -1558,7 +1594,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
         ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
         ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
         ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
@@ -1570,7 +1610,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 2;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 2;
+#endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 2;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 2;
         ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 2;
@@ -1578,7 +1622,11 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
         ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
         ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
         ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
         ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
         ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
         ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
@@ -3630,7 +3678,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
         if (sequence_control_set_ptr->static_config.new_nearest_comb_inject ==
             DEFAULT)
-
+#if OPTIMIZE_NEAREST_NEW_NEAR
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+                if (enc_mode <= ENC_M4)
+                    context_ptr->new_nearest_near_comb_injection = 1;
+                else
+                    context_ptr->new_nearest_near_comb_injection = 0;
+            else
+                if (enc_mode <= ENC_M0)
+                    context_ptr->new_nearest_near_comb_injection = 1;
+                else
+                    context_ptr->new_nearest_near_comb_injection = 0;
+#else
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if MAR30_ADOPTIONS
 #if MAY19_ADOPTIONS
@@ -3676,7 +3735,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             else
                 context_ptr->new_nearest_near_comb_injection = 0;
-
+#endif
         else
             context_ptr->new_nearest_near_comb_injection =
             sequence_control_set_ptr->static_config.new_nearest_comb_inject;

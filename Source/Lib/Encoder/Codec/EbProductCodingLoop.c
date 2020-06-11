@@ -1527,6 +1527,10 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 
     uint8_t nics_scling_level ;
 #if MAY19_ADOPTIONS
+#if M0_NIC
+    if (pcs_ptr->enc_mode <= ENC_M0)
+        nics_scling_level = 0;
+#else
     if (MR_MODE)
         nics_scling_level = 0;
     else if (pcs_ptr->enc_mode <= ENC_M0)
@@ -1534,6 +1538,7 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
         nics_scling_level = 1;
 #else
         nics_scling_level = 3;
+#endif
 #endif
     else if (pcs_ptr->enc_mode <= ENC_M1)
 #if JUNE8_ADOPTIONS
@@ -5233,9 +5238,10 @@ uint32_t early_intra_evaluation(PictureControlSet *pcs_ptr, ModeDecisionContext 
     }
     return distortion;
 }
-
+#if !ABILITY_TO_USE_CLOSEST_ONLY
 // Tag ref frame(s) as to_do or not
 #define MIN_REF_TO_TAG 2
+#endif
 void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
                          EbPictureBufferDesc *input_picture_ptr, uint32_t blk_origin_index) {
 
@@ -5567,9 +5573,11 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
     }
 #if PRUNING_PER_INTER_TYPE
     for (uint32_t gi = 0; gi < TOT_INTER_GROUP; gi++) {
+#if !ABILITY_TO_USE_CLOSEST_ONLY
         // Tag ref: do_ref or not
 // tag to_do the best ?
         uint8_t min_ref_to_tag = MIN_REF_TO_TAG;
+#endif
         uint8_t best_refs = context_ptr->ref_pruning_ctrls.best_refs[gi];
         uint8_t total_tagged_ref = 0;
 
@@ -5605,7 +5613,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                 }
             }
         }
-
+#if !ABILITY_TO_USE_CLOSEST_ONLY
         // if after intra-to-inter distortion check, less than min_ref_to_tag ref are tagged, then tag the best min_ref_to_tag ref
         if (total_tagged_ref < min_ref_to_tag) {
             total_tagged_ref = 0;
@@ -5619,6 +5627,7 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
                 }
             }
         }
+#endif
     }
 #else
     // Tag ref: do_ref or not
@@ -9767,12 +9776,21 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         start_tx_depth = end_tx_depth = candidate_buffer->candidate_ptr->tx_depth;
     } else {
         // end_tx_depth set to zero for blocks which go beyond the picture boundaries
+#if FIX_INCOMPLETE_SB
+        if ((context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x +
+            context_ptr->blk_geom->bwidth <=
+            pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_width &&
+            context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y +
+            context_ptr->blk_geom->bheight <=
+            pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_height))
+#else
         if ((context_ptr->sb_origin_x + context_ptr->blk_geom->origin_x +
                      context_ptr->blk_geom->bwidth <
                  pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_width &&
              context_ptr->sb_origin_y + context_ptr->blk_geom->origin_y +
                      context_ptr->blk_geom->bheight <
                  pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.max_frame_height))
+#endif
             end_tx_depth = get_end_tx_depth(context_ptr->blk_geom->bsize);
         else
             end_tx_depth = 0;

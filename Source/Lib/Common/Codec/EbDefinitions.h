@@ -502,6 +502,14 @@ extern "C" {
 #define STATS_TX_TYPES  TX_TYPES // 16 TXT levels (# of tx types)
 #define STATS_DELTAS    3 // negative, pred, positive
 #endif
+
+#define ABILITY_TO_USE_CLOSEST_ONLY       1 // Add the ability to use closest_refs without using best_refs
+#define OPTIMIZE_NEAREST_NEW_NEAR         1 // Use the closest ref only @ NEAREST_NEW_NEAR for M0 & higher
+#define M0_HME_ME_PRUNE                   1 // Use HME/ME ref prune level 0 for M0
+#define FIX_INCOMPLETE_SB                 1 // Perform Txs search for blocks @ right and bottom picture boundaries
+#define FIX_IFS_RATE                      1 // Update fast_luma_rate to take into account switchable_rate
+#define M0_NIC                            1 // Use nic level 0 for M0
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -650,7 +658,11 @@ enum {
 #if MAR12_ADOPTIONS && MR_MODE
 #define MAX_NFL 250 // Maximum number of candidates MD can support
 #else
+#if M0_NIC
+#define MAX_NFL 150 // Maximum number of candidates MD can support
+#else
 #define MAX_NFL 125 // Maximum number of candidates MD can support
+#endif
 #endif
 #define MAX_NFL_BUFF_Y \
     (MAX_NFL + CAND_CLASS_TOTAL) //need one extra temp buffer for each fast loop call
