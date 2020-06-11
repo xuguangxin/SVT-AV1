@@ -8176,8 +8176,19 @@ void tx_type_search(PictureControlSet *pcs_ptr,
                 }
             }
             else {
+#if SEPARATE_ADAPTIVE_TXT_INTER_INTRA
+                if (is_inter) { // INTER path
+                    if (context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.inter_th)
+                        continue;
+                }
+                else { // INTRA path
+                    if (context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.intra_th)
+                        continue;
+                }
+#else
                 if(context_ptr->txt_prob[pred_depth_refinement][tx_type] < context_ptr->txt_cycles_red_ctrls.inter_th)
                     continue;
+#endif
             }
 #else
             if (is_inter) { // INTER path

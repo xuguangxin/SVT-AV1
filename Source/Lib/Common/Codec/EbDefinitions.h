@@ -515,10 +515,11 @@ extern "C" {
 #define LAD_MEM_RED         1 // tpl works with lad 16. limit the look ahead to be 16
 #define TPL_IMP             1 // tpl improvement changes
 
-#define JUNE11_ADOPTIONS    1 // M0 and M1 adoptions
+#define JUNE11_ADOPTIONS    1 // Adoptions (all modes)
 #define TPL_240P_IMP        1 // TPL improvement for 240P
 #define TPL_LAMBDA_IMP      1 // Do lambda modulation for fast lambda
                               // Interdepth decision uses SB lambda
+#define SEPARATE_ADAPTIVE_TXT_INTER_INTRA 1 // Separate the inter/intra actions for adaptive TXT
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

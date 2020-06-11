@@ -2990,6 +2990,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #if COEFF_BASED_TXT_BYPASS
     uint8_t txt_cycles_reduction_level = 0;
+#if SEPARATE_ADAPTIVE_TXT_INTER_INTRA
+    if (pcs_ptr->parent_pcs_ptr->slice_type == I_SLICE) {
+        txt_cycles_reduction_level = 0;
+    }
+    else {
+        if (pd_pass == PD_PASS_0)
+            txt_cycles_reduction_level = 0;
+        else if (pd_pass == PD_PASS_1)
+            txt_cycles_reduction_level = 0;
+        else if (enc_mode <= ENC_M2)
+            txt_cycles_reduction_level = 0;
+        else
+            txt_cycles_reduction_level = 1;
+    }
+#endif
     set_txt_cycle_reduction_controls(context_ptr, txt_cycles_reduction_level);
 #endif
     // Interpolation search Level                     Settings
@@ -3770,6 +3785,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->unipred3x3_injection = 2;
     }
     else
+#if JUNE11_ADOPTIONS
+    {
+        if (enc_mode <= ENC_M3)
+            context_ptr->unipred3x3_injection = 1;
+        else
+            context_ptr->unipred3x3_injection = 0;
+    }
+#else
 #if SHIFT_M5_SC_TO_M3
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if JUNE8_ADOPTIONS
@@ -3799,6 +3822,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
         else
             context_ptr->unipred3x3_injection = 0;
+#endif
 
     // Set bipred3x3 injection
     // Level                Settings
@@ -4788,14 +4812,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 depth_cycles_red_mode = 0;
             else if (enc_mode <= ENC_M1)
                 depth_cycles_red_mode = 2;
-            else
+            else if (enc_mode <= ENC_M2)
                 depth_cycles_red_mode = 3;
+            else
+                depth_cycles_red_mode = 5;
         else if (enc_mode <= ENC_M0)
             depth_cycles_red_mode = 0;
         else if (enc_mode <= ENC_M1)
             depth_cycles_red_mode = 2;
-        else
+        else if (enc_mode <= ENC_M2)
             depth_cycles_red_mode = 3;
+        else
+            depth_cycles_red_mode = 5;
     }
 #else
     depth_cycles_red_mode = pcs_ptr->slice_type != I_SLICE ? 0 : 0;
@@ -5369,7 +5397,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if MAY23_M0_ADOPTIONS
 #if JUNE11_ADOPTIONS
-        if (enc_mode <= ENC_M2)
+        if (enc_mode <= ENC_M3)
 #else
 #if JUNE8_ADOPTIONS
         if (enc_mode <= ENC_M0 || (enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
@@ -8355,7 +8383,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #if MAY16_7PM_ADOPTIONS
 #if JUNE11_ADOPTIONS
-                            if (pcs_ptr->enc_mode <= ENC_M2) {
+                            if (pcs_ptr->enc_mode <= ENC_M3) {
 #else
 #if JUNE8_ADOPTIONS
                             if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M2)) {

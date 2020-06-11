@@ -1299,7 +1299,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     }
     else {
 #if JUNE11_ADOPTIONS
-        if (pcs_ptr->enc_mode <= ENC_M2)
+        if (pcs_ptr->enc_mode <= ENC_M3)
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
 #else
 #if MAY16_7PM_ADOPTIONS
@@ -2080,7 +2080,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->sc_content_detected)
 #if NEW_TXS_SETTINGS
 #if JUNE11_ADOPTIONS
-        if (pcs_ptr->enc_mode <= ENC_M1)
+        if (pcs_ptr->enc_mode <= ENC_M3)
 #else
         if (pcs_ptr->enc_mode <= ENC_M0)
 #endif
@@ -2095,6 +2095,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
         else
             pcs_ptr->tx_size_search_mode = 0;
+#if JUNE11_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+#else
 #if PRESETS_SHIFT
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M2)
@@ -2113,6 +2116,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
     else if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
