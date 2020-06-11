@@ -4829,6 +4829,17 @@ static int get_active_quality(int q, int gfu_boost, int low, int high, int *low_
         return low_motion_minq[q] + adjustment;
     }
 }
+#if TPL_IMP
+static int get_kf_active_quality_tpl(const RATE_CONTROL *const rc, int q,
+    AomBitDepth bit_depth) {
+    int *kf_low_motion_minq_cqp;
+    int *kf_high_motion_minq;
+    ASSIGN_MINQ_TABLE(bit_depth, kf_low_motion_minq_cqp);
+    ASSIGN_MINQ_TABLE(bit_depth, kf_high_motion_minq);
+    return get_active_quality(q, rc->kf_boost, kf_low, kf_high,
+        kf_low_motion_minq_cqp, kf_high_motion_minq);
+}
+#endif
 static int get_kf_active_quality_cqp(const RATE_CONTROL *const rc, int q,
     AomBitDepth bit_depth) {
     int *kf_low_motion_minq_cqp;
@@ -4883,6 +4894,36 @@ static int get_kf_boost_from_r0(double r0, int frames_to_key, int is_smaller_360
                                       : (int)rint(2 * (75.0 + 14.0 * factor) / r0);
     return boost;
 }
+
+#if TPL_IMP
+static int get_cqp_kf_boost_from_r0(double r0, int frames_to_key, EbInputResolution input_resolution) {
+    double factor = sqrt((double)frames_to_key);
+    factor = AOMMIN(factor, 10.0);
+    factor = AOMMAX(factor, 4.0);
+    const int is_720p_or_smaller = input_resolution <= INPUT_SIZE_720p_RANGE;
+    const int boost = is_720p_or_smaller ? (int)rint(3 * (75.0 + 14.0 * factor) / 2 / r0)
+                                         : (int)rint(2 * (75.0 + 14.0 * factor) / r0);
+    return boost;
+}
+
+double av1_get_gfu_boost_projection_factor(double min_factor, double max_factor,
+                                           int frame_count) {
+  double factor = sqrt((double)frame_count);
+  factor = AOMMIN(factor, max_factor);
+  factor = AOMMAX(factor, min_factor);
+  factor = (200.0 + 10.0 * factor);
+  return factor;
+}
+
+#define MAX_GFUBOOST_FACTOR 10.0
+//#define MIN_GFUBOOST_FACTOR 4.0
+static int get_gfu_boost_from_r0_lap(double min_factor, double max_factor,
+                                     double r0, int frames_to_key) {
+  double factor = av1_get_gfu_boost_projection_factor(min_factor, max_factor, frames_to_key);
+  const int boost = (int)rint(factor / r0);
+  return boost;
+}
+#endif
 
 int combine_prior_with_tpl_boost(int prior_boost, int tpl_boost,
     int frames_to_key) {
@@ -5099,10 +5140,17 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
         int is_smaller_360p = scs_ptr->input_resolution < INPUT_SIZE_360p_RANGE;
         const int new_kf_boost = get_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, frames_to_key, is_smaller_360p);
 
+#if TPL_IMP
+        if(rc->kf_boost != kf_low)
+#endif
         rc->kf_boost = combine_prior_with_tpl_boost(rc->kf_boost, new_kf_boost, frames_to_key);
 
         // Baseline value derived from cpi->active_worst_quality and kf boost.
+#if TPL_IMP
+        active_best_quality = get_kf_active_quality_tpl(rc, active_worst_quality, bit_depth);
+#else
         active_best_quality = get_kf_active_quality_cqp(rc, active_worst_quality, bit_depth);
+#endif
 #if QPS_UPDATE
         // Allow somewhat lower kf minq with small image formats.
         if ((pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width *
@@ -5134,6 +5182,15 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
                            - (pcs_ptr->parent_pcs_ptr->picture_number % (scs_ptr->intra_period_length + 1)) + 15;
         const int new_gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
         rc->arf_boost_factor = 1;
+#if TPL_IMP
+        rc->arf_boost_factor =
+            (pcs_ptr->ref_slice_type_array[0][0] == I_SLICE &&
+             (int)referenced_area_avg - (int)pcs_ptr->ref_pic_referenced_area_avg_array[0][0] >=
+                 16 &&
+             referenced_area_avg > 24 && pcs_ptr->ref_pic_referenced_area_avg_array[0][0] <= 16)
+                ? (float_t)1.3
+                : (float_t)1;
+#endif
         rc->gfu_boost = combine_prior_with_tpl_boost(rc->gfu_boost, new_gfu_boost, frames_to_key);
 
         q = active_worst_quality;
@@ -5227,11 +5284,19 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
         rc->best_quality    = MINQ;
 
         int frames_to_key = (int)MIN((uint64_t)scs_ptr->intra_period_length + 1, scs_ptr->static_config.frames_to_be_encoded);
+#if TPL_IMP
+        rc->kf_boost = get_cqp_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, frames_to_key, scs_ptr->input_resolution);
+#else
         int is_smaller_360p = scs_ptr->input_resolution < INPUT_SIZE_360p_RANGE;
         rc->kf_boost = get_kf_boost_from_r0(pcs_ptr->parent_pcs_ptr->r0, frames_to_key, is_smaller_360p);
+#endif
 
         // Baseline value derived from cpi->active_worst_quality and kf boost.
+#if TPL_IMP
+        active_best_quality = get_kf_active_quality_tpl(rc, active_worst_quality, bit_depth);
+#else
         active_best_quality = get_kf_active_quality_cqp(rc, active_worst_quality, bit_depth);
+#endif
 #if QPS_UPDATE
         // Allow somewhat lower kf minq with small image formats.
         if ((pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width *
@@ -5249,7 +5314,13 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
         active_best_quality += eb_av1_compute_qdelta(q_val, q_val * q_adj_factor, bit_depth);
     } else if (!is_src_frame_alt_ref &&
                (refresh_golden_frame || is_intrl_arf_boost || refresh_alt_ref_frame)) {
+#if TPL_IMP
+        double min_boost_factor = sqrt(1 << pcs_ptr->parent_pcs_ptr->hierarchical_levels);
+        int num_stats_required_for_gfu_boost = pcs_ptr->parent_pcs_ptr->frames_in_sw + scs_ptr->static_config.look_ahead_distance;
+        rc->gfu_boost = get_gfu_boost_from_r0_lap(min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0, num_stats_required_for_gfu_boost);
+#else
         rc->gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
+#endif
         rc->arf_boost_factor = 1;
 
         q = active_worst_quality;
@@ -5748,8 +5819,8 @@ static void sb_setup_lambda(PictureControlSet *pcs_ptr,
     }
     ppcs_ptr->blk_lambda_tuning = EB_TRUE;
 }
-
 #endif
+
 /******************************************************
  * sb_qp_derivation_tpl_la
  * Calculates the QP per SB based on the tpl statistics

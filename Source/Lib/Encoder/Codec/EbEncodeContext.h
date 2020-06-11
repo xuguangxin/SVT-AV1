@@ -180,6 +180,9 @@ typedef struct EncodeContext {
     int32_t poc_map_idx[MAX_TPL_LA_SW];
 #endif
     EbByte  mc_flow_rec_picture_buffer[MAX_TPL_LA_SW];
+#if LAD_MEM_RED
+    EbByte  mc_flow_rec_picture_buffer_saved;
+#endif
 #endif
 } EncodeContext;
 

@@ -512,6 +512,9 @@ extern "C" {
 #define M0_NIC                            1 // Use nic level 0 for M0
 
 #define MEM_OPT_10bit       1 // Memory optimization for 10bit
+#define LAD_MEM_RED         1 // tpl works with lad 16. limit the look ahead to be 16
+#define TPL_IMP             1 // tpl improvement changes
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

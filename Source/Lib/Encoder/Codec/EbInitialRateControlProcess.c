@@ -1050,6 +1050,10 @@ void eb_av1_build_quantizer(AomBitDepth bit_depth, int32_t y_dc_delta_q, int32_t
                             Quants *const quants, Dequants *const deq);
 
 #define TPL_DEP_COST_SCALE_LOG2 4
+#if TPL_IMP
+double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
+int32_t eb_av1_compute_qdelta(double qstart, double qtarget, AomBitDepth bit_depth);
+#endif
 /************************************************
 * Genrate TPL MC Flow Dispenser  Based on Lookahead
 ** LAD Window: sliding window size
@@ -1075,7 +1079,9 @@ void tpl_mc_flow_dispenser(
     BlockGeom   blk_geom;
     uint32_t    kernel = (EIGHTTAP_REGULAR << 16) | EIGHTTAP_REGULAR;
     EbPictureBufferDesc *input_picture_ptr = pcs_ptr->enhanced_picture_ptr;
+#if !TPL_IMP
     int64_t recon_error = 1, sse = 1;
+#endif
     TplStats  tpl_stats;
 
     (void)scs_ptr;
@@ -1100,6 +1106,33 @@ void tpl_mc_flow_dispenser(
     MacroblockPlane mb_plane;
     int32_t qIndex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
 
+#if TPL_IMP
+    const  double delta_rate_new[7][6] =
+    {
+        { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }, // 1L
+        { 0.6, 1.0, 1.0, 1.0, 1.0, 1.0 }, // 2L
+        { 0.6, 0.8, 1.0, 1.0, 1.0, 1.0 }, // 3L
+        { 0.6 , 0.8, 0.9, 1.0, 1.0, 1.0 }, // 4L
+        { 0.35, 0.6, 0.8,  0.9, 1.0, 1.0},  //5L
+        { 0.35, 0.6, 0.8,  0.9, 0.95, 1.0}  //6L
+    };
+    double q_val;  q_val = eb_av1_convert_qindex_to_q(qIndex, 8);
+    int32_t delta_qindex;
+    if(pcs_ptr->slice_type == I_SLICE)
+        delta_qindex = eb_av1_compute_qdelta(
+            q_val,
+            q_val * 0.25,
+            8);
+    else
+         delta_qindex = eb_av1_compute_qdelta(
+            q_val,
+            q_val * delta_rate_new[pcs_ptr->hierarchical_levels]
+            [pcs_ptr->temporal_layer_index],
+            8);
+    qIndex =
+       (qIndex + delta_qindex);
+
+#endif
     Quants *const quants_bd = &pcs_ptr->quants_bd;
     Dequants *const deq_bd = &pcs_ptr->deq_bd;
     eb_av1_set_quantizer(
@@ -1157,6 +1190,9 @@ void tpl_mc_flow_dispenser(
                     const int dst_basic_offset = input_picture_ptr->origin_y * input_picture_ptr->stride_y + input_picture_ptr->origin_x;
                     uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] + dst_basic_offset + dst_mb_offset;
                     int64_t inter_cost;
+#if TPL_IMP
+                    int64_t recon_error = 1, sse = 1;
+#endif
                     int32_t best_rf_idx = -1;
                     int64_t best_inter_cost = INT64_MAX;
                     MV final_best_mv = {0, 0};
@@ -1314,10 +1350,25 @@ void tpl_mc_flow_dispenser(
                         above_row = above_data + 16;
                         left_col = left_data + 16;
                         TxSize tx_size = TX_16X16;
-
+#if TPL_IMP
+                        uint8_t *recon_buffer =
+                            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] +
+                            dst_basic_offset;
+                        update_neighbor_samples_array_open_loop_mb_recon(above_row - 1,
+                                                                         left_col - 1,
+                                                                         recon_buffer,
+                                                                         dst_buffer_stride,
+                                                                         mb_origin_x,
+                                                                         mb_origin_y,
+                                                                         16,
+                                                                         16,
+                                                                         input_picture_ptr->width,
+                                                                         input_picture_ptr->height);
+#else
                         update_neighbor_samples_array_open_loop_mb(above_row - 1, left_col - 1,
                                                                    input_picture_ptr,
                                                                    input_picture_ptr->stride_y, mb_origin_x, mb_origin_y, 16, 16);
+#endif
                         uint8_t ois_intra_mode = ois_mb_results_ptr->intra_mode;
                         int32_t p_angle = av1_is_directional_mode((PredictionMode)ois_intra_mode) ? mode_to_angle_map[(PredictionMode)ois_intra_mode] : 0;
                         // Edge filter
@@ -1600,7 +1651,6 @@ static void generate_r0beta(PictureParentControlSet *pcs_ptr)
                         RDCOST(pcs_ptr->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist);
                     intra_cost  += (tpl_stats_ptr->recrf_dist << RDDIV_BITS);
                     mc_dep_cost += (tpl_stats_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
-
                 }
             }
             double beta = 1.0;
@@ -1637,6 +1687,172 @@ static void generate_r0beta(PictureParentControlSet *pcs_ptr)
 * Genrate TPL MC Flow Based on Lookahead
 ** LAD Window: sliding window size
 ************************************************/
+#if LAD_MEM_RED
+EbErrorType tpl_mc_flow(
+    EncodeContext                   *encode_context_ptr,
+    SequenceControlSet              *scs_ptr,
+    PictureParentControlSet         *pcs_ptr)
+{
+    InitialRateControlReorderEntry   *temporaryQueueEntryPtr;
+    PictureParentControlSet          *temp_pcs_ptr;
+    PictureParentControlSet          *pcs_array[MAX_TPL_LA_SW] = {NULL, };
+
+    uint32_t                         inputQueueIndex;
+    int32_t                          frames_in_sw = MIN(MAX_TPL_LA_SW, pcs_ptr->frames_in_sw);
+    int32_t                          frame_idx, i;
+    uint32_t                         shift = pcs_ptr->is_720p_or_larger ? 0 : 1;
+    uint32_t picture_width_in_mb  = (pcs_ptr->enhanced_picture_ptr->width  + 16 - 1) / 16;
+    uint32_t picture_height_in_mb = (pcs_ptr->enhanced_picture_ptr->height + 16 - 1) / 16;
+    EbBool                           start_is_intra = EB_FALSE;
+    EbBool                           got_intra_in_sw = EB_FALSE;
+    EbByte                           mc_flow_rec_picture_buffer_noref = NULL;
+
+    (void)scs_ptr;
+
+    // Walk the first N entries in the sliding window
+    inputQueueIndex = encode_context_ptr->initial_rate_control_reorder_queue_head_index;
+    for (frame_idx = 0; frame_idx < pcs_ptr->frames_in_sw; frame_idx++) {
+        temporaryQueueEntryPtr = encode_context_ptr->initial_rate_control_reorder_queue[inputQueueIndex];
+        temp_pcs_ptr = ((PictureParentControlSet*)(temporaryQueueEntryPtr->parent_pcs_wrapper_ptr)->object_ptr);
+
+        // sort to be decode order
+        if(frame_idx == 0) {
+            pcs_array[0] = temp_pcs_ptr;
+        } else {
+            for (i = 0; i < frame_idx; i++) {
+                if (temp_pcs_ptr->decode_order < pcs_array[i]->decode_order) {
+                    for (int32_t j = frame_idx; j > i; j--)
+                        pcs_array[j] = pcs_array[j-1];
+                    pcs_array[i] = temp_pcs_ptr;
+                    break;
+                }
+            }
+            if (i == frame_idx)
+                pcs_array[i] = temp_pcs_ptr;
+        }
+
+        // Increment the inputQueueIndex Iterator
+        inputQueueIndex = (inputQueueIndex == INITIAL_RATE_CONTROL_REORDER_QUEUE_MAX_DEPTH - 1) ? 0 : inputQueueIndex + 1;
+    }
+
+    for (frame_idx = 1; frame_idx < MIN(16, frames_in_sw); frame_idx++) {
+        if(frame_is_intra_only(pcs_array[frame_idx])) {
+            got_intra_in_sw = EB_TRUE;
+            break;
+        }
+    }
+    if (got_intra_in_sw) {
+        return EB_ErrorNone;
+    }
+    start_is_intra = frame_is_intra_only(pcs_array[0]);
+
+    for(frame_idx = 0; frame_idx < MAX_TPL_LA_SW; frame_idx++) {
+        encode_context_ptr->poc_map_idx[frame_idx] = -1;
+        encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
+    }
+    EB_MALLOC_ARRAY(mc_flow_rec_picture_buffer_noref, pcs_ptr->enhanced_picture_ptr->luma_size);
+    for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++) {
+        if (pcs_array[frame_idx]->is_used_as_reference_flag) {
+            EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], pcs_ptr->enhanced_picture_ptr->luma_size);
+        } else {
+            encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = mc_flow_rec_picture_buffer_noref;
+        }
+    }
+    if (!encode_context_ptr->mc_flow_rec_picture_buffer_saved)
+        EB_MALLOC_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer_saved, pcs_ptr->enhanced_picture_ptr->luma_size);
+
+    if (pcs_array[0]->temporal_layer_index == 0) {
+        // dispenser I0 or frame_idx0 pic in LA1
+        int32_t sw_length = MIN(17, (frames_in_sw));
+        EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
+        encode_context_ptr->poc_map_idx[0] = pcs_array[0]->picture_number;
+        for(frame_idx = 0; frame_idx < sw_length; frame_idx++) {
+            if (!start_is_intra && frame_idx == 0) {
+                uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[0];
+                memcpy(dst_buffer, encode_context_ptr->mc_flow_rec_picture_buffer_saved, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
+                continue;
+            }
+            encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
+            for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
+                memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
+            }
+
+            tpl_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
+
+        }
+
+        // synthesizer
+        for(frame_idx = sw_length - 1; frame_idx >= 0; frame_idx--)
+            tpl_mc_flow_synthesizer(pcs_array, frame_idx, sw_length);
+        generate_r0beta(pcs_array[0]);
+
+#if 0 //AMIR_PRINTS
+        SVT_LOG("LOG displayorder:%ld\n",
+            pcs_array[0]->picture_number);
+        for (frame_idx = 0; frame_idx <= sw_length - 1; frame_idx++)
+        {
+            PictureParentControlSet         *pcs_ptr_tmp = pcs_array[frame_idx];
+            Av1Common *cm = pcs_ptr_tmp->av1_cm;
+            SequenceControlSet *scs_ptr = pcs_ptr_tmp->scs_ptr;
+            //int tpl_stride = tpl_frame->stride;
+            int64_t intra_cost_base = 0;
+            int64_t mc_dep_cost_base = 0;
+            const int step = 1 << (pcs_ptr->is_720p_or_larger ? 2 : 1);
+            const int mi_cols_sr = cm->mi_cols;//av1_pixels_to_mi(cm->superres_upscaled_width);
+
+            for (int row = 0; row < cm->mi_rows; row += step) {
+                for (int col = 0; col < mi_cols_sr; col += step) {
+                    TplStats *tpl_stats_ptr = pcs_ptr_tmp->tpl_stats[((row * mi_cols_sr) >> 4) + (col >> 2)];
+                    int64_t mc_dep_delta =
+                        RDCOST(pcs_ptr_tmp->base_rdmult, tpl_stats_ptr->mc_dep_rate, tpl_stats_ptr->mc_dep_dist);
+                    intra_cost_base += (tpl_stats_ptr->recrf_dist << RDDIV_BITS);
+                    mc_dep_cost_base += (tpl_stats_ptr->recrf_dist << RDDIV_BITS) + mc_dep_delta;
+                }
+            }
+
+            SVT_LOG("After mc_flow_synthesizer:\tframe_indx:%d\tdisplayorder:%ld\tIntra:%lld\tmc_dep:%lld\n",
+                frame_idx, pcs_ptr_tmp->picture_number, intra_cost_base, mc_dep_cost_base);
+        }
+#endif
+        // The second part is for the next base layer frame to use the available pictures.
+        // i.e. POC 16 have access to picture 1,2,...15. So dispenser and synthesizer are called.
+        // In the next call, the stats for POC 16 is updated using pictures 17,... 32
+        encode_context_ptr->poc_map_idx[0] = pcs_array[0]->picture_number;
+        for (frame_idx = 1; frame_idx < sw_length; frame_idx++) {
+            encode_context_ptr->poc_map_idx[frame_idx] = pcs_array[frame_idx]->picture_number;
+            if (frame_idx == 1 && pcs_array[frame_idx]->temporal_layer_index == 0) {
+                EbPictureBufferDesc *input_picture_ptr = pcs_array[0]->enhanced_picture_ptr;
+                uint8_t *dst_buffer = encode_context_ptr->mc_flow_rec_picture_buffer[0];
+                // copy frame_idx0 input to rec before run frame_idx1 picture
+                memcpy(dst_buffer, input_picture_ptr->buffer_y, input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
+            }
+            for (uint32_t blky = 0; blky < (picture_height_in_mb << shift); blky++) {
+                memset(pcs_array[frame_idx]->tpl_stats[blky * (picture_width_in_mb << shift)], 0, (picture_width_in_mb << shift) * sizeof(TplStats));
+            }
+
+            tpl_mc_flow_dispenser(encode_context_ptr, scs_ptr, pcs_array[frame_idx], frame_idx);
+            if (frame_idx == 1 && pcs_array[frame_idx]->temporal_layer_index == 0) {
+                // save frame_idx1 picture buffer for next LA
+                memcpy(encode_context_ptr->mc_flow_rec_picture_buffer_saved, encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx], input_picture_ptr->stride_y * (input_picture_ptr->origin_y * 2 + input_picture_ptr->height));
+            }
+        }
+        // synthesizer
+        for (frame_idx = sw_length - 1; frame_idx >= 1; frame_idx--)
+            tpl_mc_flow_synthesizer(pcs_array, frame_idx, sw_length);
+    }
+
+    for(frame_idx = 0; frame_idx < frames_in_sw; frame_idx++) {
+        if ( encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] &&
+             encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] != mc_flow_rec_picture_buffer_noref ) {
+            EB_FREE_ARRAY(encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx]);
+        }
+        encode_context_ptr->mc_flow_rec_picture_buffer[frame_idx] = NULL;
+    }
+    EB_FREE_ARRAY(mc_flow_rec_picture_buffer_noref);
+
+    return EB_ErrorNone;
+}
+#else
 EbErrorType tpl_mc_flow(
     EncodeContext                   *encode_context_ptr,
     SequenceControlSet              *scs_ptr,
@@ -1763,7 +1979,7 @@ EbErrorType tpl_mc_flow(
     return EB_ErrorNone;
 }
 #endif
-
+#endif
 /* Initial Rate Control Kernel */
 
 /*********************************************************************************

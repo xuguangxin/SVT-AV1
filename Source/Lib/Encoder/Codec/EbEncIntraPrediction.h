@@ -36,6 +36,12 @@ extern EbErrorType update_neighbor_samples_array_open_loop_mb(uint8_t *above_ref
                                                            uint32_t stride, uint32_t srcOriginX,
                                                            uint32_t srcOriginY, uint8_t bwidth,
                                                            uint8_t bheight);
+#if TPL_IMP
+extern EbErrorType update_neighbor_samples_array_open_loop_mb_recon(
+    uint8_t *above_ref, uint8_t *left_ref, uint8_t *recon_ptr, uint32_t stride,
+    uint32_t src_origin_x, uint32_t src_origin_y, uint8_t bwidth, uint8_t bheight, uint32_t width,
+    uint32_t height);
+#endif
 #endif
 #if !REMOVE_UNUSED_CODE_PH2
 extern EbErrorType intra_prediction_open_loop(

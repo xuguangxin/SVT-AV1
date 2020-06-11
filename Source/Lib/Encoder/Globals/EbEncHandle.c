@@ -2431,8 +2431,13 @@ void copy_api_from_app(
     scs_ptr->static_config.enable_tpl_la = ((EbSvtAv1EncConfiguration*)config_struct)->enable_tpl_la;
     scs_ptr->static_config.frames_to_be_encoded = ((EbSvtAv1EncConfiguration*)config_struct)->frames_to_be_encoded;
     if (scs_ptr->static_config.enable_tpl_la && scs_ptr->static_config.look_ahead_distance > (uint32_t)0) {
+#if LAD_MEM_RED
+        SVT_LOG("SVT [Warning]: force look_ahead_distance to be 16 from %d for perf/quality tradeoff when enable_tpl_la=1\n", scs_ptr->static_config.look_ahead_distance);
+        scs_ptr->static_config.look_ahead_distance = 16;
+#else
         SVT_LOG("SVT [Warning]: force look_ahead_distance to be 32 from %d for perf/quality tradeoff when enable_tpl_la=1\n", scs_ptr->static_config.look_ahead_distance);
         scs_ptr->static_config.look_ahead_distance = 32;
+#endif
     }
 #endif
 
