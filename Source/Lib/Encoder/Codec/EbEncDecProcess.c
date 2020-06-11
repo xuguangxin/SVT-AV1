@@ -3399,7 +3399,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->disallow_4x4 = EB_TRUE;
 #if JUNE11_ADOPTIONS
-     else if (enc_mode <= ENC_M1)
+     else if (enc_mode <= ENC_M2)
 #else
 #if M1_C2_ADOPTIONS
      else if (enc_mode <= ENC_M0)
@@ -4786,12 +4786,16 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
             if (MR_MODE)
                 depth_cycles_red_mode = 0;
-            else
+            else if (enc_mode <= ENC_M1)
                 depth_cycles_red_mode = 2;
+            else
+                depth_cycles_red_mode = 3;
         else if (enc_mode <= ENC_M0)
             depth_cycles_red_mode = 0;
-        else
+        else if (enc_mode <= ENC_M1)
             depth_cycles_red_mode = 2;
+        else
+            depth_cycles_red_mode = 3;
     }
 #else
     depth_cycles_red_mode = pcs_ptr->slice_type != I_SLICE ? 0 : 0;
@@ -5365,7 +5369,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if MAY23_M0_ADOPTIONS
 #if JUNE11_ADOPTIONS
-        if (enc_mode <= ENC_M1)
+        if (enc_mode <= ENC_M2)
 #else
 #if JUNE8_ADOPTIONS
         if (enc_mode <= ENC_M0 || (enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected))
@@ -8351,7 +8355,7 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #endif
 #if MAY16_7PM_ADOPTIONS
 #if JUNE11_ADOPTIONS
-                            if (pcs_ptr->enc_mode <= ENC_M1 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M2)) {
+                            if (pcs_ptr->enc_mode <= ENC_M2) {
 #else
 #if JUNE8_ADOPTIONS
                             if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->parent_pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M2)) {

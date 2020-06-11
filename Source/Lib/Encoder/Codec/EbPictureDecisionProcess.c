@@ -1298,6 +1298,10 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
     else {
+#if JUNE11_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M2)
+            pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
+#else
 #if MAY16_7PM_ADOPTIONS
 #if PRESET_SHIFITNG
 #if SHUT_RESOLUTION_CHECKS
@@ -1331,6 +1335,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
+#endif
 #endif
         else
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
