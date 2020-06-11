@@ -515,6 +515,7 @@ extern "C" {
 #define LAD_MEM_RED         1 // tpl works with lad 16. limit the look ahead to be 16
 #define TPL_IMP             1 // tpl improvement changes
 
+#define JUNE11_ADOPTIONS    1 // M0 and M1 adoptions
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

@@ -130,6 +130,9 @@ void* set_me_hme_params_oq(
 #if M1_COMBO_2 || M2_COMBO_2
             if (pcs_ptr->enc_mode <= ENC_M0) {
 #else
+#if JUNE11_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M1) {
+#else
 #if MAY12_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M0) {
 #else
@@ -140,6 +143,7 @@ void* set_me_hme_params_oq(
             if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
             if (pcs_ptr->enc_mode <= ENC_M2) {
+#endif
 #endif
 #endif
 #endif

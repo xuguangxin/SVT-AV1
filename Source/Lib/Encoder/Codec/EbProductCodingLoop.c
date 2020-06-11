@@ -1541,10 +1541,14 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #endif
 #endif
     else if (pcs_ptr->enc_mode <= ENC_M1)
+#if JUNE11_ADOPTIONS
+        nics_scling_level = 3;
+#else
 #if JUNE8_ADOPTIONS
         nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 3 : 4;
 #else
         nics_scling_level = 4;
+#endif
 #endif
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M2)

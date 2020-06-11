@@ -2074,7 +2074,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR4_M6_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
 #if NEW_TXS_SETTINGS
+#if JUNE11_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M1)
+#else
         if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
             pcs_ptr->tx_size_search_mode = 1;
         else
 #endif
