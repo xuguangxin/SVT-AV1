@@ -6875,16 +6875,17 @@ void* picture_decision_kernel(void *input_ptr)
 
                             pcs_ptr = context_ptr->mg_pictures_array[pic_i];
 
+                            if (scs_ptr->static_config.look_ahead_distance == 0) {
 
-                            EbObjectWrapper *reference_picture_wrapper_ptr;
-                            // Get Empty Reference Picture Object
-                            eb_get_empty_object(
-                                scs_ptr->encode_context_ptr->reference_picture_pool_fifo_ptr,
-                                &reference_picture_wrapper_ptr);
-                            pcs_ptr->reference_picture_wrapper_ptr = reference_picture_wrapper_ptr;
-                            // Give the new Reference a nominal live_count of 1
-                            eb_object_inc_live_count(pcs_ptr->reference_picture_wrapper_ptr, 1);
-
+                                EbObjectWrapper* reference_picture_wrapper_ptr;
+                                // Get Empty Reference Picture Object
+                                eb_get_empty_object(
+                                    scs_ptr->encode_context_ptr->reference_picture_pool_fifo_ptr,
+                                    &reference_picture_wrapper_ptr);
+                                pcs_ptr->reference_picture_wrapper_ptr = reference_picture_wrapper_ptr;
+                                // Give the new Reference a nominal live_count of 1
+                                eb_object_inc_live_count(pcs_ptr->reference_picture_wrapper_ptr, 1);
+                            }
                             //get a new ME data buffer
                             eb_get_empty_object(context_ptr->me_fifo_ptr,
                                 &me_wrapper_ptr);

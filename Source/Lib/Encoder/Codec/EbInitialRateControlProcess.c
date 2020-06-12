@@ -2030,9 +2030,9 @@ void *initial_rate_control_kernel(void *input_ptr) {
     EbBool           end_of_sequence_flag   = EB_TRUE;
     uint8_t          frames_in_sw;
     uint8_t          temporal_layer_index;
-#if !DECOUPLE_ME_RES
+
     EbObjectWrapper *reference_picture_wrapper_ptr;
-#endif
+
     // Segments
     uint32_t segment_index;
     for (;;) {
@@ -2287,7 +2287,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                             update_motion_field_uniformity_over_time(
                                 encode_context_ptr, scs_ptr, pcs_ptr);
                         }
-#if !DECOUPLE_ME_RES
+
                         // Get Empty Reference Picture Object
                         eb_get_empty_object(
                             scs_ptr->encode_context_ptr->reference_picture_pool_fifo_ptr,
@@ -2307,7 +2307,7 @@ void *initial_rate_control_kernel(void *input_ptr) {
                                     ->reference_picture_wrapper_ptr,
                                 1);
                         }
-#endif
+
                         pcs_ptr->stat_struct_first_pass_ptr =
                             pcs_ptr->is_used_as_reference_flag
                                 ? &((EbReferenceObject *)
