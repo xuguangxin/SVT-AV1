@@ -606,7 +606,9 @@ typedef struct ModeDecisionContext {
     CandClass target_class;
 
     // fast_loop_core signals
+#if !USE_REGULAR_MD_STAGE_0
     EbBool md_staging_use_bilinear;
+#endif
     EbBool md_staging_skip_interpolation_search;
 #if CLEAN_UP_SKIP_CHROMA_PRED_SIGNAL
     EbBool md_staging_skip_chroma_pred;

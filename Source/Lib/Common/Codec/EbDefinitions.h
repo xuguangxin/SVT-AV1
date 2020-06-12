@@ -520,6 +520,8 @@ extern "C" {
 #define TPL_LAMBDA_IMP      1 // Do lambda modulation for fast lambda
                               // Interdepth decision uses SB lambda
 #define SEPARATE_ADAPTIVE_TXT_INTER_INTRA 1 // Separate the inter/intra actions for adaptive TXT
+
+#define USE_REGULAR_MD_STAGE_0 1 // Use Regular (instead of Bilinear) @ md_stage_0()
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

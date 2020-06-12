@@ -1253,8 +1253,12 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
     context_ptr->pu_itr                   = 0;
     // Prediction
     // Set default interp_filters
+#if USE_REGULAR_MD_STAGE_0
+    candidate_buffer->candidate_ptr->interp_filters = 0;
+#else
     candidate_buffer->candidate_ptr->interp_filters =
         (context_ptr->md_staging_use_bilinear) ? av1_make_interp_filters(BILINEAR, BILINEAR) : 0;
+#endif
 #if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_FALSE;
 #endif
@@ -3864,10 +3868,12 @@ void md_stage_0(
             ? EB_TRUE
             : EB_FALSE;
 #endif
+#if !USE_REGULAR_MD_STAGE_0
     context_ptr->md_staging_use_bilinear = (context_ptr->md_staging_mode == MD_STAGING_MODE_1 ||
                                             context_ptr->md_staging_mode == MD_STAGING_MODE_2)
                                                ? EB_TRUE
                                                : EB_FALSE;
+#endif
 #if !REMOVE_UNUSED_CODE_PH2
     // 1st fast loop: src-to-src
     fast_loop_cand_index = fast_candidate_end_index;
