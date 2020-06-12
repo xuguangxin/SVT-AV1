@@ -490,19 +490,14 @@ extern "C" {
 #define PR_1316            1 //AVX2 kernel svt_av1_apply_temporal_filter_planewise_hbd_avx2()
 #define NEW_MRP_SETTINGS   1 // New MRP settings for all modes
 #define NEW_TXS_SETTINGS   1 // New TXS settings
-
-#define SHUT_FEATURE_GREY 0
-#define ADABTIVE_NSQ_CR 1
-#if ADABTIVE_NSQ_CR
+#define ADAPTIVE_NSQ_CR 1
+#if ADAPTIVE_NSQ_CR
 #define DECOUPLE_FROM_ALLOCATION 1
 #endif
-#define ADABTIVE_DEPTH_CR 1
-#define ADABTIVE_TXT_CR 1 // Add code for generating TXS statistics
+#define ADAPTIVE_DEPTH_CR 1
+#define ADAPTIVE_TXT_CR 1 // Add code for generating TXS statistics
 #define STATS_TX_TYPES_FIX 1 // Fix the statistic txt crash
-#if ADABTIVE_TXT_CR
-#define STATS_TX_TYPES  TX_TYPES // 16 TXT levels (# of tx types)
-#define STATS_DELTAS    3 // negative, pred, positive
-#endif
+
 
 #define ABILITY_TO_USE_CLOSEST_ONLY       1 // Add the ability to use closest_refs without using best_refs
 #define OPTIMIZE_NEAREST_NEW_NEAR         1 // Use the closest ref only @ NEAREST_NEW_NEAR for M0 & higher
@@ -627,7 +622,16 @@ typedef struct {
 #define FC_SKIP_TX_SR_TH150     250     // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH025     125     // Fast cost skip tx search threshold.
 #define FC_SKIP_TX_SR_TH010     110     // Fast cost skip tx search threshold.
-
+#if ADAPTIVE_NSQ_CR
+#define FB_NUM 3 // number of freqiency bands
+#define SSEG_NUM 2 // number of sse_gradient bands
+#endif
+#if ADAPTIVE_DEPTH_CR
+#define DEPTH_DELTA_NUM 5 // number of depth refinement 0: Pred-2, 1:  Pred-1, 2:  Pred, 3:  Pred+1, 4:  Pred+2,
+#endif
+#if ADAPTIVE_TXT_CR
+#define TXT_DEPTH_DELTA_NUM   3 // negative, pred, positive
+#endif
 /*!\brief force enum to be unsigned 1 byte*/
 #define UENUM1BYTE(enumvar) \
     ;                       \

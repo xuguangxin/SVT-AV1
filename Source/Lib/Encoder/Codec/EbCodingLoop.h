@@ -42,13 +42,7 @@ void residual_kernel(uint8_t *input, uint32_t input_offset, uint32_t input_strid
                      uint32_t pred_offset, uint32_t pred_stride, int16_t *residual,
                      uint32_t residual_offset, uint32_t residual_stride, EbBool hbd,
                      uint32_t area_width, uint32_t area_height);
-#if COEFF_BASED_BYPASS_NSQ
-#if MERGED_COEFF_BAND
-#if SPEED_WEIGHT
-static const uint64_t speed_weight[9] = {100,100,100,50,50,50,50,70,70};
-static const uint64_t speed_weight2[9] = {100,100,100,60,60,60,60,80,80};
-#endif
-#if ADABTIVE_NSQ_CR
+#if ADAPTIVE_NSQ_CR
 static const uint16_t block_prob_tab[5][9][3][2] = {
 {
 {{ 75 , 75 },{ 43 , 43 },{ 17 , 17 }},
@@ -163,6 +157,12 @@ static const uint16_t block_prob_intra_tab[5][9][3][2] = {
 {{ 0 , 0 },{ 0 , 0 },{ 0 , 0 }}
 }
 };
+#else
+#if COEFF_BASED_BYPASS_NSQ
+#if MERGED_COEFF_BAND
+#if SPEED_WEIGHT
+static const uint64_t speed_weight[9] = {100,100,100,50,50,50,50,70,70};
+static const uint64_t speed_weight2[9] = {100,100,100,60,60,60,60,80,80};
 #endif
 #if SSE_BASED_SPLITTING
 static const uint64_t sse_grad_weight[5][9][3] = {
@@ -510,7 +510,8 @@ static const uint64_t allowed_part_weight_240pF[5][9][10] = {
 }
 };
 #endif
-#if ADABTIVE_TXT_CR
+#endif
+#if ADAPTIVE_TXT_CR
 static const uint8_t inter_txt_cycles_reduction_th[2/*depth*/][3/*depth refinement*/][3/*tx_size*/][2/*freq band*/][15/*tx_type*/] =
 {
     { // Depth 3

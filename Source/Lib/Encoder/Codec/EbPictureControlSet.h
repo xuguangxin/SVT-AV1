@@ -163,7 +163,7 @@ typedef struct EbMdcLeafData {
     int8_t  pred_depth_refinement;
     int8_t  final_pred_depth_refinement;
 #endif
-#if ADABTIVE_DEPTH_CR
+#if ADAPTIVE_DEPTH_CR
     int8_t  pred_depth;
     int8_t  final_pred_depth;
 #endif
@@ -422,14 +422,14 @@ typedef struct PictureControlSet {
     // pointer to a scratch buffer used by self-guided restoration
     int32_t *                       rst_tmpbuf;
 #endif
-#if ADABTIVE_NSQ_CR
-    uint32_t part_cnt[10][3][2];
+#if ADAPTIVE_NSQ_CR
+    uint32_t part_cnt[NUMBER_OF_SHAPES-1][FB_NUM][SSEG_NUM];
 #endif
-#if ADABTIVE_DEPTH_CR
-    uint32_t pred_depth_count[5];
+#if ADAPTIVE_DEPTH_CR
+    uint32_t pred_depth_count[DEPTH_DELTA_NUM];
 #endif
-#if ADABTIVE_TXT_CR
-    uint32_t txt_cnt[STATS_DELTAS][STATS_TX_TYPES];
+#if ADAPTIVE_TXT_CR
+    uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES];
 #endif
 } PictureControlSet;
 

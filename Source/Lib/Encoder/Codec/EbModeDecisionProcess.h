@@ -150,7 +150,7 @@ typedef struct MdBlkStruct {
 #if TRACK_PER_DEPTH_DELTA
     int8_t pred_depth_refinement;
 #endif
-#if ADABTIVE_DEPTH_CR
+#if ADAPTIVE_DEPTH_CR
     int8_t pred_depth;
 #endif
 } MdBlkStruct;
@@ -800,17 +800,17 @@ typedef struct ModeDecisionContext {
     EbPictureBufferDesc *recon_coeff_ptr[TX_TYPES];
     EbPictureBufferDesc *recon_ptr[TX_TYPES];
 #endif
-#if ADABTIVE_NSQ_CR
-    uint32_t part_cnt[10][3][2];
-    uint16_t part_prob[10][3][2];
+#if ADAPTIVE_NSQ_CR
+    uint32_t part_cnt[NUMBER_OF_SHAPES-1][FB_NUM][SSEG_NUM];
+    uint16_t part_prob[NUMBER_OF_SHAPES-1][FB_NUM][SSEG_NUM];
 #endif
-#if ADABTIVE_DEPTH_CR
-    uint32_t pred_depth_count[5];
-    uint32_t depth_prob[5];
+#if ADAPTIVE_DEPTH_CR
+    uint32_t pred_depth_count[DEPTH_DELTA_NUM];
+    uint32_t depth_prob[DEPTH_DELTA_NUM];
 #endif
-#if ADABTIVE_TXT_CR
-    uint32_t txt_cnt[STATS_DELTAS][STATS_TX_TYPES];
-    uint32_t txt_prob[STATS_DELTAS][STATS_TX_TYPES];
+#if ADAPTIVE_TXT_CR
+    uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES];
+    uint32_t txt_prob[TXT_DEPTH_DELTA_NUM][TX_TYPES];
 #endif
 } ModeDecisionContext;
 

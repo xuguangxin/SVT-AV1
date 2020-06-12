@@ -1849,25 +1849,17 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
         pcs_ptr->coef_coded_area = 0;
         pcs_ptr->below32_coded_area = 0;
 #endif
-#if  ADABTIVE_NSQ_CR
-        for (uint8_t partidx = 0; partidx < 10; partidx++) {
-            for (uint8_t band = 0; band < 3; band++) {
-                for (uint8_t sse_idx = 0; sse_idx < 2; sse_idx++) {
-                    pcs_ptr->part_cnt[partidx][band][sse_idx] = 0;
-                }
-            }
-        }
+#if  ADAPTIVE_NSQ_CR
+        // Init block selection
+        memset(pcs_ptr->part_cnt, 0, sizeof(uint32_t) * (NUMBER_OF_SHAPES-1) * FB_NUM * SSEG_NUM);
 #endif
-#if ADABTIVE_DEPTH_CR
-        for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++)
-            pcs_ptr->pred_depth_count[pred_depth] = 0;
+#if ADAPTIVE_DEPTH_CR
+        // Init pred_depth selection
+        memset(pcs_ptr->pred_depth_count, 0, sizeof(uint32_t) * DEPTH_DELTA_NUM);
 #endif
-#if ADABTIVE_TXT_CR
-        for (uint8_t depth_delta = 0; depth_delta < STATS_DELTAS; depth_delta++) {
-            for (uint8_t txs_idx = 0; txs_idx < STATS_TX_TYPES; txs_idx++) {
-                pcs_ptr->txt_cnt[depth_delta][txs_idx] = 0;
-            }
-        }
+#if ADAPTIVE_TXT_CR
+        // Init tx_type selection
+        memset(pcs_ptr->txt_cnt, 0, sizeof(uint32_t) * TXT_DEPTH_DELTA_NUM * TX_TYPES);
 #endif
         // Compute Tc, and Beta offsets for a given picture
         // Set reference cdef strength

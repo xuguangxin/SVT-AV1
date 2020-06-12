@@ -7853,7 +7853,7 @@ void copy_txt_data(ModeDecisionCandidateBuffer* candidate_buffer,
 }
 
 #endif
-#if COEFF_BASED_TXT_BYPASS && ! ADABTIVE_TXT_CR
+#if COEFF_BASED_TXT_BYPASS && ! ADAPTIVE_TXT_CR
 uint8_t inter_txt_cycles_reduction_th[2/*depth*/][3/*depth refinement*/][3/*tx_size*/][2/*freq band*/][15/*tx_type*/] =
 {
     { // Depth 3
@@ -8168,7 +8168,7 @@ void tx_type_search(PictureControlSet *pcs_ptr,
             else {
                 freq_band = 0;
             }
-#if ADABTIVE_TXT_CR
+#if ADAPTIVE_TXT_CR
             if (pcs_ptr->slice_type == I_SLICE) {
                 if (is_inter) { // INTER path
                     if (inter_txt_cycles_reduction_th[depth_idx][pred_depth_refinement][tx_size_idx][freq_band][(tx_type - 1)]
@@ -13332,7 +13332,7 @@ void block_based_depth_reduction(
 #if COEFF_BASED_BYPASS_NSQ
 #if MERGED_COEFF_BAND
 #if NSQ_CYCLES_REDUCTION
-#if !MERGED_COEFF_BAND || ADABTIVE_NSQ_CR
+#if !MERGED_COEFF_BAND || ADAPTIVE_NSQ_CR
 uint8_t get_allowed_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #else
 uint8_t get_allowed_block(ModeDecisionContext *context_ptr) {
@@ -13390,7 +13390,7 @@ uint8_t get_allowed_block(ModeDecisionContext *context_ptr) {
 #if SSE_BASED_SPLITTING
                 uint8_t sse_gradian_band = context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].avail_blk_flag ?
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->sqi_mds].sse_gradian_band[context_ptr->blk_geom->shape] : 1;
-#if ADABTIVE_NSQ_CR
+#if ADAPTIVE_NSQ_CR
 #if DECOUPLE_FROM_ALLOCATION
                 uint64_t nsq_prob_cycles_allocation;
                 uint64_t nsq_prob_nsq_cycles_reduction;
@@ -13781,7 +13781,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
 #if TRACK_PER_DEPTH_DELTA
         context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth_refinement = leaf_data_ptr->final_pred_depth_refinement;
 #endif
-#if ADABTIVE_DEPTH_CR
+#if ADAPTIVE_DEPTH_CR
         context_ptr->md_local_blk_unit[blk_idx_mds].pred_depth = leaf_data_ptr->final_pred_depth;
 #endif
 
@@ -13983,7 +13983,7 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
             skip_next_depth = context_ptr->blk_ptr->do_not_process_block;
 #endif
 #if COEFF_BASED_BYPASS_NSQ
-#if !MERGED_COEFF_BAND || ADABTIVE_NSQ_CR
+#if !MERGED_COEFF_BAND || ADAPTIVE_NSQ_CR
             uint8_t skip_nsq = get_allowed_block(pcs_ptr, context_ptr);
 #else
             uint8_t skip_nsq = get_allowed_block(context_ptr);

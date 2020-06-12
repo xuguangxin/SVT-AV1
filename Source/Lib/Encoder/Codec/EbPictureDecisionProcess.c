@@ -1257,7 +1257,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_nsq = EB_FALSE;
 #endif
 #endif
-#if SHUT_FEATURE_INTERACTIONS || SHUT_FEATURE_GREY
+#if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_nsq = EB_FALSE;
 #endif
 #if NSQ_REMOVAL_CODE_CLEAN_UP
@@ -1347,7 +1347,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
     }
 
-#if SHUT_FEATURE_INTERACTIONS || SHUT_FEATURE_GREY
+#if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
 #endif
     // Set disallow_all_nsq_blocks_below_16x16: 16x8, 8x16, 16x4, 4x16
@@ -1369,7 +1369,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
     else
         pcs_ptr->disallow_all_nsq_blocks_above_32x32 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
-#if SHUT_FEATURE_INTERACTIONS || SHUT_FEATURE_GREY
+#if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
 #endif
     // disallow_all_nsq_blocks_above_16x16
@@ -1392,7 +1392,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_all_nsq_blocks_above_16x16= EB_FALSE;
 #endif
 #endif
-#if SHUT_FEATURE_INTERACTIONS || SHUT_FEATURE_GREY
+#if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_FALSE;
 #endif
 #if NO_AB_HV4
