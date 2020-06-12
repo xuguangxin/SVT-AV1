@@ -1169,6 +1169,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 
     // Set disallow_nsq
 #if APR25_12AM_ADOPTIONS
+#if JUNE11_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if APR25_1PM_ADOPTIONS
 #if PRESET_SHIFITNG
 #if PRESET_SHIFITNG
@@ -1182,8 +1185,10 @@ EbErrorType signal_derivation_multi_processes_oq(
 #else
     if (pcs_ptr->enc_mode <= ENC_M5) {
 #endif
+#endif
         pcs_ptr->disallow_nsq = EB_FALSE;
     }
+#if !JUNE11_ADOPTIONS
 #if APR25_3AM_ADOPTIONS
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M4 && !sc_content_detected) {
@@ -1209,6 +1214,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
 #endif
     }
+#endif
     else {
 #if APR25_7PM_ADOPTIONS
         if (sc_content_detected)
