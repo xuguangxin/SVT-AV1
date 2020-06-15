@@ -12077,9 +12077,14 @@ void md_encode_block(PictureControlSet *pcs_ptr,
     BlkStruct *blk_ptr        = context_ptr->blk_ptr;
     candidate_buffer_ptr_array = &(candidate_buffer_ptr_array_base[0]);
 #if TPL_LA_LAMBDA_SCALING
+#if TPL_LAMBDA_IMP
     context_ptr->blk_lambda_tuning = pcs_ptr->parent_pcs_ptr->blk_lambda_tuning;
+#endif
     //Get the new lambda for current block
     if (pcs_ptr->parent_pcs_ptr->blk_lambda_tuning) {
+#if TPL_LAMBDA_IMP
+        set_tuned_blk_lambda(context_ptr, pcs_ptr);
+#else
         context_ptr->full_lambda_md[EB_8_BIT_MD] =
             get_blk_tuned_full_lambda(context_ptr,
                 pcs_ptr,
@@ -12089,16 +12094,6 @@ void md_encode_block(PictureControlSet *pcs_ptr,
             get_blk_tuned_full_lambda(context_ptr,
                 pcs_ptr,
                 context_ptr->enc_dec_context_ptr->pic_full_lambda[EB_10_BIT_MD]);
-#if TPL_LAMBDA_IMP
-        context_ptr->fast_lambda_md[EB_8_BIT_MD] =
-            get_blk_tuned_full_lambda(context_ptr,
-                pcs_ptr,
-                context_ptr->enc_dec_context_ptr->pic_fast_lambda[EB_8_BIT_MD]);
-
-        context_ptr->fast_lambda_md[EB_10_BIT_MD] =
-            get_blk_tuned_full_lambda(context_ptr,
-                pcs_ptr,
-                context_ptr->enc_dec_context_ptr->pic_fast_lambda[EB_10_BIT_MD]);
 #endif
     }
 #endif
@@ -13609,8 +13604,8 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
     init_sq_nsq_block(scs_ptr, context_ptr);
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
 #if TPL_LAMBDA_IMP
-        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
-        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+        context_ptr->full_sb_lambda_md[EB_10_BIT_MD] :
+        context_ptr->full_sb_lambda_md[EB_8_BIT_MD];
 #else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];

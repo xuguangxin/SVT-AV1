@@ -3352,8 +3352,8 @@ uint64_t d1_non_square_block_decision(ModeDecisionContext *context_ptr, uint32_t
 #endif
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
 #if TPL_LAMBDA_IMP
-        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
-        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+        context_ptr->full_sb_lambda_md[EB_10_BIT_MD] :
+        context_ptr->full_sb_lambda_md[EB_8_BIT_MD];
 #else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
@@ -3411,8 +3411,8 @@ void compute_depth_costs(ModeDecisionContext *context_ptr, SequenceControlSet *s
                          uint64_t *above_depth_cost, uint64_t *curr_depth_cost) {
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
 #if TPL_LAMBDA_IMP
-        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
-        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+        context_ptr->full_sb_lambda_md[EB_10_BIT_MD] :
+        context_ptr->full_sb_lambda_md[EB_8_BIT_MD];
 #else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];
@@ -3611,8 +3611,8 @@ void compute_depth_costs_md_skip(ModeDecisionContext *context_ptr, SequenceContr
                                  uint64_t *above_depth_cost, uint64_t *curr_depth_cost) {
     uint32_t full_lambda =  context_ptr->hbd_mode_decision ?
 #if TPL_LAMBDA_IMP
-        context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
-        context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+        context_ptr->full_sb_lambda_md[EB_10_BIT_MD] :
+        context_ptr->full_sb_lambda_md[EB_8_BIT_MD];
 #else
         context_ptr->full_lambda_md[EB_10_BIT_MD] :
         context_ptr->full_lambda_md[EB_8_BIT_MD];

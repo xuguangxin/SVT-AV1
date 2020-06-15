@@ -270,6 +270,9 @@ uint32_t product_full_mode_decision(struct ModeDecisionContext *context_ptr, Blk
 #if TPL_LA_LAMBDA_SCALING
 uint32_t get_blk_tuned_full_lambda(struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
                                    uint32_t pic_full_lambda);
+#if TPL_LAMBDA_IMP
+void set_tuned_blk_lambda(struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr);
+#endif
 #endif
 
 typedef EbErrorType (*EB_INTRA_4x4_FAST_LUMA_COST_FUNC)(

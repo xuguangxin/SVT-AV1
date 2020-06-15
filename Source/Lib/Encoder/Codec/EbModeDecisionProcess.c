@@ -618,6 +618,11 @@ const EbLambdaAssignFunc lambda_assignment_function_table[4] = {
     lambda_assign_i_slice // I_SLICE
 };
 #endif
+#if TPL_LAMBDA_IMP
+// Set the lambda for each sb.
+// When lambda tuning is on (blk_lambda_tuning), lambda of each block is set separately (full_lambda_md/fast_lambda_md)
+// later in set_tuned_blk_lambda
+#endif
 void av1_lambda_assign_md(
     ModeDecisionContext   *context_ptr)
 {
@@ -630,8 +635,8 @@ void av1_lambda_assign_md(
         context_ptr->full_lambda_md[1] *= 16;
         context_ptr->fast_lambda_md[1] *= 4;
 #if TPL_LAMBDA_IMP
-        context_ptr->full_lambda_md_org[0] = context_ptr->full_lambda_md[0];
-        context_ptr->full_lambda_md_org[1] = context_ptr->full_lambda_md[1];
+        context_ptr->full_sb_lambda_md[0] = context_ptr->full_lambda_md[0];
+        context_ptr->full_sb_lambda_md[1] = context_ptr->full_lambda_md[1];
 #endif
 }
 void av1_lambda_assign(uint32_t *fast_lambda, uint32_t *full_lambda, uint8_t bit_depth, uint16_t qp_index,

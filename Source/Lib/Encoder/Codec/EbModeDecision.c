@@ -6734,9 +6734,10 @@ uint32_t product_full_mode_decision(
     candidate_ptr = buffer_ptr_array[lowest_cost_index]->candidate_ptr;
 #if TPL_LAMBDA_IMP
     if (context_ptr->blk_lambda_tuning){
+        // When lambda tuning is on, lambda of each block is set separately, however at interdepth decision the sb lambda is used
         uint32_t full_lambda = context_ptr->hbd_mode_decision ?
-            context_ptr->full_lambda_md_org[EB_10_BIT_MD] :
-            context_ptr->full_lambda_md_org[EB_8_BIT_MD];
+            context_ptr->full_sb_lambda_md[EB_10_BIT_MD] :
+            context_ptr->full_sb_lambda_md[EB_8_BIT_MD];
         context_ptr->md_local_blk_unit[blk_ptr->mds_idx].cost =
             RDCOST(full_lambda,
                 buffer_ptr_array[lowest_cost_index]->candidate_ptr->total_rate,
@@ -7100,4 +7101,27 @@ uint32_t get_blk_tuned_full_lambda(struct ModeDecisionContext *context_ptr, Pict
     new_full_lambda = AOMMAX(new_full_lambda, 0);
     return new_full_lambda;
 }
+
+#if TPL_LAMBDA_IMP
+void set_tuned_blk_lambda(struct ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr) {
+    context_ptr->full_lambda_md[EB_8_BIT_MD] =
+        get_blk_tuned_full_lambda(context_ptr,
+            pcs_ptr,
+            context_ptr->enc_dec_context_ptr->pic_full_lambda[EB_8_BIT_MD]);
+
+    context_ptr->full_lambda_md[EB_10_BIT_MD] =
+        get_blk_tuned_full_lambda(context_ptr,
+            pcs_ptr,
+            context_ptr->enc_dec_context_ptr->pic_full_lambda[EB_10_BIT_MD]);
+    context_ptr->fast_lambda_md[EB_8_BIT_MD] =
+        get_blk_tuned_full_lambda(context_ptr,
+            pcs_ptr,
+            context_ptr->enc_dec_context_ptr->pic_fast_lambda[EB_8_BIT_MD]);
+
+    context_ptr->fast_lambda_md[EB_10_BIT_MD] =
+        get_blk_tuned_full_lambda(context_ptr,
+            pcs_ptr,
+            context_ptr->enc_dec_context_ptr->pic_fast_lambda[EB_10_BIT_MD]);
+}
+#endif
 #endif

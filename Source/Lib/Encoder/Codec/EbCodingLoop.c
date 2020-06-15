@@ -470,6 +470,9 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
         context_ptr->md_context->blk_origin_x = context_ptr->blk_origin_x;
         context_ptr->md_context->blk_origin_y = context_ptr->blk_origin_y;
         //Get the new lambda for current block
+#if TPL_LAMBDA_IMP
+        set_tuned_blk_lambda(context_ptr->md_context, pcs_ptr);
+#else
         context_ptr->md_context->full_lambda_md[EB_8_BIT_MD] =
             get_blk_tuned_full_lambda(context_ptr->md_context,
                 pcs_ptr,
@@ -479,6 +482,7 @@ static void av1_encode_loop(PictureControlSet *pcs_ptr, EncDecContext *context_p
             get_blk_tuned_full_lambda(context_ptr->md_context,
                 pcs_ptr,
                 context_ptr->pic_full_lambda[EB_10_BIT_MD]);
+#endif
     }
 #endif
     //**********************************
@@ -1016,6 +1020,9 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
         context_ptr->md_context->blk_origin_x = context_ptr->blk_origin_x;
         context_ptr->md_context->blk_origin_y = context_ptr->blk_origin_y;
         //Get the new lambda for current block
+#if TPL_LAMBDA_IMP
+        set_tuned_blk_lambda(context_ptr->md_context, pcs_ptr);
+#else
         context_ptr->md_context->full_lambda_md[EB_8_BIT_MD] =
             get_blk_tuned_full_lambda(context_ptr->md_context,
                 pcs_ptr,
@@ -1025,6 +1032,7 @@ static void av1_encode_loop_16bit(PictureControlSet *pcs_ptr, EncDecContext *con
             get_blk_tuned_full_lambda(context_ptr->md_context,
                 pcs_ptr,
                 context_ptr->pic_full_lambda[EB_10_BIT_MD]);
+#endif
     }
 #endif
     {

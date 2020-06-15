@@ -412,7 +412,8 @@ typedef struct ModeDecisionContext {
     uint32_t fast_lambda_md[2];
     uint32_t full_lambda_md[2];
 #if TPL_LAMBDA_IMP
-    uint32_t full_lambda_md_org[2];
+    uint32_t full_sb_lambda_md[2]; // for the case of lambda modulation (blk_lambda_tuning), full_lambda_md/fast_lambda_md corresponds
+                                   // to block lambda and full_sb_lambda_md is the full lambda per sb
     EbBool       blk_lambda_tuning;
 #endif
     //  Context Variables---------------------------------
