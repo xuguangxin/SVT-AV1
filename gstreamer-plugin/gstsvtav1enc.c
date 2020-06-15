@@ -659,6 +659,9 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->active_channel_count = 1;
   svt_config->logical_processors = PROP_CORES_DEFAULT;
   svt_config->target_socket = PROP_SOCKET_DEFAULT;
+#if 1 //PR_1275
+  svt_config->unpin = 1;
+#endif
   svt_config->recon_enabled = FALSE;
   //svt_config->tile_columns = 0;
   //svt_config->tile_rows = 0;

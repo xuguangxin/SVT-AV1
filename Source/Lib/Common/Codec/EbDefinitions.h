@@ -509,7 +509,6 @@ extern "C" {
 #define MEM_OPT_10bit       1 // Memory optimization for 10bit
 #define LAD_MEM_RED         1 // tpl works with lad 16. limit the look ahead to be 16
 #define TPL_IMP             1 // tpl improvement changes
-
 #define JUNE11_ADOPTIONS    1 // Adoptions (all modes)
 #define TPL_240P_IMP        1 // TPL improvement for 240P
 #define TPL_LAMBDA_IMP      1 // Do lambda modulation for fast lambda
@@ -517,6 +516,7 @@ extern "C" {
 #define SEPARATE_ADAPTIVE_TXT_INTER_INTRA 1 // Separate the inter/intra actions for adaptive TXT
 
 #define USE_REGULAR_MD_STAGE_0 1 // Use Regular (instead of Bilinear) @ md_stage_0()
+#define PR_1275                1 // Add the option of unpinning threads from being executed on a specific number of cores and buffer tuning
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
