@@ -7597,6 +7597,18 @@ static void tx_search_update_recon_sample_neighbor_array(
 }
 uint8_t get_end_tx_depth(BlockSize bsize) {
     uint8_t tx_depth = 0;
+#if FIX_TX_BLOCK_GEOMETRY
+    if (bsize == BLOCK_64X64 || bsize == BLOCK_32X32 || bsize == BLOCK_16X16 ||
+        bsize == BLOCK_64X32 || bsize == BLOCK_32X64 || bsize == BLOCK_16X32 ||
+        bsize == BLOCK_32X16 || bsize == BLOCK_16X8 || bsize == BLOCK_8X16 ||
+        bsize == BLOCK_64X16 || bsize == BLOCK_16X64 ||
+        bsize == BLOCK_32X8 || bsize == BLOCK_8X32 || bsize == BLOCK_16X4 ||
+        bsize == BLOCK_4X16)
+        tx_depth = 2;
+    else if (bsize == BLOCK_8X8)
+        tx_depth = 1;
+    // tx_depth=0 if BLOCK_8X4, BLOCK_4X8, BLOCK_4X4, BLOCK_128X128, BLOCK_128X64, BLOCK_64X128
+#else
     if (bsize == BLOCK_64X64 || bsize == BLOCK_32X32 || bsize == BLOCK_16X16 ||
         bsize == BLOCK_64X32 || bsize == BLOCK_32X64 || bsize == BLOCK_16X32 ||
         bsize == BLOCK_32X16 || bsize == BLOCK_16X8 || bsize == BLOCK_8X16)
@@ -7605,6 +7617,7 @@ uint8_t get_end_tx_depth(BlockSize bsize) {
              bsize == BLOCK_32X8 || bsize == BLOCK_8X32 || bsize == BLOCK_16X4 ||
              bsize == BLOCK_4X16)
         tx_depth = 1;
+#endif
     return tx_depth;
 }
 
