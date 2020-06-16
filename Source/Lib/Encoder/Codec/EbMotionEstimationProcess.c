@@ -846,7 +846,14 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
 #endif
     if (pcs_ptr->sc_content_detected)
+#if JUNE15_ADOPTIONS
+        if (enc_mode <= ENC_M0)
+            context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
+        else
+            context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#else
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
+#endif
     else
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
 
@@ -857,7 +864,14 @@ EbErrorType signal_derivation_me_kernel_oq(
     else
 #endif
     if (pcs_ptr->sc_content_detected)
+#if JUNE15_ADOPTIONS
+        if (enc_mode <= ENC_M0)
+            context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
+        else
+            context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#else
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
+#endif
     else
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 
@@ -1040,7 +1054,13 @@ EbErrorType signal_derivation_me_kernel_oq(
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
     else if (pcs_ptr->sc_content_detected)
 #else
+#if JUNE15_ADOPTIONS
+    if (MRS_MODE)
+        set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
+    else if (pcs_ptr->sc_content_detected)
+#else
     if (pcs_ptr->sc_content_detected)
+#endif
 #endif
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 1);
     else

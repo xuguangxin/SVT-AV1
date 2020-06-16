@@ -1650,10 +1650,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             // Remove ref/non-ref checks from palette
             (SHUT_LAYER_BASED_FEATURES)
 #else
+#if JUNE15_ADOPTIONS
+           ((pcs_ptr->enc_mode <= ENC_M0) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
+#else
 #if PRESET_SHIFITNG
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
 #else
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
+#endif
 #endif
 #if PRESET_SHIFITNG
             (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M5))
@@ -2150,7 +2154,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 1 ON - TXS in all classes
     // 2 ON - INTER TXS restricted to max 1 depth
 #if RESTRICT_INTER_TXS_DEPTH
+#if JUNE15_ADOPTIONS
+    if (MRS_MODE || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0))
+#else
     if (MR_MODE)
+#endif
         pcs_ptr->txs_in_inter_classes = 1;
     else if (pcs_ptr->enc_mode <= ENC_M0)
         pcs_ptr->txs_in_inter_classes = 2;
@@ -2266,6 +2274,10 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
+#if JUNE15_ADOPTIONS
+                pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
+                                            pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
+#else
 #if NEW_MRP_SETTINGS
                 pcs_ptr->compound_mode = MR_MODE ? 1 :
                                             pcs_ptr->enc_mode <= ENC_M0 ? 2 :
@@ -2282,6 +2294,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #else
                 pcs_ptr->compound_mode = MR_MODE ? 1 : pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
 #endif
 #endif

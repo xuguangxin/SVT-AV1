@@ -519,7 +519,9 @@ extern "C" {
 #define PR_1275                1 // Add the option of unpinning threads from being executed on a specific number of cores and buffer tuning
 
 #define FIX_TX_BLOCK_GEOMETRY 1 // Fix tx construction for tx_depth=1 of 4NxN and Nx4N
-
+#define DISALLOW_CYCLES_REDUCTION_REF 1 // Disallow Depth and NSQ cycles reduction in REF frames
+#define FIX_NSQ_CYCLE_RED_LEVEL 1 // Remove invalid setting for nsq cycles reduction
+#define JUNE15_ADOPTIONS 1 // M0, MR, and MRS adoptions
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
