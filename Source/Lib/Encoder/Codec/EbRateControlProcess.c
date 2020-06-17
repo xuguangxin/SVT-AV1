@@ -5225,11 +5225,30 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
 
                 active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
             } else {
+#if TPL_SW_UPDATE
+                EbReferenceObject *ref_obj_l0 =
+                    (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+                EbReferenceObject *ref_obj_l1 = NULL;
+                if (pcs_ptr->slice_type == B_SLICE)
+                    ref_obj_l1 =
+                        (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+                uint8_t ref_tmp_layer = ref_obj_l0->tmp_layer_idx;
+                if (pcs_ptr->slice_type == B_SLICE)
+                    ref_tmp_layer = MAX(ref_tmp_layer, ref_obj_l1->tmp_layer_idx);
+                active_best_quality = rc->arf_q;
+                int8_t tmp_layer_delta = (int8_t)pcs_ptr->parent_pcs_ptr->temporal_layer_index - (int8_t)ref_tmp_layer;
+                // active_best_quality is updated with the q index of the reference
+                if (rf_level == GF_ARF_LOW) {
+                    while (tmp_layer_delta--)
+                        active_best_quality = (active_best_quality + cq_level + 1) / 2;
+                }
+#else
                 active_best_quality = rc->arf_q;
 
                 // active_best_quality is updated with the q index of the reference
                 if (rf_level == GF_ARF_LOW)
                     active_best_quality = (active_best_quality + cq_level + 1) / 2;
+#endif
             }
             // For alt_ref and GF frames (including internal arf frames) adjust the
             // worst allowed quality as well. This insures that even on hard
@@ -5357,14 +5376,34 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
                 rc->arf_q           = active_best_quality;
                 const int min_boost = get_gf_high_motion_quality(q, bit_depth);
                 const int boost     = min_boost - active_best_quality;
-
+                
                 active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
             } else {
+#if TPL_SW_UPDATE
+                EbReferenceObject *ref_obj_l0 =
+                    (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][0]->object_ptr;
+                EbReferenceObject *ref_obj_l1 = NULL;
+                if (pcs_ptr->slice_type == B_SLICE)
+                    ref_obj_l1 =
+                    (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][0]->object_ptr;
+
+                uint8_t ref_tmp_layer = ref_obj_l0->tmp_layer_idx;
+                if (pcs_ptr->slice_type == B_SLICE)
+                    ref_tmp_layer = MAX(ref_tmp_layer, ref_obj_l1->tmp_layer_idx);
+                active_best_quality = rc->arf_q;
+                int8_t tmp_layer_delta = (int8_t)pcs_ptr->parent_pcs_ptr->temporal_layer_index - (int8_t)ref_tmp_layer;
+                // active_best_quality is updated with the q index of the reference
+                if (rf_level == GF_ARF_LOW) {
+                    while (tmp_layer_delta--)
+                        active_best_quality = (active_best_quality + cq_level + 1) / 2;
+                }
+#else
                 active_best_quality = rc->arf_q;
 
                 // active_best_quality is updated with the q index of the reference
                 if (rf_level == GF_ARF_LOW)
                     active_best_quality = (active_best_quality + cq_level + 1) / 2;
+#endif
             }
             // For alt_ref and GF frames (including internal arf frames) adjust the
             // worst allowed quality as well. This insures that even on hard
@@ -6167,13 +6206,19 @@ void *rate_control_kernel(void *input_ptr) {
                     const int32_t qindex = quantizer_to_qindex[(uint8_t)scs_ptr->static_config.qp];
                     // if there are need enough pictures in the LAD/SlidingWindow, the adaptive QP scaling is not used
                     int32_t new_qindex;
-                    if (!scs_ptr->use_output_stat_file &&
-                        pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH) {
+                    if (!scs_ptr->use_output_stat_file
+#if !TPL_SW_UPDATE
+                    &&
+                        pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH
+#endif
+                        ) {
                         // Content adaptive qp assignment
 #if TPL_LA && TPL_LA_QPS
                         // 2pass QPS with tpl_la
                         if (scs_ptr->use_input_stat_file &&
+#if !TPL_SC_ON
                             !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+#endif
                             scs_ptr->static_config.look_ahead_distance != 0 &&
                             scs_ptr->static_config.enable_tpl_la)
                             new_qindex = adaptive_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
@@ -6186,7 +6231,9 @@ void *rate_control_kernel(void *input_ptr) {
 #if TPL_LA && TPL_LA_QPS
                         // 1pass QPS with tpl_la
                         else if (!scs_ptr->use_input_stat_file &&
+#if !TPL_SC_ON
                                  !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+#endif
                                  scs_ptr->static_config.look_ahead_distance != 0 &&
                                  scs_ptr->static_config.enable_tpl_la)
                             new_qindex = cqp_qindex_calc_tpl_la(pcs_ptr, &rc, qindex);
@@ -6294,9 +6341,13 @@ void *rate_control_kernel(void *input_ptr) {
 #if TPL_LA && TPL_LA_QPM
             // 2pass QPM with tpl_la
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
+#if !TPL_SW_UPDATE
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
+#endif
                 !scs_ptr->use_output_stat_file &&
+#if !TPL_SC_ON
                 !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+#endif
                 scs_ptr->use_input_stat_file &&
                 scs_ptr->static_config.look_ahead_distance != 0 &&
                 scs_ptr->static_config.enable_tpl_la &&
@@ -6307,8 +6358,12 @@ void *rate_control_kernel(void *input_ptr) {
 #if TPL_LA && TPL_LA_QPM
             // 1pass QPM with tpl_la
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
+#if !TPL_SW_UPDATE
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
+#endif
+#if !TPL_SC_ON
                 !pcs_ptr->parent_pcs_ptr->sc_content_detected &&
+#endif
                 !scs_ptr->use_output_stat_file &&
                 !scs_ptr->use_input_stat_file &&
                 scs_ptr->static_config.look_ahead_distance != 0 &&
@@ -6318,7 +6373,9 @@ void *rate_control_kernel(void *input_ptr) {
             else
 #endif
             if (scs_ptr->static_config.enable_adaptive_quantization == 2 &&
+#if !TPL_SW_UPDATE
                 pcs_ptr->parent_pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
+#endif
                 !pcs_ptr->parent_pcs_ptr->sc_content_detected && !scs_ptr->use_output_stat_file &&
                 scs_ptr->use_input_stat_file)
                 if (scs_ptr->use_input_stat_file &&

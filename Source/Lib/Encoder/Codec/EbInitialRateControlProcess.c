@@ -1708,7 +1708,9 @@ EbErrorType tpl_mc_flow(
     EbByte                           mc_flow_rec_picture_buffer_noref = NULL;
 
     (void)scs_ptr;
-
+#if TPL_SW_UPDATE
+    pcs_array[0] = pcs_ptr;
+#endif
     // Walk the first N entries in the sliding window
     inputQueueIndex = encode_context_ptr->initial_rate_control_reorder_queue_head_index;
     for (frame_idx = 0; frame_idx < pcs_ptr->frames_in_sw; frame_idx++) {
@@ -1838,6 +1840,10 @@ EbErrorType tpl_mc_flow(
         }
         // synthesizer
         for (frame_idx = sw_length - 1; frame_idx >= 1; frame_idx--)
+#if TPL_SW_UPDATE
+            // to make sure synthesizer is not called more than one time
+            if(pcs_array[frame_idx]->picture_number <= pcs_array[1]->picture_number)
+#endif
             tpl_mc_flow_synthesizer(pcs_array, frame_idx, sw_length);
     }
 
@@ -2319,8 +2325,10 @@ void *initial_rate_control_kernel(void *input_ptr) {
 #if TPL_LA
                         if (scs_ptr->static_config.look_ahead_distance != 0 &&
                             scs_ptr->static_config.enable_tpl_la &&
+#if !TPL_SW_UPDATE
                             pcs_ptr->frames_in_sw >= QPS_SW_THRESH &&
                             //pcs_ptr->frames_in_sw > 16/*(2 << scs_ptr->static_config.hierarchical_levels)*/ &&
+#endif
                             pcs_ptr->temporal_layer_index == 0) {
                             tpl_mc_flow(encode_context_ptr, scs_ptr, pcs_ptr);
                         }

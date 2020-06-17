@@ -522,6 +522,8 @@ extern "C" {
 #define DISALLOW_CYCLES_REDUCTION_REF 1 // Disallow Depth and NSQ cycles reduction in REF frames
 #define FIX_NSQ_CYCLE_RED_LEVEL 1 // Remove invalid setting for nsq cycles reduction
 #define JUNE15_ADOPTIONS 1 // M0, MR, and MRS adoptions
+#define TPL_SW_UPDATE           1 // enable tpl for end of clip
+#define TPL_SC_ON               1 // enable tpl for SC
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
