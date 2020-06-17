@@ -5222,7 +5222,6 @@ static int adaptive_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL 
                 rc->arf_q           = active_best_quality;
                 const int min_boost = get_gf_high_motion_quality(q, bit_depth);
                 const int boost     = min_boost - active_best_quality;
-
                 active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
             } else {
 #if TPL_SW_UPDATE
@@ -5376,7 +5375,6 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
                 rc->arf_q           = active_best_quality;
                 const int min_boost = get_gf_high_motion_quality(q, bit_depth);
                 const int boost     = min_boost - active_best_quality;
-                
                 active_best_quality = min_boost - (int)(boost * rc->arf_boost_factor);
             } else {
 #if TPL_SW_UPDATE
