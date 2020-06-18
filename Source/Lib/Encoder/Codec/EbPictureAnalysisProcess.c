@@ -3764,7 +3764,7 @@ static void is_screen_content(PictureParentControlSet *pcs_ptr, int bit_depth) {
 
     // The threshold values are selected experimentally.
     uint8_t color_detection = (counts_1 * blk_h * blk_w * 10 > input_picture_ptr->width * input_picture_ptr->height);
-    
+
     // IntraBC would force loop filters off, so we use more strict rules that also
     // requires that the block has high variance.
     pcs_ptr->sc_content_detected =  color_detection

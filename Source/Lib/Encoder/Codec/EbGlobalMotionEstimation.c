@@ -151,6 +151,9 @@ void compute_global_motion(EbPictureBufferDesc *input_pic, EbPictureBufferDesc *
                 memcpy(params_by_motion[i].params,
                        k_indentity_params,
                        (MAX_PARAMDIM - 1) * sizeof(*(params_by_motion[i].params)));
+#if GLOBAL_ME_BUG_FIX_1
+                params_by_motion[i].num_inliers = 0;
+#endif
             }
 
             av1_compute_global_motion(model,

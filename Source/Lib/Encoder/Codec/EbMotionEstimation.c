@@ -12326,7 +12326,7 @@ void construct_me_candidate_array(
             }
         }
 
-        // 2nd set of BIPRED cand: (LAST,LAST2)    (LAST,LAST3) (LAST,GOLD)
+        // 2nd set of BIPRED cand: (LAST,LAST2) (LAST,LAST3) (LAST,GOLD)
         for (first_list_ref_pict_idx = 1;
             first_list_ref_pict_idx < pcs_ptr->ref_list0_count_try;
             first_list_ref_pict_idx++) {
@@ -12345,6 +12345,22 @@ void construct_me_candidate_array(
             }
         }
         // 3rd set of BIPRED cand: (BWD, ALT)
+#if BWD_ALTREF_PA_ME_CAND_FIX
+        if (pcs_ptr->ref_list1_count_try == 3) {
+            if (context_ptr->hme_results[REF_LIST_1][0].do_ref &&
+                context_ptr->hme_results[REF_LIST_1][2].do_ref) {
+
+                me_candidate = &(context_ptr->me_candidate[*total_me_candidate_index].pu[pu_index]);
+                me_candidate->prediction_direction = BI_PRED;
+                me_candidate->ref_index[0] = 0;
+                me_candidate->ref0_list = (uint8_t)REFERENCE_PIC_LIST_1;
+                me_candidate->ref_index[1] = 2;
+                me_candidate->ref1_list = (uint8_t)REFERENCE_PIC_LIST_1;
+
+                (*total_me_candidate_index)++;
+            }
+        }
+#else
         for (second_list_ref_pict_idx = 1;
             second_list_ref_pict_idx < (uint32_t)MIN(pcs_ptr->ref_list1_count_try, 1);
             second_list_ref_pict_idx++) {
@@ -12362,6 +12378,7 @@ void construct_me_candidate_array(
                 (*total_me_candidate_index)++;
             }
         }
+#endif
     }
 }
 #endif

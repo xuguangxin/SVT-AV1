@@ -318,13 +318,17 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t quarter_pel_search_width;            // 1/4 Pel search area width
     uint8_t quarter_pel_search_height;           // 1/4 Pel search area height
     uint8_t quarter_pel_interpolation;           // 1/4 Pel interpolation method
-
+#if IMPROVE_QUARTER_PEL
+    uint8_t quarter_pel_search_pos_cnt;          // [1:MD_MAX_BEST_FP_POS] total number of half-pel position(s) to search (i.e. perform 1/4 Pel for the top half_pel_search_pos_cnt full-pel candidates)
+#endif
     uint8_t eight_pel_search_enabled;            // 0: OFF; 1: ON
     uint8_t eight_pel_search_scan;               // 0: H, V, D; 1: H, V, 2: H, 3: V
     uint8_t eight_pel_search_width;              // 1/8 Pel search area width
     uint8_t eight_pel_search_height;             // 1/8 Pel search area height
     uint8_t eight_pel_interpolation;             // 1/8 Pel interpolation method
-
+#if IMPROVE_EIGHT_PEL
+    uint8_t eight_pel_search_pos_cnt;           // [1:MD_MAX_BEST_FP_POS] total number of eight-pel position(s) to search (i.e. perform 1/8 Pel for the top quarter_pel_search_pos_cnt full-pel candidates)
+#endif
 }MdSubPelSearchCtrls;
 #if SEARCH_TOP_N
 typedef struct MdFpResults {

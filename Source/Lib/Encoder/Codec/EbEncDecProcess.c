@@ -29,8 +29,14 @@
 
 #if MR_MODE
 #define MR_MODE_MULTI_PASS_PD 1
+#if IMPROVE_SUB_PEL
+#define MR_MODE_SUB_PEL 1
+#endif
 #else
 #define MR_MODE_MULTI_PASS_PD 0
+#if IMPROVE_SUB_PEL
+#define MR_MODE_SUB_PEL 0
+#endif
 #endif
 #if R2R_FIX_PADDING
 #include "EbPictureDecisionProcess.h"
@@ -1828,15 +1834,22 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
         md_subpel_search_ctrls->half_pel_search_enabled = 1;
         md_subpel_search_ctrls->half_pel_search_scan    = 0;
 #if SEARCH_TOP_N
+#if IMPROVE_HALF_PEL
+        md_subpel_search_ctrls->half_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 5;
+#else
         md_subpel_search_ctrls->half_pel_search_pos_cnt = 5;
 #endif
-
+#endif
         md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
         md_subpel_search_ctrls->quarter_pel_search_scan    = 0;
-
+#if IMPROVE_QUARTER_PEL
+        md_subpel_search_ctrls->quarter_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 1;
+#endif
         md_subpel_search_ctrls->eight_pel_search_enabled = 1;
         md_subpel_search_ctrls->eight_pel_search_scan    = 0;
-
+#if IMPROVE_EIGHT_PEL
+        md_subpel_search_ctrls->eight_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 1;
+#endif
         break;
     case 2:
         md_subpel_search_ctrls->enabled = 1;
@@ -1853,10 +1866,14 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
 
         md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
         md_subpel_search_ctrls->quarter_pel_search_scan = 0;
-
+#if IMPROVE_QUARTER_PEL
+        md_subpel_search_ctrls->quarter_pel_search_pos_cnt = 1;
+#endif
         md_subpel_search_ctrls->eight_pel_search_enabled = 1;
         md_subpel_search_ctrls->eight_pel_search_scan = 0;
-
+#if IMPROVE_EIGHT_PEL
+        md_subpel_search_ctrls->eight_pel_search_pos_cnt = 1;
+#endif
         break;
     case 3:
         md_subpel_search_ctrls->enabled = 1;
@@ -1873,10 +1890,14 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
 
         md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
         md_subpel_search_ctrls->quarter_pel_search_scan    = 0;
-
+#if IMPROVE_QUARTER_PEL
+        md_subpel_search_ctrls->quarter_pel_search_pos_cnt = 1;
+#endif
         md_subpel_search_ctrls->eight_pel_search_enabled = 1;
         md_subpel_search_ctrls->eight_pel_search_scan    = 0;
-
+#if IMPROVE_EIGHT_PEL
+        md_subpel_search_ctrls->eight_pel_search_pos_cnt = 1;
+#endif
         break;
     case 4:
         md_subpel_search_ctrls->enabled = 1;
@@ -1892,7 +1913,9 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
 #endif
         md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
         md_subpel_search_ctrls->quarter_pel_search_scan    = 1;
-
+#if IMPROVE_QUARTER_PEL
+        md_subpel_search_ctrls->quarter_pel_search_pos_cnt = 1;
+#endif
         md_subpel_search_ctrls->eight_pel_search_enabled = 0;
 
         break;
@@ -5580,6 +5603,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (pd_pass == PD_PASS_1)
         context_ptr->md_subpel_search_level = 0;
     else
+#if IMPROVE_SUB_PEL
+        if(MR_MODE_SUB_PEL)
+            context_ptr->md_subpel_search_level = 1;
+        else
+#endif
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
             context_ptr->md_subpel_search_level = 3;
 #if JUNE9_ADOPTIONS

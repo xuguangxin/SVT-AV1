@@ -509,8 +509,14 @@ static int ransac(const int *matched_points, int npoints, int *num_inliers_by_mo
             memcpy(params_by_motion[i].inliers,
                    motions[i].inlier_indices,
                    sizeof(*motions[i].inlier_indices) * npoints);
+
+#if GLOBAL_ME_BUG_FIX
+            num_inliers_by_motion[i] = motions[i].num_inliers;
+#endif
         }
+#if !GLOBAL_ME_BUG_FIX
         num_inliers_by_motion[i] = motions[i].num_inliers;
+#endif
     }
 
 finish_ransac:
