@@ -335,8 +335,11 @@ EbErrorType create_neighbor_array_units(InitData *data, size_t count) {
 #if PAL_MEM_OPT
 EbErrorType  alloc_palette_tokens(SequenceControlSet * scs_ptr, PictureControlSet * child_pcs_ptr)
 {
-
+#if UPDATE_SC_DETECTION
+    if (child_pcs_ptr->parent_pcs_ptr->frm_hdr.allow_screen_content_tools){
+#else
     if (child_pcs_ptr->parent_pcs_ptr->sc_content_detected) {
+#endif
         if (scs_ptr->static_config.screen_content_mode) {
             uint32_t     mi_cols = scs_ptr->max_input_luma_width >> MI_SIZE_LOG2;
             uint32_t     mi_rows = scs_ptr->max_input_luma_height >> MI_SIZE_LOG2;

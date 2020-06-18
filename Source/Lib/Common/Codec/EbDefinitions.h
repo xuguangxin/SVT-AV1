@@ -346,6 +346,7 @@ extern "C" {
 #define R2R_FIX_PADDING     1
 #define QP2QINDEX           1 // switch QP to qindex for MD
 
+#define UPDATE_SC_DETECTION 1 // update sc detection
 #endif
 // END  MAY2020 /////////////////////////////////////////////////////////
 
