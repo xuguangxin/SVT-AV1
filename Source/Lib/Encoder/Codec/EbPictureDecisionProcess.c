@@ -1215,6 +1215,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     }
 #endif
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6) {
+        if (sc_content_detected)
+            pcs_ptr->disallow_nsq = EB_FALSE;
+        else
+            pcs_ptr->disallow_nsq = pcs_ptr->temporal_layer_index == 0 ? EB_FALSE : EB_TRUE;
+    }
+#endif
     else {
 #if APR25_7PM_ADOPTIONS
         if (sc_content_detected)
@@ -1373,16 +1381,24 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
 #endif
     // disallow_all_nsq_blocks_above_16x16
+#if JUNE17_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if PRESET_SHIFITNG
     if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M4)
 #else
     if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M6)
 #endif
+#endif
         pcs_ptr->disallow_all_nsq_blocks_above_16x16 = EB_FALSE;
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     else if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
         pcs_ptr->disallow_all_nsq_blocks_above_16x16 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
     else
@@ -1650,6 +1666,10 @@ EbErrorType signal_derivation_multi_processes_oq(
             // Remove ref/non-ref checks from palette
             (SHUT_LAYER_BASED_FEATURES)
 #else
+#if JUNE17_ADOPTIONS
+           ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
+           (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M6))
+#else
 #if JUNE15_ADOPTIONS
            ((pcs_ptr->enc_mode <= ENC_M0) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
 #else
@@ -1659,10 +1679,13 @@ EbErrorType signal_derivation_multi_processes_oq(
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
 #endif
 #endif
+#endif
+#if !JUNE17_ADOPTIONS
 #if PRESET_SHIFITNG
             (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M5))
 #else
             (pcs_ptr->slice_type == I_SLICE && pcs_ptr->enc_mode <= ENC_M7))
+#endif
 #endif
 #endif
 #else
@@ -1816,10 +1839,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR12_M8_ADOPTIONS
 #if M8_SG
 #if UPGRADE_M6_M7_M8
+#if JUNE17_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if PRESET_SHIFITNG
         if (pcs_ptr->enc_mode <= ENC_M5)
 #else
         if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M5)
@@ -1919,10 +1946,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else
 #if MAY19_ADOPTIONS
+#if JUNE17_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M5)
+#else
 #if PRESET_SHIFITNG
         if (pcs_ptr->enc_mode <= ENC_M4)
 #else
         if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
 #endif
 #else
 #if PRESETS_SHIFT
@@ -1969,6 +2000,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     else {
         if (sc_content_detected)
+#if JUNE17_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M3)
+#else
 #if JUNE8_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
@@ -1992,6 +2026,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             if (pcs_ptr->enc_mode <= ENC_M2)
 #else
             if (pcs_ptr->enc_mode <= ENC_M3)
+#endif
 #endif
 #endif
 #endif
@@ -2089,10 +2124,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR4_M6_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
 #if NEW_TXS_SETTINGS
+#if JUNE17_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if JUNE11_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M3)
 #else
         if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
 #endif
             pcs_ptr->tx_size_search_mode = 1;
         else
@@ -2105,6 +2144,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
         else
             pcs_ptr->tx_size_search_mode = 0;
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if JUNE11_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #else
@@ -2130,6 +2172,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #endif
+#endif
         pcs_ptr->tx_size_search_mode = 1;
 #else
     if (pcs_ptr->enc_mode <= ENC_M3)
@@ -2140,7 +2183,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         : 1;
 #endif
 #if NEW_TXS_SETTINGS
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     else if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
         pcs_ptr->tx_size_search_mode = (pcs_ptr->slice_type == I_SLICE) ? 1 : 0;
 #endif
     else
@@ -2160,7 +2207,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (MR_MODE)
 #endif
         pcs_ptr->txs_in_inter_classes = 1;
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M3))
+#else
     else if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
         pcs_ptr->txs_in_inter_classes = 2;
     else
         pcs_ptr->txs_in_inter_classes = 0;
@@ -2274,6 +2325,10 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
+#if JUNE17_ADOPTIONS
+                pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
+                                            pcs_ptr->enc_mode <= ENC_M3 ? 3 : 0;
+#else
 #if JUNE15_ADOPTIONS
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
                                             pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
@@ -2298,9 +2353,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #endif
+#endif
             else
 #endif
 #if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
+#if JUNE17_ADOPTIONS
+                pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 1 :
+                                            pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
+#else
 #if NEW_MRP_SETTINGS
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M0 ? 1 :
                                             pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
@@ -2310,6 +2370,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
 #else
                 pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
 #endif
 #else
@@ -2397,10 +2458,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
 #if APR22_ADOPTIONS
 #if SHIFT_M5_SC_TO_M3
+#if JUNE17_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if PRESET_SHIFITNG
     if (pcs_ptr->enc_mode <= ENC_M1)
 #else
     if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
 #endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M2 || (pcs_ptr->enc_mode <= ENC_M4 && pcs_ptr->sc_content_detected))
@@ -2501,6 +2566,16 @@ EbErrorType signal_derivation_multi_processes_oq(
                 context_ptr->tf_level = 3;
         }
         else {
+#if ADD_SKIP_INTRA_SIGNAL
+            if (pcs_ptr->enc_mode <= ENC_M6) {
+                if (pcs_ptr->temporal_layer_index == 0)
+                    context_ptr->tf_level = 0;
+                else
+                    context_ptr->tf_level = 3;
+            }
+            else
+                context_ptr->tf_level = 3;
+#else
             if (pcs_ptr->temporal_layer_index == 0)
 #if REVERT_YELLOW // tf_level
                 context_ptr->tf_level = 2;
@@ -2509,6 +2584,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             else
                 context_ptr->tf_level = 3;
+#endif
         }
 #else
 #if UPGRADE_M8
@@ -6420,10 +6496,20 @@ void* picture_decision_kernel(void *input_ptr)
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 3);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
                                     }
+#if JUNE17_ADOPTIONS
+                                    else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
                                     else if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
                                     }
+#if JUNE17_ADOPTIONS
+                                    else if (pcs_ptr->enc_mode <= ENC_M5) {
+                                        pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
+                                        pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+                                    }
+#endif
                                     else {
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
@@ -6488,10 +6574,14 @@ void* picture_decision_kernel(void *input_ptr)
                                 }
                                 else {
 #if MRP_ADOPTIONS
+#if JUNE17_ADOPTIONS
+                                    if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if PRESET_SHIFITNG
                                     if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
                                     if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #endif
 #else
                                     if (pcs_ptr->enc_mode <= ENC_M5) {
@@ -6501,7 +6591,11 @@ void* picture_decision_kernel(void *input_ptr)
                                     }
 #if APR25_12AM_ADOPTIONS
 #if NEW_MRP_SETTINGS
+#if JUNE17_ADOPTIONS
+                                    else if (pcs_ptr->enc_mode <= ENC_M7) {
+#else
                                     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
                                         pcs_ptr->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
                                         pcs_ptr->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
 #else

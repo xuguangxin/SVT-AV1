@@ -1563,29 +1563,43 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #else
     else if (pcs_ptr->enc_mode <= ENC_M4)
 #endif
+#if JUNE17_ADOPTIONS
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 3 : 5;
+#else
 #if JUNE8_ADOPTIONS
         nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 4 : 5;
 #else
         nics_scling_level = 5;
+#endif
 #endif
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M3)
 #else
     else if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
+#if JUNE17_ADOPTIONS
+        nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 3 : 7;
+#else
         nics_scling_level = 7;
+#endif
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M4)
 #else
     else if (pcs_ptr->enc_mode <= ENC_M6)
 #endif
+#endif
         nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 7 : 8;
+#if !JUNE17_ADOPTIONS
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     else if (pcs_ptr->enc_mode <= ENC_M7)
 #endif
         nics_scling_level = 8;
+#endif
     else
         nics_scling_level = pcs_ptr->parent_pcs_ptr->sc_content_detected ? 9 : 8;
 #else

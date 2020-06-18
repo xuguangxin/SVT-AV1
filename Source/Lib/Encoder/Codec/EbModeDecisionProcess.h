@@ -817,6 +817,9 @@ typedef struct ModeDecisionContext {
     uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES];
     uint32_t txt_prob[TXT_DEPTH_DELTA_NUM][TX_TYPES];
 #endif
+#if ADD_SKIP_INTRA_SIGNAL
+    uint8_t skip_intra;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

@@ -5914,6 +5914,10 @@ void  inject_intra_candidates(
     SuperBlock                   *sb_ptr,
     EbBool                        dc_cand_only_flag,
     uint32_t                     *candidate_total_cnt){
+#if ADD_SKIP_INTRA_SIGNAL
+    if (context_ptr->skip_intra)
+        return;
+#endif
     (void)scs_ptr;
     (void)sb_ptr;
     FrameHeader *frm_hdr = &pcs_ptr->parent_pcs_ptr->frm_hdr;
@@ -6143,6 +6147,10 @@ void  inject_filter_intra_candidates(
     ModeDecisionContext          *context_ptr,
     uint32_t                     *candidate_total_cnt){
 
+#if ADD_SKIP_INTRA_SIGNAL
+    if (context_ptr->skip_intra)
+        return;
+#endif
     FilterIntraMode             intra_mode_start = FILTER_DC_PRED;
     FilterIntraMode             intra_mode_end   = FILTER_INTRA_MODES;
 

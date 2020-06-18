@@ -130,6 +130,9 @@ void* set_me_hme_params_oq(
 #if M1_COMBO_2 || M2_COMBO_2
             if (pcs_ptr->enc_mode <= ENC_M0) {
 #else
+#if JUNE17_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M3) {
+#else
 #if JUNE11_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M1) {
 #else
@@ -148,6 +151,7 @@ void* set_me_hme_params_oq(
 #endif
 #endif
 #endif
+#endif
 #else
             if (pcs_ptr->enc_mode <= ENC_M3) {
 #endif
@@ -159,6 +163,7 @@ void* set_me_hme_params_oq(
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 800;
 #endif
             }
+#if !JUNE17_ADOPTIONS
 #if MAY12_ADOPTIONS
 #if JUNE8_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M2) {
@@ -168,6 +173,7 @@ void* set_me_hme_params_oq(
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 175;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 700;
             }
+#endif
 #endif
 #if M8_HME_ME
 #if !JUNE8_ADOPTIONS
@@ -201,10 +207,14 @@ void* set_me_hme_params_oq(
 #if APR23_4AM_M6_ADOPTIONS && !APR25_10AM_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
+#if JUNE17_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if PRESET_SHIFITNG
             else if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #endif
 #endif
 #if MAY19_ADOPTIONS
@@ -214,6 +224,12 @@ void* set_me_hme_params_oq(
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 150;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 450;
 #endif
+            }
+#endif
+#if JUNE17_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M6) {
+                me_context_ptr->search_area_width = me_context_ptr->search_area_height = 100;
+                me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 400;
             }
 #endif
 #if APR23_4AM_M6_ADOPTIONS && !APR25_10AM_ADOPTIONS
@@ -334,10 +350,14 @@ void* set_me_hme_params_oq(
     }
 #endif
 #if APR25_1PM_ADOPTIONS
+#if JUNE17_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if PRESET_SHIFITNG
     else if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #endif
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 32;
     me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 128;
@@ -880,10 +900,14 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
 #if MAY19_ADOPTIONS
+#if JUNE17_ADOPTIONS
+            if (enc_mode <= ENC_M5)
+#else
 #if PRESET_SHIFITNG
             if (enc_mode <= ENC_M4)
 #else
             if (enc_mode <= ENC_M6)
+#endif
 #endif
 #else
 #if MAY12_ADOPTIONS
@@ -920,10 +944,14 @@ EbErrorType signal_derivation_me_kernel_oq(
             else
                 context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
 #if MAY19_ADOPTIONS
+#if JUNE17_ADOPTIONS
+        else if (enc_mode <= ENC_M5)
+#else
 #if PRESET_SHIFITNG
         else if (enc_mode <= ENC_M4)
 #else
         else if (enc_mode <= ENC_M6)
+#endif
 #endif
 #else
 #if PRESETS_SHIFT

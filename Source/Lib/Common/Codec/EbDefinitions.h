@@ -546,6 +546,10 @@ extern "C" {
 
 #define BWD_ALTREF_PA_ME_CAND_FIX 1 // (BWD, ALT) prep bug fix
 
+#define JUNE17_ADOPTIONS        1 // New presets (M1-M7)
+#define NEW_NSQ_RED_LEVEL       1 // Add new threshold level for NSQ cycle reduction
+#define ADD_SKIP_INTRA_SIGNAL   1 // Add ability to skip intra candidate injection
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
