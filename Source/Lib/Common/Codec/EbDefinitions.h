@@ -526,7 +526,7 @@ extern "C" {
 #define TPL_SW_UPDATE           1 // enable tpl for end of clip
 #define TPL_SC_ON               1 // enable tpl for SC
 
-#define IMPROVE_SUB_PEL       1 // Perform 1/4-Pel and 1/8-Pel refinement around multiple points (~top N best positions):
+#define IMPROVE_SUB_PEL       1 // Add the ability to perform 1/4-Pel and 1/8-Pel refinement around multiple points (~top N best positions=8), and perform 1/2-Pel ~8 best full positions
 #if IMPROVE_SUB_PEL
 #define IMPROVE_HALF_PEL    1
 #define IMPROVE_QUARTER_PEL 1
