@@ -1258,7 +1258,9 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
                   ref_pic_ptr->stride_bit_inc_y,
                   ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1),
                   ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1));
-
+#if MEM_OPT_10bit
+        if (pcs_ptr->hbd_mode_decision != EB_10_BIT_MD) {
+#endif
         un_pack2d((uint16_t *)ref_pic_16bit_ptr->buffer_cb,
                   ref_pic_16bit_ptr->stride_cb,
                   ref_pic_ptr->buffer_cb,
@@ -1276,6 +1278,9 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
                   ref_pic_ptr->stride_bit_inc_cr,
                   (ref_pic_16bit_ptr->width + (ref_pic_ptr->origin_x << 1)) >> 1,
                   (ref_pic_16bit_ptr->height + (ref_pic_ptr->origin_y << 1)) >> 1);
+#if MEM_OPT_10bit
+        }
+#endif
     }
     if ((scs_ptr->static_config.encoder_16bit_pipeline) && (!is_16bit)) {
         // Y samples
