@@ -1524,7 +1524,245 @@ uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
 };
 #endif
 #endif
+#if SOFT_CYCLES_REDUCTION
+void set_inter_inter_distortion_based_reference_pruning_controls(
+    ModeDecisionContext *mdctxt, uint8_t inter_inter_distortion_based_reference_pruning_mode) {
+    RefPruningControls *ref_pruning_ctrls = &mdctxt->ref_pruning_ctrls;
 
+    switch (inter_inter_distortion_based_reference_pruning_mode) {
+    case 0: ref_pruning_ctrls->inter_to_inter_pruning_enabled = 0; break;
+    case 1:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 7;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = MR_MODE ? 7 : 0;
+#else
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 7;
+#endif
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 7;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 7;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
+
+        break;
+    case 2:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 6;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 6;
+#endif
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 6;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 6;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 6;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
+        break;
+    case 3:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 5;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 5;
+#endif
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 5;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 5;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 5;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
+        break;
+    case 4:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 4;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 4;
+#endif
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 4;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 4;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 4;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
+        break;
+    case 5:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 3;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 3;
+#endif
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 3;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 3;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 3;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
+
+        break;
+    case 6:
+        ref_pruning_ctrls->inter_to_inter_pruning_enabled = 1;
+
+        ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 2;
+        ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
+        ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 2;
+#endif
+        ref_pruning_ctrls->best_refs[WARP_GROUP]          = 2;
+        ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 2;
+        ref_pruning_ctrls->best_refs[PRED_ME_GROUP]       = 2;
+
+        ref_pruning_ctrls->closest_refs[PA_ME_GROUP]         = 0;
+        ref_pruning_ctrls->closest_refs[UNI_3x3_GROUP]       = 0;
+        ref_pruning_ctrls->closest_refs[BI_3x3_GROUP]        = 1;
+#if OPTIMIZE_NEAREST_NEW_NEAR
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 1;
+#else
+        ref_pruning_ctrls->closest_refs[NRST_NEW_NEAR_GROUP] = 0;
+#endif
+        ref_pruning_ctrls->closest_refs[WARP_GROUP]          = 0;
+        ref_pruning_ctrls->closest_refs[NRST_NEAR_GROUP]     = 1;
+        ref_pruning_ctrls->closest_refs[PRED_ME_GROUP]       = 0;
+
+        break;
+    default: assert(0); break;
+    }
+}
+
+void soft_cycles_reduction_mrp(ModeDecisionContext *context_ptr, uint8_t *mrp_level) {
+    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
+    if (soft_cycle_red_ctrls->enabled){
+        if (soft_cycle_red_ctrls->mrp_th) {
+            // Set the bounds of pred_depth_refinement for array indexing
+            int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
+            pred_depth_refinement = MIN(pred_depth_refinement, 2);
+            pred_depth_refinement = MAX(pred_depth_refinement, -2);
+            pred_depth_refinement += 2;
+            if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->mrp_th) {
+                *mrp_level = 6;
+            }
+        }
+    }
+}
+void soft_cycles_reduction_compound(ModeDecisionContext *context_ptr, uint8_t *compound_level) {
+    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
+    if (soft_cycle_red_ctrls->enabled){
+        if (soft_cycle_red_ctrls->compound_th) {
+            // Set the bounds of pred_depth_refinement for array indexing
+            int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
+            pred_depth_refinement = MIN(pred_depth_refinement, 2);
+            pred_depth_refinement = MAX(pred_depth_refinement, -2);
+            pred_depth_refinement += 2;
+            if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->compound_th) {
+                *compound_level = 0;
+            }
+        }
+    }
+}
+void soft_cycles_reduction_nics(ModeDecisionContext *context_ptr, uint32_t *nics_div) {
+    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
+    if (soft_cycle_red_ctrls->enabled) {
+        if (soft_cycle_red_ctrls->nics_th) {
+            // Set the bounds of pred_depth_refinement for array indexing
+            int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
+            pred_depth_refinement = MIN(pred_depth_refinement, 2);
+            pred_depth_refinement = MAX(pred_depth_refinement, -2);
+            pred_depth_refinement += 2;
+            if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->nics_th) {
+                *nics_div = 8;
+            }
+        }
+    }
+}
+void soft_cycles_reduction_sq_weight(ModeDecisionContext *context_ptr, uint32_t *sq_weight) {
+    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
+    if (soft_cycle_red_ctrls->enabled) {
+        if (soft_cycle_red_ctrls->sq_weight_th) {
+            if (context_ptr->blk_geom->shape != PART_N) {
+                // Set the bounds of pred_depth_refinement for array indexing
+                int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
+                pred_depth_refinement = MIN(pred_depth_refinement, 2);
+                pred_depth_refinement = MAX(pred_depth_refinement, -2);
+                pred_depth_refinement += 2;
+                if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->sq_weight_th)
+                    *sq_weight = *sq_weight - ((*sq_weight * (uint32_t)soft_cycle_red_ctrls->sq_weight_th) / DEPTH_PROB_PRECISION);
+            }
+        }
+    }
+}
+
+#endif
 void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     // minimum nics allowed
     uint32_t min_nics = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 1;
@@ -3458,7 +3696,20 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             (context_ptr->md_stage_2_count[CAND_CLASS_8] + 1) >> 1;
 #endif
     }
-
+#if SOFT_CYCLES_REDUCTION
+    uint32_t nics_div = 0;
+    soft_cycles_reduction_nics(context_ptr, &nics_div);
+    if (nics_div) {
+        for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
+            if (context_ptr->md_stage_1_count[cidx])
+                context_ptr->md_stage_1_count[cidx] = MAX(1, (context_ptr->md_stage_1_count[cidx] / nics_div));
+            if (context_ptr->md_stage_2_count[cidx])
+                context_ptr->md_stage_2_count[cidx] = MAX(1, (context_ptr->md_stage_2_count[cidx] / nics_div));
+            if (context_ptr->md_stage_3_count[cidx])
+                context_ptr->md_stage_3_count[cidx] = MAX(1, (context_ptr->md_stage_2_count[cidx] / nics_div));
+        }
+    }
+#endif
     // Step 3: update count for md_stage_1 and d_stage_2 if bypassed (no NIC
     // setting should be done beyond this point)
     context_ptr->md_stage_2_count[CAND_CLASS_0] = context_ptr->bypass_md_stage_1[CAND_CLASS_0]
@@ -11052,6 +11303,101 @@ EbErrorType signal_derivation_block(
     EbErrorType return_error = EB_ErrorNone;
 
 #if INTER_COMP_REDESIGN
+#if SOFT_CYCLES_REDUCTION
+    // Set inter_inter_distortion_based_reference_pruning
+    if (pcs->slice_type != I_SLICE) {
+        if (context_ptr->pd_pass == PD_PASS_0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else if (context_ptr->pd_pass == PD_PASS_1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#if MAY23_M0_ADOPTIONS
+#if PRUNING_PER_INTER_TYPE
+#if !REDUCE_MR_COMP_CANDS
+        else if (MR_MODE)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
+#if SHUT_FEATURE_INTERACTIONS
+        else if (EB_TRUE)
+#else
+#if !JUNE15_ADOPTIONS
+#if NEW_MRP_SETTINGS
+        else if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
+        else if (enc_mode <= ENC_M0)
+#else
+        else if (MR_MODE || (pcs->parent_pcs_ptr->enc_mode <= ENC_M0 && !pcs->parent_pcs_ptr->sc_content_detected))
+#endif
+#endif
+            context_ptr->inter_inter_distortion_based_reference_pruning = 1;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+#else
+       else if (enc_mode <= ENC_M0)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#endif
+#else
+#if MAY19_ADOPTIONS
+        else if (MR_MODE)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
+#if MAR25_ADOPTIONS
+#if MAY16_7PM_ADOPTIONS
+        else if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
+#if MAY12_ADOPTIONS
+        else if (enc_mode <= ENC_M0)
+#else
+#if PRESETS_SHIFT
+#if M1_COMBO_1 || NEW_M1_CAND
+        else if (enc_mode <= ENC_M0 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#else
+        else if (enc_mode <= ENC_M2 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
+#else
+        else if (enc_mode <= ENC_M3 || pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#endif
+#endif
+#endif
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#if !MAY19_ADOPTIONS
+#if M1_COMBO_1 || NEW_M1_CAND
+        else if (enc_mode <= ENC_M1)
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#endif
+#endif
+        else
+#if M2_COMBO_2
+            context_ptr->inter_inter_distortion_based_reference_pruning = 5;
+#else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 3;
+#endif
+#else
+        else
+            context_ptr->inter_inter_distortion_based_reference_pruning = 0; // 3 as default mode
+#endif
+#endif
+    }
+    else {
+        context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+    }
+    soft_cycles_reduction_mrp(context_ptr, & context_ptr->inter_inter_distortion_based_reference_pruning);
+    set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
+
+
+    // set compound_types_to_try
+    uint8_t compound_mode = pcs->parent_pcs_ptr->compound_mode;
+    if (context_ptr->pd_pass == PD_PASS_0)
+        set_inter_comp_controls(context_ptr, 0);
+    else if (context_ptr->pd_pass == PD_PASS_1)
+        set_inter_comp_controls(context_ptr,0);
+    else {
+        soft_cycles_reduction_compound(context_ptr, &compound_mode);
+        set_inter_comp_controls(context_ptr, compound_mode);
+    }
+#else
         // set compound_types_to_try
     if (context_ptr->pd_pass == PD_PASS_0)
         set_inter_comp_controls(context_ptr, 0);
@@ -11059,7 +11405,7 @@ EbErrorType signal_derivation_block(
         set_inter_comp_controls(context_ptr,0);
     else
         set_inter_comp_controls(context_ptr,pcs->parent_pcs_ptr->compound_mode);
-
+#endif
     context_ptr->compound_types_to_try = context_ptr->inter_comp_ctrls.enabled ? MD_COMP_WEDGE : MD_COMP_AVG;
 #if !MAY12_ADOPTIONS
 #if APR22_ADOPTIONS
@@ -12978,6 +13324,9 @@ uint8_t update_skip_nsq_shapes(
     // use an aggressive threshold for QP 20
     if (scs_ptr->static_config.qp <= QP_20) sq_weight += AGGRESSIVE_OFFSET_1;
 #endif
+#endif
+#if SOFT_CYCLES_REDUCTION
+   soft_cycles_reduction_sq_weight(context_ptr, &sq_weight);
 #endif
 #if !SHUT_SQ_WEIGHT_H4_V4_FILTER
     // use a conservative threshold for H4, V4 blocks

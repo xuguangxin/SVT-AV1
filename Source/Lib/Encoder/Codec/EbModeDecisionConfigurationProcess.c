@@ -1875,7 +1875,11 @@ void *mode_decision_configuration_kernel(void *input_ptr) {
 #endif
 #if ADAPTIVE_DEPTH_CR
         // Init pred_depth selection
+#if SOFT_CYCLES_REDUCTION
+        memset(pcs_ptr->pred_depth_count, 0, sizeof(uint32_t) * DEPTH_DELTA_NUM * (NUMBER_OF_SHAPES-1));
+#else
         memset(pcs_ptr->pred_depth_count, 0, sizeof(uint32_t) * DEPTH_DELTA_NUM);
+#endif
 #endif
 #if ADAPTIVE_TXT_CR
         // Init tx_type selection

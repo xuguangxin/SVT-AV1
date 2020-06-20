@@ -207,6 +207,16 @@ typedef struct  NsqCycleRControls {
     uint16_t th;  // Threshold to bypass nsq <the higher th the higher speed>
 }NsqCycleRControls;
 #endif
+#if SOFT_CYCLES_REDUCTION
+typedef struct  SoftCycleRControls {
+    uint8_t enabled; // On/Off feature control
+    uint16_t sq_weight_th;  // Threshold adjust the sq_weight <the higher th the higher speed>
+    uint16_t skip_nsq_th;  // Threshold to bypass nsq <the higher th the higher speed>
+    uint16_t nics_th;  // Threshold to adjust nics <the higher th the higher speed>
+    uint16_t mrp_th;  // Threshold to adjust mrp <the higher th the higher speed>
+    uint16_t compound_th;  // Threshold to adjust compound <the higher th the higher speed>
+}SoftCycleRControls;
+#endif
 #if DEPTH_CYCLES_REDUCTION
 typedef struct  DepthCycleRControls {
     uint8_t enabled; // On/Off feature control
@@ -765,6 +775,9 @@ typedef struct ModeDecisionContext {
 #if COEFF_BASED_TXS_BYPASS
     TxsCycleRControls txs_cycles_red_ctrls;
 #endif
+#if SOFT_CYCLES_REDUCTION
+    SoftCycleRControls soft_cycles_red_ctrls;
+#endif
 #if M8_4x4
     uint8_t disallow_4x4;
 #endif
@@ -810,8 +823,17 @@ typedef struct ModeDecisionContext {
     uint16_t part_prob[NUMBER_OF_SHAPES-1][FB_NUM][SSEG_NUM];
 #endif
 #if ADAPTIVE_DEPTH_CR
+#if SOFT_CYCLES_REDUCTION
+    uint32_t pred_depth_count[DEPTH_DELTA_NUM][NUMBER_OF_SHAPES-1];
+    uint32_t depth_prob[DEPTH_DELTA_NUM];
+    uint32_t soft_prob[DEPTH_DELTA_NUM][NUMBER_OF_SHAPES-1];
+#else
     uint32_t pred_depth_count[DEPTH_DELTA_NUM];
     uint32_t depth_prob[DEPTH_DELTA_NUM];
+#if SOFT_CYCLES_REDUCTION
+    uint32_t soft_prob[DEPTH_DELTA_NUM];
+#endif
+#endif
 #endif
 #if ADAPTIVE_TXT_CR
     uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES];

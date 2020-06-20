@@ -551,7 +551,12 @@ extern "C" {
 #define NEW_NSQ_RED_LEVEL       1 // Add new threshold level for NSQ cycle reduction
 #define ADD_SKIP_INTRA_SIGNAL   1 // Add ability to skip intra candidate injection
 
+#define SOFT_CYCLES_REDUCTION 1 // Use pred_depth/part probabilities to reduce the complexity of a given block.
+#if SOFT_CYCLES_REDUCTION
+#define DEPTH_PROB_PRECISION 10000
 #endif
+#endif
+
 // END  SVT_01 /////////////////////////////////////////////////////////
 
 #if DECOUPLE_ME_RES

@@ -1367,8 +1367,13 @@ void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlS
                     ->ref_part_cnt, pcs_ptr->part_cnt, sizeof(uint32_t) * (NUMBER_OF_SHAPES-1) * FB_NUM *SSEG_NUM);
 #endif
 #if ADAPTIVE_DEPTH_CR
+#if SOFT_CYCLES_REDUCTION
+    memcpy(((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
+        ->ref_pred_depth_count, pcs_ptr->pred_depth_count, sizeof(uint32_t) * DEPTH_DELTA_NUM * (NUMBER_OF_SHAPES-1));
+#else
     memcpy(((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
         ->ref_pred_depth_count, pcs_ptr->pred_depth_count, sizeof(uint32_t) * DEPTH_DELTA_NUM);
+#endif
 #endif
 #if ADAPTIVE_TXT_CR
     memcpy(((EbReferenceObject *)pcs_ptr->parent_pcs_ptr->reference_picture_wrapper_ptr->object_ptr)
@@ -1460,6 +1465,7 @@ void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
 }
 #endif
 #if MD_REFERENCE_MASKING
+#if !SOFT_CYCLES_REDUCTION
 #if PRUNING_PER_INTER_TYPE
 void set_inter_inter_distortion_based_reference_pruning_controls(
     ModeDecisionContext *mdctxt, uint8_t inter_inter_distortion_based_reference_pruning_mode) {
@@ -1677,6 +1683,7 @@ void set_inter_inter_distortion_based_reference_pruning_controls(ModeDecisionCon
         break;
     }
 }
+#endif
 #endif
 void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_intra_distortion_based_reference_pruning_mode) {
 
@@ -2491,6 +2498,81 @@ void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_c
 #endif
 #endif
 
+#if SOFT_CYCLES_REDUCTION
+void set_soft_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t soft_cycles_red_mode) {
+    SoftCycleRControls*soft_cycle_red_ctrls = &mdctxt->soft_cycles_red_ctrls;
+    switch (soft_cycles_red_mode)
+    {
+    case 0: // soft_cycles_reduction Off
+        soft_cycle_red_ctrls->enabled = 0;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 0;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 1:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 50;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 2:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 150;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 3:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 200;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 4:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 300;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 5:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 1000;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 6:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 1500;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    case 7:
+        soft_cycle_red_ctrls->enabled = 1;
+        soft_cycle_red_ctrls->sq_weight_th = 0;
+        soft_cycle_red_ctrls->skip_nsq_th = 2000;
+        soft_cycle_red_ctrls->nics_th = 0;
+        soft_cycle_red_ctrls->mrp_th = 0;
+        soft_cycle_red_ctrls->compound_th = 0;
+        break;
+    default:
+        assert(0);
+        break;
+    }
+}
+#endif
 #if DEPTH_CYCLES_REDUCTION
 void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t depth_cycles_red_mode) {
 
@@ -5008,6 +5090,31 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
 #endif
+#if SOFT_CYCLES_REDUCTION
+    uint8_t soft_cycles_red_level = 0;
+    if (pd_pass == PD_PASS_2) {
+
+        if (pcs_ptr->slice_type == I_SLICE) {
+            if (enc_mode <= ENC_M4)
+                soft_cycles_red_level = 0;
+            else
+                soft_cycles_red_level = 3; // TH 200
+        }
+        else {
+            if (enc_mode <= ENC_M0)
+                soft_cycles_red_level = 0;
+            if(enc_mode <= ENC_M1)
+                soft_cycles_red_level = 1; // TH 50
+            if(enc_mode <= ENC_M3)
+                soft_cycles_red_level = 2; // TH 150
+            if(enc_mode <= ENC_M4)
+                soft_cycles_red_level = 4; // TH 300
+            if(enc_mode <= ENC_M5)
+                soft_cycles_red_level = 6; // TH 1000
+        }
+    }
+    set_soft_cycle_redcution_controls(context_ptr, soft_cycles_red_level);
+#endif
     // Weighting (expressed as a percentage) applied to
     // square shape costs for determining if a and b
     // shapes should be skipped. Namely:
@@ -5497,6 +5604,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->intra_similar_mode = 1;
 
 #if MD_REFERENCE_MASKING
+#if !SOFT_CYCLES_REDUCTION
     // Set inter_inter_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
         if (pd_pass == PD_PASS_0)
@@ -5577,7 +5685,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->inter_inter_distortion_based_reference_pruning = 0;
     }
     set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
-
+#endif
     // Set inter_intra_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
         if (pd_pass == PD_PASS_0)
@@ -7495,8 +7603,29 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
             if (pcs_ptr->parent_pcs_ptr->disallow_HV4)
                 tot_d1_blocks = MIN(17, tot_d1_blocks);
 #endif
-
             d1_blocks_accumlated = 0;
+#if SOFT_CYCLES_REDUCTION
+            for (d1_block_idx = 0; d1_block_idx < tot_d1_blocks; d1_block_idx++) {
+                if (results_ptr->leaf_data_array[blk_index + d1_block_idx].consider_block) {
+                    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
+                    if (soft_cycle_red_ctrls->enabled) {
+                        if (soft_cycle_red_ctrls->skip_nsq_th) {
+                            const BlockGeom *nsq_blk_geom = get_blk_geom_mds(blk_index + d1_block_idx);
+                            if (nsq_blk_geom->shape != PART_N) {
+                                int8_t pred_depth_refinement = results_ptr->leaf_data_array[blk_index + d1_block_idx].pred_depth_refinement;
+                                pred_depth_refinement = MIN(pred_depth_refinement, 2);
+                                pred_depth_refinement = MAX(pred_depth_refinement, -2);
+                                pred_depth_refinement += 2;
+                                if (context_ptr->soft_prob[pred_depth_refinement][nsq_blk_geom->shape] < soft_cycle_red_ctrls->skip_nsq_th)
+                                    results_ptr->leaf_data_array[blk_index + d1_block_idx].consider_block = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            d1_blocks_accumlated = 0;
+#endif
+
             for (d1_block_idx = 0; d1_block_idx < tot_d1_blocks; d1_block_idx++)
                 d1_blocks_accumlated +=
                 results_ptr->leaf_data_array[blk_index + d1_block_idx].consider_block ? 1 : 0;
@@ -7505,7 +7634,11 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
                 if (results_ptr->leaf_data_array[blk_index].consider_block) {
 
                     results_ptr->leaf_data_array[results_ptr->leaf_count].mds_idx = blk_index;
+#if SOFT_CYCLES_REDUCTION
+                    results_ptr->leaf_data_array[results_ptr->leaf_count].tot_d1_blocks = d1_blocks_accumlated;
+#else
                     results_ptr->leaf_data_array[results_ptr->leaf_count].tot_d1_blocks = tot_d1_blocks;
+#endif
 #if TRACK_PER_DEPTH_DELTA
                     results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement = results_ptr->leaf_data_array[blk_index].pred_depth_refinement;
                     if (results_ptr->leaf_data_array[results_ptr->leaf_count].final_pred_depth_refinement == -8)
@@ -7947,7 +8080,13 @@ void generate_statistics_depth(
                         int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[blk_geom->sqi_mds].pred_depth_refinement;
                         pred_depth_refinement = MIN(pred_depth_refinement, 1);
                         pred_depth_refinement = MAX(pred_depth_refinement, -1);
+#if SOFT_CYCLES_REDUCTION
+                        uint8_t part_idx = part_to_shape[context_ptr->md_blk_arr_nsq[blk_index].part];
+                        context_ptr->pred_depth_count[pred_depth_refinement + 2][part_idx]+= (blk_geom->bwidth*blk_geom->bheight);
+
+#else
                         context_ptr->pred_depth_count[pred_depth_refinement + 2] += (blk_geom->bwidth*blk_geom->bheight);
+#endif
                     }
                 }
             }
@@ -7962,34 +8101,77 @@ void generate_statistics_depth(
 /******************************************************
 * Generate probabilities for the depth_cycles_reduction
 ******************************************************/
-void generate_depth_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_ptr)
+void generate_depth_prob(PictureControlSet * pcs_ptr, ModeDecisionContext *context_ptr)
 {
     if (pcs_ptr->parent_pcs_ptr->slice_type != I_SLICE) {
+#if SOFT_CYCLES_REDUCTION
+        uint32_t pred_depth_count[DEPTH_DELTA_NUM][NUMBER_OF_SHAPES - 1] = { {0},{0},{0},{0},{0} };
+#else
         uint32_t pred_depth_count[DEPTH_DELTA_NUM] = { 0 };
+#endif
         uint32_t samples_num = 0;
         // Sum statistics from reference list0
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
             EbReferenceObject *ref_obj_l0 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
+#if SOFT_CYCLES_REDUCTION
+            for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
+                for (uint8_t part_idx = 0; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
+                    pred_depth_count[pred_depth][part_idx] += ref_obj_l0->ref_pred_depth_count[pred_depth][part_idx];
+                    samples_num += ref_obj_l0->ref_pred_depth_count[pred_depth][part_idx];
+                }
+            }
+#else
             for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++) {
                 pred_depth_count[pred_depth] += ref_obj_l0->ref_pred_depth_count[pred_depth];
                 samples_num += ref_obj_l0->ref_pred_depth_count[pred_depth];
             }
+#endif
         }
         // Sum statistics from reference list1
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
+#if SOFT_CYCLES_REDUCTION
+            for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
+                for (uint8_t part_idx = 0; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
+                    pred_depth_count[pred_depth][part_idx] += ref_obj_l1->ref_pred_depth_count[pred_depth][part_idx];
+                    samples_num += ref_obj_l1->ref_pred_depth_count[pred_depth][part_idx];
+                }
+            }
+#else
             for (uint8_t pred_depth = 0; pred_depth < 5; pred_depth++) {
                 pred_depth_count[pred_depth] += ref_obj_l1->ref_pred_depth_count[pred_depth];
                 samples_num += ref_obj_l1->ref_pred_depth_count[pred_depth];
             }
+#endif
         }
         // Generate the selection %
+#if SOFT_CYCLES_REDUCTION
+        for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
+            for (uint8_t part_idx = 0; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
+                context_ptr->soft_prob[pred_depth][part_idx] = (uint32_t)((pred_depth_count[pred_depth][part_idx] * (uint32_t)DEPTH_PROB_PRECISION) / (uint32_t)samples_num);
+            }
+        }
+        //Generate depth prob
+        for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
+            for (uint8_t part_idx = 1; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
+                pred_depth_count[pred_depth][0] += pred_depth_count[pred_depth][part_idx];
+            }
+        }
+        for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++)
+            context_ptr->depth_prob[pred_depth] = (uint32_t)((pred_depth_count[pred_depth][0] * (uint32_t)100) / (uint32_t)samples_num);
+#else
         for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++)
             context_ptr->depth_prob[pred_depth] = (uint32_t)((pred_depth_count[pred_depth] * (uint32_t)100) / (uint32_t)samples_num);
+#endif
 
     }
+#if SOFT_CYCLES_REDUCTION
+    else {
+        memcpy(context_ptr->soft_prob, intra_soft_cycles_reduction_th, sizeof(uint32_t) * DEPTH_DELTA_NUM * (NUMBER_OF_SHAPES - 1));
+    }
+#endif
 }
 #endif
 #if ADAPTIVE_NSQ_CR
@@ -9218,7 +9400,6 @@ static void build_starting_cand_block_array(SequenceControlSet *scs_ptr, Picture
             if (pcs_ptr->parent_pcs_ptr->disallow_HV4)
                 tot_d1_blocks = MIN(17, tot_d1_blocks);
 #endif
-
             for (uint32_t idx = 0; idx < tot_d1_blocks; ++idx) {
                 blk_geom = get_blk_geom_mds(blk_index);
 
@@ -9526,7 +9707,11 @@ void *enc_dec_kernel(void *input_ptr) {
         generate_nsq_prob(pcs_ptr, context_ptr->md_context);
 #endif
 #if ADAPTIVE_DEPTH_CR
+#if SOFT_CYCLES_REDUCTION
+        memset(context_ptr->md_context->pred_depth_count, 0, sizeof(uint32_t) * DEPTH_DELTA_NUM * (NUMBER_OF_SHAPES-1));
+#else
         memset(context_ptr->md_context->pred_depth_count, 0, sizeof(uint32_t) * DEPTH_DELTA_NUM);
+#endif
         generate_depth_prob(pcs_ptr, context_ptr->md_context);
 #endif
 #if ADAPTIVE_TXT_CR
@@ -10041,8 +10226,14 @@ void *enc_dec_kernel(void *input_ptr) {
 #endif
 #if ADAPTIVE_DEPTH_CR
         // Accumulate pred depth selection
+#if SOFT_CYCLES_REDUCTION
+        for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++)
+            for (uint8_t part_idx = 0; part_idx < (NUMBER_OF_SHAPES-1); part_idx++)
+                pcs_ptr->pred_depth_count[pred_depth][part_idx] += context_ptr->md_context->pred_depth_count[pred_depth][part_idx];
+#else
         for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++)
             pcs_ptr->pred_depth_count[pred_depth] += context_ptr->md_context->pred_depth_count[pred_depth];
+#endif
 #endif
 #if ADAPTIVE_TXT_CR
         // Accumulate tx_type selection

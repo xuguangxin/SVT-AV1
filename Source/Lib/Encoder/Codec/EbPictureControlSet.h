@@ -426,7 +426,11 @@ typedef struct PictureControlSet {
     uint32_t part_cnt[NUMBER_OF_SHAPES-1][FB_NUM][SSEG_NUM];
 #endif
 #if ADAPTIVE_DEPTH_CR
+#if SOFT_CYCLES_REDUCTION
+    uint32_t pred_depth_count[DEPTH_DELTA_NUM][NUMBER_OF_SHAPES-1];
+#else
     uint32_t pred_depth_count[DEPTH_DELTA_NUM];
+#endif
 #endif
 #if ADAPTIVE_TXT_CR
     uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES];
