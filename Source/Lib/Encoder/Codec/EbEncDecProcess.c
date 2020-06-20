@@ -5161,13 +5161,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else {
             if (enc_mode <= ENC_M0)
                 soft_cycles_red_level = 0;
-            if(enc_mode <= ENC_M1)
+            else if(enc_mode <= ENC_M1)
                 soft_cycles_red_level = 1; // TH 50
-            if(enc_mode <= ENC_M3)
+            else if(enc_mode <= ENC_M3)
                 soft_cycles_red_level = 2; // TH 150
-            if(enc_mode <= ENC_M4)
+            else if(enc_mode <= ENC_M4)
                 soft_cycles_red_level = 4; // TH 300
-            if(enc_mode <= ENC_M5)
+            else if(enc_mode <= ENC_M5)
                 soft_cycles_red_level = 6; // TH 1000
         }
     }
@@ -8250,19 +8250,32 @@ void generate_depth_prob(PictureControlSet * pcs_ptr, ModeDecisionContext *conte
         }
         // Generate the selection %
 #if SOFT_CYCLES_REDUCTION
+        uint32_t sum = 0;
+        printf("\nstart \n");
         for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
             for (uint8_t part_idx = 0; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
                 context_ptr->soft_prob[pred_depth][part_idx] = (uint32_t)((pred_depth_count[pred_depth][part_idx] * (uint32_t)DEPTH_PROB_PRECISION) / (uint32_t)samples_num);
+                sum += context_ptr->soft_prob[pred_depth][part_idx];
+                printf("%d\t", context_ptr->soft_prob[pred_depth][part_idx]);
             }
+            printf("\n");
         }
+        printf("\n");
+        printf("\nsum = %d\n",sum/100);
+        sum = 0;
         //Generate depth prob
         for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
             for (uint8_t part_idx = 1; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
                 pred_depth_count[pred_depth][0] += pred_depth_count[pred_depth][part_idx];
+                
             }
         }
-        for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++)
+        for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
             context_ptr->depth_prob[pred_depth] = (uint32_t)((pred_depth_count[pred_depth][0] * (uint32_t)100) / (uint32_t)samples_num);
+            sum += context_ptr->depth_prob[pred_depth];
+        }
+        printf("\n");
+        printf("\nsum2 = %d\n",sum);
 #else
         for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++)
             context_ptr->depth_prob[pred_depth] = (uint32_t)((pred_depth_count[pred_depth] * (uint32_t)100) / (uint32_t)samples_num);
