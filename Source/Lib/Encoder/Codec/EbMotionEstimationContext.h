@@ -593,6 +593,9 @@ typedef struct MeContext {
     int tf_block_col;
     uint16_t min_frame_size;
 #endif
+#if ON_OFF_FEATURE_MRP
+    uint8_t mrp_level;
+#endif
     // -------
 } MeContext;
 

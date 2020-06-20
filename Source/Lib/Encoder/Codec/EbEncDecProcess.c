@@ -1430,30 +1430,62 @@ void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) {
     {
     case 0:
         obmc_ctrls->enabled = 0;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->pme_best_ref = override_feature_level(mdctxt->mrp_level,0,0,0);
+#else
         obmc_ctrls->pme_best_ref = 0;
+#endif
         obmc_ctrls->me_count = 0;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->mvp_ref_count = override_feature_level(mdctxt->mrp_level,0,4,1);
+#else
         obmc_ctrls->mvp_ref_count = 0;
+#endif
         obmc_ctrls->near_count = 0;
         break;
     case 1:
         obmc_ctrls->enabled = 1;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->pme_best_ref = override_feature_level(mdctxt->mrp_level,0,0,0);
+#else
         obmc_ctrls->pme_best_ref = 0;
+#endif
         obmc_ctrls->me_count = ~0;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->mvp_ref_count = override_feature_level(mdctxt->mrp_level,4,4,1);
+#else
         obmc_ctrls->mvp_ref_count = 4;
+#endif
         obmc_ctrls->near_count = 3;
         break;
     case 2:
         obmc_ctrls->enabled = 1;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->pme_best_ref = override_feature_level(mdctxt->mrp_level,0,0,0);
+#else
         obmc_ctrls->pme_best_ref = 0;
+#endif
         obmc_ctrls->me_count = ~0;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->mvp_ref_count = override_feature_level(mdctxt->mrp_level,4,4,1);
+#else
         obmc_ctrls->mvp_ref_count = 4;
+#endif
         obmc_ctrls->near_count = 3;
         break;
     case 3:
         obmc_ctrls->enabled = 1;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->pme_best_ref = override_feature_level(mdctxt->mrp_level,1,0,0);
+#else
         obmc_ctrls->pme_best_ref = 1;
+#endif
         obmc_ctrls->me_count = 1;
+#if ON_OFF_FEATURE_MRP
+        obmc_ctrls->mvp_ref_count = override_feature_level(mdctxt->mrp_level,1,4,1);
+#else
         obmc_ctrls->mvp_ref_count = 1;
+#endif
         obmc_ctrls->near_count = 1;
         break;
     default:
@@ -2712,6 +2744,12 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     uint8_t enc_mode = pcs_ptr->enc_mode;
     uint8_t pd_pass = context_ptr->pd_pass;
+
+#if ON_OFF_FEATURE_MRP
+    // mrp level
+    context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->mrp_level ;
+#endif
+
 #if USE_M8_IN_PD1
     if (pd_pass == PD_PASS_1) {
         enc_mode = ENC_M8;
@@ -4568,9 +4606,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     // Set prune_ref_frame_for_rec_partitions
     if (pd_pass == PD_PASS_0)
+#if ON_OFF_FEATURE_MRP
+        context_ptr->prune_ref_frame_for_rec_partitions = override_feature_level(context_ptr->mrp_level,0,0,0);
+#else
         context_ptr->prune_ref_frame_for_rec_partitions = 0;
+#endif
     else if (pd_pass == PD_PASS_1)
+#if ON_OFF_FEATURE_MRP
+        context_ptr->prune_ref_frame_for_rec_partitions = override_feature_level(context_ptr->mrp_level,1,0,0);
+#else
         context_ptr->prune_ref_frame_for_rec_partitions = 1;
+#endif
     else
         if (sequence_control_set_ptr->static_config.prune_ref_rec_part == DEFAULT)
 #if PRESETS_SHIFT
@@ -4601,9 +4647,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 enc_mode <= ENC_M1)
 #endif
 #endif
+#if ON_OFF_FEATURE_MRP
+                context_ptr->prune_ref_frame_for_rec_partitions = override_feature_level(context_ptr->mrp_level,0,0,0);
+#else
                 context_ptr->prune_ref_frame_for_rec_partitions = 0;
+#endif
             else
+#if ON_OFF_FEATURE_MRP
+                context_ptr->prune_ref_frame_for_rec_partitions = override_feature_level(context_ptr->mrp_level,1,0,0);
+#else
                 context_ptr->prune_ref_frame_for_rec_partitions = 1;
+#endif
         else
             context_ptr->prune_ref_frame_for_rec_partitions =
             sequence_control_set_ptr->static_config.prune_ref_rec_part;
@@ -5608,9 +5662,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     // Set inter_inter_distortion_based_reference_pruning
     if (pcs_ptr->slice_type != I_SLICE) {
         if (pd_pass == PD_PASS_0)
+#if ON_OFF_FEATURE_MRP
+            context_ptr->inter_inter_distortion_based_reference_pruning = override_feature_level(context_ptr->mrp_level,0,0,0);
+#else
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
         else if (pd_pass == PD_PASS_1)
+#if ON_OFF_FEATURE_MRP
+            context_ptr->inter_inter_distortion_based_reference_pruning = override_feature_level(context_ptr->mrp_level,0,0,0);
+#else
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
 #if MAY23_M0_ADOPTIONS
 #if PRUNING_PER_INTER_TYPE
 #if !REDUCE_MR_COMP_CANDS
@@ -5623,16 +5685,28 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if !JUNE15_ADOPTIONS
 #if NEW_MRP_SETTINGS
         else if (enc_mode <= ENC_M0 && pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if ON_OFF_FEATURE_MRP
+            context_ptr->inter_inter_distortion_based_reference_pruning = override_feature_level(context_ptr->mrp_level,0,0,0);
+#else
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
 #endif
         else if (enc_mode <= ENC_M0)
 #else
         else if (MR_MODE || (enc_mode <= ENC_M0 && !pcs_ptr->parent_pcs_ptr->sc_content_detected))
 #endif
 #endif
+#if ON_OFF_FEATURE_MRP
+            context_ptr->inter_inter_distortion_based_reference_pruning = override_feature_level(context_ptr->mrp_level,1,0,0);
+#else
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;
+#endif
         else
+#if ON_OFF_FEATURE_MRP
+            context_ptr->inter_inter_distortion_based_reference_pruning = override_feature_level(context_ptr->mrp_level,4,0,0);
+#else
             context_ptr->inter_inter_distortion_based_reference_pruning = 4;
+#endif
 #else
        else if (enc_mode <= ENC_M0)
             context_ptr->inter_inter_distortion_based_reference_pruning = 0;
@@ -5682,7 +5756,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     }
     else {
+#if ON_OFF_FEATURE_MRP
+        context_ptr->inter_inter_distortion_based_reference_pruning = override_feature_level(context_ptr->mrp_level,0,0,0);
+#else
         context_ptr->inter_inter_distortion_based_reference_pruning = 0;
+#endif
     }
     set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
 #endif
@@ -5847,9 +5925,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
+#if ON_OFF_FEATURE_MRP
+        context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level,4,4,1);
+#else
         context_ptr->md_max_ref_count = 4;
+#endif
     else if (pd_pass == PD_PASS_1)
+#if ON_OFF_FEATURE_MRP
+        context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level,1,4,1);
+#else
         context_ptr->md_max_ref_count = 1;
+#endif
 #if M8_CAP_NUMBER_OF_REF_IN_MD
     else if(enc_mode <= ENC_M7)
         context_ptr->md_max_ref_count = 4;
@@ -5857,7 +5943,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_max_ref_count = pcs_ptr->parent_pcs_ptr->temporal_layer_index == 0 ? 4: 2;
 #else
     else
+#if ON_OFF_FEATURE_MRP
+        context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level,4,4,1);
+#else
         context_ptr->md_max_ref_count = 4;
+#endif
 #endif
 #if !PRUNING_PER_INTER_TYPE
 #if ADD_BEST_CAND_COUNT_SIGNAL
@@ -8111,7 +8201,11 @@ void generate_depth_prob(PictureControlSet * pcs_ptr, ModeDecisionContext *conte
 #endif
         uint32_t samples_num = 0;
         // Sum statistics from reference list0
+#if ON_OFF_FEATURE_MRP
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try; ref_idx++) {
+#else
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+#endif
             EbReferenceObject *ref_obj_l0 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
 #if SOFT_CYCLES_REDUCTION
@@ -8129,7 +8223,11 @@ void generate_depth_prob(PictureControlSet * pcs_ptr, ModeDecisionContext *conte
 #endif
         }
         // Sum statistics from reference list1
+#if ON_OFF_FEATURE_MRP
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try; ref_idx++) {
+#else
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+#endif
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
 #if SOFT_CYCLES_REDUCTION
@@ -8187,7 +8285,11 @@ void generate_nsq_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_
         // init stat
         memset(part_cnt, 0, sizeof(uint32_t) * (NUMBER_OF_SHAPES-1) * FB_NUM * SSEG_NUM);
         // Sum statistics from reference list0
+#if ON_OFF_FEATURE_MRP
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try; ref_idx++) {
+#else
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+#endif
             EbReferenceObject *ref_obj_l0 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
             for (partidx = 0; partidx < NUMBER_OF_SHAPES-1; partidx++) {
@@ -8200,7 +8302,11 @@ void generate_nsq_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_
             }
         }
         // Sum statistics from reference list1
+#if ON_OFF_FEATURE_MRP
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try; ref_idx++) {
+#else
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+#endif
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
             for (partidx = 0; partidx < NUMBER_OF_SHAPES-1; partidx++) {
@@ -8325,7 +8431,11 @@ void generate_txt_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_
         uint32_t txt_cnt[TXT_DEPTH_DELTA_NUM][TX_TYPES] = { {0},{0} };
         uint32_t samples_num = 0;
         // Sum statistics from reference list0
+#if ON_OFF_FEATURE_MRP
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try; ref_idx++) {
+#else
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list0_count_try; ref_idx++) {
+#endif
             EbReferenceObject *ref_obj_l0 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_0][ref_idx]->object_ptr;
             for (uint8_t depth_delta = 0; depth_delta < TXT_DEPTH_DELTA_NUM; depth_delta++) {
@@ -8336,7 +8446,11 @@ void generate_txt_prob(PictureControlSet * pcs_ptr,ModeDecisionContext *context_
             }
         }
         // Sum statistics from reference list1
+#if ON_OFF_FEATURE_MRP
+        for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try; ref_idx++) {
+#else
         for (uint8_t ref_idx = 0; ref_idx < pcs_ptr->parent_pcs_ptr->ref_list1_count_try; ref_idx++) {
+#endif
             EbReferenceObject *ref_obj_l1 =
                 (EbReferenceObject *)pcs_ptr->ref_pic_ptr_array[REF_LIST_1][ref_idx]->object_ptr;
             for (uint8_t depth_delta = 0; depth_delta < TXT_DEPTH_DELTA_NUM; depth_delta++) {

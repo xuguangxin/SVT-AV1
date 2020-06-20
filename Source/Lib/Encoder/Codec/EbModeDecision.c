@@ -1938,7 +1938,11 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                 obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARESTMV) ==
                 OBMC_CAUSAL;
 #if OBMC_FAST
+#if ON_OFF_FEATURE_MRP
+            is_obmc_allowed = context_ptr->obmc_ctrls.enabled == 0 ? 0 :
+#else
             is_obmc_allowed = context_ptr->obmc_ctrls.mvp_ref_count == 0 ? 0 :
+#endif
                 ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;
 #endif
 
@@ -2061,7 +2065,11 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
                     obmc_motion_mode_allowed(pcs_ptr, context_ptr, bsize, rf[0], rf[1], NEARMV) ==
                     OBMC_CAUSAL;
 #if OBMC_FAST
+#if ON_OFF_FEATURE_MRP
+                is_obmc_allowed = context_ptr->obmc_ctrls.enabled == 0 ? 0 :
+#else
                 is_obmc_allowed = context_ptr->obmc_ctrls.mvp_ref_count == 0 ? 0 :
+#endif
                     ref_idx > context_ptr->obmc_ctrls.mvp_ref_count - 1 ? 0 : is_obmc_allowed;
                 is_obmc_allowed = context_ptr->obmc_ctrls.near_count == 0 ? 0 :
                     drli > context_ptr->obmc_ctrls.near_count - 1 ? 0 : is_obmc_allowed;

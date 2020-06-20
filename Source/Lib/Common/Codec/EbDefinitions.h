@@ -554,6 +554,7 @@ extern "C" {
 #define SOFT_CYCLES_REDUCTION 1 // Use pred_depth/part probabilities to reduce the complexity of a given block.
 #if SOFT_CYCLES_REDUCTION
 #define DEPTH_PROB_PRECISION 10000
+#define  ON_OFF_FEATURE_MRP     1 // ON/OFF Feature MRP
 #endif
 #endif
 
@@ -1000,6 +1001,23 @@ typedef enum ATTRIBUTE_PACKED {
     COMPONENT_ALL       = 4, // Y+Cb+Cr
     COMPONENT_NONE      = 15
 } COMPONENT_TYPE;
+
+#if ON_OFF_FEATURE_MRP
+static INLINE uint8_t override_feature_level(uint8_t master_level, uint8_t input_val, uint8_t val_full, uint8_t val_off) {
+
+    uint8_t output_feature_level;
+    // Override the level when the master level is OFF or FULL
+    if (master_level == 0 /*master_level off*/)
+        output_feature_level = val_off;
+    else if (master_level == 1 /*master_level full*/)
+        output_feature_level = val_full;
+    else
+        // Do not override the level
+        output_feature_level = input_val;
+
+    return  output_feature_level;
+}
+#endif
 
 static INLINE int32_t clamp(int32_t value, int32_t low, int32_t high) {
     return value < low ? low : (value > high ? high : value);

@@ -223,6 +223,9 @@
 #define INTRA_ANGLE_DELTA_NEW_TOKEN "--enable-intra-angle-delta"
 #define PAETH_NEW_TOKEN "--enable-paeth"
 #define SMOOTH_NEW_TOKEN "--enable-smooth"
+#if 1//ON_OFF_FEATURE_MRP
+#define MRP_LEVEL_TOKEN "--mrp-level"
+#endif
 /**********************************
  * Set Cfg Functions
  **********************************/
@@ -396,6 +399,11 @@ static void set_enable_paeth_flag(const char *value, EbConfig *cfg) {
 static void set_enable_smooth_flag(const char *value, EbConfig *cfg) {
     cfg->enable_smooth = strtol(value, NULL, 0);
 };
+#if 1//ON_OFF_FEATURE_MRP
+static void set_mrp_level(const char *value, EbConfig *cfg) {
+    cfg->mrp_level = strtol(value, NULL, 0);
+};
+#endif
 static void set_enable_mfmv_flag(const char *value, EbConfig *cfg) {
     cfg->enable_mfmv = strtol(value, NULL, 0);
 };
@@ -922,7 +930,12 @@ ConfigEntry config_entry_specific[] = {
      "Wiener filter mode (0:OFF, 1: 3-Tap luma/ 3-Tap chroma, 2: 5-Tap luma/ 5-Tap chroma, 3: "
      "7-Tap luma/ 7-Tap chroma, -1: DEFAULT)",
      set_wn_filter_mode},
-
+#if 1//ON_OFF_FEATURE_MRP
+    {SINGLE_INPUT,
+     MRP_LEVEL_TOKEN,
+     "Multi reference frame levels( 0: OFF, 1: FULL, 2: Level1 .. 9: Level8,  -1: DEFAULT)",
+     set_mrp_level},
+#endif
     {SINGLE_INPUT,
      MFMV_ENABLE_NEW_TOKEN,
      "Enable motion field motion vector( 0: OFF, 1: ON, -1: DEFAULT)",
@@ -1281,7 +1294,9 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, RESTORATION_ENABLE_TOKEN, "RestorationFilter", set_enable_restoration_filter_flag},
     {SINGLE_INPUT, SG_FILTER_MODE_TOKEN, "SelfGuidedFilterMode", set_sg_filter_mode},
     {SINGLE_INPUT, WN_FILTER_MODE_TOKEN, "WienerFilterMode", set_wn_filter_mode},
-
+#if 1//ON_OFF_FEATURE_MRP
+    {SINGLE_INPUT, MRP_LEVEL_TOKEN, "MrpLevel", set_mrp_level},
+#endif
     {SINGLE_INPUT, MFMV_ENABLE_TOKEN, "Mfmv", set_enable_mfmv_flag},
     {SINGLE_INPUT, REDUNDANT_BLK_TOKEN, "RedundantBlock", set_enable_redundant_blk_flag},
     {SINGLE_INPUT, SPATIAL_SSE_FL_TOKEN, "SpatialSSEfl", set_spatial_sse_fl_flag},
@@ -1568,6 +1583,9 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->inter_intra_compound                      = DEFAULT;
     config_ptr->enable_paeth                              = DEFAULT;
     config_ptr->enable_smooth                             = DEFAULT;
+#if 1//ON_OFF_FEATURE_MRP
+    config_ptr->mrp_level                                 = DEFAULT;
+#endif
     config_ptr->enable_mfmv                               = DEFAULT;
     config_ptr->enable_redundant_blk                      = DEFAULT;
     config_ptr->spatial_sse_fl                            = DEFAULT;

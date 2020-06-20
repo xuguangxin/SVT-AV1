@@ -48,10 +48,17 @@ void global_motion_estimation(PictureParentControlSet *pcs_ptr, MeContext *conte
             num_of_ref_pic_to_search = 1;
         else
 #if MRP_CTRL
+#if ON_OFF_FEATURE_MRP
+            num_of_ref_pic_to_search = pcs_ptr->slice_type == P_SLICE
+            ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+            : list_index == REF_LIST_0 ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+            : pcs_ptr->mrp_ctrls.ref_list1_count_try;
+#else
             num_of_ref_pic_to_search = pcs_ptr->slice_type == P_SLICE
             ? pcs_ptr->ref_list0_count_try
             : list_index == REF_LIST_0 ? pcs_ptr->ref_list0_count_try
             : pcs_ptr->ref_list1_count_try;
+#endif
 #else
             num_of_ref_pic_to_search = pcs_ptr->slice_type == P_SLICE
                                            ? pcs_ptr->ref_list0_count

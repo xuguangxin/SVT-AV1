@@ -2095,7 +2095,9 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 {
     uint16_t subsampling_x = scs_ptr->subsampling_x;
     uint16_t subsampling_y = scs_ptr->subsampling_y;
-
+#if ON_OFF_FEATURE_MRP
+    scs_ptr->reference_count        = (uint8_t)scs_ptr->static_config.mrp_level == 0 ? 1: 4;
+#endif
     // Update picture width, and picture height
     if (scs_ptr->max_input_luma_width % MIN_BLOCK_SIZE) {
         scs_ptr->max_input_pad_right = MIN_BLOCK_SIZE - (scs_ptr->max_input_luma_width % MIN_BLOCK_SIZE);
@@ -2401,6 +2403,10 @@ void copy_api_from_app(
     scs_ptr->static_config.intra_angle_delta            = ((EbSvtAv1EncConfiguration*)config_struct)->intra_angle_delta;
     // inter intra compoound
     scs_ptr->static_config.inter_intra_compound         = ((EbSvtAv1EncConfiguration*)config_struct)->inter_intra_compound;
+#if ON_OFF_FEATURE_MRP
+    // multi reference frame
+    scs_ptr->static_config.mrp_level                    = ((EbSvtAv1EncConfiguration*)config_struct)->mrp_level;
+#endif
     // motion field motion vector
     scs_ptr->static_config.enable_mfmv                  = ((EbSvtAv1EncConfiguration*)config_struct)->enable_mfmv;
     // redundant block
@@ -3103,7 +3109,12 @@ static EbErrorType verify_settings(
         SVT_LOG("Error instance %u: Invalid Smooth flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->enable_smooth);
         return_error = EB_ErrorBadParameter;
     }
-
+#if ON_OFF_FEATURE_MRP
+    if (config->mrp_level < (int32_t)(-1) || config->mrp_level > 9) {
+      SVT_LOG("Error instance %u: Invalid mrp level [0..9 or -1 for auto], your input: %d\n", channel_number + 1, config->mrp_level);
+      return_error = EB_ErrorBadParameter;
+    }
+#endif
     if (config->enable_mfmv != 0 && config->enable_mfmv != 1 && config->enable_mfmv != -1) {
       SVT_LOG("Error instance %u: Invalid motion field motion vector flag [0/1 or -1 for auto], your input: %d\n", channel_number + 1, config->enable_mfmv);
       return_error = EB_ErrorBadParameter;
@@ -3294,6 +3305,9 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->inter_intra_compound = DEFAULT;
     config_ptr->enable_paeth = DEFAULT;
     config_ptr->enable_smooth = DEFAULT;
+#if ON_OFF_FEATURE_MRP
+    config_ptr->mrp_level = DEFAULT;
+#endif
     config_ptr->enable_mfmv = DEFAULT;
     config_ptr->enable_redundant_blk = DEFAULT;
     config_ptr->spatial_sse_fl = DEFAULT;

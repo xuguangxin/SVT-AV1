@@ -9966,10 +9966,17 @@ void integer_search_sb(
         } else {
 
 #if MRP_CTRL
+#if ON_OFF_FEATURE_MRP
+            num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
+                ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+                : (list_index == REF_LIST_0) ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+                : pcs_ptr->mrp_ctrls.ref_list1_count_try;
+#else
             num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
                 ? pcs_ptr->ref_list0_count_try
                 : (list_index == REF_LIST_0) ? pcs_ptr->ref_list0_count_try
                 : pcs_ptr->ref_list1_count_try;
+#endif
 #else
 
             num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
@@ -10461,12 +10468,21 @@ void prune_references_fp(
         }
         else {
 #if MRP_CTRL
+#if ON_OFF_FEATURE_MRP
+            num_of_ref_pic_to_search =
+                (pcs_ptr->slice_type == P_SLICE)
+                ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+                : (list_index == REF_LIST_0)
+                ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+                : pcs_ptr->mrp_ctrls.ref_list1_count_try;
+#else
             num_of_ref_pic_to_search =
                 (pcs_ptr->slice_type == P_SLICE)
                 ? pcs_ptr->ref_list0_count_try
                 : (list_index == REF_LIST_0)
                 ? pcs_ptr->ref_list0_count_try
                 : pcs_ptr->ref_list1_count_try;
+#endif
 #else
             num_of_ref_pic_to_search =
                 (pcs_ptr->slice_type == P_SLICE)
@@ -12260,11 +12276,19 @@ void construct_me_candidate_array(
     uint32_t ref_pic_index;
     for (list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
 #if MRP_CTRL
+#if ON_OFF_FEATURE_MRP
+        num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
+            ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+            : (list_index == REF_LIST_0)
+            ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+            : pcs_ptr->mrp_ctrls.ref_list1_count_try;
+#else
         num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
             ? pcs_ptr->ref_list0_count_try
             : (list_index == REF_LIST_0)
             ? pcs_ptr->ref_list0_count_try
             : pcs_ptr->ref_list1_count_try;
+#endif
 #else
         num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
             ? pcs_ptr->ref_list0_count
@@ -12301,10 +12325,18 @@ void construct_me_candidate_array(
         // (LAST3,BWD), (LAST3,ALT), (LAST3,ALT2)
         // (GOLD ,BWD), (GOLD,ALT ), (GOLD,ALT2 )
         for (first_list_ref_pict_idx = 0;
+#if ON_OFF_FEATURE_MRP
+            first_list_ref_pict_idx < pcs_ptr->mrp_ctrls.ref_list0_count_try;
+#else
             first_list_ref_pict_idx < pcs_ptr->ref_list0_count_try;
+#endif
             first_list_ref_pict_idx++) {
             for (second_list_ref_pict_idx = 0;
+#if ON_OFF_FEATURE_MRP
+                second_list_ref_pict_idx < pcs_ptr->mrp_ctrls.ref_list1_count_try;
+#else
                 second_list_ref_pict_idx < pcs_ptr->ref_list1_count_try;
+#endif
                 second_list_ref_pict_idx++) {
                     {
 
@@ -12328,7 +12360,11 @@ void construct_me_candidate_array(
 
         // 2nd set of BIPRED cand: (LAST,LAST2) (LAST,LAST3) (LAST,GOLD)
         for (first_list_ref_pict_idx = 1;
+#if ON_OFF_FEATURE_MRP
+            first_list_ref_pict_idx < pcs_ptr->mrp_ctrls.ref_list0_count_try;
+#else
             first_list_ref_pict_idx < pcs_ptr->ref_list0_count_try;
+#endif
             first_list_ref_pict_idx++) {
 
             if (context_ptr->hme_results[REF_LIST_0][0].do_ref &&
@@ -12346,7 +12382,11 @@ void construct_me_candidate_array(
         }
         // 3rd set of BIPRED cand: (BWD, ALT)
 #if BWD_ALTREF_PA_ME_CAND_FIX
+#if ON_OFF_FEATURE_MRP
+        if (pcs_ptr->mrp_ctrls.ref_list1_count_try == 3) {
+#else
         if (pcs_ptr->ref_list1_count_try == 3) {
+#endif
             if (context_ptr->hme_results[REF_LIST_1][0].do_ref &&
                 context_ptr->hme_results[REF_LIST_1][2].do_ref) {
 
@@ -13248,11 +13288,19 @@ EbErrorType motion_estimate_sb(
 
             for (list_index = REF_LIST_0; list_index <= num_of_list_to_search; ++list_index) {
 #if MRP_CTRL
+#if ON_OFF_FEATURE_MRP
+                num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
+                    ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+                    : (list_index == REF_LIST_0)
+                    ? pcs_ptr->mrp_ctrls.ref_list0_count_try
+                    : pcs_ptr->mrp_ctrls.ref_list1_count_try;
+#else
                 num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
                     ? pcs_ptr->ref_list0_count_try
                     : (list_index == REF_LIST_0)
                     ? pcs_ptr->ref_list0_count_try
                     : pcs_ptr->ref_list1_count_try;
+#endif
 #else
                 num_of_ref_pic_to_search = (pcs_ptr->slice_type == P_SLICE)
                                                ? pcs_ptr->ref_list0_count

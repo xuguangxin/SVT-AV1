@@ -176,7 +176,9 @@ EbErrorType eb_sequence_control_set_ctor(SequenceControlSet *scs_ptr, EbPtr obje
         scs_ptr->seq_header.enable_warped_motion = (uint8_t)scs_ptr->static_config.enable_warped_motion;
 
     scs_ptr->film_grain_random_seed = 7391;
+#if !ON_OFF_FEATURE_MRP
     scs_ptr->reference_count        = 4;
+#endif
 
     return EB_ErrorNone;
 }

@@ -5693,7 +5693,12 @@ void perform_md_reference_pruning(PictureControlSet *pcs_ptr, ModeDecisionContex
     }
 #endif
 #if M8_CLEAN_UP
+#if ON_OFF_FEATURE_MRP
+    if ((!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled) ||
+        (pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list0_count_try == 1 && pcs_ptr->parent_pcs_ptr->mrp_ctrls.ref_list1_count_try == 1))
+#else
     if ((!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled) || (pcs_ptr->parent_pcs_ptr->ref_list0_count_try == 1 && pcs_ptr->parent_pcs_ptr->ref_list1_count_try == 1))
+#endif
 #else
     if (!context_ptr->ref_pruning_ctrls.inter_to_inter_pruning_enabled && !context_ptr->ref_pruning_ctrls.intra_to_inter_pruning_enabled)
 #endif
@@ -11220,8 +11225,13 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->enabled = 0;
         inter_comp_ctrls->similar_predictions = 1;
         inter_comp_ctrls->similar_predictions_th = 0;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,1,4,1);
+#else
         inter_comp_ctrls->mrp_pruning_w_distortion  = 1;
         inter_comp_ctrls->mrp_pruning_w_distance = 1;
+#endif
         inter_comp_ctrls->wedge_search_mode = 1;
 #if MAY12_ADOPTIONS
         inter_comp_ctrls->wedge_variance_th = 0;
@@ -11234,8 +11244,13 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->enabled = 1;
         inter_comp_ctrls->similar_predictions = 0;
         inter_comp_ctrls->similar_predictions_th = 2;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,4,4,1);
+#else
         inter_comp_ctrls->mrp_pruning_w_distortion  = 0;
         inter_comp_ctrls->mrp_pruning_w_distance = 4;
+#endif
         inter_comp_ctrls->wedge_search_mode = 1;
 #if MAY12_ADOPTIONS
         inter_comp_ctrls->wedge_variance_th = 0;
@@ -11253,8 +11268,13 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->enabled = 1;
         inter_comp_ctrls->similar_predictions = 1;
         inter_comp_ctrls->similar_predictions_th = 0;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,0,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,4,4,1);
+#else
         inter_comp_ctrls->mrp_pruning_w_distortion = 0;
         inter_comp_ctrls->mrp_pruning_w_distance = 4;
+#endif
         inter_comp_ctrls->wedge_search_mode = 1;
         inter_comp_ctrls->wedge_variance_th = 0;
         inter_comp_ctrls->similar_previous_blk = 2;
@@ -11263,8 +11283,13 @@ void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mod
         inter_comp_ctrls->enabled = 1;
         inter_comp_ctrls->similar_predictions = 1;
         inter_comp_ctrls->similar_predictions_th = 0;
+#if ON_OFF_FEATURE_MRP
+        inter_comp_ctrls->mrp_pruning_w_distortion  = override_feature_level (mdctxt->mrp_level,1,0,0);
+        inter_comp_ctrls->mrp_pruning_w_distance = override_feature_level (mdctxt->mrp_level,1,4,1);
+#else
         inter_comp_ctrls->mrp_pruning_w_distortion = 1;
         inter_comp_ctrls->mrp_pruning_w_distance = 1;
+#endif
         inter_comp_ctrls->wedge_search_mode = 1;
         inter_comp_ctrls->wedge_variance_th = 0;
         inter_comp_ctrls->similar_previous_blk = 2;

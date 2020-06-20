@@ -842,6 +842,9 @@ typedef struct ModeDecisionContext {
 #if ADD_SKIP_INTRA_SIGNAL
     uint8_t skip_intra;
 #endif
+#if ON_OFF_FEATURE_MRP
+    uint8_t mrp_level;
+#endif
 } ModeDecisionContext;
 
 typedef void (*EbAv1LambdaAssignFunc)(uint32_t *fast_lambda, uint32_t *full_lambda,

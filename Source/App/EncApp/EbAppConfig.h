@@ -508,6 +508,9 @@ typedef struct EbConfig {
     PredictionStructureConfigEntry pred_struct[1 << (MAX_HIERARCHICAL_LEVEL - 1)];
     EbBool enable_manual_pred_struct;
     int32_t manual_pred_struct_entry_num;
+#if 1//ON_OFF_FEATURE_MRP
+    int                 mrp_level;
+#endif
 } EbConfig;
 
 extern void eb_config_ctor(EbConfig *config_ptr);

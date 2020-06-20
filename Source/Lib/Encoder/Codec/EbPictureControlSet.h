@@ -73,6 +73,12 @@ typedef struct MacroblockPlane {
     const int16_t *dequant_qtx;
 } MacroblockPlane;
 
+#if ON_OFF_FEATURE_MRP
+typedef struct  MrpControls {
+    uint8_t          ref_list0_count_try;  //the number of references to try (in ME/MD) in list0. should be <= ref_list0_count
+    uint8_t          ref_list1_count_try;  //the number of references to try (in ME/MD) in list1. should be <= ref_list1_count
+}MrpControls;
+#endif
 // The Quants structure is used only for internal quantizer setup in
 // av1_quantize.c.
 // All of its fields use the same coefficient shift/scaling at TX.
@@ -544,9 +550,13 @@ typedef struct PictureParentControlSet {
     EbBool           is_used_as_reference_flag;
     uint8_t          ref_list0_count;
     uint8_t          ref_list1_count;
-#if MRP_CTRL
+#if MRP_CTRL && !ON_OFF_FEATURE_MRP
     uint8_t          ref_list0_count_try;  //the number of references to try (in ME/MD) in list0. should be <= ref_list0_count
     uint8_t          ref_list1_count_try;  //the number of references to try (in ME/MD) in list1. should be <= ref_list1_count
+#endif
+#if ON_OFF_FEATURE_MRP
+    uint8_t          mrp_level;
+    MrpControls      mrp_ctrls;
 #endif
     MvReferenceFrame ref_frame_type_arr[MODE_CTX_REF_FRAMES];
     uint8_t          tot_ref_frame_types;

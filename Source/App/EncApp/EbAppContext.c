@@ -136,6 +136,9 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.inter_intra_compound     = config->inter_intra_compound;
     callback_data->eb_enc_parameters.enable_paeth             = config->enable_paeth;
     callback_data->eb_enc_parameters.enable_smooth            = config->enable_smooth;
+#if 1//ON_OFF_FEATURE_MRP
+    callback_data->eb_enc_parameters.mrp_level                = config->mrp_level;
+#endif
     callback_data->eb_enc_parameters.enable_mfmv              = config->enable_mfmv;
     callback_data->eb_enc_parameters.enable_redundant_blk     = config->enable_redundant_blk;
     callback_data->eb_enc_parameters.spatial_sse_fl           = config->spatial_sse_fl;

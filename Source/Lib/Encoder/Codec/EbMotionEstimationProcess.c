@@ -681,27 +681,47 @@ void set_me_hme_ref_prune_ctrls(MeContext* context_ptr, uint8_t prune_level) {
     switch (prune_level)
     {
     case 0:
+#if ON_OFF_FEATURE_MRP
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = override_feature_level (context_ptr->mrp_level, 0, 0, 1);
+#else
         me_hme_prune_ctrls->enable_me_hme_ref_pruning = 0;
+#endif
         me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = (uint16_t)~0;
         me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
         break;
     case 1:
+#if ON_OFF_FEATURE_MRP
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = override_feature_level(context_ptr->mrp_level, 1, 0, 1);
+#else
         me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+#endif
         me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 160;
         me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = (uint16_t)~0;
         break;
     case 2:
+#if ON_OFF_FEATURE_MRP
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = override_feature_level(context_ptr->mrp_level, 1, 0, 1);
+#else
         me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+#endif
         me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 80;
         me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
         break;
     case 3:
+#if ON_OFF_FEATURE_MRP
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = override_feature_level(context_ptr->mrp_level, 1, 0, 1);
+#else
         me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+#endif
         me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 50;
         me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
         break;
     case 4:
+#if ON_OFF_FEATURE_MRP
+        me_hme_prune_ctrls->enable_me_hme_ref_pruning = override_feature_level(context_ptr->mrp_level, 1, 0, 1);
+#else
         me_hme_prune_ctrls->enable_me_hme_ref_pruning = 1;
+#endif
         me_hme_prune_ctrls->prune_ref_if_hme_sad_dev_bigger_than_th = 30;
         me_hme_prune_ctrls->prune_ref_if_me_sad_dev_bigger_than_th = 60;
         break;
@@ -754,6 +774,9 @@ EbErrorType signal_derivation_me_kernel_oq(
 
     uint8_t  enc_mode = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
+#if ON_OFF_FEATURE_MRP
+    context_ptr->me_context_ptr->mrp_level = pcs_ptr->mrp_level;
+#endif
     // Set ME/HME search regions
 #if !REFACTOR_ME_HME
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ?

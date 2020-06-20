@@ -2618,6 +2618,44 @@ EbErrorType signal_derivation_multi_processes_oq(
         context_ptr->tf_level = 3;
     set_tf_controls(context_ptr, context_ptr->tf_level);
 #endif
+#if ON_OFF_FEATURE_MRP
+    // MRP control
+    // 0: OFF (1,1)  ; override features
+    // 1: FULL (4,3) ; override features
+    // 2: (4,3) ; No-override features
+    // 3: (3,3) ; No-override features
+    // 4: (3,2) ; No-override features
+    // 5: (2,3) ; No-override features
+    // 6: (2,2) ; No-override features
+    // 7: (2,1) ; No-override features
+    // 8: (1,2) ; No-override features
+    // 9: (1,1) ; No-override features
+
+    // Level 0 , 1  : set ref_list0_count_try and ref_list1_count_try and Override MRP-related features
+    // Level 2 .. 9 : Only set ref_list0_count_try and ref_list1_count_try
+
+    if (scs_ptr->static_config.mrp_level == DEFAULT) {
+        if (pcs_ptr->sc_content_detected)
+            if (MRS_MODE)
+                pcs_ptr->mrp_level = 3;
+            else if (MR_MODE)
+                pcs_ptr->mrp_level = 4;
+            else if (pcs_ptr->enc_mode <= ENC_M4)
+                pcs_ptr->mrp_level = 6;
+            else if (pcs_ptr->enc_mode <= ENC_M5)
+                pcs_ptr->mrp_level = 7;
+            else
+                pcs_ptr->mrp_level = 9;
+        else
+            if (pcs_ptr->enc_mode <= ENC_M5)
+                pcs_ptr->mrp_level = 2;
+            else if (pcs_ptr->enc_mode <= ENC_M7)
+                pcs_ptr->mrp_level = 6;
+            else
+                pcs_ptr->mrp_level = pcs_ptr->is_used_as_reference_flag  ? 6 : 9;
+    }else
+        pcs_ptr->mrp_level = scs_ptr->static_config.mrp_level;
+#endif
     return return_error;
 }
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);
@@ -2634,20 +2672,33 @@ static void set_all_ref_frame_type(PictureParentControlSet  *parent_pcs_ptr, MvR
     //SVT_LOG("POC %i  totRef L0:%i   totRef L1: %i\n", parent_pcs_ptr->picture_number, parent_pcs_ptr->ref_list0_count, parent_pcs_ptr->ref_list1_count);
 #if MRP_CTRL
      //single ref - List0
+#if ON_OFF_FEATURE_MRP
+    for (uint8_t ref_idx0 = 0; ref_idx0 < parent_pcs_ptr->mrp_ctrls.ref_list0_count_try; ++ref_idx0) {
+#else
     for (uint8_t ref_idx0 = 0; ref_idx0 < parent_pcs_ptr->ref_list0_count_try; ++ref_idx0) {
+#endif
         rf[0] = svt_get_ref_frame_type(REF_LIST_0, ref_idx0);
         ref_frame_arr[(*tot_ref_frames)++] = rf[0];
     }
 
     //single ref - List1
+#if ON_OFF_FEATURE_MRP
+    for (uint8_t ref_idx1 = 0; ref_idx1 < parent_pcs_ptr->mrp_ctrls.ref_list1_count_try; ++ref_idx1) {
+#else
     for (uint8_t ref_idx1 = 0; ref_idx1 < parent_pcs_ptr->ref_list1_count_try; ++ref_idx1) {
+#endif
         rf[1] = svt_get_ref_frame_type(REF_LIST_1, ref_idx1);
         ref_frame_arr[(*tot_ref_frames)++] = rf[1];
     }
 
     //compound Bi-Dir
+#if ON_OFF_FEATURE_MRP
+    for (uint8_t ref_idx0 = 0; ref_idx0 < parent_pcs_ptr->mrp_ctrls.ref_list0_count_try; ++ref_idx0) {
+        for (uint8_t ref_idx1 = 0; ref_idx1 < parent_pcs_ptr->mrp_ctrls.ref_list1_count_try; ++ref_idx1) {
+#else
     for (uint8_t ref_idx0 = 0; ref_idx0 < parent_pcs_ptr->ref_list0_count_try; ++ref_idx0) {
         for (uint8_t ref_idx1 = 0; ref_idx1 < parent_pcs_ptr->ref_list1_count_try; ++ref_idx1) {
+#endif
             rf[0] = svt_get_ref_frame_type(REF_LIST_0, ref_idx0);
             rf[1] = svt_get_ref_frame_type(REF_LIST_1, ref_idx1);
             ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
@@ -2661,20 +2712,36 @@ static void set_all_ref_frame_type(PictureParentControlSet  *parent_pcs_ptr, MvR
     {
 
         //compound Uni-Dir
+#if ON_OFF_FEATURE_MRP
+        if (parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 1) {
+#else
         if (parent_pcs_ptr->ref_list0_count_try > 1) {
+#endif
             rf[0] = LAST_FRAME;
             rf[1] = LAST2_FRAME;
             ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+#if ON_OFF_FEATURE_MRP
+            if (parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 2) {
+#else
             if (parent_pcs_ptr->ref_list0_count_try > 2) {
+#endif
                 rf[1] = LAST3_FRAME;
                 ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
+#if ON_OFF_FEATURE_MRP
+                if (parent_pcs_ptr->mrp_ctrls.ref_list0_count_try > 3) {
+#else
                 if (parent_pcs_ptr->ref_list0_count_try > 3) {
+#endif
                     rf[1] = GOLDEN_FRAME;
                     ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
                 }
             }
         }
+#if ON_OFF_FEATURE_MRP
+        if (parent_pcs_ptr->mrp_ctrls.ref_list1_count_try > 2) {
+#else
         if (parent_pcs_ptr->ref_list1_count_try > 2) {
+#endif
             rf[0] = BWDREF_FRAME;
             rf[1] = ALTREF_FRAME;
             ref_frame_arr[(*tot_ref_frames)++] = av1_ref_frame_type(rf);
@@ -5650,6 +5717,65 @@ PaReferenceQueueEntry * search_ref_in_ref_queue_pa(
     return NULL;
 }
 #endif
+#if ON_OFF_FEATURE_MRP
+
+/***************************************************************************************************
+// set number of references to try based on mrp level
+***************************************************************************************************/
+void set_mrp_controls(PictureParentControlSet *pcs_ptr) {
+
+    MrpControls *mrp_ctrls = &pcs_ptr->mrp_ctrls;
+
+    switch (pcs_ptr->mrp_level)
+    {
+    case 0:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+        break;
+    case 1:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+        break;
+    case 2:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 4);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+        break;
+    case 3:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 3);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+        break;
+    case 4:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 3);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
+        break;
+    case 5:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 3);
+        break;
+    case 6:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
+        break;
+    case 7:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 2);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+        break;
+    case 8:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 2);
+        break;
+    case 9:
+        mrp_ctrls->ref_list0_count_try = MIN(pcs_ptr->ref_list0_count, 1);
+        mrp_ctrls->ref_list1_count_try = MIN(pcs_ptr->ref_list1_count, 1);
+        break;
+    default:
+        assert(0);
+        break;
+    }
+    assert(mrp_ctrls->ref_list0_count_try <= pcs_ptr->ref_list0_count);
+    assert(mrp_ctrls->ref_list1_count_try <= pcs_ptr->ref_list1_count);
+}
+#endif
 /* Picture Decision Kernel */
 
 /***************************************************************************************************
@@ -6495,6 +6621,11 @@ void* picture_decision_kernel(void *input_ptr)
                                                                             (pcs_ptr->is_overlay) ? 1 : (uint8_t)pred_position_ptr->ref_list0.reference_list_count;
                                 pcs_ptr->ref_list1_count = (picture_type == I_SLICE || pcs_ptr->is_overlay) ? 0 : (uint8_t)pred_position_ptr->ref_list1.reference_list_count;
 
+#if ON_OFF_FEATURE_MRP // one function or under signal derivation ?
+                                // set number of references to try based on mrp level
+                                set_mrp_controls(pcs_ptr);
+#else
+
 #if MRP_CTRL
                                 //set the number of references to try in ME/MD.Note: PicMgr will still use the original values to sync the references.
 #if UPGRADE_M6_M7_M8
@@ -6651,6 +6782,7 @@ void* picture_decision_kernel(void *input_ptr)
 #endif
                                 assert(pcs_ptr->ref_list0_count_try <= pcs_ptr->ref_list0_count);
                                 assert(pcs_ptr->ref_list1_count_try <= pcs_ptr->ref_list1_count);
+#endif
 #endif
                                 if (!pcs_ptr->is_overlay) {
                                     input_entry_ptr->list0_ptr = &pred_position_ptr->ref_list0;
