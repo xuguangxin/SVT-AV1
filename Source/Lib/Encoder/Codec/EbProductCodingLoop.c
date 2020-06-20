@@ -3760,6 +3760,22 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
     context_ptr->md_stage_3_count[CAND_CLASS_3] = context_ptr->bypass_md_stage_2[CAND_CLASS_3]
                                                       ? context_ptr->md_stage_2_count[CAND_CLASS_3]
                                                       : context_ptr->md_stage_3_count[CAND_CLASS_3];
+#if M6_M7_NIC
+    uint8_t use_nic_1_last_stage;
+    if (pcs_ptr->enc_mode <= ENC_M5) {
+        use_nic_1_last_stage = 0;
+    }
+    else {
+        use_nic_1_last_stage = 1;
+    }
+
+    if (use_nic_1_last_stage) {
+        context_ptr->md_stage_3_count[CAND_CLASS_0] = 1;
+        context_ptr->md_stage_3_count[CAND_CLASS_1] = 1;
+        context_ptr->md_stage_3_count[CAND_CLASS_2] = 1;
+        context_ptr->md_stage_3_count[CAND_CLASS_3] = 1;
+    }
+#endif
 #if !CLASS_MERGING
     context_ptr->md_stage_3_count[CAND_CLASS_4] = context_ptr->bypass_md_stage_2[CAND_CLASS_4]
                                                       ? context_ptr->md_stage_2_count[CAND_CLASS_4]

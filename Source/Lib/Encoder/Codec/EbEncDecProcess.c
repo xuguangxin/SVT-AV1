@@ -4243,7 +4243,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if JUNE17_ADOPTIONS
+#if M7_PRED_ME
+                else if (enc_mode <= ENC_M7)
+#else
                 else if (enc_mode <= ENC_M6)
+#endif
                     context_ptr->predictive_me_level = 2;
 #endif
 #if REVERT_WHITE // Pred_ME
