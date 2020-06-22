@@ -2137,6 +2137,9 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
         scs_ptr->static_config.super_block_size = 64;
     else
+#if UNIFY_SC_NSC
+        scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M5) ? 128 : 64;
+#else
 #if MAR10_ADOPTIONS
         if (scs_ptr->static_config.screen_content_mode == 1)
 #if DEPTH_PART_CLEAN_UP
@@ -2193,6 +2196,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M3) ? 128 : 64;
 #endif
+#endif
 #if FIX_RC_SB_SIZE
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 0) ? 64 : scs_ptr->static_config.super_block_size;
 #else
@@ -2245,6 +2249,7 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     // Set down-sampling method     Settings
     // 0                            0: filtering
     // 1                            1: decimation
+#if !UNIFY_SC_NSC
     if (scs_ptr->static_config.screen_content_mode == 1)
 #if MAR3_M6_ADOPTIONS
 #if MAR10_ADOPTIONS
@@ -2267,6 +2272,9 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #else
         if (scs_ptr->static_config.enc_mode <= ENC_M4)
 #endif
+#endif
+#else
+        if (scs_ptr->static_config.enc_mode <= ENC_M8)
 #endif
             scs_ptr->down_sampling_method_me_search = ME_FILTERED_DOWNSAMPLED;
         else
@@ -2292,9 +2300,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     else
         scs_ptr->over_boundary_block_mode = scs_ptr->static_config.over_bndry_blk;
     if (scs_ptr->static_config.enable_mfmv == DEFAULT)
+#if !UNIFY_SC_NSC
         if (scs_ptr->static_config.screen_content_mode == 1)
             scs_ptr->mfmv_enabled = 0;
         else
+#endif
 #if MAR3_M2_ADOPTIONS
 #if MAR4_M3_ADOPTIONS
 #if MAR10_ADOPTIONS

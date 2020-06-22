@@ -967,7 +967,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     EbErrorType return_error = EB_ErrorNone;
     FrameHeader *frm_hdr = &pcs_ptr->frm_hdr;
 
+#if !UNIFY_SC_NSC
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
+#endif
 #if !REFACTOR_ME_HME
     // Set HME Settings (1st time)
     uint8_t enc_mode_hme = scs_ptr->use_output_stat_file
@@ -1252,17 +1254,21 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#if !UNIFY_SC_NSC
         if (sc_content_detected)
             pcs_ptr->disallow_nsq = EB_FALSE;
         else
+#endif
             pcs_ptr->disallow_nsq = pcs_ptr->temporal_layer_index == 0 ? EB_FALSE : EB_TRUE;
     }
 #endif
     else {
 #if APR25_7PM_ADOPTIONS
+#if !UNIFY_SC_NSC
         if (sc_content_detected)
             pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
         else
+#endif
             pcs_ptr->disallow_nsq = EB_TRUE;
 #else
         pcs_ptr->disallow_nsq = EB_TRUE;
@@ -1343,6 +1349,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_4x4 = EB_FALSE;
 #endif
     // Set disallow_all_nsq_blocks_below_8x8: 8x4, 4x8
+#if UNIFY_SC_NSC
+    if (pcs_ptr->enc_mode <= ENC_M5)
+        pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
+    else
+        pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
+#else
     if (sc_content_detected) {
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     }
@@ -1393,6 +1405,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         else
             pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
     }
+#endif
 
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
@@ -1408,6 +1421,9 @@ EbErrorType signal_derivation_multi_processes_oq(
     pcs_ptr->disallow_all_nsq_blocks_above_64x64= EB_FALSE;
 #if APR25_7PM_ADOPTIONS
     // disallow_all_nsq_blocks_above_32x32
+#if UNIFY_SC_NSC
+    pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
+#else
 #if PRESET_SHIFITNG
 #if SOFT_CYCLES_REDUCTION
     if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M5)
@@ -1420,6 +1436,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
     else
         pcs_ptr->disallow_all_nsq_blocks_above_32x32 = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
+#endif
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_all_nsq_blocks_above_32x32 = EB_FALSE;
 #endif
@@ -1713,6 +1730,10 @@ EbErrorType signal_derivation_multi_processes_oq(
             // Remove ref/non-ref checks from palette
             (SHUT_LAYER_BASED_FEATURES)
 #else
+#if UNIFY_SC_NSC
+            ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
+            (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M7))
+#else
 #if JUNE17_ADOPTIONS
            ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
            (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M6))
@@ -1724,6 +1745,7 @@ EbErrorType signal_derivation_multi_processes_oq(
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
 #else
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
+#endif
 #endif
 #endif
 #endif
@@ -1784,7 +1806,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if REVERT_WHITE //  loop_filter_mode
 #if PRESET_SHIFITNG
 #if M6_LOOP_FILTER_MODE
+#if UNIFY_SC_NSC
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#else
         if (pcs_ptr->enc_mode <= ENC_M6 || pcs_ptr->sc_content_detected)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M5 || pcs_ptr->sc_content_detected)
 #endif
@@ -1827,6 +1853,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (scs_ptr->seq_header.enable_cdef && frm_hdr->allow_intrabc == 0) {
 #if MAR17_ADOPTIONS
 #if M8_CDEF
+#if !UNIFY_SC_NSC
         if (pcs_ptr->sc_content_detected)
 #if UPGRADE_M6_M7_M8
 #if PRESET_SHIFITNG
@@ -1845,6 +1872,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->cdef_filter_mode = 5;
 #endif
         else
+#endif
 #if UPGRADE_M6_M7_M8
 #if PRESET_SHIFITNG
             if (pcs_ptr->enc_mode <= ENC_M5)
@@ -1886,6 +1914,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 3                                            4 step refinement
     // 4                                            16 step refinement
     Av1Common *cm = pcs_ptr->av1_cm;
+#if UNIFY_SC_NSC
+    if (pcs_ptr->enc_mode <= ENC_M3)
+        cm->sg_filter_mode = 4;
+    else
+        cm->sg_filter_mode = pcs_ptr->slice_type == I_SLICE ? 4 : 1;
+#else
     if (sc_content_detected)
 #if MAR12_M8_ADOPTIONS
 #if M8_SG
@@ -1977,11 +2011,13 @@ EbErrorType signal_derivation_multi_processes_oq(
         cm->sg_filter_mode = 1;
 #endif
 #endif
+#endif
     // WN Level                                     Settings
     // 0                                            OFF
     // 1                                            3-Tap luma/ 3-Tap chroma
     // 2                                            5-Tap luma/ 5-Tap chroma
     // 3                                            7-Tap luma/ 5-Tap chroma
+#if !UNIFY_SC_NSC
     if (sc_content_detected)
 #if MAR12_M8_ADOPTIONS
         cm->wn_filter_mode = 3;
@@ -1996,6 +2032,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             cm->wn_filter_mode = 0;
 #endif
     else
+#endif
 #if MAY19_ADOPTIONS
 #if JUNE17_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M5)
@@ -2050,6 +2087,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->intra_pred_mode = 4;
 #endif
     else {
+#if !UNIFY_SC_NSC
         if (sc_content_detected)
 #if JUNE17_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M3)
@@ -2136,6 +2174,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #endif
+#else
+    if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
             pcs_ptr->intra_pred_mode = 0;
 #if MAR2_M8_ADOPTIONS
 #if M8_INTRA_MODE && !UPGRADE_M8
@@ -2172,6 +2213,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Set Tx Search     Settings
     // 0                 OFF
     // 1                 ON
+#if !UNIFY_SC_NSC
 #if MAR4_M6_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
 #if NEW_TXS_SETTINGS
@@ -2233,6 +2275,10 @@ EbErrorType signal_derivation_multi_processes_oq(
         ? 0
         : 1;
 #endif
+#else
+    if (pcs_ptr->enc_mode <= ENC_M4)
+        pcs_ptr->tx_size_search_mode = 1;
+#endif
 #if NEW_TXS_SETTINGS
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M7)
@@ -2252,16 +2298,24 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 1 ON - TXS in all classes
     // 2 ON - INTER TXS restricted to max 1 depth
 #if RESTRICT_INTER_TXS_DEPTH
+#if UNIFY_SC_NSC
+    if (MRS_MODE)
+#else
 #if JUNE15_ADOPTIONS
     if (MRS_MODE || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0))
 #else
     if (MR_MODE)
 #endif
+#endif
         pcs_ptr->txs_in_inter_classes = 1;
+#if UNIFY_SC_NSC
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+#else
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M0 || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M3))
 #else
     else if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
 #endif
         pcs_ptr->txs_in_inter_classes = 2;
     else
@@ -2324,10 +2378,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->slice_type != I_SLICE && scs_ptr->seq_header.enable_interintra_compound) {
 #if INTRA_COMPOUND_OPT
 #if PRESETS_SHIFT
+#if !UNIFY_SC_NSC
 #if ENABLE_SC_DETECTOR
         if (pcs_ptr->sc_content_detected)
             pcs_ptr->enable_inter_intra = 0;
         else
+#endif
 #endif
 #if JUNE8_ADOPTIONS
         pcs_ptr->enable_inter_intra = pcs_ptr->enc_mode <= ENC_M2 ? 2 : 3;
@@ -2374,6 +2430,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if MAR17_ADOPTIONS
 #if INTER_COMP_REDESIGN
 #if PRESETS_SHIFT
+#if !UNIFY_SC_NSC
 #if APR23_ADOPTIONS
             if (pcs_ptr->sc_content_detected)
 #if JUNE17_ADOPTIONS
@@ -2407,7 +2464,12 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
             else
 #endif
+#endif
 #if M2_COMBO_1 || M1_COMBO_2 || NEW_M1_CAND
+#if UNIFY_SC_NSC
+                pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 1 :
+                                            pcs_ptr->enc_mode <= ENC_M3 ? 3 : 0;
+#else
 #if JUNE17_ADOPTIONS
                 pcs_ptr->compound_mode = pcs_ptr->enc_mode <= ENC_M1 ? 1 :
                                             pcs_ptr->enc_mode <= ENC_M2 ? 3 : 0;
@@ -2421,6 +2483,7 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->enc_mode <= ENC_M2 ? 2 : 0;
 #else
                 pcs_ptr->enc_mode <= ENC_M4 ? 2 : 0;
+#endif
 #endif
 #endif
 #endif
@@ -2486,10 +2549,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     // CHKN: Temporal MVP should be disabled for pictures beloning to 4L MiniGop
     // preceeded by 5L miniGOP. in this case the RPS is wrong(known issue). check
     // RPS construction for more info.
+#if !UNIFY_SC_NSC
 #if ENABLE_SC_DETECTOR
     if (pcs_ptr->sc_content_detected)
         pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
     else
+#endif
 #endif
     if (pcs_ptr->slice_type == I_SLICE)
         pcs_ptr->frm_hdr.use_ref_frame_mvs = 0;
@@ -2591,6 +2656,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
 #if TF_LEVELS
+#if UNIFY_SC_NSC
+    uint8_t perform_filtering =
+        (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && scs_ptr->static_config.hierarchical_levels >= 1)
+        ? 1 : 0;
+#else
 #if UPGRADE_M6_M7_M8
     uint8_t perform_filtering =
         (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && pcs_ptr->sc_content_detected == 0 && scs_ptr->static_config.hierarchical_levels >= 1)
@@ -2600,6 +2670,7 @@ EbErrorType signal_derivation_multi_processes_oq(
         (scs_ptr->enable_altrefs == EB_TRUE && scs_ptr->static_config.pred_structure == EB_PRED_RANDOM_ACCESS && pcs_ptr->sc_content_detected == 0 && scs_ptr->static_config.hierarchical_levels >= 1) &&
         (pcs_ptr->temporal_layer_index == 0 ||(pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
         ? 1 : 0;
+#endif
 #endif
 
 
@@ -2698,6 +2769,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     // Level 2 .. 9 : Only set ref_list0_count_try and ref_list1_count_try
 
     if (scs_ptr->static_config.mrp_level == DEFAULT) {
+#if !UNIFY_SC_NSC
         if (pcs_ptr->sc_content_detected)
             if (MRS_MODE)
                 pcs_ptr->mrp_level = 3;
@@ -2710,6 +2782,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             else
                 pcs_ptr->mrp_level = 9;
         else
+#endif
             if (pcs_ptr->enc_mode <= ENC_M5)
                 pcs_ptr->mrp_level = 2;
             else if (pcs_ptr->enc_mode <= ENC_M7)

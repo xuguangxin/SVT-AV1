@@ -1076,6 +1076,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // CDF
 #if M8_CDF
 #if UPGRADE_M6_M7_M8
+#if !UNIFY_SC_NSC
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if APR25_12AM_ADOPTIONS
 #if JUNE17_ADOPTIONS
@@ -1098,6 +1099,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             pcs_ptr->update_cdf = 0;
 #endif
     else
+#endif
 #if MAY19_ADOPTIONS
 #if JUNE17_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M5)
@@ -1154,6 +1156,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Filter INTRA
 #if APR23_ADOPTIONS_2
     if (scs_ptr->seq_header.enable_filter_intra) {
+#if !UNIFY_SC_NSC
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if JUNE17_ADOPTIONS
             if (pcs_ptr->enc_mode <= ENC_M3)
@@ -1192,6 +1195,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #else
         else if (pcs_ptr->enc_mode <= ENC_M5)
 #endif
+#else
+        if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
             pcs_ptr->pic_filter_intra_mode = 1;
         else
             pcs_ptr->pic_filter_intra_mode = 0;
@@ -1224,6 +1230,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     EbBool enable_wm;
 #if PRESETS_SHIFT
 #if M8_WM
+#if !UNIFY_SC_NSC
 #if UPGRADE_M6_M7_M8
     if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
 #if JUNE8_ADOPTIONS
@@ -1256,6 +1263,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
             enable_wm = EB_FALSE;
         }
     } else
+#endif
 #endif
 #if JUNE8_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2) {
@@ -1371,6 +1379,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Opt NICs 4                                   OBMC @(MVP, PME ) + ?
     // Opt2 NICs
     if (scs_ptr->static_config.enable_obmc) {
+#if !UNIFY_SC_NSC
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
 #if JUNE8_ADOPTIONS
@@ -1440,6 +1449,9 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #else
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#endif
+#else
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
 #endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
 #if OBMC_FAST

@@ -1434,6 +1434,21 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 #define INTER_PRED_NFL 24
 #define INTER_COMP_NFL 16
 #else
+#if UNIFY_SC_NSC
+uint32_t nics_scale_factor[10/*levels*/][2/*num/denum*/] =
+{
+    {10,8},   // level0
+    {8,8},    // level1
+    {7,8},    // level2
+    {6,8},    // level3
+    {5,8},    // level4
+    {4,8},    // level5
+    {3,8},    // level6
+    {2,8},    // level7
+    {1,8},    // level8
+    {1,16}    // level9
+};
+#else
 #if MAY19_ADOPTIONS
 uint32_t nics_scale_factor[2/*sc/nsc*/][10/*levels*/][2/*num/denum*/] = {
     {
@@ -1522,6 +1537,7 @@ uint32_t nics_scale_factor[2/*sc/nsc*/][6/*levels*/][2/*num/denum*/] = {
 
 
 };
+#endif
 #endif
 #endif
 #if SOFT_CYCLES_REDUCTION
@@ -1768,6 +1784,18 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     uint32_t min_nics = pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ? 2 : 1;
 
     uint8_t nics_scling_level ;
+#if UNIFY_SC_NSC
+    if (pcs_ptr->enc_mode <= ENC_M0)
+        nics_scling_level = 1;
+    else if (pcs_ptr->enc_mode <= ENC_M1)
+        nics_scling_level = 3;
+    else if (pcs_ptr->enc_mode <= ENC_M2)
+        nics_scling_level = 5;
+    else if (pcs_ptr->enc_mode <= ENC_M3)
+        nics_scling_level = 7;
+    else
+        nics_scling_level = 8;
+#else
 #if MAY19_ADOPTIONS
 #if M0_NIC
     if (pcs_ptr->enc_mode <= ENC_M0)
@@ -1883,11 +1911,16 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
         nics_scling_level = 5;
 #endif
 #endif
-
+#endif
+#if UNIFY_SC_NSC
+    uint32_t scale_num   = nics_scale_factor[nics_scling_level][0];
+    uint32_t scale_denum = nics_scale_factor[nics_scling_level][1];
+#else
     uint32_t scale_num =
         nics_scale_factor[pcs_ptr->parent_pcs_ptr->sc_content_detected][nics_scling_level][0];
     uint32_t scale_denum    =
         nics_scale_factor[pcs_ptr->parent_pcs_ptr->sc_content_detected][nics_scling_level][1];
+#endif
 
     // no NIC setting should be done beyond this point
     for (uint8_t cidx = 0; cidx < CAND_CLASS_TOTAL; ++cidx) {
@@ -2260,6 +2293,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
 #endif
 #if CLASS_MERGING
 #if NICS_CLEANUP
+#if !UNIFY_SC_NSC
                 if (pcs_ptr->parent_pcs_ptr->sc_content_detected) {
                     context_ptr->md_stage_2_count[CAND_CLASS_0] =
                         (pcs_ptr->slice_type == I_SLICE) ? 16 :
@@ -2275,6 +2309,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                         (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 2;
                 }
                 else {
+#endif
                     context_ptr->md_stage_2_count[CAND_CLASS_0] =
                         (pcs_ptr->slice_type == I_SLICE) ? 32 :
                         (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 16 : 8;
@@ -2287,7 +2322,9 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                     context_ptr->md_stage_2_count[CAND_CLASS_3] =
                         (pcs_ptr->slice_type == I_SLICE) ? 8 :
                         (pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag) ? 4 : 2;
+#if !UNIFY_SC_NSC
                 }
+#endif
 
                 // no NIC setting should be done beyond this point
 #else
@@ -9632,10 +9669,12 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
     if (context_ptr->md_staging_tx_search == 0)
         tx_search_skip_flag = EB_TRUE;
     else if (context_ptr->md_staging_tx_search == 1) {
+#if !UNIFY_SC_NSC
         if (pcs_ptr->parent_pcs_ptr->sc_content_detected && context_ptr->blk_geom->shape == PART_N)
             tx_search_skip_flag =
                 context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP ? EB_FALSE : EB_TRUE;
         else
+#endif
             tx_search_skip_flag = context_ptr->tx_search_level == TX_SEARCH_FULL_LOOP
 #if TXT_CONTROL
             ? get_tx_search_config(context_ptr,
@@ -11367,7 +11406,11 @@ EbErrorType signal_derivation_block(
 #endif
         else if (enc_mode <= ENC_M0)
 #else
+#if UNIFY_SC_NSC
+        else if (pcs->parent_pcs_ptr->enc_mode <= ENC_M0)
+#else
         else if (MR_MODE || (pcs->parent_pcs_ptr->enc_mode <= ENC_M0 && !pcs->parent_pcs_ptr->sc_content_detected))
+#endif
 #endif
 #endif
             context_ptr->inter_inter_distortion_based_reference_pruning = 1;
@@ -12104,6 +12147,25 @@ void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_
 }
 
 #if CLASS_PRUNE
+#if UNIFY_SC_NSC
+uint32_t class_prune_scale_factor[2/*levels*/][4/*band*/][2/*num/denum*/] =
+{
+    // level0
+    {
+        {4, 8},     // b0
+        {3, 8},     // b1
+        {2, 8},     // b2
+        {0, 8}      // b3
+    },
+    // level1
+    {
+        {2, 8},     // b0
+        {1, 8},     // b1
+        {1, 8},     // b2
+        {0, 8}      // b3
+    }
+};
+#else
 uint32_t class_prune_scale_factor[2/*sc-nsc*/][2/*levels*/][4/*band*/][2/*num/denum*/] = {
     { //NSC
         // level0
@@ -12138,11 +12200,14 @@ uint32_t class_prune_scale_factor[2/*sc-nsc*/][2/*levels*/][4/*band*/][2/*num/de
         },
     },//SC END
 };
+#endif
 
 void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
     uint64_t best_md_stage_cost, uint64_t  class_best_cost, CandClass cand_class_it) {
 
+#if !UNIFY_SC_NSC
     uint8_t sc_content_detected =  pcs_ptr->parent_pcs_ptr->sc_content_detected;
+#endif
 
     uint32_t scale_num     ;
     uint32_t scale_denum   ;
@@ -12159,10 +12224,14 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 #else
     if (pcs_ptr->enc_mode  <= ENC_M0)
 #endif
+#if UNIFY_SC_NSC
+        class_pruning_scaling_level = 0;
+#else
 #if MAY17_ADOPTIONS
         class_pruning_scaling_level = sc_content_detected ? 1 : 0;
 #else
         class_pruning_scaling_level = 0;
+#endif
 #endif
     else
         class_pruning_scaling_level = 1;
@@ -12180,8 +12249,13 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
     if (best_md_stage_cost && class_best_cost){
         if (class_best_cost > best_md_stage_cost) {
             // scale NICS of the worst classes
+#if UNIFY_SC_NSC
+            scale_num = class_prune_scale_factor[class_pruning_scaling_level][band][0];
+            scale_denum = class_prune_scale_factor[class_pruning_scaling_level][band][1];
+#else
             scale_num  =  class_prune_scale_factor[sc_content_detected][class_pruning_scaling_level][band][0] ;
             scale_denum = class_prune_scale_factor[sc_content_detected][class_pruning_scaling_level][band][1] ;
+#endif
             if (scale_num == 0) {
                 context_ptr->md_stage_2_count[cand_class_it] = 0;
             }else{

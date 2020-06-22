@@ -113,11 +113,17 @@ void* set_me_hme_params_oq(
     me_context_ptr->number_hme_search_region_in_width = 2;
     me_context_ptr->number_hme_search_region_in_height = 2;
 
+#if !UNIFY_SC_NSC
     uint8_t sc_content_detected = pcs_ptr->sc_content_detected;
+#endif
 
 #if REFACTOR_ME_HME
     // Set the minimum ME search area
+#if UNIFY_SC_NSC
+    if (pcs_ptr->sc_content_detected)
+#else
     if (sc_content_detected)
+#endif
 #if !APR02_ADOPTIONS
 #if MAR30_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M1)
@@ -207,6 +213,9 @@ void* set_me_hme_params_oq(
 #if APR23_4AM_M6_ADOPTIONS && !APR25_10AM_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
+#if UNIFY_SC_NSC
+            else if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
 #if JUNE17_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
@@ -214,6 +223,7 @@ void* set_me_hme_params_oq(
             else if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
             else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #endif
 #endif
 #endif
@@ -226,11 +236,18 @@ void* set_me_hme_params_oq(
 #endif
             }
 #endif
+#if UNIFY_SC_NSC
+            else if (pcs_ptr->enc_mode <= ENC_M7) {
+                me_context_ptr->search_area_width = me_context_ptr->search_area_height = 75;
+                me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 350;
+            }
+#else
 #if JUNE17_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M6) {
                 me_context_ptr->search_area_width = me_context_ptr->search_area_height = 100;
                 me_context_ptr->max_me_search_width = me_context_ptr->max_me_search_height = 400;
             }
+#endif
 #endif
 #if APR23_4AM_M6_ADOPTIONS && !APR25_10AM_ADOPTIONS
             else if (pcs_ptr->enc_mode <= ENC_M6) {
@@ -417,6 +434,7 @@ void* set_me_hme_params_oq(
 
 #if ADD_MAX_HME_SIGNAL
 #if NEW_HME_ME_SIZES
+#if !UNIFY_SC_NSC
     if (sc_content_detected) {
 #if UPGRADE_M6_M7_M8
 #if MAY19_ADOPTIONS
@@ -455,6 +473,7 @@ void* set_me_hme_params_oq(
 #endif
     }
     else {
+#endif
 #if APR22_ADOPTIONS
 #if MAY19_ADOPTIONS
 #if PRESET_SHIFITNG
@@ -490,6 +509,20 @@ void* set_me_hme_params_oq(
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 480;
 #endif
         }
+#if UNIFY_SC_NSC
+        else if (pcs_ptr->enc_mode <= ENC_M4) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 75;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 300;
+        }
+        else if (pcs_ptr->enc_mode <= ENC_M5) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 48;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 192;
+        }
+        else if (pcs_ptr->enc_mode <= ENC_M6) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 32;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 164;
+        }
+#endif
 #if UPGRADE_M6_M7_M8
 #if !MAY12_ADOPTIONS
 #if NEW_M5_HME_ME
@@ -531,7 +564,9 @@ void* set_me_hme_params_oq(
         me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 100;
         me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 400;
 #endif
+#if !UNIFY_SC_NSC
     }
+#endif
 #else
     me_context_ptr->hme_level0_max_total_search_area_width =
         me_context_ptr->hme_level0_max_total_search_area_height =
@@ -564,6 +599,7 @@ void* set_me_hme_params_oq(
 
 #if ADD_HME_DECIMATION_SIGNAL
 #if MAR30_ADOPTIONS
+#if !UNIFY_SC_NSC
     if (pcs_ptr->sc_content_detected)
 #if APR02_ADOPTIONS
         me_context_ptr->hme_decimation = TWO_DECIMATION_HME;
@@ -574,6 +610,13 @@ void* set_me_hme_params_oq(
     else
 #else
     else if (input_resolution <= INPUT_SIZE_720p_RANGE)
+#endif
+#else
+#if SHUT_RESOLUTION_CHECKS
+    if (1)
+#else
+    if (input_resolution <= INPUT_SIZE_720p_RANGE)
+#endif
 #endif
 #if PRESETS_SHIFT
 #if M2_COMBO_1
@@ -598,8 +641,12 @@ void* set_me_hme_params_oq(
 #endif
 
     // Scale up the MIN ME area if low frame rate
+#if UNIFY_SC_NSC
+    uint8_t  low_frame_rate_flag = (scs_ptr->static_config.frame_rate >> 16) < 50 ? 1 : 0;
+#else
     uint8_t  low_frame_rate_flag = sc_content_detected ? 0 :
         (scs_ptr->static_config.frame_rate >> 16) < 50 ? 1 : 0;
+#endif
     if (low_frame_rate_flag) {
         me_context_ptr->search_area_width = (me_context_ptr->search_area_width * 3) / 2;
         me_context_ptr->search_area_height = (me_context_ptr->search_area_height * 3) / 2;
@@ -888,6 +935,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
     else
 #endif
+#if !UNIFY_SC_NSC
     if (pcs_ptr->sc_content_detected)
 #if JUNE15_ADOPTIONS
         if (enc_mode <= ENC_M0)
@@ -898,6 +946,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
 #endif
     else
+#endif
         context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
 
     // ME Search Method
@@ -906,6 +955,7 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
     else
 #endif
+#if !UNIFY_SC_NSC
     if (pcs_ptr->sc_content_detected)
 #if JUNE15_ADOPTIONS
         if (enc_mode <= ENC_M0)
@@ -916,10 +966,17 @@ EbErrorType signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 #endif
     else
+#endif
         context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
 
     if (scs_ptr->static_config.enable_global_motion == EB_TRUE)
     {
+#if UNIFY_SC_NSC
+        if (enc_mode <= ENC_M5)
+            context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
+        else
+            context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+#else
 #if MAR4_M6_ADOPTIONS
         if (pcs_ptr->sc_content_detected)
 #if MAY19_ADOPTIONS
@@ -993,6 +1050,7 @@ EbErrorType signal_derivation_me_kernel_oq(
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
+#endif
     }
     else
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
@@ -1038,12 +1096,14 @@ EbErrorType signal_derivation_me_kernel_oq(
 
     // Set hme/me based reference pruning level (0-4)
 #if M0_HME_ME_PRUNE
+#if !UNIFY_SC_NSC
     if (pcs_ptr->sc_content_detected)
         if (enc_mode <= ENC_M0)
             set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
         else
             set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 1);
     else
+#endif
         if (enc_mode <= ENC_M0)
             set_me_hme_ref_prune_ctrls(context_ptr->me_context_ptr, 0);
 #if JUNE11_ADOPTIONS
@@ -1108,12 +1168,16 @@ EbErrorType signal_derivation_me_kernel_oq(
 #if JUNE15_ADOPTIONS
     if (MRS_MODE)
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 0);
+#if !UNIFY_SC_NSC
     else if (pcs_ptr->sc_content_detected)
+#endif
 #else
     if (pcs_ptr->sc_content_detected)
 #endif
 #endif
+#if !UNIFY_SC_NSC
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 1);
+#endif
     else
         set_me_sr_adjustment_ctrls(context_ptr->me_context_ptr, 2);
 #else
@@ -1404,8 +1468,10 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
     PictureParentControlSet   *pcs_ptr,
     MotionEstimationContext_t *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
+#if !UNIFY_SC_NSC
     uint8_t  enc_mode = scs_ptr->use_output_stat_file ?
         pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
+#endif
 
 #if !REFACTOR_ME_HME ||  !MAR12_ADOPTIONS
     uint8_t  hmeMeLevel = scs_ptr->use_output_stat_file ? pcs_ptr->snd_pass_enc_mode : pcs_ptr->enc_mode;
@@ -1524,6 +1590,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         context_ptr->me_context_ptr->fractional_search_model = 2;
 #endif
     // HME Search Method
+#if !UNIFY_SC_NSC
     if (pcs_ptr->sc_content_detected)
 #if MAR17_ADOPTIONS
         context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
@@ -1534,8 +1601,10 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
             context_ptr->me_context_ptr->hme_search_method = SUB_SAD_SEARCH;
 #endif
     else
+#endif
         context_ptr->me_context_ptr->hme_search_method = FULL_SAD_SEARCH;
     // ME Search Method
+#if !UNIFY_SC_NSC
     if (pcs_ptr->sc_content_detected)
 #if MAR10_ADOPTIONS
         if (enc_mode <= ENC_M8)
@@ -1546,6 +1615,7 @@ EbErrorType tf_signal_derivation_me_kernel_oq(
         else
             context_ptr->me_context_ptr->me_search_method = SUB_SAD_SEARCH;
     else
+#endif
 #if MAR10_ADOPTIONS
         context_ptr->me_context_ptr->me_search_method = FULL_SAD_SEARCH;
 #else

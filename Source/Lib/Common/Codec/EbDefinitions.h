@@ -564,6 +564,9 @@ extern "C" {
 #define M6_M7_NIC           1 // NIC=1 @ md_stage_3() in M6 & M7
 #define M6_LOOP_FILTER_MODE 1 // Use M5_LOOP_FILTER in M6
 #endif
+
+#define UNIFY_SC_NSC        1 // Unify the SC/NSC settings, except for Palette, IBC, and ME
+#define REMOVE_PRINT_STATEMENTS 1 // remove print statements
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

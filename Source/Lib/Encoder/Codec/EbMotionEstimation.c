@@ -10021,7 +10021,11 @@ void integer_search_sb(
                 ABS((int16_t)(pcs_ptr->picture_number -
                     pcs_ptr->ref_pic_poc_array[list_index][ref_pic_index]));
             // factor to slowdown the ME search region growth to MAX
+#if UNIFY_SC_NSC
+            if (context_ptr->me_alt_ref == 0) {
+#else
             if (!pcs_ptr->sc_content_detected && context_ptr->me_alt_ref == 0) {
+#endif
                 int8_t round_up = ((dist%8) == 0) ? 0 : 1;
                 dist = ((dist * 5) / 8) + round_up;
             }
@@ -10752,7 +10756,11 @@ void hme_level0_sb(
                         int32_t hme_sr_factor_x, hme_sr_factor_y;
                         // factor to scaledown the ME search region growth to MAX
                         int8_t round_up = ((dist%8) == 0) ? 0 : 1;
+#if UNIFY_SC_NSC
+                        uint16_t exp = 5;
+#else
                         uint16_t exp = pcs_ptr->sc_content_detected ? 4 : 5;
+#endif
                         dist = ((dist * exp) / 8) + round_up;
 #if !ADD_MAX_HME_SIGNAL
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
@@ -10930,7 +10938,11 @@ void hme_level1_sb(
                         int32_t hme_sr_factor_x, hme_sr_factor_y;
                         // factor to scaledown the ME search region growth to MAX
                         int8_t round_up = ((dist % 8) == 0) ? 0 : 1;
+#if UNIFY_SC_NSC
+                        uint16_t exp = 5;
+#else
                         uint16_t exp = pcs_ptr->sc_content_detected ? 4 : 5;
+#endif
                         dist = ((dist * exp) / 8) + round_up;
 #if !ADD_MAX_HME_SIGNAL
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
@@ -11119,7 +11131,11 @@ void hme_level2_sb(
                         int32_t hme_sr_factor_x, hme_sr_factor_y;
                         // factor to scaledown the ME search region growth to MAX
                         int8_t round_up = ((dist % 8) == 0) ? 0 : 1;
+#if UNIFY_SC_NSC
+                        uint16_t exp = 5;
+#else
                         uint16_t exp = pcs_ptr->sc_content_detected ? 4 : 5;
+#endif
                         dist = ((dist * exp) / 8) + round_up;
 #if !ADD_MAX_HME_SIGNAL
 #if ADD_HME_MIN_MAX_MULTIPLIER_SIGNAL
