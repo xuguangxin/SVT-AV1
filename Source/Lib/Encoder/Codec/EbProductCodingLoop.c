@@ -1553,10 +1553,14 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
         ref_pruning_ctrls->best_refs[PA_ME_GROUP]         = 7;
         ref_pruning_ctrls->best_refs[UNI_3x3_GROUP]       = 2;
         ref_pruning_ctrls->best_refs[BI_3x3_GROUP]        = 2;
+#if JUNE23_ADOPTIONS
+        ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 0;
+#else
 #if OPTIMIZE_NEAREST_NEW_NEAR
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = MR_MODE ? 7 : 0;
 #else
         ref_pruning_ctrls->best_refs[NRST_NEW_NEAR_GROUP] = 7;
+#endif
 #endif
         ref_pruning_ctrls->best_refs[WARP_GROUP]          = 7;
         ref_pruning_ctrls->best_refs[NRST_NEAR_GROUP]     = 7;
@@ -1785,7 +1789,13 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 
     uint8_t nics_scling_level ;
 #if UNIFY_SC_NSC
+#if JUNE23_ADOPTIONS
+    if (MR_MODE)
+        nics_scling_level = 0;
+    else if (pcs_ptr->enc_mode <= ENC_M0)
+#else
     if (pcs_ptr->enc_mode <= ENC_M0)
+#endif
         nics_scling_level = 1;
     else if (pcs_ptr->enc_mode <= ENC_M1)
         nics_scling_level = 3;
@@ -12219,10 +12229,14 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
     uint64_t band3_cost_th = (class_best_cost * 20);
 
     uint8_t class_pruning_scaling_level ;
+#if JUNE23_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M2)
+#else
 #if JUNE9_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M1)
 #else
     if (pcs_ptr->enc_mode  <= ENC_M0)
+#endif
 #endif
 #if UNIFY_SC_NSC
         class_pruning_scaling_level = 0;

@@ -3703,10 +3703,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if PD0_PD1_NSQ_BLIND
 #if MAY21_NSQ_OFF_FIX
+#if JUNE23_ADOPTIONS
+     if (pd_pass == PD_PASS_0)
+         context_ptr->md_disallow_nsq = MR_MODE ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+     else if (pd_pass == PD_PASS_1)
+         context_ptr->md_disallow_nsq = MR_MODE ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#else
      if (pd_pass == PD_PASS_0)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
      else if (pd_pass == PD_PASS_1)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#endif
 #else
      if (pd_pass == PD_PASS_0)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? 0 : 1;
@@ -3959,7 +3966,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     context_ptr->new_nearest_near_comb_injection = 0;
             else
 #endif
+#if JUNE23_ADOPTIONS
+                if (enc_mode <= ENC_M1)
+#else
                 if (enc_mode <= ENC_M0)
+#endif
                     context_ptr->new_nearest_near_comb_injection = 1;
                 else
                     context_ptr->new_nearest_near_comb_injection = 0;
@@ -4093,7 +4104,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (sequence_control_set_ptr->static_config.bipred_3x3_inject ==
         DEFAULT)
 #if UNIFY_SC_NSC
+#if JUNE23_ADOPTIONS
+        if (enc_mode <= ENC_M2)
+#else
         if (enc_mode <= ENC_M1)
+#endif
             context_ptr->bipred3x3_injection = 1;
         else
             context_ptr->bipred3x3_injection = 2;
@@ -4264,6 +4279,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 0;
                 else
 #endif
+#if JUNE23_ADOPTIONS
+                    if (enc_mode <= ENC_M1)
+#else
 #if MAY23_M0_ADOPTIONS
                     if (enc_mode <= ENC_M0)
 #else
@@ -4278,6 +4296,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #else
                     if (enc_mode <= ENC_M0)
+#endif
 #endif
 #endif
 #endif
@@ -4971,7 +4990,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             context_ptr->md_stage_2_3_cand_prune_th = 45;
 #if JUNE11_ADOPTIONS
+#if JUNE23_ADOPTIONS
+        else if (enc_mode <= ENC_M2)
+#else
         else if (enc_mode <= ENC_M1)
+#endif
             context_ptr->md_stage_2_3_cand_prune_th = 15;
 #endif
         else
@@ -5332,9 +5355,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
 #if UNIFY_SC_NSC
+#if JUNE23_ADOPTIONS
+            if (enc_mode <= ENC_M1)
+#else
             if (enc_mode <= ENC_M0)
                 context_ptr->sq_weight = 105;
             else if (enc_mode <= ENC_M1)
+#endif
                 context_ptr->sq_weight = 100;
             else if (enc_mode <= ENC_M3)
                 context_ptr->sq_weight = 95;
@@ -5593,8 +5620,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
     }
     else {
+#if JUNE23_ADOPTIONS
+        context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M2 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
+        context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M2 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#else
         context_ptr->pred_me_full_pel_search_width = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 : PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_7;
         context_ptr->pred_me_full_pel_search_height = enc_mode <= ENC_M1 ? PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 : PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_5;
+#endif
     }
 #else
     if (pd_pass == PD_PASS_0) {
@@ -6030,6 +6062,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
             context_ptr->md_nsq_mv_search_level = 1;
+#if JUNE23_ADOPTIONS
+        else if (enc_mode <= ENC_M2)
+#else
 #if UNIFY_SC_NSC
         else if (enc_mode <= ENC_M1)
 #else
@@ -6040,6 +6075,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M1)
 #else
         else if (enc_mode <= ENC_M0)
+#endif
 #endif
 #endif
 #endif
