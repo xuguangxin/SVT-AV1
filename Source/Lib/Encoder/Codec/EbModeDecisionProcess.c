@@ -9,6 +9,9 @@
 #include "EbModeDecisionProcess.h"
 #include "EbLambdaRateTables.h"
 
+#if MEM_OPT_PALETTE
+int svt_av1_allow_palette(int allow_palette, BlockSize sb_type);
+#endif
 static void mode_decision_context_dctor(EbPtr p) {
     ModeDecisionContext *obj = (ModeDecisionContext *)p;
 #if SB64_MEM_OPT
@@ -19,7 +22,9 @@ static void mode_decision_context_dctor(EbPtr p) {
         if (obj->palette_cand_array[cd].color_idx_map)
             EB_FREE_ARRAY(obj->palette_cand_array[cd].color_idx_map);
     for (uint32_t cand_index = 0; cand_index < MODE_DECISION_CANDIDATE_MAX_COUNT; ++cand_index) {
+#if !MEM_OPT_PALETTE
         if (obj->fast_candidate_ptr_array[cand_index]->palette_info.color_idx_map)
+#endif
 #if SB64_MEM_OPT
             for (uint32_t coded_leaf_index = 0; coded_leaf_index < block_max_count_sb;
 #else
@@ -28,7 +33,9 @@ static void mode_decision_context_dctor(EbPtr p) {
                  ++coded_leaf_index)
                 if (obj->md_blk_arr_nsq[coded_leaf_index].palette_info.color_idx_map)
                     EB_FREE_ARRAY(obj->md_blk_arr_nsq[coded_leaf_index].palette_info.color_idx_map);
+#if !MEM_OPT_PALETTE
         EB_FREE_ARRAY(obj->fast_candidate_ptr_array[cand_index]->palette_info.color_idx_map);
+#endif
     }
     EB_FREE_ARRAY(obj->ref_best_ref_sq_table);
     EB_FREE_ARRAY(obj->ref_best_cost_sq_table);
@@ -107,6 +114,10 @@ static void mode_decision_context_dctor(EbPtr p) {
     EB_DELETE(obj->residual_quant_coeff_ptr);
 #endif
 
+#if MEM_OPT_MD_BUF_DESC
+    EB_DELETE(obj->temp_residual_ptr);
+    EB_DELETE(obj->temp_recon_ptr);
+#endif
 }
 
 /******************************************************
@@ -175,12 +186,16 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
             &context_ptr->fast_candidate_array[cand_index];
         context_ptr->fast_candidate_ptr_array[cand_index]->md_rate_estimation_ptr =
             context_ptr->md_rate_estimation_ptr;
+#if MEM_OPT_PALETTE
+            context_ptr->fast_candidate_ptr_array[cand_index]->palette_info = NULL;
+#else
         if (cfg_palette)
             EB_MALLOC_ARRAY(
                 context_ptr->fast_candidate_ptr_array[cand_index]->palette_info.color_idx_map,
                 MAX_PALETTE_SQUARE);
         else
             context_ptr->fast_candidate_ptr_array[cand_index]->palette_info.color_idx_map = NULL;
+#endif
     }
     for (int cd = 0; cd < MAX_PAL_CAND; cd++)
         if (cfg_palette)
@@ -199,6 +214,7 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
     EB_MALLOC_ARRAY(context_ptr->full_cost_array, MAX_NFL_BUFF);
     EB_MALLOC_ARRAY(context_ptr->full_cost_skip_ptr, MAX_NFL_BUFF);
     EB_MALLOC_ARRAY(context_ptr->full_cost_merge_ptr, MAX_NFL_BUFF);
+#if !MEM_OPT_MD_BUF_DESC
     // Candidate Buffers
     EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_ptr_array, MAX_NFL_BUFF);
     for (buffer_index = 0; buffer_index < MAX_NFL_BUFF; ++buffer_index) {
@@ -221,6 +237,7 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
                &(context_ptr->full_cost_merge_ptr[buffer_index]));
 #endif
     }
+#endif
 
 #if !SB64_MEM_OPT
     EB_NEW(context_ptr->candidate_buffer_tx_depth_1,
@@ -382,7 +399,12 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
                 context_ptr->md_blk_arr_nsq[0].neigh_top_recon[0] + offset;
         }
 #endif
+#if MEM_OPT_PALETTE
+        const BlockGeom *blk_geom = get_blk_geom_mds(coded_leaf_index);
+        if (svt_av1_allow_palette(cfg_palette, blk_geom->bsize))
+#else
         if (cfg_palette)
+#endif
             EB_MALLOC_ARRAY(
                 context_ptr->md_blk_arr_nsq[coded_leaf_index].palette_info.color_idx_map,
                 MAX_PALETTE_SQUARE);
@@ -493,6 +515,44 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
         eb_picture_buffer_desc_ctor,
         (EbPtr)&picture_buffer_desc_init_data);
 
+#endif
+
+#if MEM_OPT_MD_BUF_DESC
+    EbPictureBufferDescInitData double_width_picture_buffer_desc_init_data;
+    double_width_picture_buffer_desc_init_data.max_width          = sb_size;
+    double_width_picture_buffer_desc_init_data.max_height         = sb_size;
+    double_width_picture_buffer_desc_init_data.bit_depth          = EB_16BIT;
+    double_width_picture_buffer_desc_init_data.color_format       = EB_YUV420;
+    double_width_picture_buffer_desc_init_data.buffer_enable_mask = PICTURE_BUFFER_DESC_FULL_MASK;
+    double_width_picture_buffer_desc_init_data.left_padding       = 0;
+    double_width_picture_buffer_desc_init_data.right_padding      = 0;
+    double_width_picture_buffer_desc_init_data.top_padding        = 0;
+    double_width_picture_buffer_desc_init_data.bot_padding        = 0;
+    double_width_picture_buffer_desc_init_data.split_mode         = EB_FALSE;
+
+    // The temp_recon_ptr and temp_residual_ptr will be shared by all candidates
+    // If you want to do something with residual or recon, you need to create one
+    EB_NEW(context_ptr->temp_recon_ptr,
+           eb_picture_buffer_desc_ctor,
+           (EbPtr)&picture_buffer_desc_init_data);
+    EB_NEW(context_ptr->temp_residual_ptr,
+           eb_picture_buffer_desc_ctor,
+           (EbPtr)&double_width_picture_buffer_desc_init_data);
+
+    // Candidate Buffers
+    EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_ptr_array, MAX_NFL_BUFF);
+    for (buffer_index = 0; buffer_index < MAX_NFL_BUFF; ++buffer_index) {
+        EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
+               mode_decision_candidate_buffer_ctor,
+               context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
+               sb_size,
+               context_ptr->temp_residual_ptr,
+               context_ptr->temp_recon_ptr,
+               &(context_ptr->fast_cost_array[buffer_index]),
+               &(context_ptr->full_cost_array[buffer_index]),
+               &(context_ptr->full_cost_skip_ptr[buffer_index]),
+               &(context_ptr->full_cost_merge_ptr[buffer_index]));
+    }
 #endif
     return EB_ErrorNone;
 }

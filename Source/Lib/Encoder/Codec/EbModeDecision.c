@@ -606,12 +606,16 @@ static void mode_decision_candidate_buffer_dctor(EbPtr p) {
     EB_DELETE(obj->prediction_ptr_temp);
     EB_DELETE(obj->cfl_temp_prediction_ptr);
 #endif
+#if !MEM_OPT_MD_BUF_DESC
     EB_DELETE(obj->residual_ptr);
+#endif
 #if !CAND_MEM_OPT
     EB_DELETE(obj->residual_quant_coeff_ptr);
 #endif
     EB_DELETE(obj->recon_coeff_ptr);
+#if !MEM_OPT_MD_BUF_DESC
     EB_DELETE(obj->recon_ptr);
+#endif
 }
 static void mode_decision_scratch_candidate_buffer_dctor(EbPtr p) {
     ModeDecisionCandidateBuffer *obj = (ModeDecisionCandidateBuffer *)p;
@@ -635,11 +639,17 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
 #if SB64_MEM_OPT
                                                 uint8_t sb_size,
 #endif
+#if MEM_OPT_MD_BUF_DESC
+                                                EbPictureBufferDesc *temp_residual_ptr,
+                                                EbPictureBufferDesc *temp_recon_ptr,
+#endif
                                                 uint64_t *fast_cost_ptr, uint64_t *full_cost_ptr,
                                                 uint64_t *full_cost_skip_ptr,
                                                 uint64_t *full_cost_merge_ptr) {
     EbPictureBufferDescInitData picture_buffer_desc_init_data;
+#if !MEM_OPT_MD_BUF_DESC
     EbPictureBufferDescInitData double_width_picture_buffer_desc_init_data;
+#endif
 
     EbPictureBufferDescInitData thirty_two_width_picture_buffer_desc_init_data;
 
@@ -661,6 +671,7 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     picture_buffer_desc_init_data.top_padding                     = 0;
     picture_buffer_desc_init_data.bot_padding                     = 0;
     picture_buffer_desc_init_data.split_mode                      = EB_FALSE;
+#if !MEM_OPT_MD_BUF_DESC
 #if SB64_MEM_OPT
     double_width_picture_buffer_desc_init_data.max_width          = sb_size;
     double_width_picture_buffer_desc_init_data.max_height         = sb_size;
@@ -676,6 +687,7 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     double_width_picture_buffer_desc_init_data.top_padding        = 0;
     double_width_picture_buffer_desc_init_data.bot_padding        = 0;
     double_width_picture_buffer_desc_init_data.split_mode         = EB_FALSE;
+#endif
 
 #if SB64_MEM_OPT
     thirty_two_width_picture_buffer_desc_init_data.max_width    = sb_size;
@@ -710,9 +722,14 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
            eb_picture_buffer_desc_ctor,
            (EbPtr)&picture_buffer_desc_init_data);
 #endif
+#if !MEM_OPT_MD_BUF_DESC
     EB_NEW(buffer_ptr->residual_ptr,
            eb_picture_buffer_desc_ctor,
            (EbPtr)&double_width_picture_buffer_desc_init_data);
+#else
+    // Reuse the residual_ptr memory in MD context
+    buffer_ptr->residual_ptr = temp_residual_ptr;
+#endif
 #if !CAND_MEM_OPT
     EB_NEW(buffer_ptr->residual_quant_coeff_ptr,
            eb_picture_buffer_desc_ctor,
@@ -722,8 +739,13 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
            eb_picture_buffer_desc_ctor,
            (EbPtr)&thirty_two_width_picture_buffer_desc_init_data);
 
+#if !MEM_OPT_MD_BUF_DESC
     EB_NEW(
         buffer_ptr->recon_ptr, eb_picture_buffer_desc_ctor, (EbPtr)&picture_buffer_desc_init_data);
+#else
+    // Reuse the recon_ptr memory in MD context
+    buffer_ptr->recon_ptr = temp_recon_ptr;
+#endif
 
     // Costs
     buffer_ptr->fast_cost_ptr       = fast_cost_ptr;
@@ -2183,21 +2205,37 @@ void inject_mvp_candidates_ii(struct ModeDecisionContext *context_ptr, PictureCo
         {
             //NEAREST_NEAREST
             int16_t to_inject_mv_x_l0 =
+#if MEM_OPT_MV_STACK
+                context_ptr->ed_ref_mv_stack[ref_pair][0].this_mv.as_mv.col;
+#else
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                     .ed_ref_mv_stack[ref_pair][0]
                     .this_mv.as_mv.col;
+#endif
             int16_t to_inject_mv_y_l0 =
+#if MEM_OPT_MV_STACK
+                context_ptr->ed_ref_mv_stack[ref_pair][0].this_mv.as_mv.row;
+#else
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                     .ed_ref_mv_stack[ref_pair][0]
                     .this_mv.as_mv.row;
+#endif
             int16_t to_inject_mv_x_l1 =
+#if MEM_OPT_MV_STACK
+                context_ptr->ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.col;
+#else
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                     .ed_ref_mv_stack[ref_pair][0]
                     .comp_mv.as_mv.col;
+#endif
             int16_t to_inject_mv_y_l1 =
+#if MEM_OPT_MV_STACK
+                context_ptr->ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.row;
+#else
                 context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                     .ed_ref_mv_stack[ref_pair][0]
                     .comp_mv.as_mv.row;
+#endif
 
             inj_mv = context_ptr->injected_mv_count_bipred == 0 ||
                      mrp_is_already_injected_mv_bipred(context_ptr,
@@ -2531,13 +2569,21 @@ void inject_new_nearest_new_comb_candidates(const SequenceControlSet *  scs_ptr,
                     pcs_ptr->parent_pcs_ptr->me_results[context_ptr->me_sb_addr];
 #endif
                 int16_t to_inject_mv_x_l0 =
+#if MEM_OPT_MV_STACK
+                    context_ptr->ed_ref_mv_stack[ref_pair][0].this_mv.as_mv.col;
+#else
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                         .ed_ref_mv_stack[ref_pair][0]
                         .this_mv.as_mv.col;
+#endif
                 int16_t to_inject_mv_y_l0 =
+#if MEM_OPT_MV_STACK
+                    context_ptr->ed_ref_mv_stack[ref_pair][0].this_mv.as_mv.row;
+#else
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                         .ed_ref_mv_stack[ref_pair][0]
                         .this_mv.as_mv.row;
+#endif
                 int16_t to_inject_mv_x_l1 =
                     context_ptr->sb_me_mv[context_ptr->blk_geom->blkidx_mds][get_list_idx(rf[1])]
                     [ref_idx_1][0];
@@ -2689,13 +2735,21 @@ void inject_new_nearest_new_comb_candidates(const SequenceControlSet *  scs_ptr,
                     context_ptr
                     ->sb_me_mv[context_ptr->blk_geom->blkidx_mds][REF_LIST_0][ref_idx_0][1];
                 int16_t to_inject_mv_x_l1 =
+#if MEM_OPT_MV_STACK
+                    context_ptr->ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.col;
+#else
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                         .ed_ref_mv_stack[ref_pair][0]
                         .comp_mv.as_mv.col;
+#endif
                 int16_t to_inject_mv_y_l1 =
+#if MEM_OPT_MV_STACK
+                    context_ptr->ed_ref_mv_stack[ref_pair][0].comp_mv.as_mv.row;
+#else
                     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                         .ed_ref_mv_stack[ref_pair][0]
                         .comp_mv.as_mv.row;
+#endif
 
                 inj_mv = context_ptr->injected_mv_count_bipred == 0 ||
                          mrp_is_already_injected_mv_bipred(context_ptr,
@@ -5645,8 +5699,12 @@ void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *context_ptr,
     IntMv nearestmv, nearmv;
     eb_av1_find_best_ref_mvs_from_stack(
         0,
+#if MEM_OPT_MV_STACK
+        context_ptr->ed_ref_mv_stack /*mbmi_ext*/,
+#else
         context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
             .ed_ref_mv_stack /*mbmi_ext*/,
+#endif
         xd,
         ref_frame,
         &nearestmv,
@@ -5660,9 +5718,13 @@ void intra_bc_search(PictureControlSet *pcs, ModeDecisionContext *context_ptr,
     // Ref DV should not have sub-pel.
     assert((dv_ref.as_mv.col & 7) == 0);
     assert((dv_ref.as_mv.row & 7) == 0);
+#if MEM_OPT_MV_STACK
+    context_ptr->ed_ref_mv_stack[INTRA_FRAME][0].this_mv = dv_ref;
+#else
     context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
         .ed_ref_mv_stack[INTRA_FRAME][0]
         .this_mv = dv_ref;
+#endif
 
     /* pointer to current frame */
     Yv12BufferConfig cur_buf;
@@ -5773,8 +5835,12 @@ void inject_intra_bc_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext 
     uint32_t               dv_i;
 
     for (dv_i = 0; dv_i < num_dv_cand; dv_i++) {
+#if MEM_OPT_PALETTE
+        cand_array[*cand_cnt].palette_info = NULL;
+#else
         cand_array[*cand_cnt].palette_info.pmi.palette_size[0] = 0;
         cand_array[*cand_cnt].palette_info.pmi.palette_size[1] = 0;
+#endif
         cand_array[*cand_cnt].type                             = INTRA_MODE;
         cand_array[*cand_cnt].intra_luma_mode                  = DC_PRED;
         cand_array[*cand_cnt].distortion_ready                 = 0;
@@ -5803,13 +5869,21 @@ void inject_intra_bc_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext 
         cand_array[*cand_cnt].motion_vector_xl0       = dv_cand[dv_i].col;
         cand_array[*cand_cnt].motion_vector_yl0       = dv_cand[dv_i].row;
         cand_array[*cand_cnt].motion_vector_pred_x[REF_LIST_0] =
+#if MEM_OPT_MV_STACK
+            context_ptr->ed_ref_mv_stack[INTRA_FRAME][0].this_mv.as_mv.col;
+#else
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                 .ed_ref_mv_stack[INTRA_FRAME][0]
                 .this_mv.as_mv.col;
+#endif
         cand_array[*cand_cnt].motion_vector_pred_y[REF_LIST_0] =
+#if MEM_OPT_MV_STACK
+            context_ptr->ed_ref_mv_stack[INTRA_FRAME][0].this_mv.as_mv.row;
+#else
             context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                 .ed_ref_mv_stack[INTRA_FRAME][0]
                 .this_mv.as_mv.row;
+#endif
         cand_array[*cand_cnt].drl_index         = 0;
         cand_array[*cand_cnt].ref_mv_index      = 0;
 #if !CLEAN_UP_SB_DATA_7
@@ -6022,8 +6096,12 @@ void  inject_intra_candidates(
                     int32_t  p_angle = mode_to_angle_map[(PredictionMode)open_loop_intra_candidate] + angle_delta * ANGLE_STEP;
                     if (!disable_z2_prediction || (p_angle <= 90 || p_angle >= 180)) {
                         cand_array[cand_total_cnt].type = INTRA_MODE;
+#if MEM_OPT_PALETTE
+                        cand_array[cand_total_cnt].palette_info = NULL;
+#else
                         cand_array[cand_total_cnt].palette_info.pmi.palette_size[0] = 0;
                         cand_array[cand_total_cnt].palette_info.pmi.palette_size[1] = 0;
+#endif
                         cand_array[cand_total_cnt].intra_luma_mode = open_loop_intra_candidate;
                         cand_array[cand_total_cnt].distortion_ready = 0;
                         cand_array[cand_total_cnt].use_intrabc = 0;
@@ -6083,8 +6161,12 @@ void  inject_intra_candidates(
         }
         else {
             cand_array[cand_total_cnt].type = INTRA_MODE;
+#if MEM_OPT_PALETTE
+            cand_array[cand_total_cnt].palette_info = NULL;
+#else
             cand_array[cand_total_cnt].palette_info.pmi.palette_size[0] = 0;
             cand_array[cand_total_cnt].palette_info.pmi.palette_size[1] = 0;
+#endif
             cand_array[cand_total_cnt].intra_luma_mode = open_loop_intra_candidate;
             cand_array[cand_total_cnt].distortion_ready = 0;
             cand_array[cand_total_cnt].use_intrabc = 0;
@@ -6188,8 +6270,12 @@ void  inject_filter_intra_candidates(
             cand_array[cand_total_cnt].use_intrabc = 0;
             cand_array[cand_total_cnt].filter_intra_mode = filter_intra_mode;
             cand_array[cand_total_cnt].is_directional_mode_flag = 0;
+#if MEM_OPT_PALETTE
+            cand_array[cand_total_cnt].palette_info = NULL;
+#else
             cand_array[cand_total_cnt].palette_info.pmi.palette_size[0] = 0;
             cand_array[cand_total_cnt].palette_info.pmi.palette_size[1] = 0;
+#endif
             cand_array[cand_total_cnt].angle_delta[PLANE_TYPE_Y] = 0;
 
             // Search the best independent intra chroma mode
@@ -6349,8 +6435,12 @@ void  inject_palette_candidates(
     for (cand_i = 0; cand_i < tot_palette_cands; ++cand_i) {
 
         palette_cand_array[cand_i].pmi.palette_size[1] = 0;
+#if MEM_OPT_PALETTE
+        cand_array[can_total_cnt].palette_info = &palette_cand_array[cand_i];
+#else
         memcpy(cand_array[can_total_cnt].palette_info.color_idx_map, palette_cand_array[cand_i].color_idx_map, 64 * 64);
         memcpy(&cand_array[can_total_cnt].palette_info.pmi, &palette_cand_array[cand_i].pmi, sizeof(PaletteModeInfo));
+#endif
         assert(palette_cand_array[cand_i].pmi.palette_size[0] < 9);
         //to re check these fields
         cand_array[can_total_cnt].type = INTRA_MODE;
@@ -6506,8 +6596,12 @@ EbErrorType generate_md_stage_0_cand(
 #endif
     //can be removed later if need be
     for (uint16_t i = 0; i < cand_total_cnt; i++) {
+#if MEM_OPT_PALETTE
+        assert(context_ptr->fast_candidate_array[i].palette_info == NULL);
+#else
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[0] == 0);
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[1] == 0);
+#endif
     }
 #if SHUT_PALETTE_BC_PD_PASS_0_1
     if (svt_av1_allow_palette(context_ptr->md_palette_mode, context_ptr->blk_geom->bsize)) {
@@ -6520,8 +6614,15 @@ EbErrorType generate_md_stage_0_cand(
             &cand_total_cnt);
     }
     for (uint16_t i = 0; i < cand_total_cnt; i++) {
+#if MEM_OPT_PALETTE
+        assert(context_ptr->fast_candidate_array[i].palette_info == NULL ||
+                context_ptr->fast_candidate_array[i].palette_info->pmi.palette_size[0] < 9);
+        assert(context_ptr->fast_candidate_array[i].palette_info == NULL ||
+                context_ptr->fast_candidate_array[i].palette_info->pmi.palette_size[1] == 0);
+#else
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[0] < 9);
         assert(context_ptr->fast_candidate_array[i].palette_info.pmi.palette_size[1] == 0);
+#endif
     }
 #if SHUT_PALETTE_BC_PD_PASS_0_1
     }
@@ -6560,7 +6661,12 @@ EbErrorType generate_md_stage_0_cand(
 #if !CLASS_MERGING
                 if (cand_ptr->filter_intra_mode == FILTER_INTRA_MODES) {
 #endif
+#if MEM_OPT_PALETTE
+                  if (cand_ptr->palette_info == NULL ||
+                          cand_ptr->palette_info->pmi.palette_size[0] == 0) {
+#else
                   if (cand_ptr->palette_info.pmi.palette_size[0] == 0) {
+#endif
                     cand_ptr->cand_class = CAND_CLASS_0;
                     context_ptr->md_stage_0_count[CAND_CLASS_0]++;
                   }
@@ -6846,13 +6952,29 @@ uint32_t product_full_mode_decision(
         }
         if (blk_ptr->prediction_mode_flag == INTRA_MODE)
         {
+#if MEM_OPT_PALETTE
+            if (candidate_ptr->palette_info)
+                memcpy(&blk_ptr->palette_info.pmi, &candidate_ptr->palette_info->pmi, sizeof(PaletteModeInfo));
+            else
+                memset(&blk_ptr->palette_info.pmi, 0, sizeof(PaletteModeInfo));
+#else
             memcpy(&blk_ptr->palette_info.pmi, &candidate_ptr->palette_info.pmi, sizeof(PaletteModeInfo));
+#endif
 #if SHUT_PALETTE_BC_PD_PASS_0_1
             if (svt_av1_allow_palette(context_ptr->md_palette_mode, context_ptr->blk_geom->bsize))
 #else
             if(svt_av1_allow_palette(context_ptr->sb_ptr->pcs_ptr->parent_pcs_ptr->palette_mode, context_ptr->blk_geom->bsize))
 #endif
+#if MEM_OPT_PALETTE
+            {
+               if (candidate_ptr->palette_info)
+                   memcpy(blk_ptr->palette_info.color_idx_map, candidate_ptr->palette_info->color_idx_map, MAX_PALETTE_SQUARE);
+               else
+                   memset(blk_ptr->palette_info.color_idx_map, 0, MAX_PALETTE_SQUARE);
+            }
+#else
                memcpy(blk_ptr->palette_info.color_idx_map, candidate_ptr->palette_info.color_idx_map, MAX_PALETTE_SQUARE);
+#endif
         }
         else {
             blk_ptr->palette_info.pmi.palette_size[0] = blk_ptr->palette_info.pmi.palette_size[1] = 0;

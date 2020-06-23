@@ -1403,8 +1403,12 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
         use_ssd ? full_lambda : fast_lambda,
         use_ssd,
         pcs_ptr,
+#if MEM_OPT_MV_STACK
+        &(context_ptr->ed_ref_mv_stack[candidate_ptr->ref_frame_type][0]),
+#else
         &(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
               .ed_ref_mv_stack[candidate_ptr->ref_frame_type][0]),
+#endif
         context_ptr->blk_geom,
         context_ptr->blk_origin_y >> MI_SIZE_LOG2,
         context_ptr->blk_origin_x >> MI_SIZE_LOG2,
@@ -4242,8 +4246,12 @@ void md_stage_0(
                         fast_lambda,
                         0,
                         pcs_ptr,
+#if MEM_OPT_MV_STACK
+                        &(context_ptr->ed_ref_mv_stack[candidate_ptr->ref_frame_type][0]),
+#else
                         &(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                               .ed_ref_mv_stack[candidate_ptr->ref_frame_type][0]),
+#endif
                         context_ptr->blk_geom,
                         context_ptr->blk_origin_y >> MI_SIZE_LOG2,
                         context_ptr->blk_origin_x >> MI_SIZE_LOG2,
@@ -5651,8 +5659,12 @@ uint32_t early_intra_evaluation(PictureControlSet *pcs_ptr, ModeDecisionContext 
     EbPictureBufferDesc *prediction_ptr = candidate_buffer->prediction_ptr;
 
     candidate_ptr->type = INTRA_MODE;
+#if MEM_OPT_PALETTE
+    candidate_ptr->palette_info = NULL;
+#else
     candidate_ptr->palette_info.pmi.palette_size[0] = 0;
     candidate_ptr->palette_info.pmi.palette_size[1] = 0;
+#endif
     candidate_ptr->intra_luma_mode = DC_PRED;
     candidate_ptr->distortion_ready = 0;
     candidate_ptr->use_intrabc = 0;
@@ -7955,8 +7967,14 @@ EbErrorType av1_intra_luma_prediction(ModeDecisionContext *        md_context_pt
             tx_size,
             mode, //PredictionMode mode,
             candidate_buffer_ptr->candidate_ptr->angle_delta[PLANE_TYPE_Y],
+#if MEM_OPT_PALETTE
+            candidate_buffer_ptr->candidate_ptr->palette_info ?
+                (candidate_buffer_ptr->candidate_ptr->palette_info->pmi.palette_size[0] > 0) : 0,
+            candidate_buffer_ptr->candidate_ptr->palette_info, //ATB MD
+#else
             candidate_buffer_ptr->candidate_ptr->palette_info.pmi.palette_size[0] > 0,
             &candidate_buffer_ptr->candidate_ptr->palette_info, //ATB MD
+#endif
             candidate_buffer_ptr->candidate_ptr->filter_intra_mode,
             top_neigh_array + 1,
             left_neigh_array + 1,
@@ -8018,8 +8036,14 @@ EbErrorType av1_intra_luma_prediction(ModeDecisionContext *        md_context_pt
             tx_size,
             mode,
             candidate_buffer_ptr->candidate_ptr->angle_delta[PLANE_TYPE_Y],
+#if MEM_OPT_PALETTE
+            candidate_buffer_ptr->candidate_ptr->palette_info ?
+                (candidate_buffer_ptr->candidate_ptr->palette_info->pmi.palette_size[0] > 0) : 0,
+            candidate_buffer_ptr->candidate_ptr->palette_info, //ATB MD
+#else
             candidate_buffer_ptr->candidate_ptr->palette_info.pmi.palette_size[0] > 0,
             &candidate_buffer_ptr->candidate_ptr->palette_info, //ATB MD
+#endif
             candidate_buffer_ptr->candidate_ptr->filter_intra_mode,
             top_neigh_array + 1,
             left_neigh_array + 1,
@@ -10520,7 +10544,12 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         // Check independant chroma vs. cfl
         if (!is_inter)
 #if FIX_CHROMA_PALETTE_INTERACTION
+#if MEM_OPT_PALETTE
+            if (candidate_ptr->palette_info == NULL ||
+                    candidate_ptr->palette_info->pmi.palette_size[0] == 0)
+#else
             if (candidate_ptr->palette_info.pmi.palette_size[0] == 0)
+#endif
 #endif
             if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level == CHROMA_MODE_0)
 #if FIX_CFL_OFF
@@ -10732,7 +10761,12 @@ void update_intra_chroma_mode(ModeDecisionContext *context_ptr, ModeDecisionCand
 
 #if FIX_CHROMA_PALETTE_INTERACTION
             if (!is_inter) {
+#if MEM_OPT_PALETTE
+                if (candidate_ptr->palette_info == NULL ||
+                        candidate_ptr->palette_info->pmi.palette_size[0] == 0) {
+#else
                 if (candidate_ptr->palette_info.pmi.palette_size[0] == 0) {
+#endif
 #else
             if (candidate_ptr->type == INTRA_MODE) {
 #endif
@@ -11812,8 +11846,12 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                         (uint8_t)av1_is_directional_mode((PredictionMode)uv_mode);
                     candidate_array[uv_mode_total_count].angle_delta[PLANE_TYPE_UV] = uv_angle_delta;
                     candidate_array[uv_mode_total_count].tx_depth = 0;
+#if MEM_OPT_PALETTE
+                    candidate_array[uv_mode_total_count].palette_info = NULL;
+#else
                     candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[0] = 0;
                     candidate_array[uv_mode_total_count].palette_info.pmi.palette_size[1] = 0;
+#endif
                     candidate_array[uv_mode_total_count].filter_intra_mode = FILTER_INTRA_MODES;
                     candidate_array[uv_mode_total_count].cfl_alpha_signs = 0;
                     candidate_array[uv_mode_total_count].cfl_alpha_idx = 0;
@@ -12064,8 +12102,12 @@ void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
                     0,
                     0,
                     pcs_ptr,
+#if MEM_OPT_MV_STACK
+                    &(context_ptr->ed_ref_mv_stack[candidate_ptr->ref_frame_type][0]),
+#else
                     &(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds]
                           .ed_ref_mv_stack[candidate_ptr->ref_frame_type][0]),
+#endif
                     context_ptr->blk_geom,
                     context_ptr->blk_origin_y >> MI_SIZE_LOG2,
                     context_ptr->blk_origin_x >> MI_SIZE_LOG2,

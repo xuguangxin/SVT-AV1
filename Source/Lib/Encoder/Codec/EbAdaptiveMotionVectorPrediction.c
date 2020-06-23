@@ -1167,7 +1167,11 @@ void mvp_bypass_init(PictureControlSet *pcs_ptr, ModeDecisionContext *context_pt
 
     // Set to 0 the fields which would have been set by setup_ref_mv_list()
     memset(xd->ref_mv_count, 0, sizeof(uint8_t) * MODE_CTX_REF_FRAMES);
+#if MEM_OPT_MV_STACK
+    memset(context_ptr->ed_ref_mv_stack,
+#else
     memset(context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ed_ref_mv_stack,
+#endif
            0,
            sizeof(CandidateMv) * MODE_CTX_REF_FRAMES * MAX_REF_MV_STACK_SIZE);
 #if CLEAN_UP_SB_DATA_0
@@ -1208,9 +1212,15 @@ void generate_av1_mvp_table(TileInfo *tile, ModeDecisionContext *context_ptr, Bl
     xd->mb_to_right_edge  = ((cm->mi_cols - bw - mi_col) * MI_SIZE) * 8;
 
     memset(xd->ref_mv_count, 0, sizeof(xd->ref_mv_count));
+#if MEM_OPT_MV_STACK
+    memset(context_ptr->ed_ref_mv_stack,
+           0,
+           sizeof(context_ptr->ed_ref_mv_stack));
+#else
     memset(context_ptr->md_local_blk_unit[blk_geom->blkidx_mds].ed_ref_mv_stack,
            0,
            sizeof(context_ptr->md_local_blk_unit[blk_geom->blkidx_mds].ed_ref_mv_stack));
+#endif
 
     xd->up_available   = (mi_row > tile->mi_row_start);
     xd->left_available = (mi_col > tile->mi_col_start);
@@ -1283,7 +1293,11 @@ void generate_av1_mvp_table(TileInfo *tile, ModeDecisionContext *context_ptr, Bl
                           xd,
                           ref_frame,
                           xd->ref_mv_count,
+#if MEM_OPT_MV_STACK
+                          context_ptr->ed_ref_mv_stack,
+#else
                           context_ptr->md_local_blk_unit[blk_geom->blkidx_mds].ed_ref_mv_stack,
+#endif
 #if CLEAN_UP_SB_DATA_0
                           context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].ref_mvs,
 #else
@@ -1316,20 +1330,37 @@ void get_av1_mv_pred_drl(ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
     if (is_compound && mode != GLOBAL_GLOBALMV) {
         int32_t ref_mv_idx = drl_index + 1;
         nearestmv[0] =
+#if MEM_OPT_MV_STACK
+            context_ptr->ed_ref_mv_stack[ref_frame][0].this_mv;
+#else
             context_ptr->md_local_blk_unit[blk_ptr->mds_idx].ed_ref_mv_stack[ref_frame][0].this_mv;
+#endif
         nearestmv[1] =
+#if MEM_OPT_MV_STACK
+            context_ptr->ed_ref_mv_stack[ref_frame][0].comp_mv;
+#else
             context_ptr->md_local_blk_unit[blk_ptr->mds_idx].ed_ref_mv_stack[ref_frame][0].comp_mv;
+#endif
+#if MEM_OPT_MV_STACK
+        nearmv[0] = context_ptr->ed_ref_mv_stack[ref_frame][ref_mv_idx].this_mv;
+        nearmv[1] = context_ptr->ed_ref_mv_stack[ref_frame][ref_mv_idx].comp_mv;
+#else
         nearmv[0] = context_ptr->md_local_blk_unit[blk_ptr->mds_idx]
                         .ed_ref_mv_stack[ref_frame][ref_mv_idx]
                         .this_mv;
         nearmv[1] = context_ptr->md_local_blk_unit[blk_ptr->mds_idx]
                         .ed_ref_mv_stack[ref_frame][ref_mv_idx]
                         .comp_mv;
+#endif
     } else if (drl_index > 0 && mode == NEARMV) {
         assert((1 + drl_index) < MAX_REF_MV_STACK_SIZE);
+#if MEM_OPT_MV_STACK
+        IntMv cur_mv = context_ptr->ed_ref_mv_stack[ref_frame][1 + drl_index].this_mv;
+#else
         IntMv cur_mv = context_ptr->md_local_blk_unit[blk_ptr->mds_idx]
                            .ed_ref_mv_stack[ref_frame][1 + drl_index]
                            .this_mv;
+#endif
         nearmv[0] = cur_mv;
     }
 
@@ -1345,20 +1376,32 @@ void get_av1_mv_pred_drl(ModeDecisionContext *context_ptr, BlkStruct *blk_ptr,
 
         // TODO(jingning, yunqing): Do we need a lower_mv_precision() call here?
         if (compound_ref0_mode(mode) == NEWMV)
+#if MEM_OPT_MV_STACK
+            ref_mv[0] = context_ptr->ed_ref_mv_stack[ref_frame][ref_mv_idx].this_mv;
+#else
             ref_mv[0] = context_ptr->md_local_blk_unit[blk_ptr->mds_idx]
                             .ed_ref_mv_stack[ref_frame][ref_mv_idx]
                             .this_mv;
+#endif
 
         if (compound_ref1_mode(mode) == NEWMV)
+#if MEM_OPT_MV_STACK
+            ref_mv[1] = context_ptr->ed_ref_mv_stack[ref_frame][ref_mv_idx].comp_mv;
+#else
             ref_mv[1] = context_ptr->md_local_blk_unit[blk_ptr->mds_idx]
                             .ed_ref_mv_stack[ref_frame][ref_mv_idx]
                             .comp_mv;
+#endif
     } else {
         if (mode == NEWMV) {
             if (xd->ref_mv_count[ref_frame] > 1)
+#if MEM_OPT_MV_STACK
+                ref_mv[0] = context_ptr->ed_ref_mv_stack[ref_frame][drl_index].this_mv;
+#else
                 ref_mv[0] = context_ptr->md_local_blk_unit[blk_ptr->mds_idx]
                                 .ed_ref_mv_stack[ref_frame][drl_index]
                                 .this_mv;
+#endif
         }
     }
 }

@@ -70,7 +70,11 @@ typedef struct ModeDecisionCandidate {
     EbBool      merge_flag;
     uint16_t    count_non_zero_coeffs;
     uint8_t     type;
+#if MEM_OPT_PALETTE
+    PaletteInfo *palette_info;
+#else
     PaletteInfo palette_info;
+#endif
     // MD Rate Estimation Ptr
     MdRateEstimationContext *md_rate_estimation_ptr; // 64 bits
     uint64_t                 fast_luma_rate;
@@ -248,7 +252,13 @@ typedef struct ModeDecisionCandidateBuffer {
     **************************************/
 extern EbErrorType mode_decision_candidate_buffer_ctor(
 #if SB64_MEM_OPT
+#if MEM_OPT_MD_BUF_DESC
+    ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepthEnum max_bitdepth, uint8_t sb_size,
+    EbPictureBufferDesc *temp_residual_ptr, EbPictureBufferDesc *temp_recon_ptr,
+    uint64_t *fast_cost_ptr,
+#else
     ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepthEnum max_bitdepth, uint8_t sb_size, uint64_t *fast_cost_ptr,
+#endif
 #else
     ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepthEnum max_bitdepth, uint64_t *fast_cost_ptr,
 #endif

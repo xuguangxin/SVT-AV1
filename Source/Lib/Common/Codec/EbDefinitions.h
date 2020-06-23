@@ -581,6 +581,9 @@ extern "C" {
 #define ADMDTM4_TUNE 1
 #define ADMDTM5_TUNE 1
 #endif
+#define MEM_OPT_PALETTE     1 // Memory optimization for palette
+#define MEM_OPT_MV_STACK    1 // Memory optimization for ed_ref_mv_stack
+#define MEM_OPT_MD_BUF_DESC 1 // Memory optimization for buf_desc used in MDContext
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
