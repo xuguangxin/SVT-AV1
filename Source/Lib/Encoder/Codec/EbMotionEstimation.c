@@ -12492,10 +12492,15 @@ EbErrorType motion_estimate_sb(
     num_of_list_to_search =
         (pcs_ptr->slice_type == P_SLICE) ? (uint32_t)REF_LIST_0 : (uint32_t)REF_LIST_1;
 
+#if PRUNE_ADJUST_ME_BUG_FIX
+    //pruning of the references is not done for alt-ref / when HMeLevel2 not done
+    uint8_t prune_ref = (context_ptr->enable_hme_flag && context_ptr->enable_hme_level2_flag && context_ptr->me_alt_ref == EB_FALSE) ? 1 : 0;
+#else
     //pruning of the references is not done for alt-ref / Base-Layer (HME not done for list1 refs) / non-complete-SBs when HMeLevel2 is done
     uint8_t prune_ref = (context_ptr->enable_hme_flag && context_ptr->enable_hme_level2_flag &&
         context_ptr->me_alt_ref == EB_FALSE && sb_height == BLOCK_SIZE_64 &&
         pcs_ptr->temporal_layer_index > 0) ? 1 : 0;
+#endif
     //init hme results buffer
     for (uint32_t li = 0; li < MAX_NUM_OF_REF_PIC_LIST; li++) {
         for (uint32_t ri = 0; ri < REF_LIST_MAX_DEPTH; ri++) {

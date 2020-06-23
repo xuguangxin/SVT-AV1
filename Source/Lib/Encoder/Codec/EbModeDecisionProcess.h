@@ -44,8 +44,7 @@ extern "C" {
 #define REFINE_ME_MV_EIGHT_PEL_REF_WINDOW 3
 #endif
 #if SEARCH_TOP_N
-#define MD_MAX_BEST_FP_POS 8
-#define MD_MAX_HP_POS 225
+#define MD_MOTION_SEARCH_MAX_BEST_MV 8
 #endif
 /**************************************
       * Macros
@@ -321,7 +320,7 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t half_pel_search_height;              // 1/2 Pel search area height
     uint8_t half_pel_interpolation;              // 1/2 Pel interpolation method
 #if SEARCH_TOP_N
-    uint8_t half_pel_search_pos_cnt;             // [1:MD_MAX_BEST_FP_POS] total number of full-pel position(s) to search (i.e. perform 1/3 Pel for the top half_pel_search_pos_cnt full-pel candidates)
+    uint8_t half_pel_search_pos_cnt;             // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of full-pel position(s) to search (i.e. perform 1/2 Pel for the top half_pel_search_pos_cnt best MV)
 #endif
     uint8_t quarter_pel_search_enabled;          // 0: OFF; 1: ON
     uint8_t quarter_pel_search_scan;             // 0: H, V, D; 1: H, V, 2: H, 3: V
@@ -329,7 +328,7 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t quarter_pel_search_height;           // 1/4 Pel search area height
     uint8_t quarter_pel_interpolation;           // 1/4 Pel interpolation method
 #if IMPROVE_QUARTER_PEL
-    uint8_t quarter_pel_search_pos_cnt;          // [1:MD_MAX_BEST_FP_POS] total number of half-pel position(s) to search (i.e. perform 1/4 Pel for the top half_pel_search_pos_cnt full-pel candidates)
+    uint8_t quarter_pel_search_pos_cnt;          // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of half-pel position(s) to search (i.e. perform 1/4 Pel for the top half_pel_search_pos_cnt best MV)
 #endif
     uint8_t eight_pel_search_enabled;            // 0: OFF; 1: ON
     uint8_t eight_pel_search_scan;               // 0: H, V, D; 1: H, V, 2: H, 3: V
@@ -337,15 +336,15 @@ typedef struct MdSubPelSearchCtrls {
     uint8_t eight_pel_search_height;             // 1/8 Pel search area height
     uint8_t eight_pel_interpolation;             // 1/8 Pel interpolation method
 #if IMPROVE_EIGHT_PEL
-    uint8_t eight_pel_search_pos_cnt;           // [1:MD_MAX_BEST_FP_POS] total number of eight-pel position(s) to search (i.e. perform 1/8 Pel for the top quarter_pel_search_pos_cnt full-pel candidates)
+    uint8_t eight_pel_search_pos_cnt;           // [1:MD_MOTION_SEARCH_MAX_BEST_MV] total number of eight-pel position(s) to search (i.e. perform 1/8 Pel for the top quarter_pel_search_pos_cnt best MV)
 #endif
 }MdSubPelSearchCtrls;
 #if SEARCH_TOP_N
-typedef struct MdFpResults {
+typedef struct MdMotionSearchResults {
     uint32_t dist; // distortion
     int16_t mvx;  // MVx
     int16_t mvy;  // MVy
-} MdFpResults;
+} MdMotionSearchResults;
 #endif
 #endif
 #if TXT_CONTROL
@@ -717,7 +716,7 @@ typedef struct ModeDecisionContext {
     uint8_t md_subpel_search_level;
     MdSubPelSearchCtrls md_subpel_search_ctrls;
 #if SEARCH_TOP_N
-    MdFpResults md_best_fp_pos[MD_MAX_BEST_FP_POS];
+    MdMotionSearchResults md_motion_search_best_mv[MD_MOTION_SEARCH_MAX_BEST_MV];
 #endif
 #endif
 #if !PRUNING_PER_INTER_TYPE

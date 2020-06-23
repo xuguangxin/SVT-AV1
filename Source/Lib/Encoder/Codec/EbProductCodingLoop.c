@@ -4578,18 +4578,18 @@ void md_full_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context
             if (track_best_fp_pos) {
                 // Find the pos that holds the max dist
                 uint32_t max_dist = 0;
-                uint8_t max_dist_fp_pos_idx = 0;
-                for (uint8_t fp_pos_idx = 0; fp_pos_idx < MD_MAX_BEST_FP_POS; fp_pos_idx++) {
-                    if (context_ptr->md_best_fp_pos[fp_pos_idx].dist > max_dist) {
-                        max_dist = context_ptr->md_best_fp_pos[fp_pos_idx].dist;
-                        max_dist_fp_pos_idx = fp_pos_idx;
+                uint8_t max_dist_best_mv_idx = 0;
+                for (uint8_t best_mv_idx = 0; best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV; best_mv_idx++) {
+                    if (context_ptr->md_motion_search_best_mv[best_mv_idx].dist > max_dist) {
+                        max_dist = context_ptr->md_motion_search_best_mv[best_mv_idx].dist;
+                        max_dist_best_mv_idx = best_mv_idx;
                     }
                 }
-                // Update max_dist_fp_pos_idx spot if better distortion
+                // Update max_dist_best_mv_idx spot if better distortion
                 if (distortion < max_dist) {
-                    context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].mvx = mvx + (refinement_pos_x * search_step);
-                    context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].mvy = mvy + (refinement_pos_y * search_step);
-                    context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].dist = distortion;
+                    context_ptr->md_motion_search_best_mv[max_dist_best_mv_idx].mvx = mvx + (refinement_pos_x * search_step);
+                    context_ptr->md_motion_search_best_mv[max_dist_best_mv_idx].mvy = mvy + (refinement_pos_y * search_step);
+                    context_ptr->md_motion_search_best_mv[max_dist_best_mv_idx].dist = distortion;
                 }
             }
 #endif
@@ -4803,9 +4803,9 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
                 int16_t mvx_res = (mvx + (refinement_pos_x * search_step));
                 int16_t mvy_res = (mvy + (refinement_pos_y * search_step));
                 uint8_t mv_present = 0;
-                for (uint8_t fp_pos_idx = 0; fp_pos_idx < MD_MAX_BEST_FP_POS; fp_pos_idx++) {
-                    if ((context_ptr->md_best_fp_pos[fp_pos_idx].mvx == mvx_res) &&
-                        (context_ptr->md_best_fp_pos[fp_pos_idx].mvy == mvy_res)) {
+                for (uint8_t best_mv_idx = 0; best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV; best_mv_idx++) {
+                    if ((context_ptr->md_motion_search_best_mv[best_mv_idx].mvx == mvx_res) &&
+                        (context_ptr->md_motion_search_best_mv[best_mv_idx].mvy == mvy_res)) {
                         mv_present = 1;
                         break;
                     }
@@ -4814,18 +4814,18 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
                 if (!mv_present) {
                     // Find the pos that holds the max dist
                     uint32_t max_dist = 0;
-                    uint8_t max_dist_fp_pos_idx = 0;
-                    for (uint8_t fp_pos_idx = 0; fp_pos_idx < MD_MAX_BEST_FP_POS; fp_pos_idx++) {
-                        if (context_ptr->md_best_fp_pos[fp_pos_idx].dist > max_dist) {
-                            max_dist = context_ptr->md_best_fp_pos[fp_pos_idx].dist;
-                            max_dist_fp_pos_idx = fp_pos_idx;
+                    uint8_t max_dist_best_mv_idx = 0;
+                    for (uint8_t best_mv_idx = 0; best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV; best_mv_idx++) {
+                        if (context_ptr->md_motion_search_best_mv[best_mv_idx].dist > max_dist) {
+                            max_dist = context_ptr->md_motion_search_best_mv[best_mv_idx].dist;
+                            max_dist_best_mv_idx = best_mv_idx;
                         }
                     }
-                    // Update max_dist_fp_pos_idx spot if better distortion
+                    // Update max_dist_best_mv_idx spot if better distortion
                     if (distortion < max_dist) {
-                        context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].mvx = mvx_res;
-                        context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].mvy = mvy_res;
-                        context_ptr->md_best_fp_pos[max_dist_fp_pos_idx].dist = distortion;
+                        context_ptr->md_motion_search_best_mv[max_dist_best_mv_idx].mvx = mvx_res;
+                        context_ptr->md_motion_search_best_mv[max_dist_best_mv_idx].mvy = mvy_res;
+                        context_ptr->md_motion_search_best_mv[max_dist_best_mv_idx].dist = distortion;
                     }
                 }
             }
@@ -5193,31 +5193,31 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
     if (context_ptr->md_subpel_search_ctrls.half_pel_search_enabled) {
 
         // Derive valid_fp_pos_cnt
-        uint8_t fp_pos_idx = 0;
-        while (fp_pos_idx < MD_MAX_BEST_FP_POS && context_ptr->md_best_fp_pos[fp_pos_idx].dist != (uint32_t)~0) {
-            fp_pos_idx++;
+        uint8_t best_mv_idx = 0;
+        while (best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV && context_ptr->md_motion_search_best_mv[best_mv_idx].dist != (uint32_t)~0) {
+            best_mv_idx++;
         }
-        uint8_t valid_fp_pos_cnt = fp_pos_idx;
-        // Sort md_best_fp_pos
+        uint8_t valid_fp_pos_cnt = best_mv_idx;
+        // Sort md_motion_search_best_mv
         if (valid_fp_pos_cnt == 0) { // Full-Pel search not performed @ MD (if SQ or if NSQ search @ MD skipped)
-            context_ptr->md_best_fp_pos[0].mvx = *me_mv_x;
-            context_ptr->md_best_fp_pos[0].mvy = *me_mv_y;
+            context_ptr->md_motion_search_best_mv[0].mvx = *me_mv_x;
+            context_ptr->md_motion_search_best_mv[0].mvy = *me_mv_y;
             valid_fp_pos_cnt = 1;
         }
         else {  // Sort md_fp_res_array
-            MdFpResults *md_best_fp_pos_p = &(context_ptr->md_best_fp_pos[0]);
+            MdMotionSearchResults *md_motion_search_best_mv_p = &(context_ptr->md_motion_search_best_mv[0]);
             for (uint16_t i = 0; i < valid_fp_pos_cnt - 1; ++i) {
                 for (uint16_t j = i + 1; j < valid_fp_pos_cnt; ++j) {
-                    if (context_ptr->md_best_fp_pos[j].dist < context_ptr->md_best_fp_pos[i].dist) {
-                        MdFpResults temp = md_best_fp_pos_p[i];
-                        md_best_fp_pos_p[i] = md_best_fp_pos_p[j];
-                        md_best_fp_pos_p[j] = temp;
+                    if (context_ptr->md_motion_search_best_mv[j].dist < context_ptr->md_motion_search_best_mv[i].dist) {
+                        MdMotionSearchResults temp = md_motion_search_best_mv_p[i];
+                        md_motion_search_best_mv_p[i] = md_motion_search_best_mv_p[j];
+                        md_motion_search_best_mv_p[j] = temp;
                     }
                 }
             }
         }
 
-        for (uint8_t fp_pos_idx = 0; fp_pos_idx < MIN(context_ptr->md_subpel_search_ctrls.half_pel_search_pos_cnt, valid_fp_pos_cnt); fp_pos_idx++) {
+        for (uint8_t best_mv_idx = 0; best_mv_idx < MIN(context_ptr->md_subpel_search_ctrls.half_pel_search_pos_cnt, valid_fp_pos_cnt); best_mv_idx++) {
             md_sub_pel_search(
                 pcs_ptr,
                 context_ptr,
@@ -5227,8 +5227,8 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 context_ptr->md_subpel_search_ctrls.use_ssd,
                 list_idx,
                 ref_idx,
-                context_ptr->md_best_fp_pos[fp_pos_idx].mvx,
-                context_ptr->md_best_fp_pos[fp_pos_idx].mvy,
+                context_ptr->md_motion_search_best_mv[best_mv_idx].mvx,
+                context_ptr->md_motion_search_best_mv[best_mv_idx].mvy,
                 -(context_ptr->md_subpel_search_ctrls.half_pel_search_width >> 1),
                 +(context_ptr->md_subpel_search_ctrls.half_pel_search_width >> 1),
                 -(context_ptr->md_subpel_search_ctrls.half_pel_search_height >> 1),
@@ -5278,31 +5278,31 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
 #if IMPROVE_QUARTER_PEL
     {
         // Derive valid_fp_pos_cnt
-        uint8_t fp_pos_idx = 0;
-        while (fp_pos_idx < MD_MAX_BEST_FP_POS && context_ptr->md_best_fp_pos[fp_pos_idx].dist != (uint32_t)~0) {
-            fp_pos_idx++;
+        uint8_t best_mv_idx = 0;
+        while (best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV && context_ptr->md_motion_search_best_mv[best_mv_idx].dist != (uint32_t)~0) {
+            best_mv_idx++;
         }
-        uint8_t valid_fp_pos_cnt = fp_pos_idx;
-        // Sort md_best_fp_pos
+        uint8_t valid_fp_pos_cnt = best_mv_idx;
+        // Sort md_motion_search_best_mv
         if (valid_fp_pos_cnt == 0 || context_ptr->md_subpel_search_ctrls.quarter_pel_search_pos_cnt == 1) {
-            context_ptr->md_best_fp_pos[0].mvx = best_search_mvx;
-            context_ptr->md_best_fp_pos[0].mvy = best_search_mvy;
+            context_ptr->md_motion_search_best_mv[0].mvx = best_search_mvx;
+            context_ptr->md_motion_search_best_mv[0].mvy = best_search_mvy;
             valid_fp_pos_cnt = 1;
         }
         else {  // Sort md_fp_res_array
-            MdFpResults *md_best_fp_pos_p = &(context_ptr->md_best_fp_pos[0]);
+            MdMotionSearchResults *md_motion_search_best_mv_p = &(context_ptr->md_motion_search_best_mv[0]);
             for (uint16_t i = 0; i < valid_fp_pos_cnt - 1; ++i) {
                 for (uint16_t j = i + 1; j < valid_fp_pos_cnt; ++j) {
-                    if (context_ptr->md_best_fp_pos[j].dist < context_ptr->md_best_fp_pos[i].dist) {
-                        MdFpResults temp = md_best_fp_pos_p[i];
-                        md_best_fp_pos_p[i] = md_best_fp_pos_p[j];
-                        md_best_fp_pos_p[j] = temp;
+                    if (context_ptr->md_motion_search_best_mv[j].dist < context_ptr->md_motion_search_best_mv[i].dist) {
+                        MdMotionSearchResults temp = md_motion_search_best_mv_p[i];
+                        md_motion_search_best_mv_p[i] = md_motion_search_best_mv_p[j];
+                        md_motion_search_best_mv_p[j] = temp;
                     }
                 }
             }
         }
 
-        for (uint8_t fp_pos_idx = 0; fp_pos_idx < MIN(context_ptr->md_subpel_search_ctrls.quarter_pel_search_pos_cnt, valid_fp_pos_cnt); fp_pos_idx++) {
+        for (uint8_t best_mv_idx = 0; best_mv_idx < MIN(context_ptr->md_subpel_search_ctrls.quarter_pel_search_pos_cnt, valid_fp_pos_cnt); best_mv_idx++) {
 #endif
         md_sub_pel_search(
             pcs_ptr,
@@ -5314,8 +5314,8 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
             list_idx,
             ref_idx,
 #if IMPROVE_QUARTER_PEL
-            context_ptr->md_best_fp_pos[fp_pos_idx].mvx,
-            context_ptr->md_best_fp_pos[fp_pos_idx].mvy,
+            context_ptr->md_motion_search_best_mv[best_mv_idx].mvx,
+            context_ptr->md_motion_search_best_mv[best_mv_idx].mvy,
 #else
             best_search_mvx,
             best_search_mvy,
@@ -5347,31 +5347,31 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
 #if IMPROVE_EIGHT_PEL
         {
             // Derive valid_fp_pos_cnt
-            uint8_t fp_pos_idx = 0;
-            while (fp_pos_idx < MD_MAX_BEST_FP_POS && context_ptr->md_best_fp_pos[fp_pos_idx].dist != (uint32_t)~0) {
-                fp_pos_idx++;
+            uint8_t best_mv_idx = 0;
+            while (best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV && context_ptr->md_motion_search_best_mv[best_mv_idx].dist != (uint32_t)~0) {
+                best_mv_idx++;
             }
-            uint8_t valid_fp_pos_cnt = fp_pos_idx;
-            // Sort md_best_fp_pos
+            uint8_t valid_fp_pos_cnt = best_mv_idx;
+            // Sort md_motion_search_best_mv
             if (valid_fp_pos_cnt == 0 || context_ptr->md_subpel_search_ctrls.eight_pel_search_pos_cnt == 1) {
-                context_ptr->md_best_fp_pos[0].mvx = best_search_mvx;
-                context_ptr->md_best_fp_pos[0].mvy = best_search_mvy;
+                context_ptr->md_motion_search_best_mv[0].mvx = best_search_mvx;
+                context_ptr->md_motion_search_best_mv[0].mvy = best_search_mvy;
                 valid_fp_pos_cnt = 1;
             }
             else {  // Sort md_fp_res_array
-                MdFpResults *md_best_fp_pos_p = &(context_ptr->md_best_fp_pos[0]);
+                MdMotionSearchResults *md_motion_search_best_mv_p = &(context_ptr->md_motion_search_best_mv[0]);
                 for (uint16_t i = 0; i < valid_fp_pos_cnt - 1; ++i) {
                     for (uint16_t j = i + 1; j < valid_fp_pos_cnt; ++j) {
-                        if (context_ptr->md_best_fp_pos[j].dist < context_ptr->md_best_fp_pos[i].dist) {
-                            MdFpResults temp = md_best_fp_pos_p[i];
-                            md_best_fp_pos_p[i] = md_best_fp_pos_p[j];
-                            md_best_fp_pos_p[j] = temp;
+                        if (context_ptr->md_motion_search_best_mv[j].dist < context_ptr->md_motion_search_best_mv[i].dist) {
+                            MdMotionSearchResults temp = md_motion_search_best_mv_p[i];
+                            md_motion_search_best_mv_p[i] = md_motion_search_best_mv_p[j];
+                            md_motion_search_best_mv_p[j] = temp;
                         }
                     }
                 }
             }
 
-            for (uint8_t fp_pos_idx = 0; fp_pos_idx < MIN(context_ptr->md_subpel_search_ctrls.eight_pel_search_pos_cnt, valid_fp_pos_cnt); fp_pos_idx++) {
+            for (uint8_t best_mv_idx = 0; best_mv_idx < MIN(context_ptr->md_subpel_search_ctrls.eight_pel_search_pos_cnt, valid_fp_pos_cnt); best_mv_idx++) {
 #endif
             md_sub_pel_search(
                 pcs_ptr,
@@ -5383,8 +5383,8 @@ void md_subpel_search_pa_me_cand(PictureControlSet *pcs_ptr, ModeDecisionContext
                 list_idx,
                 ref_idx,
 #if IMPROVE_EIGHT_PEL
-                context_ptr->md_best_fp_pos[fp_pos_idx].mvx,
-                context_ptr->md_best_fp_pos[fp_pos_idx].mvy,
+                context_ptr->md_motion_search_best_mv[best_mv_idx].mvx,
+                context_ptr->md_motion_search_best_mv[best_mv_idx].mvy,
 #else
                 best_search_mvx,
                 best_search_mvy,
@@ -5457,9 +5457,9 @@ void read_refine_me_mvs(PictureControlSet *pcs_ptr, ModeDecisionContext *context
             {
 
 #if SEARCH_TOP_N
-                // Set md_best_fp_pos array dist(s) to max
-                for (uint8_t fp_pos_idx = 0; fp_pos_idx < MD_MAX_BEST_FP_POS; fp_pos_idx++)
-                    context_ptr->md_best_fp_pos[fp_pos_idx].dist = (uint32_t) ~0;
+                // Set md_motion_search_best_mv array dist(s) to max
+                for (uint8_t best_mv_idx = 0; best_mv_idx < MD_MOTION_SEARCH_MAX_BEST_MV; best_mv_idx++)
+                    context_ptr->md_motion_search_best_mv[best_mv_idx].dist = (uint32_t) ~0;
 #endif
 
                 int16_t me_mv_x;

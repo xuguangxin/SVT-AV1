@@ -570,6 +570,8 @@ extern "C" {
 #define SOFT_CYCLES_M6M7        1
 #define JUNE23_ADOPTIONS        1
 #define NEW_M7_MRP              1
+#define PRUNE_ADJUST_ME_BUG_FIX 1 // Enable for BASE and incomplete 64x64
+#define NEW_M8                  1 // Set M8=M7
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

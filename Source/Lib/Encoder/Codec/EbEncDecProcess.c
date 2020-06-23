@@ -2966,10 +2966,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     else {
 #if UNIFY_SC_NSC
+#if NEW_M8
+        context_ptr->md_txt_search_level = 0;
+#else
         if (enc_mode <= ENC_M7)
             context_ptr->md_txt_search_level = 0;
         else
             context_ptr->md_txt_search_level = 3;
+#endif
 #else
 #if APR23_ADOPTIONS_2
         // New adoption levels after UPDATE_TXT_LEVEL
@@ -4328,10 +4332,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
 #if JUNE17_ADOPTIONS
+#if NEW_M8
+                else if (enc_mode <= ENC_M8)
+#else
 #if M7_PRED_ME
                 else if (enc_mode <= ENC_M7)
 #else
                 else if (enc_mode <= ENC_M6)
+#endif
 #endif
                     context_ptr->predictive_me_level = 2;
 #endif
