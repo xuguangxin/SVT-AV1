@@ -2531,73 +2531,81 @@ void set_nsq_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t nsq_c
 #endif
 
 #if SOFT_CYCLES_REDUCTION
-void set_soft_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t soft_cycles_red_mode) {
-    SoftCycleRControls*soft_cycle_red_ctrls = &mdctxt->soft_cycles_red_ctrls;
-    switch (soft_cycles_red_mode)
+void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &mdctxt->admd_cycles_red_ctrls;
+    switch (adaptive_md_cycles_red_mode)
     {
     case 0: // soft_cycles_reduction Off
-        soft_cycle_red_ctrls->enabled = 0;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 0;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 0;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 0;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 1:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 50;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 50;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 2:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 150;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 150;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 3:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 200;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 200;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 4:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 300;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 300;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 5:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 1000;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 1000;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 6:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 1500;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 1500;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     case 7:
-        soft_cycle_red_ctrls->enabled = 1;
-        soft_cycle_red_ctrls->sq_weight_th = 0;
-        soft_cycle_red_ctrls->skip_nsq_th = 2000;
-        soft_cycle_red_ctrls->nics_th = 0;
-        soft_cycle_red_ctrls->mrp_th = 0;
-        soft_cycle_red_ctrls->compound_th = 0;
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 2000;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+        break;
+     case 8:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 5000;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
     default:
         assert(0);
@@ -5258,29 +5266,42 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     set_depth_cycle_redcution_controls(context_ptr, depth_cycles_red_mode);
 #endif
 #if SOFT_CYCLES_REDUCTION
-    uint8_t soft_cycles_red_level = 0;
+    uint8_t adaptive_md_cycles_level = 0;
     if (pd_pass == PD_PASS_2) {
 
         if (pcs_ptr->slice_type == I_SLICE) {
             if (enc_mode <= ENC_M4)
-                soft_cycles_red_level = 0;
+                adaptive_md_cycles_level = 0;
+#if SOFT_CYCLES_M6M7
+            else if (enc_mode <= ENC_M5)
+                adaptive_md_cycles_level = 3; // TH 200
             else
-                soft_cycles_red_level = 3; // TH 200
+                adaptive_md_cycles_level = 4; // TH 300
+#else
+            else
+                adaptive_md_cycles_level = 3; // TH 200
+#endif
         }
         else {
             if (enc_mode <= ENC_M0)
-                soft_cycles_red_level = 0;
-            else if(enc_mode <= ENC_M1)
-                soft_cycles_red_level = 1; // TH 50
-            else if(enc_mode <= ENC_M3)
-                soft_cycles_red_level = 2; // TH 150
-            else if(enc_mode <= ENC_M4)
-                soft_cycles_red_level = 4; // TH 300
-            else if(enc_mode <= ENC_M5)
-                soft_cycles_red_level = 6; // TH 1000
+                adaptive_md_cycles_level = 0;
+            else if (enc_mode <= ENC_M1)
+                adaptive_md_cycles_level = 1; // TH 50
+            else if (enc_mode <= ENC_M3)
+                adaptive_md_cycles_level = 2; // TH 150
+            else if (enc_mode <= ENC_M4)
+                adaptive_md_cycles_level = 4; // TH 300
+            else if (enc_mode <= ENC_M5)
+                adaptive_md_cycles_level = 6; // TH 1500
+#if SOFT_CYCLES_M6M7
+            else if (enc_mode <= ENC_M6)
+                adaptive_md_cycles_level = 7;
+            else
+                adaptive_md_cycles_level = 8;
+#endif
         }
     }
-    set_soft_cycle_redcution_controls(context_ptr, soft_cycles_red_level);
+    adaptive_md_cycles_redcution_controls(context_ptr, adaptive_md_cycles_level);
 #endif
     // Weighting (expressed as a percentage) applied to
     // square shape costs for determining if a and b
@@ -7844,16 +7865,16 @@ static void build_cand_block_array(SequenceControlSet *scs_ptr, PictureControlSe
 #if SOFT_CYCLES_REDUCTION
             for (d1_block_idx = 0; d1_block_idx < tot_d1_blocks; d1_block_idx++) {
                 if (results_ptr->leaf_data_array[blk_index + d1_block_idx].consider_block) {
-                    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
-                    if (soft_cycle_red_ctrls->enabled) {
-                        if (soft_cycle_red_ctrls->skip_nsq_th) {
+                    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+                    if (adaptive_md_cycles_red_ctrls->enabled) {
+                        if (adaptive_md_cycles_red_ctrls->skip_nsq_th) {
                             const BlockGeom *nsq_blk_geom = get_blk_geom_mds(blk_index + d1_block_idx);
                             if (nsq_blk_geom->shape != PART_N) {
                                 int8_t pred_depth_refinement = results_ptr->leaf_data_array[blk_index + d1_block_idx].pred_depth_refinement;
                                 pred_depth_refinement = MIN(pred_depth_refinement, 2);
                                 pred_depth_refinement = MAX(pred_depth_refinement, -2);
                                 pred_depth_refinement += 2;
-                                if (context_ptr->soft_prob[pred_depth_refinement][nsq_blk_geom->shape] < soft_cycle_red_ctrls->skip_nsq_th)
+                                if (context_ptr->ad_md_prob[pred_depth_refinement][nsq_blk_geom->shape] < adaptive_md_cycles_red_ctrls->skip_nsq_th)
                                     results_ptr->leaf_data_array[blk_index + d1_block_idx].consider_block = 0;
                             }
                         }
@@ -8416,10 +8437,10 @@ void generate_depth_prob(PictureControlSet * pcs_ptr, ModeDecisionContext *conte
 #endif
         for (uint8_t pred_depth = 0; pred_depth < DEPTH_DELTA_NUM; pred_depth++) {
             for (uint8_t part_idx = 0; part_idx < (NUMBER_OF_SHAPES - 1); part_idx++) {
-                context_ptr->soft_prob[pred_depth][part_idx] = (uint32_t)((pred_depth_count[pred_depth][part_idx] * (uint32_t)DEPTH_PROB_PRECISION) / (uint32_t)samples_num);
-                sum += context_ptr->soft_prob[pred_depth][part_idx];
+                context_ptr->ad_md_prob[pred_depth][part_idx] = (uint32_t)((pred_depth_count[pred_depth][part_idx] * (uint32_t)DEPTH_PROB_PRECISION) / (uint32_t)samples_num);
+                sum += context_ptr->ad_md_prob[pred_depth][part_idx];
 #if !REMOVE_PRINT_STATEMENTS
-                printf("%d\t", context_ptr->soft_prob[pred_depth][part_idx]);
+                printf("%d\t", context_ptr->ad_md_prob[pred_depth][part_idx]);
 #endif
             }
 #if !REMOVE_PRINT_STATEMENTS
@@ -8453,7 +8474,7 @@ void generate_depth_prob(PictureControlSet * pcs_ptr, ModeDecisionContext *conte
     }
 #if SOFT_CYCLES_REDUCTION
     else {
-        memcpy(context_ptr->soft_prob, intra_soft_cycles_reduction_th, sizeof(uint32_t) * DEPTH_DELTA_NUM * (NUMBER_OF_SHAPES - 1));
+        memcpy(context_ptr->ad_md_prob, intra_adaptive_md_cycles_reduction_th, sizeof(uint32_t) * DEPTH_DELTA_NUM * (NUMBER_OF_SHAPES - 1));
     }
 #endif
 }

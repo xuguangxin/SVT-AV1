@@ -696,7 +696,7 @@ static const uint8_t intra_txt_cycles_reduction_th[2/*depth*/][3/*depth refineme
 };
 #endif
 #if SOFT_CYCLES_REDUCTION
-static const uint32_t intra_soft_cycles_reduction_th[DEPTH_DELTA_NUM][NUMBER_OF_SHAPES - 1] = {
+static const uint32_t intra_adaptive_md_cycles_reduction_th[DEPTH_DELTA_NUM][NUMBER_OF_SHAPES - 1] = {
 {0 ,0 ,0 ,0 ,0 ,0 ,0 ,0 ,0},
 {630 ,453 ,303 ,99 ,78 ,17 ,17 ,672 ,85},
 {1552 ,606 ,202 ,28 ,35 ,5 ,11 ,461 ,58},

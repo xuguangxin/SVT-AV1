@@ -1252,7 +1252,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     }
 #endif
-#if JUNE17_ADOPTIONS
+#if JUNE17_ADOPTIONS && !SOFT_CYCLES_M6M7
     else if (pcs_ptr->enc_mode <= ENC_M6) {
 #if !UNIFY_SC_NSC
         if (sc_content_detected)
@@ -1269,7 +1269,11 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
         else
 #endif
+#if SOFT_CYCLES_M6M7
+            pcs_ptr->disallow_nsq = EB_FALSE;
+#else
             pcs_ptr->disallow_nsq = EB_TRUE;
+#endif
 #else
         pcs_ptr->disallow_nsq = EB_TRUE;
 #endif
@@ -1350,7 +1354,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
     // Set disallow_all_nsq_blocks_below_8x8: 8x4, 4x8
 #if UNIFY_SC_NSC
+#if SOFT_CYCLES_M6M7
+    if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_FALSE;
     else
         pcs_ptr->disallow_all_nsq_blocks_below_8x8 = EB_TRUE;
@@ -1361,7 +1369,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     else {
 #if JUNE11_ADOPTIONS
 #if SOFT_CYCLES_REDUCTION
+#if SOFT_CYCLES_M6M7
+    if (pcs_ptr->enc_mode <= ENC_M7)
+#else
         if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
         if (pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1426,7 +1438,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 #else
 #if PRESET_SHIFITNG
 #if SOFT_CYCLES_REDUCTION
+#if SOFT_CYCLES_M6M7
+    if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M7)
+#else
     if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
     if (!sc_content_detected || pcs_ptr->enc_mode <= ENC_M3)
 #endif
@@ -1443,7 +1459,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // disallow_all_nsq_blocks_above_16x16
 #if JUNE17_ADOPTIONS
 #if SOFT_CYCLES_REDUCTION
+#if SOFT_CYCLES_M6M7
+    if (pcs_ptr->enc_mode <= ENC_M7)
+#else
     if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
 #else
     if (pcs_ptr->enc_mode <= ENC_M4)
 #endif

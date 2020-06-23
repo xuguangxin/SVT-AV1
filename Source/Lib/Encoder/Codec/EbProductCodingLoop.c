@@ -1717,62 +1717,62 @@ void set_inter_inter_distortion_based_reference_pruning_controls(
 }
 
 void soft_cycles_reduction_mrp(ModeDecisionContext *context_ptr, uint8_t *mrp_level) {
-    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
-    if (soft_cycle_red_ctrls->enabled){
-        if (soft_cycle_red_ctrls->mrp_th) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+    if (adaptive_md_cycles_red_ctrls->enabled){
+        if (adaptive_md_cycles_red_ctrls->mrp_th) {
             // Set the bounds of pred_depth_refinement for array indexing
             int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
             pred_depth_refinement = MIN(pred_depth_refinement, 2);
             pred_depth_refinement = MAX(pred_depth_refinement, -2);
             pred_depth_refinement += 2;
-            if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->mrp_th) {
+            if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->mrp_th) {
                 *mrp_level = 6;
             }
         }
     }
 }
 void soft_cycles_reduction_compound(ModeDecisionContext *context_ptr, uint8_t *compound_level) {
-    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
-    if (soft_cycle_red_ctrls->enabled){
-        if (soft_cycle_red_ctrls->compound_th) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+    if (adaptive_md_cycles_red_ctrls->enabled){
+        if (adaptive_md_cycles_red_ctrls->compound_th) {
             // Set the bounds of pred_depth_refinement for array indexing
             int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
             pred_depth_refinement = MIN(pred_depth_refinement, 2);
             pred_depth_refinement = MAX(pred_depth_refinement, -2);
             pred_depth_refinement += 2;
-            if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->compound_th) {
+            if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->compound_th) {
                 *compound_level = 0;
             }
         }
     }
 }
 void soft_cycles_reduction_nics(ModeDecisionContext *context_ptr, uint32_t *nics_div) {
-    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
-    if (soft_cycle_red_ctrls->enabled) {
-        if (soft_cycle_red_ctrls->nics_th) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+    if (adaptive_md_cycles_red_ctrls->enabled) {
+        if (adaptive_md_cycles_red_ctrls->nics_th) {
             // Set the bounds of pred_depth_refinement for array indexing
             int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
             pred_depth_refinement = MIN(pred_depth_refinement, 2);
             pred_depth_refinement = MAX(pred_depth_refinement, -2);
             pred_depth_refinement += 2;
-            if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->nics_th) {
+            if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->nics_th) {
                 *nics_div = 8;
             }
         }
     }
 }
 void soft_cycles_reduction_sq_weight(ModeDecisionContext *context_ptr, uint32_t *sq_weight) {
-    SoftCycleRControls*soft_cycle_red_ctrls = &context_ptr->soft_cycles_red_ctrls;
-    if (soft_cycle_red_ctrls->enabled) {
-        if (soft_cycle_red_ctrls->sq_weight_th) {
+    AMdCycleRControls*adaptive_md_cycles_red_ctrls = &context_ptr->admd_cycles_red_ctrls;
+    if (adaptive_md_cycles_red_ctrls->enabled) {
+        if (adaptive_md_cycles_red_ctrls->sq_weight_th) {
             if (context_ptr->blk_geom->shape != PART_N) {
                 // Set the bounds of pred_depth_refinement for array indexing
                 int8_t pred_depth_refinement = context_ptr->md_local_blk_unit[context_ptr->blk_geom->blkidx_mds].pred_depth_refinement;
                 pred_depth_refinement = MIN(pred_depth_refinement, 2);
                 pred_depth_refinement = MAX(pred_depth_refinement, -2);
                 pred_depth_refinement += 2;
-                if (context_ptr->soft_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < soft_cycle_red_ctrls->sq_weight_th)
-                    *sq_weight = *sq_weight - ((*sq_weight * (uint32_t)soft_cycle_red_ctrls->sq_weight_th) / DEPTH_PROB_PRECISION);
+                if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->sq_weight_th)
+                    *sq_weight = *sq_weight - ((*sq_weight * (uint32_t)adaptive_md_cycles_red_ctrls->sq_weight_th) / DEPTH_PROB_PRECISION);
             }
         }
     }
@@ -3743,7 +3743,7 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
             if (context_ptr->md_stage_2_count[cidx])
                 context_ptr->md_stage_2_count[cidx] = MAX(1, (context_ptr->md_stage_2_count[cidx] / nics_div));
             if (context_ptr->md_stage_3_count[cidx])
-                context_ptr->md_stage_3_count[cidx] = MAX(1, (context_ptr->md_stage_2_count[cidx] / nics_div));
+                context_ptr->md_stage_3_count[cidx] = MAX(1, (context_ptr->md_stage_3_count[cidx] / nics_div));
         }
     }
 #endif

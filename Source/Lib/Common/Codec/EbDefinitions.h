@@ -567,6 +567,7 @@ extern "C" {
 
 #define UNIFY_SC_NSC        1 // Unify the SC/NSC settings, except for Palette, IBC, and ME
 #define REMOVE_PRINT_STATEMENTS 1 // remove print statements
+#define SOFT_CYCLES_M6M7        1
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
