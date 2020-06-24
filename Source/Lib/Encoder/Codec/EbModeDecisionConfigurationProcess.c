@@ -1451,9 +1451,14 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
 #endif
 #else
+#if JUNE23_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#else
         if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
 #endif
+#endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+#if !JUNE23_ADOPTIONS
 #if OBMC_FAST
 #if M8_OBMC
 #if PRESET_SHIFITNG
@@ -1465,6 +1470,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
 #endif
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
+#endif
 #endif
         else
             pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;

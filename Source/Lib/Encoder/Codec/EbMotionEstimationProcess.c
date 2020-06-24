@@ -493,10 +493,14 @@ void* set_me_hme_params_oq(
 #endif
 #if APR22_ADOPTIONS
 #if MAY19_ADOPTIONS
+#if JUNE23_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
 #if PRESET_SHIFITNG
         if (pcs_ptr->enc_mode <= ENC_M3) {
 #else
         if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #endif
 #else
 #if MAY12_ADOPTIONS
@@ -527,10 +531,12 @@ void* set_me_hme_params_oq(
 #endif
         }
 #if UNIFY_SC_NSC
+#if !JUNE23_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M4) {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 75;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 300;
         }
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M5) {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 48;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 192;

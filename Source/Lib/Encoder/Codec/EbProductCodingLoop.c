@@ -12230,7 +12230,7 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 
     uint8_t class_pruning_scaling_level ;
 #if JUNE23_ADOPTIONS
-    if (pcs_ptr->enc_mode <= ENC_M2)
+    if (pcs_ptr->enc_mode <= ENC_M4)
 #else
 #if JUNE9_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M1)

@@ -1758,6 +1758,9 @@ EbErrorType signal_derivation_multi_processes_oq(
             // Remove ref/non-ref checks from palette
             (SHUT_LAYER_BASED_FEATURES)
 #else
+#if JUNE23_ADOPTIONS
+            ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M8))
+#else
 #if NEW_M8
             ((pcs_ptr->enc_mode <= ENC_M3) || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
             (pcs_ptr->temporal_layer_index == 0 && pcs_ptr->enc_mode <= ENC_M8))
@@ -1777,6 +1780,7 @@ EbErrorType signal_derivation_multi_processes_oq(
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M4) ||
 #else
            (MR_MODE || (pcs_ptr->is_used_as_reference_flag && pcs_ptr->enc_mode <= ENC_M6) ||
+#endif
 #endif
 #endif
 #endif

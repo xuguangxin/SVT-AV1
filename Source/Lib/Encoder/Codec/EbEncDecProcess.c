@@ -3423,6 +3423,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     }
 #endif
 #if MAY12_ADOPTIONS
+#if JUNE23_ADOPTIONS
+    else if (enc_mode <= ENC_M3) {
+#else
 #if JUNE8_ADOPTIONS
     else if (enc_mode <= ENC_M2) {
 #else
@@ -3430,6 +3433,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else if (enc_mode <= ENC_M1) {
 #else
     else if (enc_mode <= ENC_M2) {
+#endif
 #endif
 #endif
         context_ptr->chroma_at_last_md_stage = (context_ptr->chroma_level == CHROMA_MODE_0) ? 1 : 0;
@@ -3661,7 +3665,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
          context_ptr->disallow_4x4 = EB_FALSE;
 #if UNIFY_SC_NSC
+#if JUNE23_ADOPTIONS
+     else if (enc_mode <= ENC_M4)
+#else
      else if (enc_mode <= ENC_M3)
+#endif
          context_ptr->disallow_4x4 = (pcs_ptr->temporal_layer_index == 0) ? EB_FALSE : EB_TRUE;
 #endif
 #if REVERT_WHITE // disallow_4x4
@@ -4060,7 +4068,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if JUNE11_ADOPTIONS
     {
+#if JUNE23_ADOPTIONS
+        if (enc_mode <= ENC_M2)
+#else
         if (enc_mode <= ENC_M3)
+#endif
             context_ptr->unipred3x3_injection = 1;
         else
             context_ptr->unipred3x3_injection = 0;
@@ -4686,6 +4698,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if M2_COMBO_1
             if (enc_mode <= ENC_M1)
 #else
+#if JUNE23_ADOPTIONS
+            if (enc_mode <= ENC_M4)
+#else
 #if JUNE11_ADOPTIONS
             if (enc_mode <= ENC_M3)
 #else
@@ -4696,6 +4711,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M1)
 #else
             if (enc_mode <= ENC_M2)
+#endif
 #endif
 #endif
 #endif
@@ -5002,7 +5018,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             context_ptr->md_stage_2_3_cand_prune_th = 45;
 #if JUNE11_ADOPTIONS
 #if JUNE23_ADOPTIONS
-        else if (enc_mode <= ENC_M2)
+        else if (enc_mode <= ENC_M4)
 #else
         else if (enc_mode <= ENC_M1)
 #endif
@@ -5366,18 +5382,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
 #if UNIFY_SC_NSC
-#if JUNE23_ADOPTIONS
-            if (enc_mode <= ENC_M1)
-#else
             if (enc_mode <= ENC_M0)
                 context_ptr->sq_weight = 105;
             else if (enc_mode <= ENC_M1)
-#endif
                 context_ptr->sq_weight = 100;
+#if JUNE23_ADOPTIONS
+            else if (enc_mode <= ENC_M4)
+                context_ptr->sq_weight = 95;
+#else
             else if (enc_mode <= ENC_M3)
                 context_ptr->sq_weight = 95;
             else if (enc_mode <= ENC_M4)
                 context_ptr->sq_weight = 85;
+#endif
             else
                 context_ptr->sq_weight = 80;
 #else
@@ -6074,7 +6091,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             context_ptr->md_nsq_mv_search_level = 1;
 #if JUNE23_ADOPTIONS
-        else if (enc_mode <= ENC_M2)
+        else if (enc_mode <= ENC_M3)
 #else
 #if UNIFY_SC_NSC
         else if (enc_mode <= ENC_M1)
@@ -6091,12 +6108,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
 #endif
             context_ptr->md_nsq_mv_search_level = 2;
+#if !JUNE23_ADOPTIONS
 #if PRESET_SHIFITNG
         else if (enc_mode <= ENC_M3)
 #else
         else if (enc_mode <= ENC_M5)
 #endif
             context_ptr->md_nsq_mv_search_level = 3;
+#endif
         else
             context_ptr->md_nsq_mv_search_level = 4;
 
