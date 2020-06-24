@@ -2833,6 +2833,12 @@ EbErrorType signal_derivation_multi_processes_oq(
     }else
         pcs_ptr->mrp_level = scs_ptr->static_config.mrp_level;
 #endif
+#if TPL_OPT
+    if (pcs_ptr->enc_mode <= ENC_M5)
+        pcs_ptr->tpl_opt_flag = 0;
+    else
+        pcs_ptr->tpl_opt_flag = 1;
+#endif
     return return_error;
 }
 int8_t av1_ref_frame_type(const MvReferenceFrame *const rf);

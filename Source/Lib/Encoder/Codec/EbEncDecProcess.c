@@ -1348,6 +1348,9 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
     // set up the Slice Type
     reference_object->slice_type          = pcs_ptr->parent_pcs_ptr->slice_type;
     reference_object->referenced_area_avg = pcs_ptr->parent_pcs_ptr->referenced_area_avg;
+#if TPL_1PASS_IMP
+    reference_object->r0 = pcs_ptr->parent_pcs_ptr->r0;
+#endif
 }
 
 void copy_statistics_to_ref_obj_ect(PictureControlSet *pcs_ptr, SequenceControlSet *scs_ptr) {

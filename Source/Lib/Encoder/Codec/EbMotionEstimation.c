@@ -13670,10 +13670,17 @@ EbErrorType open_loop_intra_search_mb(
             uint8_t intra_mode_start = DC_PRED;
             EbBool   enable_paeth                = pcs_ptr->scs_ptr->static_config.enable_paeth == DEFAULT ? EB_TRUE : (EbBool) pcs_ptr->scs_ptr->static_config.enable_paeth;
             EbBool   enable_smooth               = pcs_ptr->scs_ptr->static_config.enable_smooth == DEFAULT ? EB_TRUE : (EbBool) pcs_ptr->scs_ptr->static_config.enable_smooth;
-            uint8_t  intra_mode_end              = enable_paeth ? PAETH_PRED : enable_smooth ? SMOOTH_H_PRED : D67_PRED;
-            int64_t intra_cost;
-            PredictionMode best_mode = DC_PRED;
-            int64_t best_intra_cost = INT64_MAX;
+#if TPL_OPT
+            uint8_t intra_mode_end =
+                pcs_ptr->tpl_opt_flag
+                    ? DC_PRED
+                    : enable_paeth ? PAETH_PRED : enable_smooth ? SMOOTH_H_PRED : D67_PRED;
+#else
+            uint8_t  intra_mode_end = enable_paeth ? PAETH_PRED : enable_smooth ? SMOOTH_H_PRED : D67_PRED;
+#endif
+                int64_t intra_cost;
+            PredictionMode best_mode       = DC_PRED;
+            int64_t        best_intra_cost = INT64_MAX;
 
             for (ois_intra_mode = intra_mode_start; ois_intra_mode <= intra_mode_end; ++ois_intra_mode) {
                 int32_t p_angle = av1_is_directional_mode((PredictionMode)ois_intra_mode) ? mode_to_angle_map[(PredictionMode)ois_intra_mode] : 0;

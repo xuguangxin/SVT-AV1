@@ -5347,13 +5347,23 @@ static int cqp_qindex_calc_tpl_la(PictureControlSet *pcs_ptr, RATE_CONTROL *rc, 
                (refresh_golden_frame || is_intrl_arf_boost || refresh_alt_ref_frame)) {
 #if TPL_IMP
         double min_boost_factor = sqrt(1 << pcs_ptr->parent_pcs_ptr->hierarchical_levels);
+#if TPL_1PASS_IMP
+        int num_stats_required_for_gfu_boost = pcs_ptr->parent_pcs_ptr->frames_in_sw + (1 << pcs_ptr->parent_pcs_ptr->hierarchical_levels);
+#else
         int num_stats_required_for_gfu_boost = pcs_ptr->parent_pcs_ptr->frames_in_sw + scs_ptr->static_config.look_ahead_distance;
+#endif
         rc->gfu_boost = get_gfu_boost_from_r0_lap(min_boost_factor, MAX_GFUBOOST_FACTOR, pcs_ptr->parent_pcs_ptr->r0, num_stats_required_for_gfu_boost);
 #else
         rc->gfu_boost = (int)(200.0 / pcs_ptr->parent_pcs_ptr->r0);
 #endif
         rc->arf_boost_factor = 1;
-
+#if TPL_1PASS_IMP
+        rc->arf_boost_factor =
+            (pcs_ptr->ref_slice_type_array[0][0] == I_SLICE &&
+                pcs_ptr->ref_pic_r0[0][0] - pcs_ptr->parent_pcs_ptr->r0 >= 0.1)
+            ? (float_t)1.3
+            : (float_t)1;
+#endif
         q = active_worst_quality;
 
         // non ref frame or repeated frames with re-encode

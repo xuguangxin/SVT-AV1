@@ -572,6 +572,8 @@ extern "C" {
 #define NEW_M7_MRP              1
 #define PRUNE_ADJUST_ME_BUG_FIX 1 // Enable for BASE and incomplete 64x64
 #define NEW_M8                  1 // Set M8=M7
+#define TPL_OPT                 1 // Optimize the tpl algorithm for faster presets
+#define TPL_1PASS_IMP           1 // Get actions from 2 pass to 1 pass LAD
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

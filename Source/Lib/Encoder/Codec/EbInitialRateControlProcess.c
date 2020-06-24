@@ -1295,7 +1295,11 @@ void tpl_mc_flow_dispenser(
                     if(best_inter_cost < INT64_MAX) {
                         uint16_t eob;
                         get_quantize_error(&mb_plane, best_coeff, qcoeff, dqcoeff, tx_size, &eob, &recon_error, &sse);
+#if TPL_OPT
+                        int rate_cost = pcs_ptr->tpl_opt_flag? 0 : rate_estimator(qcoeff, eob, tx_size);
+#else
                         int rate_cost = rate_estimator(qcoeff, eob, tx_size);
+#endif
                         tpl_stats.srcrf_rate = rate_cost << TPL_DEP_COST_SCALE_LOG2;
                     }
                     best_intra_cost = AOMMAX(best_intra_cost, 1);
@@ -1385,8 +1389,11 @@ void tpl_mc_flow_dispenser(
                     uint16_t eob;
 
                     get_quantize_error(&mb_plane, coeff, qcoeff, dqcoeff, tx_size, &eob, &recon_error, &sse);
-
+#if TPL_OPT
+                    int rate_cost = pcs_ptr->tpl_opt_flag ? 0 : rate_estimator(qcoeff, eob, tx_size);
+#else
                     int rate_cost = rate_estimator(qcoeff, eob, tx_size);
+#endif
 
                     if(eob) {
                         av1_inv_transform_recon8bit((int32_t*)dqcoeff, dst_buffer, dst_buffer_stride, dst_buffer, dst_buffer_stride, TX_16X16, DCT_DCT, PLANE_TYPE_Y, eob, 0);

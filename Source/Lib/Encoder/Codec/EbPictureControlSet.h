@@ -259,6 +259,9 @@ typedef struct PictureControlSet {
     uint8_t  ref_pic_qp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     EB_SLICE ref_slice_type_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
     uint64_t ref_pic_referenced_area_avg_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#if TPL_1PASS_IMP
+    double ref_pic_r0[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+#endif
     // GOP
     uint64_t      picture_number;
     uint8_t       temporal_layer_index;
@@ -663,6 +666,9 @@ typedef struct PictureParentControlSet {
     double       *tpl_rdmult_scaling_factors;
     double       *tpl_sb_rdmult_scaling_factors;
     EbBool       blk_lambda_tuning;
+#endif
+#if TPL_OPT
+    uint8_t       tpl_opt_flag;
 #endif
 #endif
     // Dynamic GOP
