@@ -1,4 +1,4 @@
-From efc9ea8f73f78f5fff9fa40acf0ce92403437d39 Mon Sep 17 00:00:00 2001
+From c0a28082a211477faf3cf7e3b2d236282b480292 Mon Sep 17 00:00:00 2001
 From: Daryl Seah <daryl.seah@intel.com>
 Date: Fri, 18 Jan 2019 02:11:38 +0000
 Subject: [PATCH] Add ability for ffmpeg to run svt-av1
@@ -79,7 +79,7 @@ index 80f128cade..2e45683b38 100644
  extern AVCodec ff_libopus_encoder;
 diff --git a/libavcodec/libsvt_av1.c b/libavcodec/libsvt_av1.c
 new file mode 100644
-index 0000000000..ffb8861af4
+index 0000000000..77ffdd2821
 --- /dev/null
 +++ b/libavcodec/libsvt_av1.c
 @@ -0,0 +1,581 @@
@@ -609,9 +609,9 @@ index 0000000000..ffb8861af4
 +
 +    { "rc", "Bit rate control mode", OFFSET(rc_mode),
 +      AV_OPT_TYPE_INT, { .i64 = 0 }, 0, 3, VE , "rc"},
-+        { "cqp", NULL, 0, AV_OPT_TYPE_CONST, { .i64 = 0 },  INT_MIN, INT_MAX, VE, "rc" },
-+        { "vbr", NULL, 0, AV_OPT_TYPE_CONST, { .i64 = 2 },  INT_MIN, INT_MAX, VE, "rc" },
-+        { "cvbr", NULL, 0, AV_OPT_TYPE_CONST,{ .i64 = 3 },  INT_MIN, INT_MAX, VE, "rc" },
++        { "cqp", "Const QP", 0, AV_OPT_TYPE_CONST, { .i64 = 0 },  INT_MIN, INT_MAX, VE, "rc" },
++        { "vbr", "Variable bit rate, achieve the target bitrate at entire stream", 0, AV_OPT_TYPE_CONST, { .i64 = 1 },  INT_MIN, INT_MAX, VE, "rc" },
++        { "cvbr", "Constrained variable bit rate, achieve the target bitrate at each gop", 0, AV_OPT_TYPE_CONST,{ .i64 = 2 },  INT_MIN, INT_MAX, VE, "rc" },
 +
 +    { "qp", "QP value for intra frames", OFFSET(qp),
 +      AV_OPT_TYPE_INT, { .i64 = 50 }, 0, 63, VE },
