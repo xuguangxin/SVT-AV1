@@ -2578,6 +2578,48 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
+#if TUNE_ADAPTIVE_MD_CR_TH
+    case 5:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 700;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+        break;
+     case 6:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 1000;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+        break;
+    case 7:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 1500;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+        break;
+    case 8:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 2000;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+        break;
+     case 9:
+        adaptive_md_cycles_red_ctrls->enabled = 1;
+        adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
+        adaptive_md_cycles_red_ctrls->skip_nsq_th = 5000;
+        adaptive_md_cycles_red_ctrls->nics_th = 0;
+        adaptive_md_cycles_red_ctrls->mrp_th = 0;
+        adaptive_md_cycles_red_ctrls->compound_th = 0;
+        break;
+#else
     case 5:
         adaptive_md_cycles_red_ctrls->enabled = 1;
         adaptive_md_cycles_red_ctrls->sq_weight_th = 0;
@@ -2610,6 +2652,7 @@ void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t 
         adaptive_md_cycles_red_ctrls->mrp_th = 0;
         adaptive_md_cycles_red_ctrls->compound_th = 0;
         break;
+#endif
     default:
         assert(0);
         break;
@@ -5324,30 +5367,57 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                 adaptive_md_cycles_level = 0;
 #if SOFT_CYCLES_M6M7
             else if (enc_mode <= ENC_M5)
-                adaptive_md_cycles_level = 3; // TH 200
+#if ADMDTM5_TUNE
+                adaptive_md_cycles_level = 0;
+#else
+                adaptive_md_cycles_level = 3;
+#endif
             else
-                adaptive_md_cycles_level = 4; // TH 300
+                adaptive_md_cycles_level = 4;
 #else
             else
-                adaptive_md_cycles_level = 3; // TH 200
+                adaptive_md_cycles_level = 3;
 #endif
         }
         else {
             if (enc_mode <= ENC_M0)
                 adaptive_md_cycles_level = 0;
             else if (enc_mode <= ENC_M1)
-                adaptive_md_cycles_level = 1; // TH 50
+                adaptive_md_cycles_level = 1;
+#if ADMDTM2_TUNE
+            else if (enc_mode <= ENC_M2)
+                adaptive_md_cycles_level = pcs_ptr->temporal_layer_index == 0 ? 2 : 4;
+#endif
             else if (enc_mode <= ENC_M3)
-                adaptive_md_cycles_level = 2; // TH 150
+#if ADMDTM3_TUNE
+                adaptive_md_cycles_level = pcs_ptr->temporal_layer_index == 0 ? 2 : 4;
+#else
+                adaptive_md_cycles_level = 2;
+#endif
             else if (enc_mode <= ENC_M4)
-                adaptive_md_cycles_level = 4; // TH 300
+#if ADMDTM4_TUNE
+                adaptive_md_cycles_level = pcs_ptr->temporal_layer_index == 0 ? 4 : 5;
+#else
+                adaptive_md_cycles_level = 4;
+#endif
             else if (enc_mode <= ENC_M5)
-                adaptive_md_cycles_level = 6; // TH 1500
+#if ADMDTM5_TUNE
+                adaptive_md_cycles_level = 5;
+#else
+                adaptive_md_cycles_level = 6;
+#endif
 #if SOFT_CYCLES_M6M7
+#if TUNE_ADAPTIVE_MD_CR_TH
+            else if (enc_mode <= ENC_M6)
+                adaptive_md_cycles_level = 8;
+            else
+                adaptive_md_cycles_level = 9;
+#else
             else if (enc_mode <= ENC_M6)
                 adaptive_md_cycles_level = 7;
             else
                 adaptive_md_cycles_level = 8;
+#endif
 #endif
         }
     }

@@ -574,6 +574,13 @@ extern "C" {
 #define NEW_M8                  1 // Set M8=M7
 #define TPL_OPT                 1 // Optimize the tpl algorithm for faster presets
 #define TPL_1PASS_IMP           1 // Get actions from 2 pass to 1 pass LAD
+#define TUNE_ADAPTIVE_MD_CR_TH   1
+#if TUNE_ADAPTIVE_MD_CR_TH
+#define ADMDTM2_TUNE 1
+#define ADMDTM3_TUNE 1
+#define ADMDTM4_TUNE 1
+#define ADMDTM5_TUNE 1
+#endif
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
