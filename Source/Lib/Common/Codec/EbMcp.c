@@ -312,4 +312,5 @@ void pad_input_picture_16bit(
 
     return;
 }
+
 #endif
