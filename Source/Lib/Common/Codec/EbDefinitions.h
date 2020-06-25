@@ -587,6 +587,7 @@ extern "C" {
 #define FIX_HBD_R2R         1 // Fix 10bit error in over-boundaries CUs (incomplete SB)
 #define FIX_HBD_MD5         1 // Fix 10bit error in non multiple of 8 resolution
 #define CHANGE_HBD_MODE     1 // Change 10bit MD for MR and M0
+#define JUNE25_ADOPTIONS    1 // Adoptions in M3-M8
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

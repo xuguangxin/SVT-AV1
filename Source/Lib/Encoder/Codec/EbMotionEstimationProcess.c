@@ -384,6 +384,9 @@ void* set_me_hme_params_oq(
     }
 #endif
 #if APR25_1PM_ADOPTIONS
+#if JUNE25_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
 #if JUNE17_ADOPTIONS
     else if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
@@ -391,6 +394,7 @@ void* set_me_hme_params_oq(
     else if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
     else if (pcs_ptr->enc_mode <= ENC_M6) {
+#endif
 #endif
 #endif
     me_context_ptr->search_area_width = me_context_ptr->search_area_height = 32;
@@ -537,10 +541,12 @@ void* set_me_hme_params_oq(
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 300;
         }
 #endif
+#if !JUNE25_ADOPTIONS
         else if (pcs_ptr->enc_mode <= ENC_M5) {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 48;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 192;
         }
+#endif
         else if (pcs_ptr->enc_mode <= ENC_M6) {
             me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 32;
             me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 164;
@@ -1300,10 +1306,14 @@ void* tf_set_me_hme_params_oq(
 #endif
 #if APR22_ADOPTIONS
 #if UPGRADE_M6_M7_M8
+#if JUNE25_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if PRESET_SHIFITNG
     if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
         me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 30;
     else
@@ -1317,10 +1327,14 @@ void* tf_set_me_hme_params_oq(
 #if ADD_MAX_HME_SIGNAL
 #if APR22_ADOPTIONS
 #if UPGRADE_M6_M7_M8
+#if JUNE25_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if PRESET_SHIFITNG
     if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
         me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 60;
     else

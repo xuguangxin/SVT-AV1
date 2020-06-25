@@ -3726,6 +3726,10 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
      if (enc_mode <= ENC_M2)
 #endif
          context_ptr->disallow_4x4 = EB_FALSE;
+#if JUNE25_ADOPTIONS
+     else
+         context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
+#else
 #if UNIFY_SC_NSC
 #if JUNE23_ADOPTIONS
      else if (enc_mode <= ENC_M4)
@@ -3746,6 +3750,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          context_ptr->disallow_4x4 = (pcs_ptr->slice_type == I_SLICE) ? EB_FALSE : EB_TRUE;
      else
          context_ptr->disallow_4x4 = EB_TRUE;
+#endif
 #else
 #if UPGRADE_M6_M7_M8
      if (enc_mode <= ENC_M5)
@@ -4384,6 +4389,9 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                         context_ptr->predictive_me_level = 6;
 #if MAR12_M8_ADOPTIONS
 #if REVERT_WHITE // Pred_ME
+#if JUNE25_ADOPTIONS
+                    else if (enc_mode <= ENC_M6)
+#else
 #if JUNE17_ADOPTIONS
                     else if (enc_mode <= ENC_M4)
 #else
@@ -4391,6 +4399,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
                     else if (enc_mode <= ENC_M5)
 #else
                     else if (enc_mode <= ENC_M7)
+#endif
 #endif
 #endif
 #else
@@ -4761,7 +4770,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M1)
 #else
 #if JUNE23_ADOPTIONS
+#if JUNE25_ADOPTIONS
+            if (enc_mode <= ENC_M6)
+#else
             if (enc_mode <= ENC_M4)
+#endif
 #else
 #if JUNE11_ADOPTIONS
             if (enc_mode <= ENC_M3)
@@ -4814,7 +4827,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         if (sequence_control_set_ptr->static_config.prune_ref_rec_part == DEFAULT)
 #if UNIFY_SC_NSC
+#if JUNE25_ADOPTIONS
+            if (enc_mode <= ENC_M8)
+#else
             if (enc_mode <= ENC_M5)
+#endif
 #else
 #if PRESETS_SHIFT
             if (pcs_ptr->parent_pcs_ptr->sc_content_detected ||
@@ -5079,10 +5096,14 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
             context_ptr->md_stage_2_3_cand_prune_th = 45;
 #if JUNE11_ADOPTIONS
+#if JUNE25_ADOPTIONS
+        else if (enc_mode <= ENC_M8)
+#else
 #if JUNE23_ADOPTIONS
         else if (enc_mode <= ENC_M4)
 #else
         else if (enc_mode <= ENC_M1)
+#endif
 #endif
             context_ptr->md_stage_2_3_cand_prune_th = 15;
 #endif
@@ -5385,11 +5406,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             if (enc_mode <= ENC_M4)
                 adaptive_md_cycles_level = 0;
 #if SOFT_CYCLES_M6M7
+#if !JUNE25_ADOPTIONS
             else if (enc_mode <= ENC_M5)
 #if ADMDTM5_TUNE
                 adaptive_md_cycles_level = 0;
 #else
                 adaptive_md_cycles_level = 3;
+#endif
 #endif
             else
                 adaptive_md_cycles_level = 4;
@@ -5419,11 +5442,13 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #else
                 adaptive_md_cycles_level = 4;
 #endif
+#if !JUNE25_ADOPTIONS
             else if (enc_mode <= ENC_M5)
 #if ADMDTM5_TUNE
                 adaptive_md_cycles_level = 5;
 #else
                 adaptive_md_cycles_level = 6;
+#endif
 #endif
 #if SOFT_CYCLES_M6M7
 #if TUNE_ADAPTIVE_MD_CR_TH
@@ -5476,8 +5501,15 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
             else if (enc_mode <= ENC_M1)
                 context_ptr->sq_weight = 100;
 #if JUNE23_ADOPTIONS
+#if JUNE25_ADOPTIONS
+            else if (enc_mode <= ENC_M3)
+                context_ptr->sq_weight = 95;
+            else if (enc_mode <= ENC_M4)
+                context_ptr->sq_weight = 85;
+#else
             else if (enc_mode <= ENC_M4)
                 context_ptr->sq_weight = 95;
+#endif
 #else
             else if (enc_mode <= ENC_M3)
                 context_ptr->sq_weight = 95;
@@ -6097,7 +6129,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
 #if MAY23_M0_ADOPTIONS
 #if JUNE11_ADOPTIONS
+#if JUNE25_ADOPTIONS
+        if (enc_mode <= ENC_M8)
+#else
         if (enc_mode <= ENC_M5)
+#endif
 #else
 #if JUNE8_ADOPTIONS
         if (enc_mode <= ENC_M0 || (enc_mode <= ENC_M1 && pcs_ptr->parent_pcs_ptr->sc_content_detected))

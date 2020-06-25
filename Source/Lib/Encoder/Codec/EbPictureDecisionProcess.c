@@ -1032,10 +1032,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
     // Can enable everywhere b/c TF is off for SC anyway; remove fake diff
 #if UPGRADE_M6_M7_M8
+#if JUNE25_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
 #if PRESET_SHIFITNG
     if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
     if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
 #endif
         pcs_ptr->tf_enable_hme_level1_flag = 1;
         pcs_ptr->tf_enable_hme_level2_flag = 1;
@@ -2313,7 +2317,11 @@ EbErrorType signal_derivation_multi_processes_oq(
         : 1;
 #endif
 #else
+#if JUNE25_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5)
+#else
     if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
         pcs_ptr->tx_size_search_mode = 1;
 #endif
 #if NEW_TXS_SETTINGS
@@ -2717,7 +2725,11 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 #if IMPROVED_TF_LEVELS
     if (perform_filtering) {
+#if JUNE25_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M4) {
+#else
         if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
             if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                 context_ptr->tf_level = 1;
             else

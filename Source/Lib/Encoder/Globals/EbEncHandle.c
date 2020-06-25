@@ -2138,7 +2138,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
         scs_ptr->static_config.super_block_size = 64;
     else
 #if UNIFY_SC_NSC
+#if JUNE25_ADOPTIONS
+        scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M4) ? 128 : 64;
+#else
         scs_ptr->static_config.super_block_size = (scs_ptr->static_config.enc_mode <= ENC_M5) ? 128 : 64;
+#endif
 #else
 #if MAR10_ADOPTIONS
         if (scs_ptr->static_config.screen_content_mode == 1)
