@@ -1482,10 +1482,22 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
                                          pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
 
     // HBD Mode
+#if CHANGE_HBD_MODE
+    if (scs_ptr->static_config.enable_hbd_mode_decision == DEFAULT)
+        if (MR_MODE)
+            pcs_ptr->hbd_mode_decision = 1;
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M0)
+            pcs_ptr->hbd_mode_decision = 1;
+        else
+            pcs_ptr->hbd_mode_decision = 2;
+    else
+        pcs_ptr->hbd_mode_decision = scs_ptr->static_config.enable_hbd_mode_decision;
+#else
     pcs_ptr->hbd_mode_decision =
         scs_ptr->static_config.enable_hbd_mode_decision;
 
     pcs_ptr->hbd_mode_decision = scs_ptr->static_config.enable_hbd_mode_decision;
+#endif
     return return_error;
 }
 #if !DEPTH_PART_CLEAN_UP

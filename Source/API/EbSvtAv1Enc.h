@@ -431,9 +431,12 @@ typedef struct EbSvtAv1EncConfiguration {
      * 1 = 10bit mode decision
      * 2 = Auto: 8bit & 10bit mode decision
      *
-    * Default is 1. */
+    * Default is -1. */
+#if 1 //CHANGE_HBD_MODE
+    int8_t enable_hbd_mode_decision;
+#else
     uint8_t enable_hbd_mode_decision;
-
+#endif
     /* Palette Mode
     *
     * Default is -1. */

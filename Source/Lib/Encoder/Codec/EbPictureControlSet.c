@@ -557,7 +557,11 @@ EbErrorType picture_control_set_ctor(PictureControlSet *object_ptr, EbPtr object
     // Mode Decision Control config
     EB_MALLOC_ARRAY(object_ptr->mdc_sb_array, object_ptr->sb_total_count);
 #endif
-
+#if CHANGE_HBD_MODE
+    if (init_data_ptr->hbd_mode_decision == DEFAULT)
+        object_ptr->hbd_mode_decision = init_data_ptr->hbd_mode_decision = 2;
+    else
+#endif
     object_ptr->hbd_mode_decision = init_data_ptr->hbd_mode_decision;
     // Mode Decision Neighbor Arrays
     uint8_t depth;

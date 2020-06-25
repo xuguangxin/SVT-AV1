@@ -79,7 +79,11 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
         &enc_handle_ptr->scs_instance_array[0]->scs_ptr->static_config;
     EbBool        is_16bit                 = (EbBool)(static_config->encoder_bit_depth > EB_8BIT);
     EbColorFormat color_format             = static_config->encoder_color_format;
+#if CHANGE_HBD_MODE
+    int8_t       enable_hbd_mode_decision = static_config->enable_hbd_mode_decision;
+#else
     uint8_t       enable_hbd_mode_decision = static_config->enable_hbd_mode_decision;
+#endif
 
     EncDecContext *context_ptr;
     EB_CALLOC_ARRAY(context_ptr, 1);
@@ -163,6 +167,16 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
 
     // Mode Decision Context
 #if SB64_MEM_OPT
+#if CHANGE_HBD_MODE
+    EB_NEW(context_ptr->md_context,
+           mode_decision_context_ctor,
+           color_format,
+           static_config->super_block_size,
+           0,
+           0,
+           enable_hbd_mode_decision == DEFAULT ? 2 : enable_hbd_mode_decision ,
+           static_config->screen_content_mode);
+#else
     EB_NEW(context_ptr->md_context,
            mode_decision_context_ctor,
            color_format,
@@ -171,6 +185,7 @@ EbErrorType enc_dec_context_ctor(EbThreadContext *  thread_context_ptr,
            0,
            enable_hbd_mode_decision,
            static_config->screen_content_mode);
+#endif
 #else
     EB_NEW(context_ptr->md_context,
            mode_decision_context_ctor,
@@ -1225,6 +1240,10 @@ void pad_ref_and_set_flags(PictureControlSet *pcs_ptr, SequenceControlSet *scs_p
 
     //We need this for MCP
     if (is_16bit) {
+#if FIX_HBD_MD5
+        // Non visible Reference samples should be overwritten by the last visible line of pixels
+        pad_picture_to_multiple_of_min_blk_size_dimensions_16bit(scs_ptr, ref_pic_16bit_ptr);
+#endif
         // Y samples
         generate_padding16_bit(ref_pic_16bit_ptr->buffer_y,
                                ref_pic_16bit_ptr->stride_y << 1,

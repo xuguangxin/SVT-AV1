@@ -3022,8 +3022,13 @@ static EbErrorType verify_settings(
     }
 
     // HBD mode decision
+#if CHANGE_HBD_MODE
+    if (config->enable_hbd_mode_decision < (int8_t)(-1) || config->enable_hbd_mode_decision > 2) {
+         SVT_LOG("Error instance %u: Invalid HBD mode decision flag [-1 - 2], your input: %d\n", channel_number + 1, config->enable_hbd_mode_decision);
+#else
     if (config->enable_hbd_mode_decision != 0 && config->enable_hbd_mode_decision != 1 && config->enable_hbd_mode_decision != 2) {
     SVT_LOG("Error instance %u: Invalid HBD mode decision flag [0 - 2], your input: %d\n", channel_number + 1, config->enable_hbd_mode_decision);
+#endif
     return_error = EB_ErrorBadParameter;
     }
 
@@ -3362,7 +3367,11 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->hme_level2_search_area_in_width_array[1] = 1;
     config_ptr->hme_level2_search_area_in_height_array[0] = 1;
     config_ptr->hme_level2_search_area_in_height_array[1] = 1;
+#if CHANGE_HBD_MODE
+    config_ptr->enable_hbd_mode_decision = DEFAULT;
+#else
     config_ptr->enable_hbd_mode_decision = 1;
+#endif
     config_ptr->enable_palette = -1;
     config_ptr->olpd_refinement = -1;
     // Bitstream options

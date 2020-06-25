@@ -3460,6 +3460,47 @@ void pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlSet * scs
     return;
 }
 
+#if FIX_HBD_MD5
+void pad_picture_to_multiple_of_min_blk_size_dimensions_16bit(SequenceControlSet * scs_ptr,
+                                                        EbPictureBufferDesc *input_picture_ptr) {
+
+    uint32_t       color_format  = input_picture_ptr->color_format;
+    const uint16_t subsampling_x = (color_format == EB_YUV444 ? 1 : 2) - 1;
+    const uint16_t subsampling_y = (color_format >= EB_YUV422 ? 1 : 2) - 1;
+
+    // Input Picture Padding
+    pad_input_picture_16bit(
+        &(((uint16_t*)input_picture_ptr->buffer_y)[input_picture_ptr->origin_x  +
+                                     (input_picture_ptr->origin_y * input_picture_ptr->stride_y )]),
+        input_picture_ptr->stride_y,
+        (input_picture_ptr->width - scs_ptr->pad_right) ,
+        (input_picture_ptr->height - scs_ptr->pad_bottom),
+        scs_ptr->pad_right ,
+        scs_ptr->pad_bottom);
+
+    pad_input_picture_16bit(
+        &(((uint16_t*)input_picture_ptr->buffer_cb)[(input_picture_ptr->origin_x >> subsampling_y) +
+                                      ((input_picture_ptr->origin_y >> subsampling_y) *
+                                       input_picture_ptr->stride_cb)]),
+        input_picture_ptr->stride_cb,
+        (input_picture_ptr->width - scs_ptr->pad_right)>> subsampling_x ,
+        (input_picture_ptr->height - scs_ptr->pad_bottom)>> subsampling_x,
+        scs_ptr->pad_right >> subsampling_x,
+        scs_ptr->pad_bottom >> subsampling_y);
+
+    pad_input_picture_16bit(
+        &(((uint16_t*)input_picture_ptr->buffer_cr)[(input_picture_ptr->origin_x >> subsampling_y) +
+                                      ((input_picture_ptr->origin_y >> subsampling_y) *
+                                       input_picture_ptr->stride_cb)]),
+        input_picture_ptr->stride_cr,
+        (input_picture_ptr->width - scs_ptr->pad_right)>> subsampling_x,
+        (input_picture_ptr->height - scs_ptr->pad_bottom)>> subsampling_x,
+        scs_ptr->pad_right >> subsampling_x,
+        scs_ptr->pad_bottom >> subsampling_y);
+
+    return;
+}
+#endif
 /************************************************
  * Pad Picture at the right and bottom sides
  ** To complete border SB smaller than SB size
@@ -3926,6 +3967,17 @@ void *picture_analysis_kernel(void *input_ptr) {
                              input_picture_ptr->height,
                              input_picture_ptr->origin_x,
                              input_picture_ptr->origin_y);
+#if FIX_HBD_R2R
+
+            // PAD the bit inc buffer in 10bit
+            if (scs_ptr->static_config.encoder_bit_depth > EB_8BIT)
+                generate_padding(input_picture_ptr->buffer_bit_inc_y,
+                        input_picture_ptr->stride_bit_inc_y,
+                        input_picture_ptr->width,
+                        input_picture_ptr->height,
+                        input_picture_ptr->origin_x,
+                        input_picture_ptr->origin_y);
+#endif
 #if PR_1217
             // Padding the chroma if over_boundary_block_mode is enabled
             if (scs_ptr->over_boundary_block_mode == 1) {
@@ -3942,6 +3994,26 @@ void *picture_analysis_kernel(void *input_ptr) {
                     input_picture_ptr->height >> scs_ptr->subsampling_y,
                     input_picture_ptr->origin_x >> scs_ptr->subsampling_x,
                     input_picture_ptr->origin_y >> scs_ptr->subsampling_y);
+#if FIX_HBD_R2R
+
+                // PAD the bit inc buffer in 10bit
+                if (scs_ptr->static_config.encoder_bit_depth > EB_8BIT) {
+                    generate_padding(input_picture_ptr->buffer_bit_inc_cb,
+                            input_picture_ptr->stride_bit_inc_cb,
+                            input_picture_ptr->width >> scs_ptr->subsampling_x,
+                            input_picture_ptr->height >> scs_ptr->subsampling_y,
+                            input_picture_ptr->origin_x >> scs_ptr->subsampling_x,
+                            input_picture_ptr->origin_y >> scs_ptr->subsampling_y);
+
+                    generate_padding(input_picture_ptr->buffer_bit_inc_cr,
+                            input_picture_ptr->stride_bit_inc_cr,
+                            input_picture_ptr->width >> scs_ptr->subsampling_x,
+                            input_picture_ptr->height >> scs_ptr->subsampling_y,
+                            input_picture_ptr->origin_x >> scs_ptr->subsampling_x,
+                            input_picture_ptr->origin_y >> scs_ptr->subsampling_y);
+                }
+#endif
+
             }
 #endif
             {

@@ -25,6 +25,10 @@ void downsample_decimation_input_picture(PictureParentControlSet *pcs_ptr,
 
 void pad_picture_to_multiple_of_min_blk_size_dimensions(SequenceControlSet * scs_ptr,
                                                         EbPictureBufferDesc *input_picture_ptr);
+#if FIX_HBD_MD5
+void pad_picture_to_multiple_of_min_blk_size_dimensions_16bit(SequenceControlSet * scs_ptr,
+                                                        EbPictureBufferDesc *input_picture_ptr);
+#endif
 void picture_pre_processing_operations(PictureParentControlSet *pcs_ptr,
                                        SequenceControlSet *scs_ptr, uint32_t sb_total_count);
 void pad_picture_to_multiple_of_sb_dimensions(EbPictureBufferDesc *input_padded_picture_ptr);

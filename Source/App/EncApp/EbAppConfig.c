@@ -591,7 +591,11 @@ static void set_superres_qthres(const char *value, EbConfig *cfg) {
 };
 // --- end: SUPER-RESOLUTION SUPPORT
 static void set_enable_hbd_mode_decision(const char *value, EbConfig *cfg) {
+#if 1 //CHANGE_HBD_MODE
     cfg->enable_hbd_mode_decision = (uint8_t)strtoul(value, NULL, 0);
+#else
+    cfg->enable_hbd_mode_decision = (int8_t)strtoul(value, NULL, 0);
+#endif
 };
 static void set_enable_palette(const char *value, EbConfig *cfg) {
     cfg->enable_palette = (int32_t)strtoul(value, NULL, 0);
@@ -1632,7 +1636,11 @@ void eb_config_ctor(EbConfig *config_ptr) {
 #else
     config_ptr->screen_content_mode                       = 0;
 #endif
+#if 1 //CHANGE_HBD_MODE
+    config_ptr->enable_hbd_mode_decision                  = DEFAULT;
+#else
     config_ptr->enable_hbd_mode_decision                  = 2;
+#endif
     config_ptr->enable_palette                            = -1;
     config_ptr->olpd_refinement                           = -1;
     config_ptr->injector_frame_rate                       = 60 << 16;

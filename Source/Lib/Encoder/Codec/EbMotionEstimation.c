@@ -12454,9 +12454,11 @@ EbErrorType motion_estimate_sb(
     EbErrorType return_error = EB_ErrorNone;
 
     SequenceControlSet *scs_ptr = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+#if !PRUNE_ADJUST_ME_BUG_FIX
     uint32_t sb_height = (input_ptr->height - sb_origin_y) < BLOCK_SIZE_64
                              ? input_ptr->height - sb_origin_y
                              : BLOCK_SIZE_64;
+#endif
     uint32_t pu_index;
 
     uint32_t max_number_of_pus_per_sb = pcs_ptr->max_number_of_pus_per_sb;

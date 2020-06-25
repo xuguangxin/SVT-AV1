@@ -179,7 +179,11 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
         config->hme_level0_total_search_area_height;
     callback_data->eb_enc_parameters.screen_content_mode = (EbBool)config->screen_content_mode;
     callback_data->eb_enc_parameters.enable_hbd_mode_decision =
+#if 1 //CHANGE_HBD_MODE
+        config->enable_hbd_mode_decision;
+#else
         (EbBool)config->enable_hbd_mode_decision;
+#endif
     callback_data->eb_enc_parameters.enable_palette           = config->enable_palette;
     callback_data->eb_enc_parameters.olpd_refinement          = config->olpd_refinement;
     callback_data->eb_enc_parameters.channel_id               = config->channel_id;

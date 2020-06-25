@@ -584,6 +584,9 @@ extern "C" {
 #define MEM_OPT_PALETTE     1 // Memory optimization for palette
 #define MEM_OPT_MV_STACK    1 // Memory optimization for ed_ref_mv_stack
 #define MEM_OPT_MD_BUF_DESC 1 // Memory optimization for buf_desc used in MDContext
+#define FIX_HBD_R2R         1 // Fix 10bit error in over-boundaries CUs (incomplete SB)
+#define FIX_HBD_MD5         1 // Fix 10bit error in non multiple of 8 resolution
+#define CHANGE_HBD_MODE     1 // Change 10bit MD for MR and M0
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

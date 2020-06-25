@@ -931,7 +931,11 @@ typedef struct PictureControlSetInitData {
     uint16_t  enc_dec_segment_row;
     EbEncMode enc_mode;
     uint8_t   speed_control;
+#if CHANGE_HBD_MODE
+    int8_t   hbd_mode_decision;
+#else
     uint8_t   hbd_mode_decision;
+#endif
     uint16_t  film_grain_noise_level;
     EbBool    ext_block_flag;
 #if !REMOVE_MRP_MODE

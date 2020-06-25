@@ -59,7 +59,11 @@ extern void generate_padding16_bit(EbByte src_pic, uint32_t src_stride, uint32_t
 extern void pad_input_picture(EbByte src_pic, uint32_t src_stride, uint32_t original_src_width,
                               uint32_t original_src_height, uint32_t pad_right,
                               uint32_t pad_bottom);
-
+#if FIX_HBD_MD5 || FIX_HBD_R2R
+extern void pad_input_picture_16bit(uint16_t* src_pic, uint32_t src_stride, uint32_t original_src_width,
+                              uint32_t original_src_height, uint32_t pad_right,
+                              uint32_t pad_bottom);
+#endif
     void generate_padding_l(EbByte src_pic, uint32_t src_stride,
         uint32_t row_height, uint32_t padding_width);
     void generate_padding_r(EbByte src_pic, uint32_t src_stride,
