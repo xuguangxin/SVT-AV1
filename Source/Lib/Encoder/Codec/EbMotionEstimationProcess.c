@@ -1001,7 +1001,11 @@ EbErrorType signal_derivation_me_kernel_oq(
     if (scs_ptr->static_config.enable_global_motion == EB_TRUE)
     {
 #if UNIFY_SC_NSC
+#if JUNE26_ADOPTIONS
+        if (enc_mode <= ENC_M6)
+#else
         if (enc_mode <= ENC_M5)
+#endif
             context_ptr->me_context_ptr->compute_global_motion = EB_TRUE;
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
@@ -1312,6 +1316,9 @@ void* tf_set_me_hme_params_oq(
 #endif
 #if APR22_ADOPTIONS
 #if UPGRADE_M6_M7_M8
+#if JUNE26_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5)
+#else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
 #else
@@ -1319,6 +1326,7 @@ void* tf_set_me_hme_params_oq(
     if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
 #endif
         me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height = 30;
@@ -1333,6 +1341,9 @@ void* tf_set_me_hme_params_oq(
 #if ADD_MAX_HME_SIGNAL
 #if APR22_ADOPTIONS
 #if UPGRADE_M6_M7_M8
+#if JUNE26_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5)
+#else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4)
 #else
@@ -1340,6 +1351,7 @@ void* tf_set_me_hme_params_oq(
     if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     if (pcs_ptr->enc_mode <= ENC_M7)
+#endif
 #endif
 #endif
         me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height = 60;

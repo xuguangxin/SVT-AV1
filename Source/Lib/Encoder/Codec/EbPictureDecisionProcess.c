@@ -1032,6 +1032,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 #if PRESETS_SHIFT
     // Can enable everywhere b/c TF is off for SC anyway; remove fake diff
 #if UPGRADE_M6_M7_M8
+#if JUNE26_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
@@ -1039,6 +1042,7 @@ EbErrorType signal_derivation_multi_processes_oq(
     if (pcs_ptr->enc_mode <= ENC_M5) {
 #else
     if (pcs_ptr->enc_mode <= ENC_M7) {
+#endif
 #endif
 #endif
         pcs_ptr->tf_enable_hme_level1_flag = 1;
@@ -1273,10 +1277,14 @@ EbErrorType signal_derivation_multi_processes_oq(
             pcs_ptr->disallow_nsq = pcs_ptr->slice_type == I_SLICE ? EB_FALSE : EB_TRUE;
         else
 #endif
+#if JUNE26_ADOPTIONS
+            pcs_ptr->disallow_nsq = EB_TRUE;
+#else
 #if SOFT_CYCLES_M6M7
             pcs_ptr->disallow_nsq = EB_FALSE;
 #else
             pcs_ptr->disallow_nsq = EB_TRUE;
+#endif
 #endif
 #else
         pcs_ptr->disallow_nsq = EB_TRUE;
@@ -2317,10 +2325,14 @@ EbErrorType signal_derivation_multi_processes_oq(
         : 1;
 #endif
 #else
+#if JUNE26_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M4)
+#else
 #if JUNE25_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M5)
 #else
     if (pcs_ptr->enc_mode <= ENC_M4)
+#endif
 #endif
         pcs_ptr->tx_size_search_mode = 1;
 #endif
@@ -2655,8 +2667,15 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #endif
         pcs_ptr->gm_level = GM_FULL;
+#if JUNE26_ADOPTIONS
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+        pcs_ptr->gm_level = GM_DOWN;
+    else
+        pcs_ptr->gm_level = GM_DOWN16;
+#else
     else
         pcs_ptr->gm_level = GM_DOWN;
+#endif
 #else
 #if MAR12_ADOPTIONS
     if (pcs_ptr->sc_content_detected)
@@ -2725,10 +2744,14 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 #if IMPROVED_TF_LEVELS
     if (perform_filtering) {
+#if JUNE26_ADOPTIONS
+        if (pcs_ptr->enc_mode <= ENC_M5) {
+#else
 #if JUNE25_ADOPTIONS
         if (pcs_ptr->enc_mode <= ENC_M4) {
 #else
         if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
 #endif
             if (pcs_ptr->temporal_layer_index == 0 || (pcs_ptr->temporal_layer_index == 1 && scs_ptr->static_config.hierarchical_levels >= 3))
                 context_ptr->tf_level = 1;
@@ -2836,6 +2859,10 @@ EbErrorType signal_derivation_multi_processes_oq(
                 pcs_ptr->mrp_level = 9;
         else
 #endif
+#if JUNE26_ADOPTIONS
+            if (pcs_ptr->enc_mode <= ENC_M6)
+                pcs_ptr->mrp_level = 2;
+#else
             if (pcs_ptr->enc_mode <= ENC_M5)
                 pcs_ptr->mrp_level = 2;
 #if NEW_M7_MRP
@@ -2844,6 +2871,7 @@ EbErrorType signal_derivation_multi_processes_oq(
             else if (pcs_ptr->enc_mode <= ENC_M7)
 #endif
                 pcs_ptr->mrp_level = 6;
+#endif
             else
                 pcs_ptr->mrp_level = pcs_ptr->is_used_as_reference_flag  ? 6 : 9;
     }else

@@ -1439,6 +1439,22 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 #define INTER_COMP_NFL 16
 #else
 #if UNIFY_SC_NSC
+#if JUNE26_ADOPTIONS
+uint32_t nics_scale_factor[11/*levels*/][2/*num/denum*/] =
+{
+    {10,8},   // level0
+    {8,8},    // level1
+    {7,8},    // level2
+    {6,8},    // level3
+    {5,8},    // level4
+    {4,8},    // level5
+    {3,8},    // level6
+    {2,8},    // level7
+    {3,16},   // level8
+    {1,8},    // level9
+    {1,16}    // level10
+};
+#else
 uint32_t nics_scale_factor[10/*levels*/][2/*num/denum*/] =
 {
     {10,8},   // level0
@@ -1452,6 +1468,7 @@ uint32_t nics_scale_factor[10/*levels*/][2/*num/denum*/] =
     {1,8},    // level8
     {1,16}    // level9
 };
+#endif
 #else
 #if MAY19_ADOPTIONS
 uint32_t nics_scale_factor[2/*sc/nsc*/][10/*levels*/][2/*num/denum*/] = {
@@ -1802,13 +1819,25 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
 #endif
         nics_scling_level = 1;
     else if (pcs_ptr->enc_mode <= ENC_M1)
+#if JUNE26_ADOPTIONS
+        nics_scling_level = 4;
+#else
         nics_scling_level = 3;
+#endif
     else if (pcs_ptr->enc_mode <= ENC_M2)
+#if JUNE26_ADOPTIONS
+        nics_scling_level = 6;
+    else if (pcs_ptr->enc_mode <= ENC_M4)
+        nics_scling_level = 8;
+    else
+        nics_scling_level = 9;
+#else
         nics_scling_level = 5;
     else if (pcs_ptr->enc_mode <= ENC_M3)
         nics_scling_level = 7;
     else
         nics_scling_level = 8;
+#endif
 #else
 #if MAY19_ADOPTIONS
 #if M0_NIC
@@ -3813,7 +3842,11 @@ void set_md_stage_counts(PictureControlSet *pcs_ptr, ModeDecisionContext *contex
                                                       : context_ptr->md_stage_3_count[CAND_CLASS_3];
 #if M6_M7_NIC
     uint8_t use_nic_1_last_stage;
+#if JUNE26_ADOPTIONS
+    if (pcs_ptr->enc_mode <= ENC_M6) {
+#else
     if (pcs_ptr->enc_mode <= ENC_M5) {
+#endif
         use_nic_1_last_stage = 0;
     }
     else {

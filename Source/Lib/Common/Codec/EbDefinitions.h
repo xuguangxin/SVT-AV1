@@ -592,6 +592,9 @@ extern "C" {
 #define GM_DOWN_16          1 // Downsampled search mode, with a downsampling factor of 4 in each dimension
 #define GM_LIST1            1 // Exit gm search if first reference detection is identity
 
+#define JUNE26_ADOPTIONS    1
+#define ENABLE_ADAPTIVE_NSQ_ALL_FRAMES 1    // Enable the adaptive NSQ algorithm for all frames (no longer REF only)
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
