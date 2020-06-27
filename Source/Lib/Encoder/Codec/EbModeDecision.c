@@ -4918,7 +4918,11 @@ void inject_inter_candidates(PictureControlSet *pcs_ptr, ModeDecisionContext *co
                           &cand_total_cnt);
 
     if (context_ptr->global_mv_injection) {
+#if GM_DOWN_16
+        if (pcs_ptr->parent_pcs_ptr->gm_level <= GM_DOWN16) {
+#else
         if (pcs_ptr->parent_pcs_ptr->gm_level <= GM_DOWN) {
+#endif
             for (unsigned list_ref_index_l0 = 0; list_ref_index_l0 < 1; ++list_ref_index_l0)
                 for (unsigned list_ref_index_l1 = 0; list_ref_index_l1 < 1; ++list_ref_index_l1) {
                     /**************

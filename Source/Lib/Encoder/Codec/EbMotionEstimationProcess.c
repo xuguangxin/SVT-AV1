@@ -1080,6 +1080,12 @@ EbErrorType signal_derivation_me_kernel_oq(
         else
             context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
 #endif
+
+#if GM_LIST1
+        //TODO: enclose all gm signals into a control
+        context_ptr->me_context_ptr->gm_identiy_exit = EB_FALSE;
+#endif
+
     }
     else
         context_ptr->me_context_ptr->compute_global_motion = EB_FALSE;
@@ -1981,7 +1987,11 @@ void *motion_estimation_kernel(void *input_ptr) {
             // Global motion estimation
             // Compute only for the first fragment.
             // TODO: create an other kernel ?
+#if GM_DOWN_16
+            if (pcs_ptr->gm_level == GM_FULL || pcs_ptr->gm_level == GM_DOWN || pcs_ptr->gm_level == GM_DOWN16) {
+#else
             if (pcs_ptr->gm_level == GM_FULL || pcs_ptr->gm_level == GM_DOWN) {
+#endif
                 if (context_ptr->me_context_ptr->compute_global_motion &&
                     in_results_ptr->segment_index == 0)
                     global_motion_estimation(

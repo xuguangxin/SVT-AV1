@@ -588,6 +588,10 @@ extern "C" {
 #define FIX_HBD_MD5         1 // Fix 10bit error in non multiple of 8 resolution
 #define CHANGE_HBD_MODE     1 // Change 10bit MD for MR and M0
 #define JUNE25_ADOPTIONS    1 // Adoptions in M3-M8
+
+#define GM_DOWN_16          1 // Downsampled search mode, with a downsampling factor of 4 in each dimension
+#define GM_LIST1            1 // Exit gm search if first reference detection is identity
+
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -653,7 +657,12 @@ typedef enum MeHpMode {
 typedef enum GM_LEVEL {
     GM_FULL      = 0, // Exhaustive search mode.
     GM_DOWN      = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension
+#if GM_DOWN_16
+    GM_DOWN16    = 2, // Downsampled search mode, with a downsampling factor of 4 in each dimension
+    GM_TRAN_ONLY = 3 // Translation only using ME MV.
+#else
     GM_TRAN_ONLY = 2 // Translation only using ME MV.
+#endif
 } GM_LEVEL;
 typedef enum SqWeightOffsets {
     CONSERVATIVE_OFFSET_0 =   5,
