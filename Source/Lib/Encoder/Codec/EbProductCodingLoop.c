@@ -1811,7 +1811,11 @@ void scale_nics(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr) {
     uint8_t nics_scling_level ;
 #if UNIFY_SC_NSC
 #if JUNE23_ADOPTIONS
+#if REMOVE_MR_MACRO
+    if (pcs_ptr->enc_mode <= ENC_MR)
+#else
     if (MR_MODE)
+#endif
         nics_scling_level = 0;
     else if (pcs_ptr->enc_mode <= ENC_M0)
 #else
@@ -10943,11 +10947,16 @@ void md_stage_3(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *blk_p
 #else
         context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
 #endif
-#if MR_MODE
+#if MR_MODE && !REMOVE_MR_MACRO
         context_ptr->md_staging_tx_size_mode = EB_TRUE;
 #else
 #if CLASS_MERGING
 #if APR22_ADOPTIONS
+#if REMOVE_MR_MACRO
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_MR)
+            context_ptr->md_staging_tx_size_mode = 1;
+        else
+#endif
         if (pcs_ptr->parent_pcs_ptr->txs_in_inter_classes)
             context_ptr->md_staging_tx_size_mode = 1;
         else
@@ -12233,6 +12242,32 @@ void interintra_class_pruning_1(ModeDecisionContext *context_ptr, uint64_t best_
 
 #if CLASS_PRUNE
 #if UNIFY_SC_NSC
+#if REMOVE_MR_MACRO
+uint32_t class_prune_scale_factor[3/*levels*/][4/*band*/][2/*num/denum*/] =
+{
+    // level0 -- class prune OFF
+    {
+        {1, 1},     // b0
+        {1, 1},     // b1
+        {1, 1},     // b2
+        {1, 1}      // b3
+    },
+    // level1
+    {
+        {4, 8},     // b0
+        {3, 8},     // b1
+        {2, 8},     // b2
+        {0, 8}      // b3
+    },
+    // level2
+    {
+        {2, 8},     // b0
+        {1, 8},     // b1
+        {1, 8},     // b2
+        {0, 8}      // b3
+    }
+};
+#else
 uint32_t class_prune_scale_factor[2/*levels*/][4/*band*/][2/*num/denum*/] =
 {
     // level0
@@ -12250,6 +12285,7 @@ uint32_t class_prune_scale_factor[2/*levels*/][4/*band*/][2/*num/denum*/] =
         {0, 8}      // b3
     }
 };
+#endif
 #else
 uint32_t class_prune_scale_factor[2/*sc-nsc*/][2/*levels*/][4/*band*/][2/*num/denum*/] = {
     { //NSC
@@ -12305,6 +12341,12 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 
     uint8_t class_pruning_scaling_level ;
 #if JUNE25_ADOPTIONS
+#if REMOVE_MR_MACRO
+    if (pcs_ptr->enc_mode <= ENC_MRS)
+        // class prune OFF
+        class_pruning_scaling_level = 0;
+    else
+#endif
     if (pcs_ptr->enc_mode <= ENC_M8)
 #else
 #if JUNE23_ADOPTIONS
@@ -12318,7 +12360,11 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 #endif
 #endif
 #if UNIFY_SC_NSC
+#if REMOVE_MR_MACRO
+        class_pruning_scaling_level = 1;
+#else
         class_pruning_scaling_level = 0;
+#endif
 #else
 #if MAY17_ADOPTIONS
         class_pruning_scaling_level = sc_content_detected ? 1 : 0;
@@ -12327,8 +12373,11 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
 #endif
 #endif
     else
+#if REMOVE_MR_MACRO
+        class_pruning_scaling_level = 2;
+#else
         class_pruning_scaling_level = 1;
-
+#endif
     // minimum nics
     uint32_t min_nics =   pcs_ptr->parent_pcs_ptr->is_used_as_reference_flag ?
         MIN(2,context_ptr->md_stage_2_count[cand_class_it]) : 1 ;
@@ -12338,7 +12387,9 @@ void class_pruning(PictureControlSet *pcs_ptr, ModeDecisionContext *context_ptr,
         (distance_cost < band1_cost_th) ? 0 :
         (distance_cost < band2_cost_th) ? 1 :
         (distance_cost < band3_cost_th) ? 2 : 3;
-
+#if REMOVE_MR_MACRO
+    if (class_pruning_scaling_level)
+#endif
     if (best_md_stage_cost && class_best_cost){
         if (class_best_cost > best_md_stage_cost) {
             // scale NICS of the worst classes
@@ -12453,8 +12504,12 @@ void interintra_class_pruning_2(ModeDecisionContext *context_ptr, uint64_t best_
                     *(context_ptr->candidate_buffer_ptr_array[cand_buff_indices[0]]->full_cost_ptr);
 #if CLASS_PRUNE
                 // class pruning
+#if REMOVE_MR_MACRO
+                class_pruning(pcs_ptr,context_ptr, best_md_stage_cost , class_best_cost, cand_class_it);
+#else
 #if !MRS_MODE
                 class_pruning(pcs_ptr,context_ptr, best_md_stage_cost , class_best_cost, cand_class_it);
+#endif
 #endif
 #else
                 // inter class pruning

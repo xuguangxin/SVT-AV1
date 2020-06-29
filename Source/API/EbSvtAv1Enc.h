@@ -67,12 +67,20 @@ typedef struct EbSvtAv1EncConfiguration {
      * density mode.
      *
      * Default is defined as MAX_ENC_PRESET. */
+#if 1//REMOVE_MR_MACRO
+    int8_t enc_mode;
+#else
     uint8_t enc_mode;
+#endif
     /* For two pass encoding, the enc_mod of the second pass is passed in the first pass.
     * First pass has the option to run with second pass ME settings.
     *
     * Default is defined as MAX_ENC_PRESET. */
+#if 1//REMOVE_MR_MACRO
+    int8_t snd_pass_enc_mode;
+#else
     uint8_t snd_pass_enc_mode;
+#endif
     // GOP Structure
 
     /* The intra period defines the interval of frames after which you insert an
@@ -275,7 +283,7 @@ typedef struct EbSvtAv1EncConfiguration {
     *
     * Default is -1. */
     int enable_paeth;
-#if 1//OMARK
+#if 1//ON_OFF_FEATURE_MRP
     /* mrp level
     *
     * Default is -1. */

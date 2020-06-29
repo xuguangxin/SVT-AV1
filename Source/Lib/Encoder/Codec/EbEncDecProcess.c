@@ -26,7 +26,7 @@
 //To fix warning C4013: 'convert_16bit_to_8bit' undefined; assuming extern returning int
 #include "common_dsp_rtcd.h"
 #include "EbRateDistortionCost.h"
-
+#if !REMOVE_MR_MACRO
 #if MR_MODE
 #define MR_MODE_MULTI_PASS_PD 1
 #if IMPROVE_SUB_PEL
@@ -36,6 +36,7 @@
 #define MR_MODE_MULTI_PASS_PD 0
 #if IMPROVE_SUB_PEL
 #define MR_MODE_SUB_PEL 0
+#endif
 #endif
 #endif
 #if R2R_FIX_PADDING
@@ -1885,7 +1886,11 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
 }
 #endif
 #if PERFORM_SUB_PEL_MD
+#if REMOVE_MR_MACRO
+void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode) {
+#else
 void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level) {
+#endif
     MdSubPelSearchCtrls *md_subpel_search_ctrls = &mdctxt->md_subpel_search_ctrls;
 
     switch (md_subpel_search_level) {
@@ -1901,7 +1906,11 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
         md_subpel_search_ctrls->half_pel_search_scan    = 0;
 #if SEARCH_TOP_N
 #if IMPROVE_HALF_PEL
+#if REMOVE_MR_MACRO
+        md_subpel_search_ctrls->half_pel_search_pos_cnt = enc_mode <= ENC_MR ? 8 : 5;
+#else
         md_subpel_search_ctrls->half_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 5;
+#endif
 #else
         md_subpel_search_ctrls->half_pel_search_pos_cnt = 5;
 #endif
@@ -1909,12 +1918,20 @@ void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_se
         md_subpel_search_ctrls->quarter_pel_search_enabled = 1;
         md_subpel_search_ctrls->quarter_pel_search_scan    = 0;
 #if IMPROVE_QUARTER_PEL
+#if REMOVE_MR_MACRO
+        md_subpel_search_ctrls->quarter_pel_search_pos_cnt = enc_mode <= ENC_MR ? 8 : 1;
+#else
         md_subpel_search_ctrls->quarter_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 1;
+#endif
 #endif
         md_subpel_search_ctrls->eight_pel_search_enabled = 1;
         md_subpel_search_ctrls->eight_pel_search_scan    = 0;
 #if IMPROVE_EIGHT_PEL
+#if REMOVE_MR_MACRO
+        md_subpel_search_ctrls->eight_pel_search_pos_cnt = enc_mode <= ENC_MR ? 8 : 1;
+#else
         md_subpel_search_ctrls->eight_pel_search_pos_cnt = MR_MODE_SUB_PEL ? 8 : 1;
+#endif
 #endif
         break;
     case 2:
@@ -2825,8 +2842,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     PictureControlSet *pcs_ptr,
     ModeDecisionContext *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
-
+#if REMOVE_MR_MACRO
+    EbEncMode enc_mode = pcs_ptr->enc_mode;
+#else
     uint8_t enc_mode = pcs_ptr->enc_mode;
+#endif
     uint8_t pd_pass = context_ptr->pd_pass;
 
 #if ON_OFF_FEATURE_MRP
@@ -3493,7 +3513,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
     }
 #else
+#if REMOVE_MR_MACRO
+    if (enc_mode <= ENC_MR) {
+#else
     if (MR_MODE) {
+#endif
         context_ptr->chroma_at_last_md_stage = 0;
         context_ptr->chroma_at_last_md_stage_intra_th = (uint64_t)~0;
         context_ptr->chroma_at_last_md_stage_cfl_th = (uint64_t)~0;
@@ -3806,9 +3830,17 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #if MAY21_NSQ_OFF_FIX
 #if JUNE23_ADOPTIONS
      if (pd_pass == PD_PASS_0)
+#if REMOVE_MR_MACRO
+         context_ptr->md_disallow_nsq = enc_mode <= ENC_MR ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#else
          context_ptr->md_disallow_nsq = MR_MODE ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#endif
      else if (pd_pass == PD_PASS_1)
+#if REMOVE_MR_MACRO
+         context_ptr->md_disallow_nsq = enc_mode <= ENC_MR ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#else
          context_ptr->md_disallow_nsq = MR_MODE ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
+#endif
 #else
      if (pd_pass == PD_PASS_0)
          context_ptr->md_disallow_nsq = (enc_mode <= ENC_M0) ? pcs_ptr->parent_pcs_ptr->disallow_nsq : 1;
@@ -5094,7 +5126,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_stage_2_3_cand_prune_th = 5;
     else
 #if ADD_MRS_MODE
+#if REMOVE_MR_MACRO
+        if (enc_mode <= ENC_MRS)
+#else
         if (MRS_MODE)
+#endif
             context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
         else
 #endif
@@ -5119,7 +5155,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else if (enc_mode <= ENC_M0)
 #endif
 #else
+#if REMOVE_MR_MACRO
+        if (enc_mode <= ENC_MR)
+#else
         if (MR_MODE)
+#endif
 #endif
             context_ptr->md_stage_2_3_cand_prune_th = 45;
 #if JUNE11_ADOPTIONS
@@ -5525,11 +5565,19 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
     else
 #if ADD_MRS_MODE
+#if REMOVE_MR_MACRO
+        if (enc_mode <= ENC_MRS)
+#else
         if (MRS_MODE)
+#endif
             context_ptr->sq_weight = (uint32_t)~0;
         else
 #endif
+#if REMOVE_MR_MACRO
+        if (enc_mode <= ENC_MR)
+#else
         if (MR_MODE)
+#endif
 #if MAY19_ADOPTIONS
             context_ptr->sq_weight = 115;
 #else
@@ -5948,7 +5996,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
          pcs_ptr->parent_pcs_ptr->sc_content_detected == 0) ? EB_FALSE : EB_TRUE;
 #else
 #if JUNE8_ADOPTIONS
+#if REMOVE_MR_MACRO
+        if (enc_mode <= ENC_MR)
+#else
         if (MR_MODE)
+#endif
             context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
         else
 #endif
@@ -6248,7 +6300,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->md_nsq_mv_search_level = 0;
     else
 #if JUNE15_ADOPTIONS
+#if REMOVE_MR_MACRO
+        if (enc_mode <= ENC_MRS)
+#else
         if (MRS_MODE)
+#endif
 #else
 #if ADD_MRS_MODE
         if (MRS_MODE || pcs_ptr->parent_pcs_ptr->sc_content_detected)
@@ -6330,7 +6386,11 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 #endif
         else
             context_ptr->md_subpel_search_level = 3;
+#if REMOVE_MR_MACRO
+    md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level,enc_mode);
+#else
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level);
+#endif
 #endif
     // Set max_ref_count @ MD
     if (pd_pass == PD_PASS_0)
@@ -8291,8 +8351,11 @@ uint64_t  mr_pd_level_tab[2][9][2][3] =
 #endif
 void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint32_t sb_size,
                             int8_t *s_depth, int8_t *e_depth, const BlockGeom *blk_geom) {
+#if REMOVE_MR_MACRO
+    EbEncMode encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
+#else
     uint8_t encode_mode = pcs_ptr->parent_pcs_ptr->enc_mode;
-
+#endif
     int8_t start_depth = sb_size == BLOCK_128X128 ? 0 : 1;
     int8_t end_depth   = 5;
 
@@ -8333,7 +8396,11 @@ void derive_start_end_depth(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, uint
 #endif
 #if FIX_MR_PD1
 #if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1
+#if REMOVE_MR_MACRO
+    if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 || pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_MR) {
+#else
     if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0 || MR_MODE_MULTI_PASS_PD) {
+#endif
 #else
     if (pcs_ptr->parent_pcs_ptr->multi_pass_pd_level == MULTI_PASS_PD_LEVEL_0) {
 #endif
@@ -9269,11 +9336,19 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if APR22_ADOPTIONS
 #if MAY12_ADOPTIONS
 #if JUNE15_ADOPTIONS
+#if REMOVE_MR_MACRO
+                        if (pcs_ptr->enc_mode <= ENC_MRS) {
+#else
                         if (MRS_MODE) {
+#endif
                             s_depth = -2;
                             e_depth = 2;
                         }
+#if REMOVE_MR_MACRO
+                        else if (pcs_ptr->enc_mode <= ENC_MR) {
+#else
                         else if (MR_MODE) {
+#endif
 #else
                         if (MR_MODE_MULTI_PASS_PD) {
 #endif
@@ -9615,7 +9690,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if OPT_BLOCK_INDICES_GEN_1
                             s_depth =  -1;
 #if UNIFY_SC_NSC
+#if REMOVE_MR_MACRO
+                            e_depth = (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_MR) ? 3 : 2;
+#else
                             e_depth = (MR_MODE_MULTI_PASS_PD) ? 3 : 2;
+#endif
 #else
                             e_depth =  (MR_MODE_MULTI_PASS_PD || pcs_ptr->parent_pcs_ptr->sc_content_detected) ? 3 : 2;
 #endif
@@ -9798,7 +9877,11 @@ static void perform_pred_depth_refinement(SequenceControlSet *scs_ptr, PictureCo
 #if MR_MODE_FOR_PIC_MULTI_PASS_PD_MODE_1 || ADD_NEW_MPPD_LEVEL
 #if ADD_NEW_MPPD_LEVEL
                             // This removes the SQ-versus-NSQ decision for the new MULTI_PASS_PD_LEVEL_1
+#if REMOVE_MR_MACRO
+                            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_MR || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level <= MULTI_PASS_PD_LEVEL_1) {
+#else
                             if (MR_MODE_MULTI_PASS_PD || pcs_ptr->parent_pcs_ptr->multi_pass_pd_level <= MULTI_PASS_PD_LEVEL_1) { // Active when multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3 or PIC_MULTI_PASS_PD_MODE_4
+#endif
 #else
                             if (MR_MODE_MULTI_PASS_PD) { // Active when multi_pass_pd_level = PIC_MULTI_PASS_PD_MODE_1 or PIC_MULTI_PASS_PD_MODE_2 or PIC_MULTI_PASS_PD_MODE_3
 #endif

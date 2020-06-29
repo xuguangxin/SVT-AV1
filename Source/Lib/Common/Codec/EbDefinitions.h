@@ -554,7 +554,6 @@ extern "C" {
 #define SOFT_CYCLES_REDUCTION 1 // Use pred_depth/part probabilities to reduce the complexity of a given block.
 #if SOFT_CYCLES_REDUCTION
 #define DEPTH_PROB_PRECISION 10000
-#define  ON_OFF_FEATURE_MRP     1 // ON/OFF Feature MRP
 #endif
 
 #define IMPROVED_M6_M7        1 // Improve M6 & M7
@@ -564,6 +563,7 @@ extern "C" {
 #define M6_M7_NIC           1 // NIC=1 @ md_stage_3() in M6 & M7
 #define M6_LOOP_FILTER_MODE 1 // Use M5_LOOP_FILTER in M6
 #endif
+#define  ON_OFF_FEATURE_MRP     1 // ON/OFF Feature MRP
 
 #define UNIFY_SC_NSC        1 // Unify the SC/NSC settings, except for Palette, IBC, and ME
 #define REMOVE_PRINT_STATEMENTS 1 // remove print statements
@@ -595,6 +595,7 @@ extern "C" {
 #define JUNE26_ADOPTIONS    1
 #define ENABLE_ADAPTIVE_NSQ_ALL_FRAMES 1    // Enable the adaptive NSQ algorithm for all frames (no longer REF only)
 
+#define REMOVE_MR_MACRO               1  // Change MR_MODE to -enc-mode -1 (ENC_MR) and MRS_MODE to -enc-mode -2 (ENC_MRS)
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
@@ -605,7 +606,7 @@ extern "C" {
 #define COMMON_16BIT 1 // 16Bit pipeline support for common
 #define SHUT_FILTERING 0 //1
 #define MAX_TILE_CNTS 128 // Annex A.3
-
+#if !REMOVE_MR_MACRO
 // MR_MODE  = M0 + MR_MODE (ON); Research mode with higher quality than M0
 // MRS_MODE = MR + MRS_MODE (ON); Highest quality research mode (slowest)
 #if ADD_MRS_MODE
@@ -616,7 +617,7 @@ extern "C" {
 #else
 #define MR_MODE 0
 #endif
-
+#endif
 #define ALT_REF_QP_THRESH 20
 #define HIGH_PRECISION_MV_QTHRESH 150
 #define NON8_FIX_REST 1
@@ -754,6 +755,9 @@ enum {
 #define BLOCK_MAX_COUNT_SB_128 4421 // TODO: reduce alloction for 64x64
 #define BLOCK_MAX_COUNT_SB_64 1101 // TODO: reduce alloction for 64x64
 #define MAX_TXB_COUNT 16 // Maximum number of transform blocks per depth
+#if REMOVE_MR_MACRO
+#define MAX_NFL 250 // Maximum number of candidates MD can support
+#else
 #if MAR12_ADOPTIONS && MR_MODE
 #define MAX_NFL 250 // Maximum number of candidates MD can support
 #else
@@ -761,6 +765,7 @@ enum {
 #define MAX_NFL 150 // Maximum number of candidates MD can support
 #else
 #define MAX_NFL 125 // Maximum number of candidates MD can support
+#endif
 #endif
 #endif
 #define MAX_NFL_BUFF_Y \
@@ -2761,8 +2766,15 @@ typedef enum EbIntraRefreshType
 
 /** The EbEncMode type is used to describe the encoder mode .
 */
-
+#if REMOVE_MR_MACRO
+#define EbEncMode     int8_t
+#else
 #define EbEncMode     uint8_t
+#endif
+#if REMOVE_MR_MACRO
+#define ENC_MRS         -2 // Highest quality research mode (slowest)
+#define ENC_MR          -1 //Research mode with higher quality than M0
+#endif
 #define ENC_M0          0
 #define ENC_M1          1
 #define ENC_M2          2

@@ -896,7 +896,11 @@ ConfigEntry config_entry_intra_refresh[] = {
 ConfigEntry config_entry_specific[] = {
     // Prediction Structure
     //{SINGLE_INPUT, ENCMODE_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+#if 1//REMOVE_MR_MACRO
+    {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[-2,-1,0,..,8]", set_enc_mode},
+#else
     {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+#endif
     {SINGLE_INPUT,
      INPUT_COMPRESSED_TEN_BIT_FORMAT,
      "Offline packing of the 2bits: requires two bits packed input (0: OFF[default], 1: ON)",
@@ -1467,7 +1471,11 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, MDS_2_3_PRUNE_C_TH, "MdFullPruneClassThreshold", set_md_stage_2_3_class_prune_th },
     {SINGLE_INPUT, MDS_2_3_PRUNE_S_TH, "MdFullPruneCandThreshold", set_md_stage_2_3_cand_prune_th },
     // double dash
+#if 1//REMOVE_MR_MACRO
+    {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[-2,-1,0,..,8]", set_enc_mode},
+#else
     {SINGLE_INPUT, PRESET_TOKEN, "Encoder mode/Preset used[0-8]", set_enc_mode},
+#endif
     {SINGLE_INPUT, QP_FILE_NEW_TOKEN, "Path to Qp file", set_cfg_qp_file},
     {SINGLE_INPUT, INPUT_DEPTH_TOKEN, "Bit depth for codec(8 or 10)", set_encoder_bit_depth},
     {SINGLE_INPUT,

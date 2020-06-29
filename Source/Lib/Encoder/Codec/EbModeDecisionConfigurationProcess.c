@@ -1517,9 +1517,13 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // HBD Mode
 #if CHANGE_HBD_MODE
     if (scs_ptr->static_config.enable_hbd_mode_decision == DEFAULT)
+#if REMOVE_MR_MACRO
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M0)
+#else
         if (MR_MODE)
             pcs_ptr->hbd_mode_decision = 1;
         else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M0)
+#endif
             pcs_ptr->hbd_mode_decision = 1;
         else
             pcs_ptr->hbd_mode_decision = 2;

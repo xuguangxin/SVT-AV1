@@ -194,8 +194,13 @@ typedef struct EbConfig {
     /*****************************************
      * Coding Structure
      *****************************************/
+#if 1//REMOVE_MR_MACRO
+    int8_t  enc_mode;
+    int8_t  snd_pass_enc_mode;
+#else
     uint8_t  enc_mode;
     uint8_t  snd_pass_enc_mode;
+#endif
     int32_t  intra_period;
     uint32_t intra_refresh_type;
     uint32_t hierarchical_levels;

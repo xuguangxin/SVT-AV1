@@ -2710,8 +2710,13 @@ static EbErrorType verify_settings(
     EbErrorType return_error = EB_ErrorNone;
     EbSvtAv1EncConfiguration *config = &scs_ptr->static_config;
     unsigned int channel_number = config->channel_id;
+#if REMOVE_MR_MACRO
+    if (config->enc_mode > MAX_ENC_PRESET || config->enc_mode < -2) {
+        SVT_LOG("Error instance %u: EncoderMode must be in the range of [-2-%d]\n", channel_number + 1, MAX_ENC_PRESET);
+#else
     if (config->enc_mode > MAX_ENC_PRESET) {
         SVT_LOG("Error instance %u: EncoderMode must be in the range of [0-%d]\n", channel_number + 1, MAX_ENC_PRESET);
+#endif
         return_error = EB_ErrorBadParameter;
     }
     if (config->snd_pass_enc_mode > MAX_ENC_PRESET + 1) {

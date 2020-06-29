@@ -2360,7 +2360,11 @@ EbErrorType signal_derivation_multi_processes_oq(
     // 2 ON - INTER TXS restricted to max 1 depth
 #if RESTRICT_INTER_TXS_DEPTH
 #if UNIFY_SC_NSC
+#if REMOVE_MR_MACRO
+    if (pcs_ptr->enc_mode <= ENC_MRS)
+#else
     if (MRS_MODE)
+#endif
 #else
 #if JUNE15_ADOPTIONS
     if (MRS_MODE || (pcs_ptr->sc_content_detected && pcs_ptr->enc_mode <= ENC_M0))
