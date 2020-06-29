@@ -541,6 +541,35 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
 
     // Candidate Buffers
     EB_ALLOC_PTR_ARRAY(context_ptr->candidate_buffer_ptr_array, MAX_NFL_BUFF);
+#if MEM_OPT_UV_MODE
+    for (buffer_index = 0; buffer_index < MAX_NFL_BUFF_Y; ++buffer_index) {
+        EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
+               mode_decision_candidate_buffer_ctor,
+               context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
+               sb_size,
+               PICTURE_BUFFER_DESC_FULL_MASK,
+               context_ptr->temp_residual_ptr,
+               context_ptr->temp_recon_ptr,
+               &(context_ptr->fast_cost_array[buffer_index]),
+               &(context_ptr->full_cost_array[buffer_index]),
+               &(context_ptr->full_cost_skip_ptr[buffer_index]),
+               &(context_ptr->full_cost_merge_ptr[buffer_index]));
+    }
+
+    for (buffer_index = MAX_NFL_BUFF_Y; buffer_index < MAX_NFL_BUFF; ++buffer_index) {
+        EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
+               mode_decision_candidate_buffer_ctor,
+               context_ptr->hbd_mode_decision ? EB_10BIT : EB_8BIT,
+               sb_size,
+               PICTURE_BUFFER_DESC_CHROMA_MASK,
+               context_ptr->temp_residual_ptr,
+               context_ptr->temp_recon_ptr,
+               &(context_ptr->fast_cost_array[buffer_index]),
+               &(context_ptr->full_cost_array[buffer_index]),
+               &(context_ptr->full_cost_skip_ptr[buffer_index]),
+               &(context_ptr->full_cost_merge_ptr[buffer_index]));
+    }
+#else
     for (buffer_index = 0; buffer_index < MAX_NFL_BUFF; ++buffer_index) {
         EB_NEW(context_ptr->candidate_buffer_ptr_array[buffer_index],
                mode_decision_candidate_buffer_ctor,
@@ -553,6 +582,7 @@ EbErrorType mode_decision_context_ctor(ModeDecisionContext *context_ptr, EbColor
                &(context_ptr->full_cost_skip_ptr[buffer_index]),
                &(context_ptr->full_cost_merge_ptr[buffer_index]));
     }
+#endif
 #endif
     return EB_ErrorNone;
 }

@@ -254,6 +254,9 @@ extern EbErrorType mode_decision_candidate_buffer_ctor(
 #if SB64_MEM_OPT
 #if MEM_OPT_MD_BUF_DESC
     ModeDecisionCandidateBuffer *buffer_ptr, EbBitDepthEnum max_bitdepth, uint8_t sb_size,
+#if MEM_OPT_UV_MODE
+    uint32_t buffer_mask,
+#endif
     EbPictureBufferDesc *temp_residual_ptr, EbPictureBufferDesc *temp_recon_ptr,
     uint64_t *fast_cost_ptr,
 #else

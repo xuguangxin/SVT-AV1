@@ -639,6 +639,9 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
 #if SB64_MEM_OPT
                                                 uint8_t sb_size,
 #endif
+#if MEM_OPT_UV_MODE
+                                                uint32_t buffer_desc_mask,
+#endif
 #if MEM_OPT_MD_BUF_DESC
                                                 EbPictureBufferDesc *temp_residual_ptr,
                                                 EbPictureBufferDesc *temp_recon_ptr,
@@ -665,7 +668,11 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
 #endif
     picture_buffer_desc_init_data.bit_depth                       = max_bitdepth;
     picture_buffer_desc_init_data.color_format                    = EB_YUV420;
+#if MEM_OPT_UV_MODE
+    picture_buffer_desc_init_data.buffer_enable_mask              = buffer_desc_mask;
+#else
     picture_buffer_desc_init_data.buffer_enable_mask              = PICTURE_BUFFER_DESC_FULL_MASK;
+#endif
     picture_buffer_desc_init_data.left_padding                    = 0;
     picture_buffer_desc_init_data.right_padding                   = 0;
     picture_buffer_desc_init_data.top_padding                     = 0;
@@ -699,7 +706,11 @@ EbErrorType mode_decision_candidate_buffer_ctor(ModeDecisionCandidateBuffer *buf
     thirty_two_width_picture_buffer_desc_init_data.bit_depth    = EB_32BIT;
     thirty_two_width_picture_buffer_desc_init_data.color_format = EB_YUV420;
     thirty_two_width_picture_buffer_desc_init_data.buffer_enable_mask =
+#if MEM_OPT_UV_MODE
+        buffer_desc_mask;
+#else
         PICTURE_BUFFER_DESC_FULL_MASK;
+#endif
     thirty_two_width_picture_buffer_desc_init_data.left_padding  = 0;
     thirty_two_width_picture_buffer_desc_init_data.right_padding = 0;
     thirty_two_width_picture_buffer_desc_init_data.top_padding   = 0;

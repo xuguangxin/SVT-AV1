@@ -599,6 +599,7 @@ extern "C" {
 
 #define OBMC_CLI            1 // Improve CLI support for OBMC (OFF / Fully ON / Other Levels).
 #define FILTER_INTRA_CLI    1 // Improve CLI support for Filter Intra (OFF / Fully ON / Other Levels)
+#define MEM_OPT_UV_MODE     1 // Memory optimization for independant uv mode
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
