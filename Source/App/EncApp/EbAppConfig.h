@@ -349,7 +349,11 @@ typedef struct EbConfig {
     /****************************************
      * OBMC
      ****************************************/
+#if 1 // OBMC_CLI
+    int8_t obmc_level;
+#else
     EbBool enable_obmc;
+#endif
 
     /****************************************
      * RDOQ

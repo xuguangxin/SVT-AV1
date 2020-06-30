@@ -86,7 +86,11 @@
 #define FRAME_END_CDF_UPDATE_TOKEN "-framend-cdf-upd-mode"
 #define LOCAL_WARPED_ENABLE_TOKEN "-local-warp"
 #define GLOBAL_MOTION_ENABLE_TOKEN "-global-motion"
+#if 1 // OBMC_CLI
+#define OBMC_TOKEN "-obmc-level"
+#else
 #define OBMC_TOKEN "-obmc"
+#endif
 #define RDOQ_TOKEN "-rdoq"
 #define PRED_ME_TOKEN "-pred-me"
 #define BIPRED_3x3_TOKEN "-bipred-3x3"
@@ -440,9 +444,15 @@ static void set_chroma_mode(const char *value, EbConfig *cfg) {
 static void set_disable_cfl_flag(const char *value, EbConfig *cfg) {
     cfg->disable_cfl_flag = strtol(value, NULL, 0);
 };
+#if 1 // OBMC_CLI
+static void set_obmc_level_flag(const char *value, EbConfig *cfg) {
+    cfg->obmc_level = (EbBool)strtoul(value, NULL, 0);
+};
+#else
 static void set_enable_obmc_flag(const char *value, EbConfig *cfg) {
     cfg->enable_obmc = (EbBool)strtoul(value, NULL, 0);
 };
+#endif
 static void set_enable_rdoq_flag(const char *value, EbConfig *cfg) {
     cfg->enable_rdoq = strtol(value, NULL, 0);
 };
@@ -1030,7 +1040,11 @@ ConfigEntry config_entry_specific[] = {
       "Enable smooth (0: OFF, 1: ON, -1: DEFAULT)",
       set_enable_smooth_flag},
      // OBMC
+#if 1 // OBMC_CLI
+     {SINGLE_INPUT, OBMC_TOKEN, "OBMC Level(0: OFF, 1: Fully ON, 2 and 3 are faster levels, -1: DEFAULT)", set_obmc_level_flag},
+#else
      {SINGLE_INPUT, OBMC_TOKEN, "Enable OBMC(0: OFF, 1: ON[default]) ", set_enable_obmc_flag},
+#endif
      // RDOQ
      {SINGLE_INPUT,
       RDOQ_NEW_TOKEN,
@@ -1349,7 +1363,11 @@ ConfigEntry config_entry[] = {
     // SMOOTH
     {SINGLE_INPUT, SMOOTH_TOKEN, "Smooth", set_enable_smooth_flag},
     // OBMC
+#if 1 // OBMC_CLI
+    {SINGLE_INPUT, OBMC_TOKEN, "Obmc", set_obmc_level_flag},
+#else
     {SINGLE_INPUT, OBMC_TOKEN, "Obmc", set_enable_obmc_flag},
+#endif
     // RDOQ
     {SINGLE_INPUT, RDOQ_TOKEN, "RDOQ", set_enable_rdoq_flag},
     // Filter Intra
@@ -1610,7 +1628,11 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->frame_end_cdf_update                      = DEFAULT;
     config_ptr->set_chroma_mode                           = DEFAULT;
     config_ptr->disable_cfl_flag                          = DEFAULT;
+#if 1 // OBMC_CLI
+    config_ptr->obmc_level                                = DEFAULT;
+#else
     config_ptr->enable_obmc                               = EB_TRUE;
+#endif
     config_ptr->enable_rdoq                               = DEFAULT;
     config_ptr->pred_me                                   = DEFAULT;
     config_ptr->bipred_3x3_inject                         = DEFAULT;

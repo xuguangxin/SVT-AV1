@@ -1400,6 +1400,125 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         !frm_hdr->error_resilient_mode;
     frm_hdr->is_motion_mode_switchable = frm_hdr->allow_warped_motion;
 
+#if OBMC_CLI
+    // pic_obmc_level - pic_obmc_level is used to define md_pic_obmc_level.
+    // The latter determines the OBMC settings in the function set_obmc_controls.
+    // Please check the definitions of the flags/variables in the function
+    // set_obmc_controls corresponding to the pic_obmc_level settings.
+
+    //  pic_obmc_level  |              Default Encoder Settings             |     Command Line Settings
+    //         0        | OFF subject to possible constraints               | OFF everywhere in encoder
+    //         1        | ON subject to possible constraints                | Fully ON in PD_PASS_2
+    //         2        | Faster level subject to possible constraints      | Level 2 everywhere in PD_PASS_2
+    //         3        | Even faster level subject to possible constraints | Level 3 everywhere in PD_PASS_3
+    if (scs_ptr->static_config.obmc_level == DEFAULT) {
+#if !UNIFY_SC_NSC
+#if MAR4_M6_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if JUNE8_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+#else
+#if SHIFT_M5_SC_TO_M3
+#if PRESET_SHIFITNG
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M1)
+#else
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+#endif
+#else
+#if PRESETS_SHIFT
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#else
+#if MAR17_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#else
+#if MAR10_ADOPTIONS
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#else
+            if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#endif
+#endif
+#endif
+#endif
+#endif
+                pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 2;
+#if OBMC_FAST
+#if M8_OBMC
+#if UPGRADE_M6_M7_M8
+#if APR24_ADOPTIONS_M6_M7
+#if JUNE17_ADOPTIONS
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#else
+#if PRESET_SHIFITNG
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#else
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6)
+#endif
+#endif
+#else
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#endif
+#else
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#endif
+#else
+            else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
+#endif
+                pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
+#endif
+            else
+                pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 0;
+#if PRESETS_SHIFT
+#if PRESET_SHIFITNG
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+#else
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#endif
+#else
+#if MAR17_ADOPTIONS
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M7)
+#else
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#endif
+#endif
+#else
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#endif
+#else
+#if JUNE25_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M6)
+#else
+#if JUNE23_ADOPTIONS
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M4)
+#else
+        if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M2)
+#endif
+#endif
+#endif
+            pcs_ptr->parent_pcs_ptr->pic_obmc_level = 2;
+#if !JUNE23_ADOPTIONS
+#if OBMC_FAST
+#if M8_OBMC
+#if PRESET_SHIFITNG
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M3)
+#else
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M5)
+#endif
+#else
+        else if (pcs_ptr->parent_pcs_ptr->enc_mode <= ENC_M8)
+#endif
+            pcs_ptr->parent_pcs_ptr->pic_obmc_mode = 3;
+#endif
+#endif
+        else
+            pcs_ptr->parent_pcs_ptr->pic_obmc_level = 0;
+    }
+    else
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level = scs_ptr->static_config.obmc_level;
+
+    // Switchable Motion Mode
+    frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable ||
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+#else
     // OBMC Level                                   Settings
     // 0                                            OFF
     // 1                                            OBMC @(MVP, PME and ME) + 16
@@ -1513,6 +1632,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
     // Switchable Motion Mode
     frm_hdr->is_motion_mode_switchable = frm_hdr->is_motion_mode_switchable ||
                                          pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
+#endif
 
     // HBD Mode
 #if CHANGE_HBD_MODE

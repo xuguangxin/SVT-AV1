@@ -6007,6 +6007,20 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 #endif
 
+#if OBMC_CLI
+    // Set pic_obmc_level @ MD
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_pic_obmc_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_pic_obmc_level = 0;
+    else
+        context_ptr->md_pic_obmc_level =
+        pcs_ptr->parent_pcs_ptr->pic_obmc_level;
+
+#if OBMC_FAST
+    set_obmc_controls(context_ptr, context_ptr->md_pic_obmc_level);
+#endif
+#else
     // Set pic_obmc_mode @ MD
     if (pd_pass == PD_PASS_0)
         context_ptr->md_pic_obmc_mode = 0;
@@ -6018,6 +6032,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
 
 #if OBMC_FAST
     set_obmc_controls(context_ptr,context_ptr->md_pic_obmc_mode);
+#endif
 #endif
 
     // Set enable_inter_intra @ MD
@@ -7691,17 +7706,18 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->coeff_based_nsq_cand_reduction = EB_TRUE;
 
+
     // Set pic_obmc_mode @ MD
-    if (context_ptr->pd_pass == PD_PASS_0)
+    if (pd_pass == PD_PASS_0)
         context_ptr->md_pic_obmc_mode = 0;
-    else if (context_ptr->pd_pass == PD_PASS_1)
+    else if (pd_pass == PD_PASS_1)
         context_ptr->md_pic_obmc_mode = 0;
     else
         context_ptr->md_pic_obmc_mode =
         pcs_ptr->parent_pcs_ptr->pic_obmc_mode;
 
 #if OBMC_FAST
-    set_obmc_controls(context_ptr,context_ptr->md_pic_obmc_mode);
+    set_obmc_controls(context_ptr, context_ptr->md_pic_obmc_mode);
 #endif
 
     // Set enable_inter_intra @ MD

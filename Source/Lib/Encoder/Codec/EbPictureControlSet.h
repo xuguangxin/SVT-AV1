@@ -871,7 +871,11 @@ typedef struct PictureParentControlSet {
 #endif
     uint16_t *        altref_buffer_highbd[3];
     uint8_t           enable_inter_intra;
+#if OBMC_CLI
+    uint8_t           pic_obmc_level;
+#else
     uint8_t           pic_obmc_mode;
+#endif
     StatStruct *      stat_struct_first_pass_ptr; // pointer to stat_struct in the first pass
     struct StatStruct stat_struct; // stat_struct used in the second pass
     uint64_t          referenced_area_avg; // average referenced area per frame

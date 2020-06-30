@@ -149,7 +149,11 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.prune_ref_rec_part       = config->prune_ref_rec_part;
     callback_data->eb_enc_parameters.nsq_table                = config->nsq_table;
     callback_data->eb_enc_parameters.frame_end_cdf_update     = config->frame_end_cdf_update;
+#if 1 // OBMC_CLI
+    callback_data->eb_enc_parameters.obmc_level               = (int8_t)config->obmc_level;
+#else
     callback_data->eb_enc_parameters.enable_obmc              = (EbBool)config->enable_obmc;
+#endif
     callback_data->eb_enc_parameters.enable_rdoq              = config->enable_rdoq;
     callback_data->eb_enc_parameters.pred_me                  = config->pred_me;
     callback_data->eb_enc_parameters.bipred_3x3_inject        = config->bipred_3x3_inject;

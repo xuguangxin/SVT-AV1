@@ -377,10 +377,28 @@ typedef struct EbSvtAv1EncConfiguration {
      * Default is -1 (auto) */
     int disable_cfl_flag;
 
+#if 1 // OBMC_CLI
+    /* obmc_level specifies the level of the OBMC feature that would be
+     * considered when the level is specified in the command line instruction (CLI).
+     * The meaning of the feature level in the CLI is different from that for
+     * the default settings. See description of pic_obmc_level for the full details.
+     *
+     * The table below specifies the meaning of obmc_level when specified in the CLI.
+     *     obmc_level   | Command Line Settings
+     *        -1        | Default settings (auto)
+     *         0        | OFF everywhere in encoder
+     *         1        | Fully ON in PD_PASS_2
+     *         2        | Level 2 everywhere in PD_PASS_2
+     *         3        | Level 3 everywhere in PD_PASS_3
+     *
+     * Default is -1 (auto). */
+    int8_t obmc_level;
+#else
     /* OBMC
-    *
-    * Default is 1. */
+     *
+     * Default is 1. */
     EbBool enable_obmc;
+#endif
 
     /* RDOQ
     *
