@@ -704,7 +704,11 @@ typedef struct ModeDecisionContext {
     uint8_t      md_enable_paeth;
     uint8_t      md_enable_smooth;
     uint8_t      md_enable_inter_intra;
+#if FILTER_INTRA_CLI
+    uint8_t      md_filter_intra_level;
+#else
     uint8_t      md_filter_intra_mode;
+#endif
     uint8_t      md_intra_angle_delta;
 #if SHUT_PALETTE_BC_PD_PASS_0_1
     uint8_t      md_allow_intrabc;

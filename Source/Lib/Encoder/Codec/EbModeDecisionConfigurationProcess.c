@@ -1183,6 +1183,74 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
 #endif
 #endif
     // Filter INTRA
+#if FILTER_INTRA_CLI
+    // pic_filter_intra_level specifies whether filter intra would be active
+    // for a given picture.
+
+    // pic_filter_intra_level | Settings
+    // 0                      | OFF
+    // 1                      | ON
+    if (scs_ptr->static_config.filter_intra_level == DEFAULT) {
+#if APR23_ADOPTIONS_2
+        if (scs_ptr->seq_header.filter_intra_level) {
+#if !UNIFY_SC_NSC
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if JUNE17_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M3)
+#else
+#if JUNE8_ADOPTIONS
+                if (pcs_ptr->enc_mode <= ENC_M2)
+#else
+#if MAY12_ADOPTIONS
+#if PRESET_SHIFITNG
+                if (pcs_ptr->enc_mode <= ENC_M1)
+#else
+                if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
+#else
+#if SHIFT_M3_SC_TO_M1
+                if (pcs_ptr->enc_mode <= ENC_M0)
+#else
+                if (pcs_ptr->enc_mode <= ENC_M2)
+#endif
+#endif
+#endif
+#endif
+                    pcs_ptr->pic_filter_intra_mode = 1;
+                else
+                    pcs_ptr->pic_filter_intra_mode = 0;
+#if MAY19_ADOPTIONS
+#if JUNE17_ADOPTIONS
+            else if (pcs_ptr->enc_mode <= ENC_M6)
+#else
+#if PRESET_SHIFITNG
+            else if (pcs_ptr->enc_mode <= ENC_M4)
+#else
+            else if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
+#endif
+#else
+            else if (pcs_ptr->enc_mode <= ENC_M5)
+#endif
+#else
+            if (pcs_ptr->enc_mode <= ENC_M6)
+#endif
+                pcs_ptr->pic_filter_intra_level = 1;
+            else
+                pcs_ptr->pic_filter_intra_level = 0;
+        }
+        else
+            pcs_ptr->pic_filter_intra_level = 0;
+    }
+    else
+        pcs_ptr->pic_filter_intra_level = scs_ptr->static_config.filter_intra_level;
+#else
+    if (scs_ptr->seq_header.enable_filter_intra)
+        pcs_ptr->pic_filter_intra_mode = 1;
+    else
+        pcs_ptr->pic_filter_intra_mode = 0;
+#endif
+#else
 #if APR23_ADOPTIONS_2
     if (scs_ptr->seq_header.enable_filter_intra) {
 #if !UNIFY_SC_NSC
@@ -1238,6 +1306,7 @@ EbErrorType signal_derivation_mode_decision_config_kernel_oq(
         pcs_ptr->pic_filter_intra_mode = 1;
     else
         pcs_ptr->pic_filter_intra_mode = 0;
+#endif
 #endif
 
     // High Precision

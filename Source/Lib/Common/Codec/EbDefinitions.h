@@ -598,6 +598,7 @@ extern "C" {
 #define REMOVE_MR_MACRO               1  // Change MR_MODE to -enc-mode -1 (ENC_MR) and MRS_MODE to -enc-mode -2 (ENC_MRS)
 
 #define OBMC_CLI            1 // Improve CLI support for OBMC (OFF / Fully ON / Other Levels).
+#define FILTER_INTRA_CLI    1 // Improve CLI support for Filter Intra (OFF / Fully ON / Other Levels)
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 

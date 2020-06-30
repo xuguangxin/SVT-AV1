@@ -761,7 +761,11 @@ uint64_t av1_intra_fast_cost(BlkStruct *blk_ptr, ModeDecisionCandidate *candidat
         }
 
         if (av1_filter_intra_allowed(
+#if FILTER_INTRA_CLI
+                pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.filter_intra_level,
+#else
                 pcs_ptr->parent_pcs_ptr->scs_ptr->seq_header.enable_filter_intra,
+#endif
                 blk_geom->bsize,
 #if MEM_OPT_PALETTE
                 candidate_ptr->palette_info ? candidate_ptr->palette_info->pmi.palette_size[0] : 0,

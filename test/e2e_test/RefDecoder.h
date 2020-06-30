@@ -99,7 +99,11 @@ class RefDecoder {
         bool still_pic;
         /* coding options */
         int force_integer_mv;
+#if 1 // FILTER_INTRA_CLI
+        int filter_intra_level;
+#else
         int enable_filter_intra;
+#endif
         int enable_intra_edge_filter;
         int enable_masked_compound;
         int enable_dual_filter;

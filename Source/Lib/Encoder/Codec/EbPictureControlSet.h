@@ -420,7 +420,11 @@ typedef struct PictureControlSet {
     struct MdRateEstimationContext *md_rate_estimation_array;
     int8_t                          ref_frame_side[REF_FRAMES];
     TPL_MV_REF *                    tpl_mvs;
+#if FILTER_INTRA_CLI
+    uint8_t                         pic_filter_intra_level;
+#else
     uint8_t                         pic_filter_intra_mode;
+#endif
     TOKENEXTRA *                    tile_tok[64][64];
     //Put it here for deinit, don't need to go pcs->ppcs->av1_cm which may already be released
     uint16_t tile_row_count;

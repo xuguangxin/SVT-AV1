@@ -95,7 +95,11 @@
 #define PRED_ME_TOKEN "-pred-me"
 #define BIPRED_3x3_TOKEN "-bipred-3x3"
 #define COMPOUND_LEVEL_TOKEN "-compound"
+#if 1 // FILTER_INTRA_CLI
+#define FILTER_INTRA_TOKEN "-filter-intra-level"
+#else
 #define FILTER_INTRA_TOKEN "-filter-intra"
+#endif
 #define INTRA_EDGE_FILTER_TOKEN "-intra-edge-filter"
 #define PIC_BASED_RATE_EST_TOKEN "-pic-based-rate-est"
 #define USE_DEFAULT_ME_HME_TOKEN "-use-default-me-hme"
@@ -208,7 +212,11 @@
 #define LOCAL_WARPED_ENABLE_NEW_TOKEN "--enable-local-warp"
 #define GLOBAL_MOTION_ENABLE_NEW_TOKEN "--enable-global-motion"
 #define RDOQ_NEW_TOKEN "--enable-rdoq"
+#if 1 // FILTER_INTRA_CLI
+#define FILTER_INTRA_NEW_TOKEN "--filter-intra-level"
+#else
 #define FILTER_INTRA_NEW_TOKEN "--enable-filter-intra"
+#endif
 #define HDR_INPUT_NEW_TOKEN "--enable-hdr"
 #define ADAPTIVE_QP_ENABLE_NEW_TOKEN "--aq-mode"
 
@@ -465,9 +473,15 @@ static void set_bipred3x3inject_flag(const char *value, EbConfig *cfg) {
 static void set_compound_level_flag(const char *value, EbConfig *cfg) {
     cfg->compound_level = strtol(value, NULL, 0);
 };
+#if 1 // FILTER_INTRA_CLI
+static void set_filter_intra_level_flag(const char *value, EbConfig *cfg) {
+    cfg->filter_intra_level = (int8_t)strtoul(value, NULL, 0);
+};
+#else
 static void set_enable_filter_intra_flag(const char *value, EbConfig *cfg) {
     cfg->enable_filter_intra = (EbBool)strtoul(value, NULL, 0);
 };
+#endif
 static void set_enable_intra_edge_filter_flag(const char *value, EbConfig *cfg) {
     cfg->enable_intra_edge_filter = strtol(value, NULL, 0);
 };
@@ -1052,10 +1066,17 @@ ConfigEntry config_entry_specific[] = {
       set_enable_rdoq_flag},
 
      // Filter Intra
+#if 1 // FILTER_INTRA_CLI
+    {SINGLE_INPUT,
+     FILTER_INTRA_NEW_TOKEN,
+     "Enable filter intra prediction mode (0: OFF, 1: ON [default])",
+     set_filter_intra_level_flag},
+#else
      {SINGLE_INPUT,
       FILTER_INTRA_NEW_TOKEN,
       "Enable filter intra prediction mode (0: OFF, 1: ON [default])",
       set_enable_filter_intra_flag},
+#endif
 
      // Edge Intra Filter
      {SINGLE_INPUT,
@@ -1371,7 +1392,11 @@ ConfigEntry config_entry[] = {
     // RDOQ
     {SINGLE_INPUT, RDOQ_TOKEN, "RDOQ", set_enable_rdoq_flag},
     // Filter Intra
+#if 1 // FILTER_INTRA_CLI
+    {SINGLE_INPUT, FILTER_INTRA_TOKEN, "FilterIntra", set_filter_intra_level_flag},
+#else
     {SINGLE_INPUT, FILTER_INTRA_TOKEN, "FilterIntra", set_enable_filter_intra_flag},
+#endif
 
     // Edge Intra Filter
     {SINGLE_INPUT, INTRA_EDGE_FILTER_TOKEN, "IntraEdgeFilter", set_enable_intra_edge_filter_flag},
@@ -1540,7 +1565,11 @@ ConfigEntry config_entry[] = {
      set_enable_local_warped_motion_flag},
     {SINGLE_INPUT, GLOBAL_MOTION_ENABLE_NEW_TOKEN, "Global Motion", set_enable_global_motion_flag},
     {SINGLE_INPUT, RDOQ_NEW_TOKEN, "RDOQ double dash token", set_enable_rdoq_flag},
+#if 1 // FILTER_INTRA_CLI
+    {SINGLE_INPUT, FILTER_INTRA_NEW_TOKEN, "Filter Intra", set_filter_intra_level_flag},
+#else
     {SINGLE_INPUT, FILTER_INTRA_NEW_TOKEN, "Filter Intra", set_enable_filter_intra_flag},
+#endif
     {SINGLE_INPUT, HDR_INPUT_NEW_TOKEN, "High Dynamic Range Input", set_high_dynamic_range_input},
     {SINGLE_INPUT,
      ADAPTIVE_QP_ENABLE_NEW_TOKEN,
@@ -1637,7 +1666,11 @@ void eb_config_ctor(EbConfig *config_ptr) {
     config_ptr->pred_me                                   = DEFAULT;
     config_ptr->bipred_3x3_inject                         = DEFAULT;
     config_ptr->compound_level                            = DEFAULT;
+#if 1 // FILTER_INTRA_CLI
+    config_ptr->filter_intra_level                        = DEFAULT;
+#else
     config_ptr->enable_filter_intra                       = EB_TRUE;
+#endif
     config_ptr->enable_intra_edge_filter                  = DEFAULT;
     config_ptr->pic_based_rate_est                        = DEFAULT;
     config_ptr->use_default_me_hme                        = EB_TRUE;

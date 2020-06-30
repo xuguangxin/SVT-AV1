@@ -3511,7 +3511,11 @@ void write_sequence_header(SequenceControlSet *scs_ptr, struct AomWriteBitBuffer
 
     eb_aom_wb_write_bit(wb, scs_ptr->seq_header.sb_size == BLOCK_128X128 ? 1 : 0);
     //    write_sb_size(seq_params, wb);
+#if FILTER_INTRA_CLI
+    eb_aom_wb_write_bit(wb, scs_ptr->seq_header.filter_intra_level);
+#else
     eb_aom_wb_write_bit(wb, scs_ptr->seq_header.enable_filter_intra);
+#endif
 
     if (scs_ptr->static_config.enable_intra_edge_filter == DEFAULT)
         scs_ptr->seq_header.enable_intra_edge_filter = 1;
@@ -5757,7 +5761,11 @@ EbErrorType write_modes_b(PictureControlSet *pcs_ptr, EntropyCodingContext *cont
 #else
             if (blk_ptr->av1xd->use_intrabc == 0 &&
 #endif
+#if FILTER_INTRA_CLI
+                av1_filter_intra_allowed(scs_ptr->seq_header.filter_intra_level,
+#else
                 av1_filter_intra_allowed(scs_ptr->seq_header.enable_filter_intra,
+#endif
                                          bsize,
                                          blk_ptr->palette_info.pmi.palette_size[0],
                                          intra_luma_mode)) {
@@ -5953,7 +5961,11 @@ EbErrorType write_modes_b(PictureControlSet *pcs_ptr, EntropyCodingContext *cont
                                             blk_origin_y >> MI_SIZE_LOG2,
                                             blk_origin_x >> MI_SIZE_LOG2,
                                             ec_writer);
+#if FILTER_INTRA_CLI
+                if (av1_filter_intra_allowed(scs_ptr->seq_header.filter_intra_level,
+#else
                 if (av1_filter_intra_allowed(scs_ptr->seq_header.enable_filter_intra,
+#endif
                                              bsize,
                                              blk_ptr->palette_info.pmi.palette_size[0],
                                              intra_luma_mode)) {

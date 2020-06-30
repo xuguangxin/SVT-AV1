@@ -6577,7 +6577,11 @@ EbErrorType generate_md_stage_0_cand(
                 &cand_total_cnt);
     }
     if (!coeff_based_nsq_cand_reduction)
+#if FILTER_INTRA_CLI
+       if (context_ptr->md_filter_intra_level > 0 && av1_filter_intra_allowed_bsize(scs_ptr->seq_header.filter_intra_level, context_ptr->blk_geom->bsize))
+#else
        if (context_ptr->md_filter_intra_mode > 0 && av1_filter_intra_allowed_bsize(scs_ptr->seq_header.enable_filter_intra, context_ptr->blk_geom->bsize))
+#endif
 
             inject_filter_intra_candidates(
                 pcs_ptr,

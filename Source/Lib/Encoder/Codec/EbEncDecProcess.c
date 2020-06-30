@@ -6084,6 +6084,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->md_tx_size_search_mode = (context_ptr->enable_area_based_cycles_allocation && context_ptr->sb_class == MEDIUM_COMPLEX_CLASS) ? 0 : context_ptr->md_tx_size_search_mode;
 #endif
     // Set md_filter_intra_mode @ MD
+#if FILTER_INTRA_CLI
+    // md_filter_intra_level specifies whether filter intra would be active
+    // for a given prediction candidate in mode decision.
+
+    // md_filter_intra_level | Settings
+    // 0                      | OFF
+    // 1                      | ON
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_filter_intra_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_filter_intra_level = 0;
+    else
+        context_ptr->md_filter_intra_level =
+        pcs_ptr->pic_filter_intra_level;
+#else
     if (pd_pass == PD_PASS_0)
         context_ptr->md_filter_intra_mode = 0;
     else if (pd_pass == PD_PASS_1)
@@ -6091,6 +6106,7 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->md_filter_intra_mode =
         pcs_ptr->pic_filter_intra_mode;
+#endif
 #if SHUT_PALETTE_BC_PD_PASS_0_1
     // Set md_allow_intrabc @ MD
     if (pd_pass == PD_PASS_0)

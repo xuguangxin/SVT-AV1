@@ -405,10 +405,21 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is -1. */
     int enable_rdoq;
 
+#if 1 // FILTER_INTRA_CLI
+    /* Filter intra prediction
+    *
+    * The table below specifies the meaning of filter_intra_level when specified in the CLI.
+    * filter_intra_level | Command Line Settings
+    *        -1          | Default settings (auto)
+    *         0          | OFF everywhere in encoder
+    *         1          | Fully ON in PD_PASS_2, Default settings in PD_PASS_0 */
+    int8_t filter_intra_level;
+#else
     /* Filter intra prediction
     *
     * Default is 1. */
     EbBool enable_filter_intra;
+#endif
 
     /* Intra Edge Filter
     *
