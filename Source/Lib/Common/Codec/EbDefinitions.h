@@ -603,6 +603,14 @@ extern "C" {
 #endif
 // END  SVT_01 /////////////////////////////////////////////////////////
 
+// START  svt-02-temp /////////////////////////////////////////////////////////
+#define SVT_02_TEMP 1 // based on svt-01 1702a2b5f8dd4d7bf8a06f2c693f3702ee629115
+
+#if SVT_02_TEMP
+
+#endif
+// END  SVT_02_TEMP /////////////////////////////////////////////////////////
+
 #if DECOUPLE_ME_RES
 #define UPDATED_LINKS 100 //max number of pictures a dep-Cnt-cleanUp triggering picture can process
 #endif
