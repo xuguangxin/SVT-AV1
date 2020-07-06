@@ -1,4 +1,4 @@
-From 726a9def395d40aa0d8a4b8fe5ebc1af13015dbb Mon Sep 17 00:00:00 2001
+From 189d8ca54f08fe5ea33f1b5c22a8ce95aaf2d3bd Mon Sep 17 00:00:00 2001
 From: Daryl Seah <daryl.seah@intel.com>
 Date: Fri, 18 Jan 2019 02:11:38 +0000
 Subject: [PATCH] Add ability for ffmpeg to run svt-av1
@@ -11,10 +11,11 @@ Signed-off-by: Zhong Li <zhong.li@intel.com>
 Signed-off-by: Xu Guangxin <guangxin.xu@intel.com>
 ---
  configure               |   4 +
+ fftools/ffmpeg_opt.c    |   3 +-
  libavcodec/Makefile     |   1 +
  libavcodec/allcodecs.c  |   1 +
- libavcodec/libsvt_av1.c | 583 ++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 589 insertions(+)
+ libavcodec/libsvt_av1.c | 608 ++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 616 insertions(+), 1 deletion(-)
  create mode 100644 libavcodec/libsvt_av1.c
 
 diff --git a/configure b/configure
@@ -53,6 +54,20 @@ index 7495f35faa..e0a466b968 100755
  enabled libopencv         && { check_headers opencv2/core/core_c.h &&
                                 { check_pkg_config libopencv opencv opencv2/core/core_c.h cvCreateImageHeader ||
                                   require libopencv opencv2/core/core_c.h cvCreateImageHeader -lopencv_core -lopencv_imgproc; } ||
+diff --git a/fftools/ffmpeg_opt.c b/fftools/ffmpeg_opt.c
+index 9d1489ce01..799e7eb7a5 100644
+--- a/fftools/ffmpeg_opt.c
++++ b/fftools/ffmpeg_opt.c
+@@ -1817,7 +1817,8 @@ static OutputStream *new_video_stream(OptionsContext *o, AVFormatContext *oc, in
+                      ost->logfile_prefix ? ost->logfile_prefix :
+                                            DEFAULT_PASS_LOGFILENAME_PREFIX,
+                      i);
+-            if (!strcmp(ost->enc->name, "libx264")) {
++            if (!strcmp(ost->enc->name, "libx264") ||
++                !strcmp(ost->enc->name, "libsvt_av1")) {
+                 av_dict_set(&ost->encoder_opts, "stats", logfilename, AV_DICT_DONT_OVERWRITE);
+             } else {
+                 if (video_enc->flags & AV_CODEC_FLAG_PASS2) {
 diff --git a/libavcodec/Makefile b/libavcodec/Makefile
 index 5a6ea59715..b4dbca54d5 100644
 --- a/libavcodec/Makefile
@@ -79,10 +94,10 @@ index fa0c08d42e..ec1e0d48ba 100644
  extern AVCodec ff_libopus_encoder;
 diff --git a/libavcodec/libsvt_av1.c b/libavcodec/libsvt_av1.c
 new file mode 100644
-index 0000000000..541ba228fa
+index 0000000000..dc5049aad2
 --- /dev/null
 +++ b/libavcodec/libsvt_av1.c
-@@ -0,0 +1,583 @@
+@@ -0,0 +1,608 @@
 +
 +/*
 +* Scalable Video Technology for AV1 encoder library plugin
@@ -125,6 +140,8 @@ index 0000000000..541ba228fa
 +#endif
 +#include "avcodec.h"
 +
++#define TWO_PASS_FILE_NAME "svtav1_2pass.log"
++
 +typedef enum eos_status {
 +    EOS_NOT_REACHED = 0,
 +    EOS_SENT,
@@ -163,6 +180,7 @@ index 0000000000..541ba228fa
 +
 +    int tile_columns;
 +    int tile_rows;
++    char *stats;
 +} SvtContext;
 +
 +static const struct {
@@ -253,6 +271,7 @@ index 0000000000..541ba228fa
 +{
 +    SvtContext *svt_enc = avctx->priv_data;
 +    const AVPixFmtDescriptor *desc;
++    const char* stats;
 +
 +    param->source_width     = avctx->width;
 +    param->source_height    = avctx->height;
@@ -319,6 +338,21 @@ index 0000000000..541ba228fa
 +
 +    param->tile_columns = svt_enc->tile_columns;
 +    param->tile_rows = svt_enc->tile_rows;
++
++    stats = svt_enc->stats ? svt_enc->stats : TWO_PASS_FILE_NAME;
++    if (avctx->flags & AV_CODEC_FLAG_PASS2) {
++        param->input_stat_file = fopen(stats, "rb");
++        if (!param->input_stat_file) {
++            av_log(avctx, AV_LOG_ERROR, "failed to open input stats file %s", stats);
++            return AVERROR(EINVAL);
++        }
++    } else if (avctx->flags & AV_CODEC_FLAG_PASS1) {
++        param->output_stat_file = fopen(stats, "wb");
++        if (!param->output_stat_file) {
++            av_log(avctx, AV_LOG_ERROR, "failed to open output stats file %s", stats);
++            return AVERROR(EINVAL);
++        }
++    }
 +
 +    return 0;
 +}
@@ -549,6 +583,11 @@ index 0000000000..541ba228fa
 +
 +        av_frame_free(&svt_enc->frame);
 +
++        if (svt_enc->enc_params.input_stat_file)
++            fclose(svt_enc->enc_params.input_stat_file);
++        if (svt_enc->enc_params.output_stat_file)
++            fclose(svt_enc->enc_params.output_stat_file);
++
 +        free_buffer(svt_enc);
 +        svt_enc = NULL;
 +    }
@@ -626,6 +665,7 @@ index 0000000000..541ba228fa
 +      AV_OPT_TYPE_BOOL,   { .i64 = 1 }, 0, 1, VE },
 +    { "tile-columns",     "Log2 of number of tile columns to use", OFFSET(tile_columns), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 4, VE},
 +    { "tile-rows",        "Log2 of number of tile rows to use",    OFFSET(tile_rows), AV_OPT_TYPE_INT, {.i64 = 0}, 0, 6, VE},
++    { "stats",            "Filename for 2 pass stats",             OFFSET(stats),     AV_OPT_TYPE_STRING, { 0 },  0,       0, VE },
 +
 +    {NULL},
 +};
