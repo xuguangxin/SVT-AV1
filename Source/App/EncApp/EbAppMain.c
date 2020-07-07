@@ -71,7 +71,16 @@ void assign_app_thread_group(uint8_t target_socket) {
 
 double get_psnr(double sse, double max);
 
-static EbErrorType encode(int32_t argc, char *argv[])
+static const char* get_pass_name(EncodePass pass)
+{
+    if (pass == ENCODE_FIRST_PASS)
+        return "Pass 1/2 ";
+    if (pass == ENCODE_LAST_PASS)
+        return "Pass 2/2 ";
+    return "";
+}
+
+static EbErrorType encode(int32_t argc, char *argv[], EncodePass pass)
 {
     EbErrorType          return_error   = EB_ErrorNone; // Error Handling
     AppExitConditionType exit_condition = APP_ExitConditionNone; // Processing loop exit condition
@@ -101,6 +110,10 @@ static EbErrorType encode(int32_t argc, char *argv[])
             return EB_ErrorInsufficientResources;
         }
         eb_config_ctor(configs[inst_cnt]);
+        if (pass == ENCODE_FIRST_PASS)
+            configs[inst_cnt]->pass = 1;
+        else if (pass == ENCODE_LAST_PASS)
+            configs[inst_cnt]->pass = 2;
         return_errors[inst_cnt] = EB_ErrorNone;
     }
 
@@ -181,7 +194,7 @@ static EbErrorType encode(int32_t argc, char *argv[])
                 else
                     break;
             }
-            fprintf(stderr, "Encoding          ");
+            fprintf(stderr, "%sEncoding          ", get_pass_name(pass));
             fflush(stdout);
 
             while (exit_condition == APP_ExitConditionNone) {
@@ -417,14 +430,19 @@ int32_t main(int32_t argc, char *argv[]) {
     _setmode(_fileno(stdout), _O_BINARY);
 #endif
     EbErrorType          return_error   = EB_ErrorNone; // Error Handling
+    uint32_t passes;
+    EncodePass pass[MAX_ENCODE_PASS];
 
     signal(SIGINT, event_handler);
     fprintf(stderr, "-------------------------------------------\n");
     fprintf(stderr, "SVT-AV1 Encoder\n");
-    if (!get_help(argc, argv)) {
-        return_error = encode(argc, argv);
+    if (get_help(argc, argv))
+        return 0;
+    passes = get_passes(argc, argv, pass);
+    for (uint32_t i = 0; i < passes; i++) {
+        return_error = encode(argc, argv, pass[i]);
+        if (return_error != EB_ErrorNone)
+            break;
     }
-    fprintf(stderr, "Encoder finished\n");
-
     return (return_error == 0) ? 0 : 1;
 }
