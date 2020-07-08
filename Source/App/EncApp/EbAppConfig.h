@@ -14,6 +14,7 @@
 #define fseeko _fseeki64
 #define ftello _ftelli64
 #endif
+
 // Define Cross-Platform 64-bit fseek() and ftell()
 
 /** The AppExitConditionType type is used to define the App main loop exit
@@ -358,7 +359,12 @@ typedef struct EbConfig {
     /****************************************
      * RDOQ
      * ****************************************/
+#if 1 //RDOQ_CLI
+    int rdoq_level;
+#else
     int enable_rdoq;
+#endif
+
 
     /****************************************
      * Filter intra prediction

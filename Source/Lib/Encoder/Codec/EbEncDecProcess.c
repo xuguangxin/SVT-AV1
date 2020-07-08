@@ -4746,6 +4746,74 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     else
         context_ptr->blk_skip_decision = EB_FALSE;
 
+#if RDOQ_CLI
+    // rdoq_level - controls whether rdoq is to be performed.
+    // 0: RDOQ OFF in PD_PASS_2.
+    // 1: In default encoder configuration, it corresponds to RDOQ ON according to the constraints specified below.
+    //    When set through the command line instruction, it corresponds to RDOQ fully on in PD_PASS_2.
+
+    //   rdoq_level   |      Default Encoder Settings       | Command Line Settings
+    //       0        | ON subject to possible constraints  | OFF in PD_PASS_2
+    //       1        | OFF subject to possible constraints | Fully ON in PD_PASS_W
+    if (pd_pass == PD_PASS_0)
+        context_ptr->rdoq_level = EB_FALSE;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->rdoq_level = EB_FALSE;
+    else
+        if (sequence_control_set_ptr->static_config.rdoq_level == DEFAULT)
+#if !UNIFY_SC_NSC
+            if (pcs_ptr->parent_pcs_ptr->sc_content_detected)
+#if MAR17_ADOPTIONS
+#if M8_RDOQ
+#if UPGRADE_M6_M7_M8
+#if JUNE17_ADOPTIONS
+                if (enc_mode <= ENC_M6)
+#else
+#if PRESET_SHIFITNG
+                if (enc_mode <= ENC_M4)
+#else
+                if (enc_mode <= ENC_M6)
+#endif
+#endif
+#else
+                if (enc_mode <= ENC_M5)
+#endif
+#else
+                if (enc_mode <= ENC_M8)
+#endif
+#else
+#if MAR4_M6_ADOPTIONS
+                if (enc_mode <= ENC_M5)
+#else
+                if (enc_mode <= ENC_M3)
+#endif
+#endif
+                    context_ptr->enable_rdoq = EB_TRUE;
+                else
+#if M5_I_RDOQ
+                    context_ptr->enable_rdoq = pcs_ptr->slice_type == I_SLICE ? EB_TRUE : EB_FALSE;
+#else
+                    context_ptr->enable_rdoq = EB_FALSE;
+#endif
+#if MAR4_M6_ADOPTIONS
+#if MAR10_ADOPTIONS
+            else if (enc_mode <= ENC_M8)
+#else
+            else if (enc_mode <= ENC_M5)
+#endif
+#else
+            else if (enc_mode <= ENC_M3)
+#endif
+#else
+            if (enc_mode <= ENC_M8)
+#endif
+                context_ptr->rdoq_level = EB_TRUE;
+            else
+                context_ptr->rdoq_level = EB_FALSE;
+        else
+            context_ptr->rdoq_level =
+            sequence_control_set_ptr->static_config.rdoq_level;
+#else
     // Derive Trellis Quant Coeff Optimization Flag
     if (pd_pass == PD_PASS_0)
         context_ptr->enable_rdoq = EB_FALSE;
@@ -4805,6 +4873,8 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
         else
             context_ptr->enable_rdoq =
             sequence_control_set_ptr->static_config.enable_rdoq;
+#endif
+
 
     // Derive redundant block
     if (pd_pass == PD_PASS_0)
