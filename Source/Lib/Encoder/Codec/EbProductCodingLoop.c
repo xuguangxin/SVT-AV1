@@ -1781,7 +1781,11 @@ void soft_cycles_reduction_nics(ModeDecisionContext *context_ptr, uint32_t *nics
             pred_depth_refinement = MAX(pred_depth_refinement, -2);
             pred_depth_refinement += 2;
             if (context_ptr->ad_md_prob[pred_depth_refinement][context_ptr->blk_geom->shape] < adaptive_md_cycles_red_ctrls->nics_th) {
+#if IMPROVED_MD_ADAPTIVE_CYCLES
+                *nics_div = 2;
+#else
                 *nics_div = 8;
+#endif
             }
         }
     }

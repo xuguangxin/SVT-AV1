@@ -605,9 +605,11 @@ extern "C" {
 
 // START  svt-02-temp /////////////////////////////////////////////////////////
 #define SVT_02_TEMP 1 // based on svt-01 1702a2b5f8dd4d7bf8a06f2c693f3702ee629115
-
 #if SVT_02_TEMP
-
+#define IMPROVED_MD_ADAPTIVE_CYCLES 1 // Replace the nsq_cycles_reduction and the depth_cycles_reduction
+#if IMPROVED_MD_ADAPTIVE_CYCLES
+#define DISALLOW_NSQ_DEPTH   1 // Disable nsq_cycles_reduction and the depth_cycles_reduction
+#endif
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

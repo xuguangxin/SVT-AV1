@@ -1213,6 +1213,9 @@ EbErrorType signal_derivation_multi_processes_oq(
 
 
     // Set disallow_nsq
+#if DISALLOW_NSQ_DEPTH
+    pcs_ptr->disallow_nsq = EB_FALSE;
+#else
 #if APR25_12AM_ADOPTIONS
 #if JUNE11_ADOPTIONS
     if (pcs_ptr->enc_mode <= ENC_M5) {
@@ -1324,6 +1327,7 @@ EbErrorType signal_derivation_multi_processes_oq(
 #endif
 #if SHUT_FEATURE_INTERACTIONS
     pcs_ptr->disallow_nsq = EB_FALSE;
+#endif
 #endif
 #if NSQ_REMOVAL_CODE_CLEAN_UP
     pcs_ptr->max_number_of_pus_per_sb = SQUARE_PU_COUNT;
