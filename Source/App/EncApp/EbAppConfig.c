@@ -142,7 +142,11 @@
 #define SUPERRES_QTHRES "-superres-qthres"
 // --- end: SUPER-RESOLUTION SUPPORT
 #define HBD_MD_ENABLE_TOKEN "-hbd-md"
+#if 1 // PALETTE_CLI
+#define PALETTE_TOKEN "-palette-level"
+#else
 #define PALETTE_TOKEN "-palette"
+#endif
 #define OLPD_REFINEMENT_TOKEN "-olpd-refinement"
 #define HDR_INPUT_TOKEN "-hdr"
 #define RATE_CONTROL_ENABLE_TOKEN "-rc"
@@ -649,9 +653,15 @@ static void set_enable_hbd_mode_decision(const char *value, EbConfig *cfg) {
     cfg->enable_hbd_mode_decision = (int8_t)strtoul(value, NULL, 0);
 #endif
 };
+#if 1 // PALETTE_CLI
+static void set_palette_level(const char *value, EbConfig *cfg) {
+    cfg->palette_level = (int32_t)strtoul(value, NULL, 0);
+};
+#else
 static void set_enable_palette(const char *value, EbConfig *cfg) {
     cfg->enable_palette = (int32_t)strtoul(value, NULL, 0);
 };
+#endif
 static void set_enable_olpd_refinement(const char *value, EbConfig *cfg) {
     cfg->olpd_refinement = (int32_t)strtoul(value, NULL, 0);
 };
@@ -1208,10 +1218,17 @@ ConfigEntry config_entry_specific[] = {
       HBD_MD_ENABLE_TOKEN,
       "Enable high bit depth mode decision(0: OFF, 1: fully ON, 2: ON partially[default])",
       set_enable_hbd_mode_decision},
+#if 1 // PALETTE_CLI
+     {SINGLE_INPUT,
+      PALETTE_TOKEN,
+      "Set palette prediction mode(-1: default or [0-6])",
+      set_palette_level},
+#else
      {SINGLE_INPUT,
       PALETTE_TOKEN,
       "Set palette prediction mode(-1: default or [0-6])",
       set_enable_palette},
+#endif
      // Optional Features
      {SINGLE_INPUT,
       UNRESTRICTED_MOTION_VECTOR,
@@ -1491,7 +1508,11 @@ ConfigEntry config_entry[] = {
     // MD Parameters
     {SINGLE_INPUT, SCREEN_CONTENT_TOKEN, "ScreenContentMode", set_screen_content_mode},
     {SINGLE_INPUT, HBD_MD_ENABLE_TOKEN, "HighBitDepthModeDecision", set_enable_hbd_mode_decision},
+#if 1 // PALETTE_CLI
+    {SINGLE_INPUT, PALETTE_TOKEN, "PaletteLevel", set_palette_level},
+#else
     {SINGLE_INPUT, PALETTE_TOKEN, "PaletteMode", set_enable_palette},
+#endif
     {SINGLE_INPUT, OLPD_REFINEMENT_TOKEN, "OlpdRefinement", set_enable_olpd_refinement},
     // Thread Management
     {SINGLE_INPUT, THREAD_MGMNT, "LogicalProcessors", set_logical_processors},
@@ -1770,7 +1791,11 @@ void eb_config_ctor(EbConfig *config_ptr) {
 #else
     config_ptr->enable_hbd_mode_decision                  = 2;
 #endif
+#if 1 // PALETTE_CLI
+    config_ptr->palette_level                             = DEFAULT;
+#else
     config_ptr->enable_palette                            = -1;
+#endif
     config_ptr->olpd_refinement                           = -1;
     config_ptr->injector_frame_rate                       = 60 << 16;
 

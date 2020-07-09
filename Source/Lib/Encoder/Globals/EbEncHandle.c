@@ -2527,7 +2527,11 @@ void copy_api_from_app(
 
     // MD Parameters
     scs_ptr->static_config.enable_hbd_mode_decision = ((EbSvtAv1EncConfiguration*)config_struct)->encoder_bit_depth > 8 ? ((EbSvtAv1EncConfiguration*)config_struct)->enable_hbd_mode_decision : 0;
+#if PALETTE_CLI
+    scs_ptr->static_config.palette_level = ((EbSvtAv1EncConfiguration*)config_struct)->palette_level;
+#else
     scs_ptr->static_config.enable_palette = ((EbSvtAv1EncConfiguration*)config_struct)->enable_palette;
+#endif
     scs_ptr->static_config.olpd_refinement = ((EbSvtAv1EncConfiguration*)config_struct)->olpd_refinement;
     // Adaptive Loop Filter
     scs_ptr->static_config.tile_rows = ((EbSvtAv1EncConfiguration*)config_struct)->tile_rows;
@@ -3076,10 +3080,17 @@ static EbErrorType verify_settings(
     }
 
     // palette
+#if PALETTE_CLI
+    if (config->palette_level < (int32_t)(-1) || config->palette_level > 6) {
+        SVT_LOG("Error instance %u: Invalid Palette Mode [0 .. 6], your input: %i\n", channel_number + 1, config->palette_level);
+        return_error = EB_ErrorBadParameter;
+    }
+#else
     if (config->enable_palette < (int32_t)(-1) || config->enable_palette >6) {
         SVT_LOG( "Error instance %u: Invalid Palette Mode [0 .. 6], your input: %i\n", channel_number + 1, config->enable_palette);
         return_error = EB_ErrorBadParameter;
     }
+#endif
 
     // RDOQ
 #if RDOQ_CLI
@@ -3445,7 +3456,11 @@ EbErrorType eb_svt_enc_init_parameter(
 #else
     config_ptr->enable_hbd_mode_decision = 1;
 #endif
+#if PALETTE_CLI
+    config_ptr->palette_level = DEFAULT;
+#else
     config_ptr->enable_palette = -1;
+#endif
     config_ptr->olpd_refinement = -1;
     // Bitstream options
     //config_ptr->codeVpsSpsPps = 0;

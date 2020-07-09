@@ -612,6 +612,7 @@ extern "C" {
 #define DISALLOW_NSQ_DEPTH   1 // Disable nsq_cycles_reduction and the depth_cycles_reduction
 #endif
 #define SSSE_CLI            1 // Improve CLI Support for Spatial SSE
+#define PALETTE_CLI         1 // CLI Support for Palette
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 

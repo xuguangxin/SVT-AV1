@@ -200,7 +200,11 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
 #else
         (EbBool)config->enable_hbd_mode_decision;
 #endif
+#if 1 // PALETTE_CLI
+    callback_data->eb_enc_parameters.palette_level            = config->palette_level;
+#else
     callback_data->eb_enc_parameters.enable_palette           = config->enable_palette;
+#endif
     callback_data->eb_enc_parameters.olpd_refinement          = config->olpd_refinement;
     callback_data->eb_enc_parameters.channel_id               = config->channel_id;
     callback_data->eb_enc_parameters.active_channel_count     = config->active_channel_count;

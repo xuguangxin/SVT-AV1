@@ -489,10 +489,19 @@ typedef struct EbSvtAv1EncConfiguration {
 #else
     uint8_t enable_hbd_mode_decision;
 #endif
+
+#if 1 // PALETTE_CLI
+    /* Palette Mode
+    *
+    * -1: Default, 0: OFF, 1: Fully ON, 2 ... 6: Faster levels
+    * Levels 0 - 6 apply only to PD_PASS_2 */
+    int32_t palette_level;
+#else
     /* Palette Mode
     *
     * Default is -1. */
     int32_t enable_palette;
+#endif
 
     /* Open Loop Partitioning Decision refinement
     *
