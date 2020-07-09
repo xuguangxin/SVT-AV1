@@ -76,7 +76,11 @@
 #define SMOOTH_TOKEN "-smooth"
 #define MFMV_ENABLE_TOKEN "-mfmv"
 #define REDUNDANT_BLK_TOKEN "-redundant-blk"
+#if 1 // SSSE_CLI
+#define SPATIAL_SSE_FL_TOKEN "-spatial-sse-full-loop-level"
+#else
 #define SPATIAL_SSE_FL_TOKEN "-spatial-sse-fl"
+#endif
 #define SUBPEL_TOKEN "-subpel"
 #define OVR_BNDRY_BLK_TOKEN "-over-bndry-blk"
 #define NEW_NEAREST_COMB_INJECT_TOKEN "-new-nrst-near-comb"
@@ -205,7 +209,11 @@
 #define FRAC_SEARCH_64_NEW_TOKEN "--enable-frac-search-64"
 #define MFMV_ENABLE_NEW_TOKEN "--enable-mfmv"
 #define REDUNDANT_BLK_NEW_TOKEN "--enable-redundant-blk"
+#if 1 // SSSE_CLI
+#define SPATIAL_SSE_FL_NEW_TOKEN "--enable-spatial-sse-full-loop-level"
+#else
 #define SPATIAL_SSE_FL_NEW_TOKEN "--enable-spatial-sse-fl"
+#endif
 #define OVR_BNDRY_BLK_NEW_TOKEN "--enable-over-bndry-blk"
 #define NEW_NEAREST_COMB_INJECT_NEW_TOKEN "--enable-new-nrst-near-comb"
 #define NX4_4XN_MV_INJECT_NEW_TOKEN "--enable-nx4-4xn-mv-inject"
@@ -430,9 +438,15 @@ static void set_enable_mfmv_flag(const char *value, EbConfig *cfg) {
 static void set_enable_redundant_blk_flag(const char *value, EbConfig *cfg) {
     cfg->enable_redundant_blk = strtol(value, NULL, 0);
 };
+#if 1 // SSSE_CLI
+static void set_spatial_sse_full_loop_level_flag(const char *value, EbConfig *cfg) {
+    cfg->spatial_sse_full_loop_level = strtol(value, NULL, 0);
+};
+#else
 static void set_spatial_sse_fl_flag(const char *value, EbConfig *cfg) {
     cfg->spatial_sse_fl = strtol(value, NULL, 0);
 };
+#endif
 static void set_enable_sub_pel_flag(const char *value, EbConfig *cfg) {
     cfg->enable_subpel = strtol(value, NULL, 0);
 };
@@ -991,10 +1005,17 @@ ConfigEntry config_entry_specific[] = {
      "Use the same md results(mode, residual , cost,etc..)as the previously processed identical "
      "block(0: OFF, 1: ON, -1: DEFAULT)",
      set_enable_redundant_blk_flag},
+#if 1 // SSSE_CLI
+     {SINGLE_INPUT,
+      SPATIAL_SSE_FL_NEW_TOKEN,
+      "Enable spatial sse full loop(0: OFF, 1: ON, -1: DEFAULT)",
+      set_spatial_sse_full_loop_level_flag},
+#else
      {SINGLE_INPUT,
       SPATIAL_SSE_FL_NEW_TOKEN,
       "Enable spatial sse full loop(0: OFF, 1: ON, -1: DEFAULT)",
       set_spatial_sse_fl_flag},
+#endif
      {SINGLE_INPUT,
       SUBPEL_TOKEN,
       "Enable subpel(0: OFF, 1: ON, -1: DEFAULT)",
@@ -1363,7 +1384,11 @@ ConfigEntry config_entry[] = {
 #endif
     {SINGLE_INPUT, MFMV_ENABLE_TOKEN, "Mfmv", set_enable_mfmv_flag},
     {SINGLE_INPUT, REDUNDANT_BLK_TOKEN, "RedundantBlock", set_enable_redundant_blk_flag},
+#if 1 // SSSE_CLI
+    {SINGLE_INPUT, SPATIAL_SSE_FL_TOKEN, "SpatialSSEfl", set_spatial_sse_full_loop_level_flag},
+#else
     {SINGLE_INPUT, SPATIAL_SSE_FL_TOKEN, "SpatialSSEfl", set_spatial_sse_fl_flag},
+#endif
     {SINGLE_INPUT, SUBPEL_TOKEN, "Subpel", set_enable_sub_pel_flag},
     {SINGLE_INPUT, OVR_BNDRY_BLK_TOKEN, "OverBoundryBlock", set_over_bndry_blk_flag},
     {SINGLE_INPUT,
@@ -1571,7 +1596,11 @@ ConfigEntry config_entry[] = {
     //{SINGLE_INPUT, FRAC_SEARCH_64_NEW_TOKEN, "FracSearch64", ??}, // todo
     {SINGLE_INPUT, MFMV_ENABLE_NEW_TOKEN, "Mfmv token with double dash", set_enable_mfmv_flag},
     {SINGLE_INPUT, REDUNDANT_BLK_NEW_TOKEN, "Redundant Block", set_enable_redundant_blk_flag},
+#if 1 // SSSE_CLI
+    {SINGLE_INPUT, SPATIAL_SSE_FL_NEW_TOKEN, "Spatial SSE fl", set_spatial_sse_full_loop_level_flag},
+#else
     {SINGLE_INPUT, SPATIAL_SSE_FL_NEW_TOKEN, "Spatial SSE fl", set_spatial_sse_fl_flag},
+#endif
     {SINGLE_INPUT, OVR_BNDRY_BLK_NEW_TOKEN, "Over Boundry Block", set_over_bndry_blk_flag},
     {SINGLE_INPUT,
      NEW_NEAREST_COMB_INJECT_NEW_TOKEN,
@@ -1676,7 +1705,11 @@ void eb_config_ctor(EbConfig *config_ptr) {
 #endif
     config_ptr->enable_mfmv                               = DEFAULT;
     config_ptr->enable_redundant_blk                      = DEFAULT;
+#if 1 // SSSE_CLI
+    config_ptr->spatial_sse_full_loop_level               = DEFAULT;
+#else
     config_ptr->spatial_sse_fl                            = DEFAULT;
+#endif
     config_ptr->enable_subpel                             = DEFAULT;
     config_ptr->over_bndry_blk                            = DEFAULT;
     config_ptr->new_nearest_comb_inject                   = DEFAULT;

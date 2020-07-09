@@ -141,7 +141,11 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
 #endif
     callback_data->eb_enc_parameters.enable_mfmv              = config->enable_mfmv;
     callback_data->eb_enc_parameters.enable_redundant_blk     = config->enable_redundant_blk;
+#if 1 // SSSE_CLI
+    callback_data->eb_enc_parameters.spatial_sse_full_loop_level = config->spatial_sse_full_loop_level;
+#else
     callback_data->eb_enc_parameters.spatial_sse_fl           = config->spatial_sse_fl;
+#endif
     callback_data->eb_enc_parameters.enable_subpel            = config->enable_subpel;
     callback_data->eb_enc_parameters.over_bndry_blk           = config->over_bndry_blk;
     callback_data->eb_enc_parameters.new_nearest_comb_inject  = config->new_nearest_comb_inject;
