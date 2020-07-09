@@ -1074,10 +1074,17 @@ ConfigEntry config_entry_specific[] = {
      {SINGLE_INPUT, OBMC_TOKEN, "Enable OBMC(0: OFF, 1: ON[default]) ", set_enable_obmc_flag},
 #endif
      // RDOQ
+#if 1 // RDOQ_CLI
+     {SINGLE_INPUT,
+      RDOQ_NEW_TOKEN,
+      "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)",
+      set_rdoq_level_flag},
+#else
      {SINGLE_INPUT,
       RDOQ_NEW_TOKEN,
       "Enable RDOQ (0: OFF, 1: ON, -1: DEFAULT)",
       set_enable_rdoq_flag},
+#endif
 
      // Filter Intra
 #if 1 // FILTER_INTRA_CLI
