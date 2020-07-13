@@ -30,7 +30,11 @@ extern "C" {
 #define DEPTH_ONE_STEP 21
 #define DEPTH_TWO_STEP 5
 #define DEPTH_THREE_STEP 1
+#if ADAPTIVE_ME_SEARCH
+#define MAX_MVP_CANIDATES 4
+#else
 #define PRED_ME_MAX_MVP_CANIDATES 4
+#endif
 #define PRED_ME_DEVIATION_TH 50
 #define PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15 15
 #define PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15 15
@@ -309,6 +313,38 @@ typedef struct MdNsqMotionSearchCtrls {
 #endif
 }MdNsqMotionSearchCtrls;
 #endif
+
+#if ADAPTIVE_ME_SEARCH
+typedef struct MdSqMotionSearchCtrls {
+    uint8_t enabled;                    // 0: SQ motion search @ MD OFF; 1: SQ motion search @ MD ON
+    uint8_t use_ssd;                    // 0: search using SAD; 1: search using SSD
+
+    int16_t size_colocated_area;        // size_colocated_area = f(8x8)
+    uint16_t pame_distortion_th;        // TH for pa_me distortion to determine whether to search (distortion per pixel)
+
+    uint8_t  sprs_lev0_enabled;         // 0: OFF; 1: ON
+    uint8_t  sprs_lev0_step;            // Sparse search step
+    uint16_t sprs_lev0_w;               // Sparse search area width
+    uint16_t sprs_lev0_h;               // Sparse search area height
+    uint16_t max_sprs_lev0_w;           // Max Sparse search area width
+    uint16_t max_sprs_lev0_h;           // Max Sparse search area height
+    int16_t sprs_lev0_multiplier;       // search area multiplier (is a % -- 100 is no scaling)
+
+    uint8_t  sprs_lev1_enabled;         // 0: OFF; 1: ON
+    uint8_t  sprs_lev1_step;            // Sparse search step
+    uint16_t sprs_lev1_w;               // Sparse search area width
+    uint16_t sprs_lev1_h;               // Sparse search area height
+    uint16_t max_sprs_lev1_w;           // Max Sparse search area width
+    uint16_t max_sprs_lev1_h;           // Max Sparse search area height
+    int16_t sprs_lev1_multiplier;       // search area multiplier (is a % -- 100 is no scaling)
+
+    uint8_t  sprs_lev2_enabled;         // 0: OFF; 1: ON
+    uint8_t  sprs_lev2_step;            // Sparse search step
+    uint16_t sprs_lev2_w;               // Sparse search area width
+    uint16_t sprs_lev2_h;               // Sparse search area height
+}MdSqMotionSearchCtrls;
+#endif
+
 #if PERFORM_SUB_PEL_MD
 typedef struct MdSubPelSearchCtrls {
     uint8_t enabled;                             // 0: subpel search @ MD OFF; 1: subpel search @ MD ON
@@ -741,6 +777,11 @@ typedef struct ModeDecisionContext {
     uint8_t      block_based_depth_reduction_level;
     DepthReductionCtrls depth_reduction_ctrls;
 #endif
+#if ADAPTIVE_ME_SEARCH
+    // Control signals for MD sparse search (used for increasing ME search for active clips)
+    uint8_t md_sq_mv_search_level;
+    MdSqMotionSearchCtrls md_sq_me_ctrls;
+#endif
 #if ADD_MD_NSQ_SEARCH
     uint8_t md_nsq_mv_search_level ;
     MdNsqMotionSearchCtrls md_nsq_motion_search_ctrls;
@@ -880,6 +921,18 @@ typedef struct ModeDecisionContext {
 #if MEM_OPT_MD_BUF_DESC
     EbPictureBufferDesc* temp_residual_ptr;
     EbPictureBufferDesc* temp_recon_ptr;
+#endif
+#if ADAPTIVE_ME_SEARCH
+    // Array for all nearest/near MVs for a block for single ref case
+    MV mvp_array[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH][MAX_MVP_CANIDATES];
+    // Count of all nearest/near MVs for a block for single ref case
+    int8_t  mvp_count[MAX_NUM_OF_REF_PIC_LIST][REF_LIST_MAX_DEPTH];
+
+    // Start/end position for MD sparse search
+    int16_t sprs_lev0_start_x;
+    int16_t sprs_lev0_end_x;
+    int16_t sprs_lev0_start_y;
+    int16_t sprs_lev0_end_y;
 #endif
 } ModeDecisionContext;
 

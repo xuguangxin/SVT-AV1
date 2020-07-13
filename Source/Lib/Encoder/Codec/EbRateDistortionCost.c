@@ -91,6 +91,7 @@ int32_t eb_av1_mv_bit_cost(const MV *mv, const MV *ref, const int32_t *mvjcost, 
     // Both the MVs and the MV diffs should be within the allowable range for accessing the MV cost
     // infrastructure.
     MV temp_diff = { mv->row - ref->row, mv->col - ref->col };
+
     temp_diff.row = MAX(temp_diff.row, MV_LOW);
     temp_diff.row = MIN(temp_diff.row, MV_UPP);
     temp_diff.col = MAX(temp_diff.col, MV_LOW);

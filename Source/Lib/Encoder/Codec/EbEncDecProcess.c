@@ -1885,6 +1885,105 @@ void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_m
     }
 }
 #endif
+#if ADAPTIVE_ME_SEARCH
+void md_sq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_sq_mv_search_level) {
+
+    MdSqMotionSearchCtrls *md_sq_me_ctrls = &mdctxt->md_sq_me_ctrls;
+
+    switch (md_sq_mv_search_level) {
+        case 0:
+            md_sq_me_ctrls->enabled = 0;
+            break;
+        case 1:
+            md_sq_me_ctrls->enabled = 1;
+            md_sq_me_ctrls->use_ssd = 0;
+
+            md_sq_me_ctrls->size_colocated_area = 2;
+            md_sq_me_ctrls->pame_distortion_th = 10;
+
+            md_sq_me_ctrls->sprs_lev0_enabled = 1;
+            md_sq_me_ctrls->sprs_lev0_step = 4;
+            md_sq_me_ctrls->sprs_lev0_w = 15;
+            md_sq_me_ctrls->sprs_lev0_h = 15;
+            md_sq_me_ctrls->max_sprs_lev0_w = 150;
+            md_sq_me_ctrls->max_sprs_lev0_h = 150;
+            md_sq_me_ctrls->sprs_lev0_multiplier = 500;
+
+            md_sq_me_ctrls->sprs_lev1_enabled = 1;
+            md_sq_me_ctrls->sprs_lev1_step = 2;
+            md_sq_me_ctrls->sprs_lev1_w = 4;
+            md_sq_me_ctrls->sprs_lev1_h = 4;
+            md_sq_me_ctrls->max_sprs_lev1_w = 50;
+            md_sq_me_ctrls->max_sprs_lev1_h = 50;
+            md_sq_me_ctrls->sprs_lev1_multiplier = 500;
+
+            md_sq_me_ctrls->sprs_lev2_enabled = 1;
+            md_sq_me_ctrls->sprs_lev2_step = 1;
+            md_sq_me_ctrls->sprs_lev2_w = 3;
+            md_sq_me_ctrls->sprs_lev2_h = 3;
+            break;
+        case 2:
+            md_sq_me_ctrls->enabled = 1;
+            md_sq_me_ctrls->use_ssd = 0;
+
+            md_sq_me_ctrls->size_colocated_area = 2;
+            md_sq_me_ctrls->pame_distortion_th = 10;
+
+            md_sq_me_ctrls->sprs_lev0_enabled = 1;
+            md_sq_me_ctrls->sprs_lev0_step = 4;
+            md_sq_me_ctrls->sprs_lev0_w = 15;
+            md_sq_me_ctrls->sprs_lev0_h = 15;
+            md_sq_me_ctrls->max_sprs_lev0_w = 150;
+            md_sq_me_ctrls->max_sprs_lev0_h = 150;
+            md_sq_me_ctrls->sprs_lev0_multiplier = 400;
+
+            md_sq_me_ctrls->sprs_lev1_enabled = 1;
+            md_sq_me_ctrls->sprs_lev1_step = 2;
+            md_sq_me_ctrls->sprs_lev1_w = 4;
+            md_sq_me_ctrls->sprs_lev1_h = 4;
+            md_sq_me_ctrls->max_sprs_lev1_w = 50;
+            md_sq_me_ctrls->max_sprs_lev1_h = 50;
+            md_sq_me_ctrls->sprs_lev1_multiplier = 400;
+
+            md_sq_me_ctrls->sprs_lev2_enabled = 1;
+            md_sq_me_ctrls->sprs_lev2_step = 1;
+            md_sq_me_ctrls->sprs_lev2_w = 3;
+            md_sq_me_ctrls->sprs_lev2_h = 3;
+            break;
+        case 3:
+            md_sq_me_ctrls->enabled = 1;
+            md_sq_me_ctrls->use_ssd = 0;
+
+            md_sq_me_ctrls->size_colocated_area = 2;
+            md_sq_me_ctrls->pame_distortion_th = 10;
+
+            md_sq_me_ctrls->sprs_lev0_enabled = 1;
+            md_sq_me_ctrls->sprs_lev0_step = 4;
+            md_sq_me_ctrls->sprs_lev0_w = 15;
+            md_sq_me_ctrls->sprs_lev0_h = 15;
+            md_sq_me_ctrls->max_sprs_lev0_w = 150;
+            md_sq_me_ctrls->max_sprs_lev0_h = 150;
+            md_sq_me_ctrls->sprs_lev0_multiplier = 300;
+
+            md_sq_me_ctrls->sprs_lev1_enabled = 1;
+            md_sq_me_ctrls->sprs_lev1_step = 2;
+            md_sq_me_ctrls->sprs_lev1_w = 4;
+            md_sq_me_ctrls->sprs_lev1_h = 4;
+            md_sq_me_ctrls->max_sprs_lev1_w = 50;
+            md_sq_me_ctrls->max_sprs_lev1_h = 50;
+            md_sq_me_ctrls->sprs_lev1_multiplier = 300;
+
+            md_sq_me_ctrls->sprs_lev2_enabled = 1;
+            md_sq_me_ctrls->sprs_lev2_step = 1;
+            md_sq_me_ctrls->sprs_lev2_w = 3;
+            md_sq_me_ctrls->sprs_lev2_h = 3;
+            break;
+        default:
+            assert(0);
+            break;
+    }
+}
+#endif
 #if PERFORM_SUB_PEL_MD
 #if REMOVE_MR_MACRO
 void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode) {
@@ -6518,6 +6617,21 @@ EbErrorType signal_derivation_enc_dec_kernel_oq(
     context_ptr->block_based_depth_reduction_level = 0;
 #endif
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
+#endif
+#if ADAPTIVE_ME_SEARCH
+    if (pd_pass == PD_PASS_0)
+        context_ptr->md_sq_mv_search_level = 0;
+    else if (pd_pass == PD_PASS_1)
+        context_ptr->md_sq_mv_search_level = 0;
+    else
+        if (enc_mode <= ENC_M0)
+            context_ptr->md_sq_mv_search_level = 1;
+        else if (enc_mode <= ENC_M5)
+            context_ptr->md_sq_mv_search_level = 2;
+        else
+            context_ptr->md_sq_mv_search_level = 3;
+
+    md_sq_motion_search_controls(context_ptr, context_ptr->md_sq_mv_search_level);
 #endif
 #if ADD_MD_NSQ_SEARCH
     if (pd_pass == PD_PASS_0)
