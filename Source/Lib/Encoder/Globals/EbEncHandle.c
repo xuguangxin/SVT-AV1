@@ -607,7 +607,11 @@ EbErrorType load_default_buffer_configuration_settings(
                                                                           (2 << scs_ptr->static_config.hierarchical_levels) + SCD_LAD : 1;
     //Future frames window in Scene Change Detection (SCD) / TemporalFiltering
     scs_ptr->scd_delay =
+#if ALTREF_CLI
+        scs_ptr->static_config.tf_level || scs_ptr->static_config.scene_change_detection ? SCD_LAD : 0;
+#else
         scs_ptr->static_config.enable_altrefs || scs_ptr->static_config.scene_change_detection ? SCD_LAD : 0;
+#endif
 
     // bistream buffer will be allocated at run time. app will free the buffer once written to file.
     scs_ptr->output_stream_buffer_fifo_init_count = PICTURE_DECISION_PA_REFERENCE_QUEUE_MAX_DEPTH;
@@ -2217,7 +2221,11 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     scs_ptr->top_padding = BLOCK_SIZE_64 + 4;
     scs_ptr->right_padding = BLOCK_SIZE_64 + 4;
     scs_ptr->bot_padding = scs_ptr->static_config.super_block_size + 4;
+#if ALTREF_CLI
+    scs_ptr->static_config.enable_overlays = scs_ptr->static_config.tf_level == 0 ||
+#else
     scs_ptr->static_config.enable_overlays = scs_ptr->static_config.enable_altrefs == EB_FALSE ||
+#endif
         (scs_ptr->static_config.altref_nframes <= 1) ||
         (scs_ptr->static_config.rate_control_mode > 0) ||
         scs_ptr->static_config.encoder_bit_depth != EB_8BIT ?
@@ -2636,7 +2644,11 @@ void copy_api_from_app(
     }
 #endif
 
+#if ALTREF_CLI
+    scs_ptr->static_config.tf_level = config_struct->tf_level;
+#else
     scs_ptr->static_config.enable_altrefs = config_struct->enable_altrefs;
+#endif
     scs_ptr->static_config.altref_strength = config_struct->altref_strength;
     scs_ptr->static_config.altref_nframes = config_struct->altref_nframes;
     scs_ptr->static_config.enable_overlays = config_struct->enable_overlays;
@@ -3504,7 +3516,11 @@ EbErrorType eb_svt_enc_init_parameter(
     config_ptr->recon_enabled = 0;
 
     // Alt-Ref default values
+#if ALTREF_CLI
+    config_ptr->tf_level = DEFAULT;
+#else
     config_ptr->enable_altrefs = EB_TRUE;
+#endif
 #if NOISE_BASED_TF_FRAMES
     config_ptr->altref_nframes = ALTREF_MAX_NFRAMES;
 #else

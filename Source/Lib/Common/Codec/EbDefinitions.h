@@ -614,6 +614,7 @@ extern "C" {
 #define SSSE_CLI            1 // Improve CLI Support for Spatial SSE
 #define PALETTE_CLI         1 // CLI Support for Palette
 #define ADAPTIVE_ME_SEARCH  1 // Add algorithm to detect high motion frames and increase ME size for those frames
+#define ALTREF_CLI         1 // CLI Support for ALTREFA
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
