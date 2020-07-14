@@ -1099,7 +1099,11 @@ EbErrorType signal_derivation_me_kernel_oq(
 
 #if GM_LIST1
         //TODO: enclose all gm signals into a control
+#if ENABLE_GM_LIST1
+        context_ptr->me_context_ptr->gm_identiy_exit = EB_TRUE;
+#else
         context_ptr->me_context_ptr->gm_identiy_exit = EB_FALSE;
+#endif
 #endif
 
     }
@@ -2015,7 +2019,7 @@ void *motion_estimation_kernel(void *input_ptr) {
         if (in_results_ptr->task_type == 0) {
             // ME Kernel Signal(s) derivation
             signal_derivation_me_kernel_oq(scs_ptr, pcs_ptr, context_ptr);
-
+#if !IMPROVE_GMV
             // Global motion estimation
             // Compute only for the first fragment.
             // TODO: create an other kernel ?
@@ -2029,7 +2033,7 @@ void *motion_estimation_kernel(void *input_ptr) {
                     global_motion_estimation(
                         pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
             }
-
+#endif
             // Segments
             segment_index = in_results_ptr->segment_index;
             pic_width_in_sb =
@@ -2170,9 +2174,26 @@ void *motion_estimation_kernel(void *input_ptr) {
                                            sb_origin_y,
                                            context_ptr->me_context_ptr,
                                            input_picture_ptr);
+#if IMPROVE_GMV
+                        eb_block_on_mutex(pcs_ptr->me_processed_sb_mutex);
+                        pcs_ptr->me_processed_sb_count++;
+                        eb_release_mutex(pcs_ptr->me_processed_sb_mutex);
+#endif
                     }
                 }
             }
+#if IMPROVE_GMV
+            // Global motion estimation
+            // TODO: create an other kernel ?
+            if (context_ptr->me_context_ptr->compute_global_motion &&
+                // Compute only when ME of all 64x64 SBs is performed
+                pcs_ptr->me_processed_sb_count == pcs_ptr->sb_total_count) {
+
+                    global_motion_estimation(
+                        pcs_ptr, context_ptr->me_context_ptr, input_picture_ptr);
+            }
+#endif
+
 #if !REMOVE_UNUSED_CODE_PH2
             if (pcs_ptr->intra_pred_mode > 4)
             // *** OPEN LOOP INTRA CANDIDATE SEARCH CODE ***

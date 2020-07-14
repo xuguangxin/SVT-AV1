@@ -185,7 +185,12 @@ typedef enum InterCandGroup {
     WARP_GROUP          = 4,
     NRST_NEAR_GROUP     = 5,
     PRED_ME_GROUP       = 6,
+#if IMPROVE_GMV
+    GLOBAL_GROUP        = 7,
+    TOT_INTER_GROUP     = 8,
+#else
     TOT_INTER_GROUP     = 7
+#endif
 } InterCandGroup;
 #endif
 #endif

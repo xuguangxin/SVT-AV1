@@ -615,6 +615,8 @@ extern "C" {
 #define PALETTE_CLI         1 // CLI Support for Palette
 #define ADAPTIVE_ME_SEARCH  1 // Add algorithm to detect high motion frames and increase ME size for those frames
 #define ALTREF_CLI         1 // CLI Support for ALTREFA
+#define IMPROVE_GMV        1 // Make GMV params/candidates derivation multi-ref aware, and set multi-ref to be considered = f(input_complexity)
+#define ENABLE_GM_LIST1    1 // Enable GM_LIST1
 #endif
 // END  SVT_02_TEMP /////////////////////////////////////////////////////////
 
@@ -682,7 +684,9 @@ typedef enum GM_LEVEL {
     GM_DOWN      = 1, // Downsampled search mode, with a downsampling factor of 2 in each dimension
 #if GM_DOWN_16
     GM_DOWN16    = 2, // Downsampled search mode, with a downsampling factor of 4 in each dimension
+#if !IMPROVE_GMV
     GM_TRAN_ONLY = 3 // Translation only using ME MV.
+#endif
 #else
     GM_TRAN_ONLY = 2 // Translation only using ME MV.
 #endif
