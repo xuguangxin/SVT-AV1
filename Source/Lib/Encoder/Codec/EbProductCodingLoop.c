@@ -6510,7 +6510,11 @@ uint32_t early_intra_evaluation(PictureControlSet *pcs_ptr, ModeDecisionContext 
 #define MIN_REF_TO_TAG 2
 #endif
 #if REMOVE_USELESS_CODE
+#if TWOPASS_RC
+void perform_md_reference_pruning(PictureControlSet *  pcs_ptr,
+#else
 static void perform_md_reference_pruning(PictureControlSet *  pcs_ptr,
+#endif
                                          ModeDecisionContext *context_ptr,
                                          EbPictureBufferDesc *input_picture_ptr) {
 #else

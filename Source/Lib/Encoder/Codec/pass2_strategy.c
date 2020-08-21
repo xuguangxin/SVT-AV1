@@ -21,7 +21,7 @@
 
 #if TWOPASS_RC
 
-#define INT_MAX 0x7fffffff
+//#define INT_MAX 0x7fffffff
 
 #define DEFAULT_KF_BOOST 2300
 #define DEFAULT_GF_BOOST 2000
@@ -2605,7 +2605,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     TWO_PASS *const twopass = &scs_ptr->twopass;
     GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
     CurrentFrame *const current_frame = &pcs_ptr->av1_cm->current_frame;
-    current_frame->frame_number = pcs_ptr->picture_number;
+    current_frame->frame_number = (int)pcs_ptr->picture_number;
 
     EncodeFrameParams temp_frame_params, *frame_params = &temp_frame_params;
     pcs_ptr->gf_group_index = gf_group->index;

@@ -22,8 +22,6 @@ extern "C" {
 #include <stdlib.h>
 #include <stdio.h>
 
-#define TWOPASS_RC 1
-
 //***HME***
 #define EB_HME_SEARCH_AREA_COLUMN_MAX_COUNT 2
 #define EB_HME_SEARCH_AREA_ROW_MAX_COUNT 2
@@ -86,7 +84,7 @@ typedef struct EbSvtAv1EncConfiguration {
 #if 0//REMOVE_MR_MACRO
     int8_t snd_pass_enc_mode;
 #else
-#if !TWOPASS_RC
+#if 0//!TWOPASS_RC
     uint8_t snd_pass_enc_mode;
 #endif
 #endif

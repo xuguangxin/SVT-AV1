@@ -636,7 +636,7 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
     context_ptr->md_staging_tx_size_mode              = 0;
     context_ptr->md_staging_skip_full_chroma          = EB_FALSE;
     context_ptr->md_staging_skip_rdoq                 = EB_TRUE;
-    context_ptr->md_staging_spatial_sse_full_loop     = context_ptr->spatial_sse_full_loop;
+    context_ptr->md_staging_spatial_sse_full_loop_level     = context_ptr->spatial_sse_full_loop_level;
 
     first_pass_loop_core(pcs_ptr,
                          blk_ptr,
@@ -1205,9 +1205,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
     }
 #if REMOVE_UNUSED_CODE_PH2
     av1_perform_inverse_transform_recon(context_ptr, candidate_buffer);
-#if !CLEAN_UP_SB_DATA_8
-    blk_ptr,
-#endif
 #else
     av1_perform_inverse_transform_recon(pcs_ptr,
                                         context_ptr,
@@ -1251,7 +1248,7 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
                                    ((context_ptr->blk_geom->origin_y >> 3) << 3) *
                                        candidate_buffer->recon_ptr->stride_cr) >>
                                   1);
-#if CLEAN_UP_SB_DATA_3
+
         if (!context_ptr->hbd_mode_decision) {
 #if SSE_BASED_SPLITTING
 #if FIX_WARNINGS
@@ -1348,78 +1345,6 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
                 }
             }
         }
-#else
-        if (!context_ptr->hbd_mode_decision) {
-            memcpy(blk_ptr->neigh_top_recon[0],
-                   recon_ptr->buffer_y + rec_luma_offset +
-                       (context_ptr->blk_geom->bheight - 1) * recon_ptr->stride_y,
-                   context_ptr->blk_geom->bwidth);
-            if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
-                memcpy(blk_ptr->neigh_top_recon[1],
-                       recon_ptr->buffer_cb + rec_cb_offset +
-                           (context_ptr->blk_geom->bheight_uv - 1) * recon_ptr->stride_cb,
-                       context_ptr->blk_geom->bwidth_uv);
-                memcpy(blk_ptr->neigh_top_recon[2],
-                       recon_ptr->buffer_cr + rec_cr_offset +
-                           (context_ptr->blk_geom->bheight_uv - 1) * recon_ptr->stride_cr,
-                       context_ptr->blk_geom->bwidth_uv);
-            }
-
-            for (j = 0; j < context_ptr->blk_geom->bheight; ++j)
-                blk_ptr->neigh_left_recon[0][j] =
-                    recon_ptr->buffer_y[rec_luma_offset + context_ptr->blk_geom->bwidth - 1 +
-                                        j * recon_ptr->stride_y];
-
-            if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
-                for (j = 0; j < context_ptr->blk_geom->bheight_uv; ++j) {
-                    blk_ptr->neigh_left_recon[1][j] =
-                        recon_ptr->buffer_cb[rec_cb_offset + context_ptr->blk_geom->bwidth_uv - 1 +
-                                             j * recon_ptr->stride_cb];
-                    blk_ptr->neigh_left_recon[2][j] =
-                        recon_ptr->buffer_cr[rec_cr_offset + context_ptr->blk_geom->bwidth_uv - 1 +
-                                             j * recon_ptr->stride_cr];
-                }
-            }
-        } else {
-            uint16_t sz = sizeof(uint16_t);
-            memcpy(
-                blk_ptr->neigh_top_recon_16bit[0],
-                recon_ptr->buffer_y + sz * (rec_luma_offset + (context_ptr->blk_geom->bheight - 1) *
-                                                                  recon_ptr->stride_y),
-                sz * context_ptr->blk_geom->bwidth);
-            if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
-                memcpy(blk_ptr->neigh_top_recon_16bit[1],
-                       recon_ptr->buffer_cb +
-                           sz * (rec_cb_offset +
-                                 (context_ptr->blk_geom->bheight_uv - 1) * recon_ptr->stride_cb),
-                       sz * context_ptr->blk_geom->bwidth_uv);
-                memcpy(blk_ptr->neigh_top_recon_16bit[2],
-                       recon_ptr->buffer_cr +
-                           sz * (rec_cr_offset +
-                                 (context_ptr->blk_geom->bheight_uv - 1) * recon_ptr->stride_cr),
-                       sz * context_ptr->blk_geom->bwidth_uv);
-            }
-
-            for (j = 0; j < context_ptr->blk_geom->bheight; ++j)
-                blk_ptr->neigh_left_recon_16bit[0][j] =
-                    ((uint16_t *)
-                         recon_ptr->buffer_y)[rec_luma_offset + context_ptr->blk_geom->bwidth - 1 +
-                                              j * recon_ptr->stride_y];
-
-            if (context_ptr->blk_geom->has_uv && context_ptr->chroma_level <= CHROMA_MODE_1) {
-                for (j = 0; j < context_ptr->blk_geom->bheight_uv; ++j) {
-                    blk_ptr->neigh_left_recon_16bit[1][j] =
-                        ((uint16_t *)recon_ptr
-                             ->buffer_cb)[rec_cb_offset + context_ptr->blk_geom->bwidth_uv - 1 +
-                                          j * recon_ptr->stride_cb];
-                    blk_ptr->neigh_left_recon_16bit[2][j] =
-                        ((uint16_t *)recon_ptr
-                             ->buffer_cr)[rec_cr_offset + context_ptr->blk_geom->bwidth_uv - 1 +
-                                          j * recon_ptr->stride_cr];
-                }
-            }
-        }
-#endif
     }
 
     context_ptr->md_local_blk_unit[blk_ptr->mds_idx].avail_blk_flag = EB_TRUE;
@@ -1487,7 +1412,7 @@ EbErrorType first_pass_signal_derivation_multi_processes(SequenceControlSet *   
     //    4:        NIC=4/2/1
     //    5:        NIC=4/2/1 + No K means for Inter frame
     //    6:        Fastest NIC=4/2/1 + No K means for non base + step for non base for most dominent
-    pcs_ptr->palette_mode = 0;
+    pcs_ptr->palette_level = 0;
     // Loop filter Level                            Settings
     // 0                                            OFF
     // 1                                            CU-BASED
@@ -1502,7 +1427,7 @@ EbErrorType first_pass_signal_derivation_multi_processes(SequenceControlSet *   
     // 3                                            8 step refinement
     // 4                                            16 step refinement
     // 5                                            64 step refinement
-    pcs_ptr->cdef_filter_mode = 0;
+    pcs_ptr->cdef_level = 0;
 
     // SG Level                                    Settings
     // 0                                            OFF
@@ -1597,7 +1522,6 @@ EbErrorType first_pass_signal_derivation_multi_processes(SequenceControlSet *   
     // 9: (1,1) ; No-override features
     // Level 0 , 1  : set ref_list0_count_try and ref_list1_count_try and Override MRP-related features
     // Level 2 .. 9 : Only set ref_list0_count_try and ref_list1_count_try
-    pcs_ptr->mrp_level = 0;
 
     pcs_ptr->tpl_opt_flag = 1;
     return return_error;
@@ -1608,10 +1532,14 @@ void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t dep
 void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode);
 void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) ;
 void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_cycles_red_mode);
+#if !REMOVE_USELESS_CODE
 void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_intra_distortion_based_reference_pruning_mode);
 void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_reduction_level);
+#endif
 void md_nsq_motion_search_controls(ModeDecisionContext *mdctxt, uint8_t md_nsq_mv_search_level);
+#if !UPGRADE_SUBPEL
 void md_subpel_search_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_search_level, EbEncMode enc_mode);
+#endif
 /******************************************************
 * Derive EncDec Settings for first pass
 Input   : encoder mode and pd pass
@@ -1624,9 +1552,6 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     EbEncMode enc_mode = pcs_ptr->enc_mode;
     uint8_t pd_pass = context_ptr->pd_pass;
-    // mrp level
-    context_ptr->mrp_level = pcs_ptr->parent_pcs_ptr->mrp_level;
-
     // sb_classifier levels
     // Level                Settings
     // 0                    Off
@@ -1820,12 +1745,12 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->interpolation_filter_search_blk_size = 0;
 
     // Derive Spatial SSE Flag
-    context_ptr->spatial_sse_full_loop = EB_TRUE;
+    context_ptr->spatial_sse_full_loop_level = EB_TRUE;
 
     context_ptr->blk_skip_decision = EB_FALSE;
 
     // Derive Trellis Quant Coeff Optimization Flag
-    context_ptr->enable_rdoq = EB_FALSE;
+    context_ptr->rdoq_level = EB_FALSE;
 
     // Derive redundant block
     context_ptr->redundant_blk = EB_FALSE;
@@ -1834,7 +1759,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->edge_based_skip_angle_intra = 0;
 
     // Set prune_ref_frame_for_rec_partitions
-    context_ptr->prune_ref_frame_for_rec_partitions = override_feature_level(context_ptr->mrp_level, 0, 0, 0);
+    context_ptr->prune_ref_frame_for_rec_partitions = 0;
 
 
 
@@ -1922,22 +1847,24 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // 0: OFF
     // 1: If previous similar block is intra, do not inject any inter
     context_ptr->intra_similar_mode = 0;
-
+#if !REMOVE_USELESS_CODE
     // Set inter_intra_distortion_based_reference_pruning
     context_ptr->inter_intra_distortion_based_reference_pruning = 0;
     set_inter_intra_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_intra_distortion_based_reference_pruning);
-
+#endif
+#if !REMOVE_USELESS_CODE
     context_ptr->block_based_depth_reduction_level = 0;
     set_block_based_depth_reduction_controls(context_ptr, context_ptr->block_based_depth_reduction_level);
-
+#endif
     context_ptr->md_nsq_mv_search_level = 0;
     md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
-
+#if !UPGRADE_SUBPEL
     context_ptr->md_subpel_search_level = 0;
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
+#endif
 
     // Set max_ref_count @ MD
-    context_ptr->md_max_ref_count = override_feature_level(context_ptr->mrp_level, 4, 4, 1);
+    context_ptr->md_max_ref_count = 4;
 
     // Set md_skip_mvp_generation (and use (0,0) as MVP instead)
     context_ptr->md_skip_mvp_generation = EB_FALSE;
@@ -2029,7 +1956,6 @@ EbErrorType first_pass_signal_derivation_me_kernel(
     MotionEstimationContext_t   *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
-    context_ptr->me_context_ptr->mrp_level = pcs_ptr->mrp_level;
     // Set ME/HME search regions
 
     if (scs_ptr->static_config.use_default_me_hme)

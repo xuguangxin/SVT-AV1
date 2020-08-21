@@ -587,7 +587,13 @@ void *set_me_hme_params_oq(MeContext *me_context_ptr, PictureParentControlSet *p
         me_context_ptr->hme_level0_max_total_search_area_height =
         me_context_ptr->hme_level0_total_search_area_width * 3;
 #endif
-
+#if FASTER_FIRST_PASS
+    if (!pcs_ptr->sc_content_detected)
+        if (scs_ptr->use_output_stat_file) {
+            me_context_ptr->hme_level0_total_search_area_width = me_context_ptr->hme_level0_total_search_area_height  = me_context_ptr->hme_level0_total_search_area_width/2;
+            me_context_ptr->hme_level0_max_total_search_area_width = me_context_ptr->hme_level0_max_total_search_area_height =   me_context_ptr->hme_level0_max_total_search_area_width/2;
+        }
+#endif
     me_context_ptr->hme_level0_max_search_area_in_width_array[0] =
         me_context_ptr->hme_level0_max_search_area_in_width_array[1] =
         me_context_ptr->hme_level0_max_total_search_area_width / me_context_ptr->number_hme_search_region_in_width;
@@ -611,7 +617,20 @@ void *set_me_hme_params_oq(MeContext *me_context_ptr, PictureParentControlSet *p
         me_context_ptr->hme_level2_search_area_in_width_array[1] =
         me_context_ptr->hme_level2_search_area_in_height_array[0] =
         me_context_ptr->hme_level2_search_area_in_height_array[1] = 16;
+#if FASTER_FIRST_PASS
+    if (!pcs_ptr->sc_content_detected)
+        if (scs_ptr->use_output_stat_file) {
+            me_context_ptr->hme_level1_search_area_in_width_array[0] =
+                me_context_ptr->hme_level1_search_area_in_width_array[1] =
+                me_context_ptr->hme_level1_search_area_in_height_array[0] =
+                me_context_ptr->hme_level1_search_area_in_height_array[1] = 16/2;
 
+            me_context_ptr->hme_level2_search_area_in_width_array[0] =
+                me_context_ptr->hme_level2_search_area_in_width_array[1] =
+                me_context_ptr->hme_level2_search_area_in_height_array[0] =
+                me_context_ptr->hme_level2_search_area_in_height_array[1] = 16/2;
+        }
+#endif
 #if ADD_HME_DECIMATION_SIGNAL
 #if MAR30_ADOPTIONS
 #if !UNIFY_SC_NSC

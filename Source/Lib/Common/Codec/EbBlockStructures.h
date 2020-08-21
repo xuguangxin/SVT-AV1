@@ -47,7 +47,7 @@ typedef struct fullpel_mv {
   int16_t row;
   int16_t col;
 } FULLPEL_MV;
-#if 0  //FIRST_PASS_SETUP
+#if FIRST_PASS_SETUP
 static const MV kZeroMv = { 0, 0 };
 static const FULLPEL_MV kZeroFullMv = { 0, 0 };
 static INLINE int is_zero_mv(const MV *mv) {

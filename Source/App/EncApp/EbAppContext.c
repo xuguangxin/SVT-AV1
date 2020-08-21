@@ -89,7 +89,7 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
     callback_data->eb_enc_parameters.intra_period_length    = config->intra_period;
     callback_data->eb_enc_parameters.intra_refresh_type     = config->intra_refresh_type;
     callback_data->eb_enc_parameters.enc_mode               = (EbBool)config->enc_mode;
-#if !TWOPASS_RC
+#if 0//!TWOPASS_RC
     callback_data->eb_enc_parameters.snd_pass_enc_mode      = (EbBool)config->snd_pass_enc_mode;
 #endif
     callback_data->eb_enc_parameters.frame_rate             = config->frame_rate;

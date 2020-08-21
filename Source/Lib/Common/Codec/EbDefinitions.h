@@ -1000,6 +1000,12 @@ static INLINE int64_t clamp64(int64_t value, int64_t low, int64_t high) {
     return value < low ? low : (value > high ? high : value);
 }
 
+#if TWOPASS_RC
+// from aom aom_dsp_common.h
+static INLINE double fclamp(double value, double low, double high) {
+  return value < low ? low : (value > high ? high : value);
+}
+#endif
 static INLINE uint8_t clip_pixel(int32_t val) {
     return (uint8_t)((val > 255) ? 255 : (val < 0) ? 0 : val);
 }
@@ -2390,6 +2396,9 @@ static const EbWarpedMotionParams default_warp_params = {
 
 #define MAX_NUM_TOKENS          200
 
+#if TWOPASS_RC
+#define    Log2f                              Log2f_ASM
+#endif
 #if NEW_RESOLUTION_RANGES
 #define INPUT_SIZE_240p_TH                  0x28500      // 0.165 Million
 #define INPUT_SIZE_360p_TH                  0x4CE00      // 0.315 Million

@@ -4830,7 +4830,7 @@ int av1_frame_type_qdelta_org(RATE_CONTROL *rc, GF_GROUP *gf_group, unsigned cha
     rate_factor -= (gf_group->layer_depth[gf_group_index] - 2) * 0.1;
     rate_factor = AOMMAX(rate_factor, 1.0);
   }
-  return av1_compute_qdelta_by_rate(rc, frame_type, q, rate_factor, bit_depth);
+  return svt_av1_compute_qdelta_by_rate(rc, frame_type, q, rate_factor, bit_depth);
 }
 
 static void adjust_active_best_and_worst_quality_org(PictureControlSet *pcs_ptr, RATE_CONTROL *rc,
@@ -6259,7 +6259,7 @@ static int get_bits_per_mb(PictureControlSet *pcs_ptr, int use_cyclic_refresh,
   SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
   return use_cyclic_refresh
              ? 0/*av1_cyclic_refresh_rc_bits_per_mb(cpi, q, correction_factor)*/
-             : av1_rc_bits_per_mb(pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type, q,
+             : svt_av1_rc_bits_per_mb(pcs_ptr->parent_pcs_ptr->frm_hdr.frame_type, q,
                                   correction_factor, scs_ptr->static_config.encoder_bit_depth);
 }
 
@@ -6461,7 +6461,7 @@ int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs,
                            double correction_factor,
                            AomBitDepth bit_depth) {
   const int bpm =
-      (int)(av1_rc_bits_per_mb(frame_type, q, correction_factor, bit_depth));
+      (int)(svt_av1_rc_bits_per_mb(frame_type, q, correction_factor, bit_depth));
   return AOMMAX(FRAME_OVERHEAD_BITS,
                 (int)((uint64_t)bpm * mbs) >> BPER_MB_NORMBITS);
 }

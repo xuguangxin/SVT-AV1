@@ -150,7 +150,9 @@ extern const CodedBlockStats* get_coded_blk_stats(const uint32_t cu_idx);
 
 #define TU_ORIGIN_ADJUST(cu_origin, cu_size, offset) ((((cu_size) * (offset)) >> 2) + (cu_origin))
 #define TU_SIZE_ADJUST(cu_size, tuDepth) ((cu_size) >> (tuDepth))
-
+#if TWOPASS_RC
+extern uint32_t Log2f(uint32_t x);
+#endif
 extern uint64_t log2f_64(uint64_t x);
 
 /****************************
@@ -216,8 +218,11 @@ extern uint64_t log2f_64(uint64_t x);
     (x) |= ((x) >> 16);             \
     (x) += 1;                       \
     MULTI_LINE_MACRO_END
-
-
+#if TWOPASS_RC
+// Calculates the Log2 floor of the integer 'x'
+//   Intended to only be used for macro definitions
+#define LOG2F Log2f_ASM
+#endif
 #define LOG2F_8(x)               \
     (((x) < 0x0002u)             \
          ? 0u                    \
