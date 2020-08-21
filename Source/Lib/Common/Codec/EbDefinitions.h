@@ -524,6 +524,22 @@ extern "C" {
 #define JULY31_PRESETS_ADOPTIONS        1
 #define SHIFT_PRESETS                   1 // M5->M4, M6->M5, M8->M6
 #define AUG5_ADOPTS                     1 // Adoptions for MR and M2
+
+
+
+#define TWOPASS_RC           1 // Refine 2pass RC VBR from libaom
+#if TWOPASS_RC
+#define FORCE_DECODE_ORDER   1
+#define FIRST_PASS_SETUP     1
+#define FASTER_FIRST_PASS    1
+
+
+
+
+
+#endif
+
+
 #endif
 
 ///////// END MASTER_SYNCH

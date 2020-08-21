@@ -14001,6 +14001,11 @@ void md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionContext *context_pt
 #endif
 }
 
+#if FIRST_PASS_SETUP
+ void first_pass_md_encode_block(PictureControlSet *pcs_ptr,
+    ModeDecisionContext *context_ptr, EbPictureBufferDesc *input_picture_ptr,
+    ModeDecisionCandidateBuffer *bestcandidate_buffers[5]);
+#endif
 /*
  * Determine if the evaluation of nsq blocks (HA, HB, VA, VB, H4, V4) can be skipped
  * based on the relative cost of the SQ, H, and V blocks.  The scaling factor sq_weight
@@ -15309,6 +15314,14 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
                     if (!pcs_ptr->parent_pcs_ptr->sb_geom[sb_addr].block_is_allowed[context_ptr->blk_geom->sqi_mds])
                         context_ptr->prune_ref_frame_for_rec_partitions = 0;
                 }
+#if FIRST_PASS_SETUP
+                if (scs_ptr->use_output_stat_file)
+                    first_pass_md_encode_block(pcs_ptr,
+                        context_ptr,
+                        input_picture_ptr,
+                        bestcandidate_buffers);
+                else
+#endif
                 md_encode_block(pcs_ptr, context_ptr, input_picture_ptr, bestcandidate_buffers);
 #if SWITCH_MODE_BASED_ON_SQ_COEFF
             } else if (sq_weight_based_nsq_skip || skip_next_depth || zero_sq_coeff_skip_action) {

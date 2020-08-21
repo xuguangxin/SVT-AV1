@@ -119,6 +119,9 @@ static EbErrorType encode(int32_t argc, char *argv[], EncodePass pass) {
             configs[inst_cnt]->pass = 1;
         else if (pass == ENCODE_LAST_PASS)
             configs[inst_cnt]->pass = 2;
+#if TWOPASS_RC
+        eb_2pass_config_update(configs[inst_cnt]);
+#endif
         return_errors[inst_cnt] = EB_ErrorNone;
     }
 

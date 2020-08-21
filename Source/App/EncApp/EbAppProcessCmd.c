@@ -1104,6 +1104,9 @@ AppExitConditionType process_output_stream_buffer(EbConfig *config, EbAppContext
     uint64_t finish_s_time = 0;
     uint64_t finish_u_time = 0;
     uint8_t  is_alt_ref    = 1;
+#if 0 //TWOPASS_RC
+    *frame_count = config->performance_context.frame_count;
+#endif
     while (is_alt_ref) {
         is_alt_ref = 0;
         // non-blocking call until all input frames are sent
