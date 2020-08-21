@@ -1,7 +1,13 @@
 /*
  * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file AVCStyleMcpTest.cc
@@ -41,9 +47,14 @@
 #include "EbAvcStyleMcp_SSSE3.h"
 #include "EbAvcStyleMcp_SSE2.h"
 #include "EbDefinitions.h"
-#include "EbIntraPrediction.h"
+#include "EbEncIntraPrediction.h"
 #include "random.h"
 #include "util.h"
+#include "EbUtility.h"
+#include "common_dsp_rtcd.h"
+#if !REMOVE_UNUSED_CODE
+void *eb_aom_memalign(size_t align, size_t size);
+void  eb_aom_free(void *memblk);
 
 using svt_av1_test_tool::SVTRandom;  // to generate the random
 
@@ -86,19 +97,15 @@ SearchArea TEST_AREAS[] = {SearchArea(64, 64),
 
 PUSize TEST_PU_HELPER[] = {PUSize(64, 64)};
 
-typedef void (*MCP_REF_FUNC)(EbByte refPic, uint32_t srcStride, EbByte dst,
+typedef void (*MCP_FUNC)(EbByte refPic, uint32_t srcStride, EbByte dst,
                              uint32_t dstStride, uint32_t puWidth,
                              uint32_t puHeight, EbByte tempBuf,
                              uint32_t fracPos);
-typedef void (*MCP_TEST_FUNC)(EbByte ref_pic, uint32_t src_stride, EbByte dst,
-                              uint32_t dst_stride, uint32_t pu_width,
-                              uint32_t pu_height, EbByte temp_buf, EbBool skip,
-                              uint32_t frac_pos);
 
 typedef struct {
     const char *name;
-    MCP_REF_FUNC ref_func;
-    MCP_TEST_FUNC test_func;
+    MCP_FUNC ref_func;
+    MCP_FUNC test_func;
 } AVCStyleMcpFuncPair;
 static const AVCStyleMcpFuncPair AVC_style_c_sse3_func_pairs[] = {
     {"posA", avc_style_copy_c, avc_style_copy_sse2},
@@ -241,7 +248,6 @@ class AVCStyleMcpTestBase : public ::testing::Test {
                                                      block_width_,
                                                      block_height_,
                                                      tmp_buf_,
-                                                     EB_FALSE,
                                                      2);
 
             int fail_pixel_Count = 0;
@@ -275,7 +281,6 @@ class AVCStyleMcpTestBase : public ::testing::Test {
                                                 block_width_,
                                                 block_height_,
                                                 tmp_buf_,
-                                                EB_FALSE,
                                                 2,
                                                 i);
 
@@ -287,7 +292,6 @@ class AVCStyleMcpTestBase : public ::testing::Test {
                                                 block_width_,
                                                 block_height_,
                                                 tmp_buf_,
-                                                EB_FALSE,
                                                 2,
                                                 i);
 
@@ -425,3 +429,4 @@ INSTANTIATE_TEST_CASE_P(AVCMCPSearchRegionHelper,
                                            ::testing::ValuesIn(TEST_PATTERNS)));
 
 }  // namespace
+#endif

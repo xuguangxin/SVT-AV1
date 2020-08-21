@@ -1,6 +1,12 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 #ifndef EbInitialRateControlResults_h
@@ -14,8 +20,8 @@
  * Process Results
  **************************************/
 typedef struct InitialRateControlResults {
-    EbDctor                      dctor;
-    EbObjectWrapper   *picture_control_set_wrapper_ptr;
+    EbDctor          dctor;
+    EbObjectWrapper *pcs_wrapper_ptr;
 } InitialRateControlResults;
 
 typedef struct InitialRateControlResultInitData {
@@ -25,8 +31,7 @@ typedef struct InitialRateControlResultInitData {
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType initial_rate_control_results_creator(
-    EbPtr *object_dbl_ptr,
-    EbPtr object_init_data_ptr);
+extern EbErrorType initial_rate_control_results_creator(EbPtr *object_dbl_ptr,
+                                                        EbPtr  object_init_data_ptr);
 
 #endif //EbInitialRateControlResults_h

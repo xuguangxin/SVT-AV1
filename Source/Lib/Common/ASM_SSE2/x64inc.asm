@@ -1,7 +1,49 @@
 ;
 ; Copyright(c) 2019 Intel Corporation
-; SPDX - License - Identifier: BSD - 2 - Clause - Patent
 ;
+; This source code is subject to the terms of the BSD 2 Clause License and
+; the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+; was not distributed with this source code in the LICENSE file, you can
+; obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+; Media Patent License 1.0 was not distributed with this source code in the
+; PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+;
+
+%undef WIN64
+%undef UNIX64
+%ifidn __OUTPUT_FORMAT__,win32
+    %define WIN64  1
+%elifidn __OUTPUT_FORMAT__,win64
+    %define WIN64  1
+%elifidn __OUTPUT_FORMAT__,x64
+    %define WIN64  1
+%else
+    %define UNIX64 1
+%endif
+
+%undef FORMAT_ELF
+%ifidn __OUTPUT_FORMAT__,elf
+    %define FORMAT_ELF 1
+%elifidn __OUTPUT_FORMAT__,elf32
+    %define FORMAT_ELF 1
+%elifidn __OUTPUT_FORMAT__,elf64
+    %define FORMAT_ELF 1
+%endif
+
+%undef FORMAT_MACHO
+%ifidn __OUTPUT_FORMAT__,macho32
+     %define FORMAT_MACHO 1
+%elifidn __OUTPUT_FORMAT__,macho64
+     %define FORMAT_MACHO 1
+%endif
+
+%ifdef FORMAT_ELF
+    %undef PREFIX
+%elif WIN64
+    %undef PREFIX
+%else
+    %define PREFIX
+%endif
 
 %ifdef PREFIX
     %define mangle(x) _ %+ x

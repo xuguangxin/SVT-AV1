@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file InvTxfm1dTest.cc
@@ -37,7 +43,6 @@
 #include "TxfmCommon.h"
 
 using svt_av1_test_tool::SVTRandom;
-using svt_av1_test_tool::round_shift;
 namespace {
 
 using InvTxfm1dParam = std::tuple<TxfmType, int>;
@@ -109,7 +114,7 @@ class AV1InvTxfm1dTest : public ::testing::TestWithParam<InvTxfm1dParam> {
             for (int ni = 0; ni < txfm_size_; ++ni) {
                 EXPECT_LE(
                     abs(input_[ni] -
-                        round_shift(inv_output_[ni], get_msb(txfm_size_) - 1)),
+                    svt_av1_test_tool::round_shift(inv_output_[ni], get_msb(txfm_size_) - 1)),
                     max_error_)
                     << "inv txfm type " << txfm_type_ << " size " << txfm_size_
                     << " loop: " << ti;

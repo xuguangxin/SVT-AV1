@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file compute_mean_test.cc
@@ -22,7 +28,7 @@
 #include "gtest/gtest.h"
 #include "EbComputeMean.h"
 #include "random.h"
-
+#include "aom_dsp_rtcd.h"
 /**
  * @brief Unit test for compute mean function:
  * - compute_mean8x8_sse2_intrin
@@ -74,7 +80,7 @@ static const uint8_t* prepare_data_8x8(uint8_t* data, SVTRandom* rnd) {
     }
     return data;
 }
-
+#if !REMOVE_ME_SUBPEL_CODE
 TEST(ComputeMeanTest, run_compute_mean_test) {
     SVTRandom rnd[2] = {
         SVTRandom(8, false),  /**< random generator of normal test vector */
@@ -106,7 +112,7 @@ TEST(ComputeMeanTest, run_compute_mean_test) {
         }
     }
 }
-
+#endif
 TEST(ComputeMeanTest, run_compute_mean_squared_values_test) {
     SVTRandom rnd[2] = {
         SVTRandom(8, false),  /**< random generator of normal test vector */
@@ -150,7 +156,7 @@ TEST(ComputeMeanTest, run_compute_sub_mean_test) {
             // compute mean
             uint64_t output_sse2_tst =
                 compute_sub_mean8x8_sse2_intrin(input_data, 8);
-            uint64_t output_c_ref = compute_sub_mean_c(input_data, 8, 8, 8);
+            uint64_t output_c_ref = compute_sub_mean_8x8_c(input_data, 8);
 
             // compare results
             ASSERT_EQ(output_sse2_tst, output_c_ref)

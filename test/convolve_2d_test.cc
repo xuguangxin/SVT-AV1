@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file Convolve2dTest.cc
@@ -422,6 +428,8 @@ class AV1Convolve2DTest : public ::testing::TestWithParam<Convolve2DParam> {
         // fill the input data with random
         prepare_data(input_w, input_h);
 
+        setup_common_rtcd_internal(get_cpu_flags_to_use());
+
         // loop the filter type and subpixel position
         const int output_w = block_size_wide[block_idx];
         const int output_h = block_size_high[block_idx];
@@ -701,7 +709,7 @@ class AV1LbdConvolve2DTest
 
         const uint64_t num_loop = 10000000000 / (output_w * output_h);
 
-        EbStartTime(&start_time_seconds, &start_time_useconds);
+        eb_start_time(&start_time_seconds, &start_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++) {
             func_ref_(input + offset_r * src_stride + offset_c,
@@ -717,7 +725,7 @@ class AV1LbdConvolve2DTest
                       conv_params_ref);
         }
 
-        EbStartTime(&middle_time_seconds, &middle_time_useconds);
+        eb_start_time(&middle_time_seconds, &middle_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++) {
             func_tst_(input + offset_r * src_stride + offset_c,
@@ -733,13 +741,13 @@ class AV1LbdConvolve2DTest
                       conv_params_tst);
         }
 
-        EbStartTime(&finish_time_seconds, &finish_time_useconds);
-        EbComputeOverallElapsedTimeMs(start_time_seconds,
+        eb_start_time(&finish_time_seconds, &finish_time_useconds);
+        eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                       start_time_useconds,
                                       middle_time_seconds,
                                       middle_time_useconds,
                                       &time_c);
-        EbComputeOverallElapsedTimeMs(middle_time_seconds,
+        eb_compute_overall_elapsed_time_ms(middle_time_seconds,
                                       middle_time_useconds,
                                       finish_time_seconds,
                                       finish_time_useconds,
@@ -908,7 +916,7 @@ class AV1HbdConvolve2DTest
 
         const uint64_t num_loop = 10000000 / (output_w * output_h);
 
-        EbStartTime(&start_time_seconds, &start_time_useconds);
+        eb_start_time(&start_time_seconds, &start_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++) {
             func_ref_(input + offset_r * src_stride + offset_c,
@@ -925,7 +933,7 @@ class AV1HbdConvolve2DTest
                       bd);
         }
 
-        EbStartTime(&middle_time_seconds, &middle_time_useconds);
+        eb_start_time(&middle_time_seconds, &middle_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++) {
             func_tst_(input + offset_r * src_stride + offset_c,
@@ -942,13 +950,13 @@ class AV1HbdConvolve2DTest
                       bd);
         }
 
-        EbStartTime(&finish_time_seconds, &finish_time_useconds);
-        EbComputeOverallElapsedTimeMs(start_time_seconds,
+        eb_start_time(&finish_time_seconds, &finish_time_useconds);
+        eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                       start_time_useconds,
                                       middle_time_seconds,
                                       middle_time_useconds,
                                       &time_c);
-        EbComputeOverallElapsedTimeMs(middle_time_seconds,
+        eb_compute_overall_elapsed_time_ms(middle_time_seconds,
                                       middle_time_useconds,
                                       finish_time_seconds,
                                       finish_time_useconds,

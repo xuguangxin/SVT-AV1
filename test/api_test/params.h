@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file params.h
@@ -93,10 +99,10 @@ static const vector<int32_t> valid_intra_period_length = {
     55,  // 60 fps
     -1,  // no intra update
     -2,  // auto
+    0,   // all I frame
 };
 static const vector<int32_t> invalid_intra_period_length = {
     -3,   // < -2
-    0,    // 0 fps or all I frame ?
     256,  // > 255
 };
 
@@ -123,7 +129,7 @@ static const vector<uint32_t> invalid_intra_refresh_type = {
  *
  * Default is 3. */
 static const vector<uint32_t> default_hierarchical_levels = {
-    3,
+    4,
 };
 static const vector<uint32_t> valid_hierarchical_levels = {3, 4};
 static const vector<uint32_t> invalid_hierarchical_levels = {
@@ -131,14 +137,14 @@ static const vector<uint32_t> invalid_hierarchical_levels = {
 };
 
 /* Prediction structure used to construct GOP. There are two main structures
- * supported, which are: Low Delay (P or B) and Random Access.
+ * supported, which are: Low Delay (P or b) and Random Access.
  *
  * In Low Delay structure, pictures within a mini GOP refer to the previously
  * encoded pictures in display order. In other words, pictures with display
  * order N can only be referenced by pictures with display order greater than
  * N, and it can only refer pictures with picture order lower than N. The Low
  * Delay structure can be flat structured (e.g. IPPPPPPP...) or hierarchically
- * structured. B/b pictures can be used instead of P/p pictures. However, the
+ * structured. b/b pictures can be used instead of P/p pictures. However, the
  * reference picture list 0 and the reference picture list 1 will contain the
  * same reference picture.
  *
@@ -148,7 +154,7 @@ static const vector<uint32_t> invalid_hierarchical_levels = {
  * #define EB_PRED_RANDOM_ACCESS   2
  * #define EB_PRED_TOTAL_COUNT     3
 
- * In Random Access structure, the B/b pictures can refer to reference pictures
+ * In Random Access structure, the b/b pictures can refer to reference pictures
  * from both directions (past and future).
  *
  * Default is 2. */
@@ -158,24 +164,9 @@ static const vector<uint8_t> default_pred_structure = {
 static const vector<uint8_t> valid_pred_structure = {
     EB_PRED_LOW_DELAY_P, EB_PRED_LOW_DELAY_B, EB_PRED_RANDOM_ACCESS};
 static const vector<uint8_t> invalid_pred_structure = {
-    EB_PRED_TOTAL_COUNT, EB_PRED_TOTAL_COUNT + 1, EB_PRED_INVALID};
+    /* _pred_structure override in code
+    EB_PRED_TOTAL_COUNT, EB_PRED_TOTAL_COUNT + 1, EB_PRED_INVALID*/};
 
-/* Decides whether to use B picture or P picture in the base layer.
- *
- * 0 = B Picture.
- * 1 = P Picture.
- *
- * Default is 0. */
-static const vector<uint32_t> default_base_layer_switch_mode = {
-    0,
-};
-static const vector<uint32_t> valid_base_layer_switch_mode = {
-    0,  // B Picture.
-    1,  // P Picture
-};
-static const vector<uint32_t> invalid_base_layer_switch_mode = {
-    2,  // > 1
-};
 
 // Input Info
 /* The width of input source in units of picture luma pixels.
@@ -212,7 +203,7 @@ static const vector<uint32_t> invalid_source_height = {
  *
  * Default is 25. */
 static const vector<uint32_t> default_frame_rate = {
-    25 << 16,
+    30 << 16,
 };
 static const vector<uint32_t> valid_frame_rate = {
     1,
@@ -231,7 +222,7 @@ static const vector<uint32_t> valid_frame_rate = {
     240 << 16,
 };
 static const vector<uint32_t> invalid_frame_rate = {
-    0, 61, 241 << 16, 0xFFFFFFFF  // ...
+    0, 241 << 16, 0xFFFFFFFF  // ...
 };
 
 // TODO: follwoing two parameters should be a combination test
@@ -316,7 +307,7 @@ static const vector<uint32_t> default_compressed_ten_bit_format = {
 };
 static const vector<uint32_t> valid_compressed_ten_bit_format = {
     0,
-    1,
+    //1, Not supported in this version
 };
 static const vector<uint32_t> invalid_compressed_ten_bit_format = {
     2, 10,  // ...
@@ -354,9 +345,11 @@ static const vector<uint32_t> valid_sb_sz = {
     MAX_SB_SIZE,
 };
 static const vector<uint32_t> invalid_sb_sz = {
+    /* sb_sz override in code
     0,
     (MAX_SB_SIZE + 1),
     (MAX_SB_SIZE << 1),
+    */
 };
 
 /* Super block size
@@ -370,9 +363,11 @@ static const vector<uint32_t> valid_super_block_size = {
     MAX_SB_SIZE,
 };
 static const vector<uint32_t> invalid_super_block_size = {
+    /* super_block_size override in code
     0,
     (MAX_SB_SIZE + 1),
     (MAX_SB_SIZE << 1),
+    */
 };
 
 /* The maximum partitioning depth with 0 being the superblock depth
@@ -386,10 +381,12 @@ static const vector<uint32_t> valid_partition_depth = {
     1,
     2,
     3,
-    EB_MAX_LCU_DEPTH,
+    EB_MAX_SB_DEPTH,
 };
 static const vector<uint32_t> invalid_partition_depth = {
-    (EB_MAX_LCU_DEPTH + 1),
+    /* partition_depth override in code
+    (EB_MAX_SB_DEPTH + 1),
+    */
 };
 
 // Quantization
@@ -497,7 +494,7 @@ static const vector<uint32_t> invalid_film_grain_denoise_strength = {
  *
  * Default is 0. */
 static const vector<EbBool> default_enable_warped_motion = {
-    EB_FALSE,
+    EB_TRUE,
 };
 static const vector<EbBool> valid_enable_warped_motion = {
     EB_FALSE,
@@ -551,9 +548,9 @@ static const vector<EbBool> invalid_enable_hme_flag = {
 
 /* Flag to enable the use of non-swaure partitions
  *
- * Default is 1. */
+ * Default is 0. */
 static const vector<EbBool> default_ext_block_flag = {
-    EB_TRUE,
+    EB_FALSE,
 };
 static const vector<EbBool> valid_ext_block_flag = {
     EB_FALSE,
@@ -565,9 +562,9 @@ static const vector<EbBool> invalid_ext_block_flag = {
 
 /* Flag to enable the use of recon pictures for motion estimation
  *
- * Default is 1. */
+ * Default is 0. */
 static const vector<EbBool> default_in_loop_me_flag = {
-    EB_TRUE,
+    EB_FALSE,
 };
 static const vector<EbBool> valid_in_loop_me_flag = {
     EB_FALSE,
@@ -616,9 +613,9 @@ static const vector<uint32_t> invalid_search_area_height = {
  * 6:Fastest NIC=4/2/1 + No K means for non base + step for non base for
  * most dominant
  * Default is -1. */
-static const vector<int32_t> default_enable_palette = {-1};
-static const vector<int32_t> valid_enable_palette = {-1, 0, 1, 2, 3, 4, 5, 6};
-static const vector<int32_t> invalid_enable_palette = {-2, 7};
+static const vector<int32_t> default_palette_level = { -1 };
+static const vector<int32_t> valid_palette_level = { -1, 0, 1, 2, 3, 4, 5, 6 };
+static const vector<int32_t> invalid_palette_level = { -2, 7 };
 
 /* Enable the use of Constrained Intra, which yields sending two picture
  * parameter sets in the elementary streams .
@@ -643,14 +640,14 @@ static const vector<EbBool> invalid_constrained_intra = {
  *
  * Default is 0. */
 static const vector<uint32_t> default_rate_control_mode = {0};
-static const vector<uint32_t> valid_rate_control_mode = {0, 1, 2, 3};
-static const vector<uint32_t> invalid_rate_control_mode = {4};
+static const vector<uint32_t> valid_rate_control_mode = {0, 1, 2};
+static const vector<uint32_t> invalid_rate_control_mode = {3, 4};
 
 /* Flag to enable the scene change detection algorithm.
  *
- * Default is 1. */
+ * Default is 0. */
 static const vector<uint32_t> default_scene_change_detection = {
-    1,
+    0,
 };
 static const vector<uint32_t> valid_scene_change_detection = {
     0,
@@ -680,7 +677,10 @@ static const vector<uint32_t> valid_look_ahead_distance = {
     MAX_LAD,
 };
 static const vector<uint32_t> invalid_look_ahead_distance = {
-    MAX_LAD + 1, ((uint32_t)~0 - 1)};
+    /* look_ahead_distance override in code
+    MAX_LAD + 1, ((uint32_t)~0 - 1)
+    */
+    };
 
 /* Target bitrate in bits/second, only apllicable when rate control mode is
  * set to 1.
@@ -736,13 +736,13 @@ static const vector<uint32_t> invalid_max_qp_allowed = {
  * There is a value check for min_qp_allowed in EbEncHandle.c :
  * else if (config->min_qp_allowed >= MAX_QP_VALUE) {
  *     SVT_LOG("Error instance %u: MinQpAllowed must be [0 - %d]\n",
- *         channelNumber + 1, MAX_QP_VALUE-1); return_error =
+ *         channel_number + 1, MAX_QP_VALUE-1); return_error =
  *         EB_ErrorBadParameter;
  * }
- * The maximum valid value should be MAX_QP_VALUE - 1.
+ * The maximum valid value should be MAX_QP_VALUE - 10.
  */
 static const vector<uint32_t> default_min_qp_allowed = {
-    MIN_QP_VALUE,
+    10,
 };
 static const vector<uint32_t> valid_min_qp_allowed = {
     MIN_QP_VALUE,
@@ -775,14 +775,14 @@ static const vector<uint32_t> invalid_high_dynamic_range_input = {
     2,
 };
 
-/* Defined set of coding tools to create bitstream.
+/* Defined set of coding tools to create Bitstream.
  *
  * 1 = Main, allows bit depth of 8.
  * 2 = Main 10, allows bit depth of 8 to 10.
  *
- * Default is 2. */
+ * Default is 0. */
 static const vector<uint32_t> default_profile = {
-    PROFILE_2,
+    PROFILE_0,
 };
 static const vector<uint32_t> valid_profile = {
     PROFILE_0,
@@ -793,7 +793,7 @@ static const vector<uint32_t> invalid_profile = {
     MAX_PROFILES,
 };
 
-/* Constraints for bitstream in terms of max bitrate and max buffer size.
+/* Constraints for Bitstream in terms of max bitrate and max buffer size.
  *
  * 0 = Main, for most applications.
  * 1 = High, for demanding applications.
@@ -807,10 +807,12 @@ static const vector<uint32_t> valid_tier = {
     1,
 };
 static const vector<uint32_t> invalid_tier = {
+    /* tier override in code
     2,
+    */
 };
 
-/* Constraints for bitstream in terms of max bitrate and max buffer size.
+/* Constraints for Bitstream in terms of max bitrate and max buffer size.
  *
  * 0 = auto determination.
  *
@@ -829,15 +831,29 @@ static const vector<uint32_t> invalid_level = {
  * 1 = up to AVX512, auto-select highest assembly instruction set supported.
  *
  * Default is 1. */
-static const vector<uint32_t> default_asm_type = {
-    1,
+static const vector<CPU_FLAGS> default_use_cpu_flags = {
+    CPU_FLAGS_ALL,
 };
-static const vector<uint32_t> valid_asm_type = {
-    0,
-    1,
+static const vector<CPU_FLAGS> valid_use_cpu_flags = {
+    CPU_FLAGS_MMX,
+    CPU_FLAGS_SSE,
+    CPU_FLAGS_SSE2,
+    CPU_FLAGS_SSE3,
+    CPU_FLAGS_SSSE3,
+    CPU_FLAGS_SSE4_1,
+    CPU_FLAGS_SSE4_2,
+    CPU_FLAGS_AVX,
+    CPU_FLAGS_AVX2,
+    CPU_FLAGS_AVX512F,
+    CPU_FLAGS_AVX512CD,
+    CPU_FLAGS_AVX512DQ,
+    CPU_FLAGS_AVX512ER,
+    CPU_FLAGS_AVX512PF,
+    CPU_FLAGS_AVX512BW,
+    CPU_FLAGS_AVX512VL,
 };
-static const vector<uint32_t> invalid_asm_type = {
-    2,
+static const vector<CPU_FLAGS> invalid_use_cpu_flags = {
+    CPU_FLAGS_INVALID
 };
 
 // Application Specific parameters
@@ -871,7 +887,9 @@ static const vector<uint32_t> valid_active_channel_count = {
     0xFFFFFFFF,
 };
 static const vector<uint32_t> invalid_active_channel_count = {
+    /* active_channel_count override in code
     0,
+    */
 };
 
 /* Flag to enable the Speed Control functionality to achieve the real-time
@@ -895,7 +913,7 @@ static const vector<uint32_t> invalid_speed_control_flag = {
  *
  * Default is 60. */
 static const vector<int32_t> default_injector_frame_rate = {
-    60,
+    60<<16,
 };
 static const vector<int32_t> valid_injector_frame_rate = {
     24,
@@ -914,7 +932,9 @@ static const vector<int32_t> valid_injector_frame_rate = {
     240 << 16,  // ...
 };
 static const vector<int32_t> invalid_injector_frame_rate = {
+    /* injector_frame_rate override in code
     0, 1, 2, 10, 15, 29, 241,  // ...
+    */
 };
 
 // Threads management
@@ -1023,21 +1043,35 @@ static const vector<uint32_t> invalid_screen_content_mode = {3};
 
 /* Variables to control the use of ALT-REF (temporally filtered frames)
  */
-static const vector<EbBool> default_enable_altrefs = {EB_TRUE};
-static const vector<EbBool> valid_enable_altrefs = {EB_FALSE, EB_TRUE};
-static const vector<EbBool> invalid_enable_altrefs = {/*none*/};
+static const vector<int8_t> default_tf_level = { DEFAULT };
+static const vector<int8_t> valid_tf_level = { DEFAULT, 0, 1, 2, 3 };
+static const vector<int8_t> invalid_tf_level = { -2, 4 };
 
 static const vector<uint8_t> default_altref_strength = {5};
 static const vector<uint8_t> valid_altref_strength = {0, 1, 2, 3, 4, 5, 6};
 static const vector<uint8_t> invalid_altref_strength = {7};
 
 static const vector<uint8_t> default_altref_nframes = {7};
-static const vector<uint8_t> valid_altref_nframes = {0, 1, 2, 3, 4, 5, 6, 7};
-static const vector<uint8_t> invalid_altref_nframes = {8};
+static const vector<uint8_t> valid_altref_nframes = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+static const vector<uint8_t> invalid_altref_nframes = {11};
 
 static const vector<EbBool> default_enable_overlays = {EB_FALSE};
 static const vector<EbBool> valid_enable_overlays = {EB_FALSE, EB_TRUE};
 static const vector<EbBool> invalid_enable_overlays = {/*none*/};
+
+/* Variables to control the super-resolution tool
+ */
+static const vector<EbBool> default_superres_mode = {0};
+static const vector<EbBool> valid_superres_mode = {0, 1, 2};
+static const vector<EbBool> invalid_superres_mode = {3};
+
+static const vector<uint8_t> default_superres_denom = {8};
+static const vector<uint8_t> valid_superres_denom = {8, 9, 10, 11, 12, 13, 14, 15, 16};
+static const vector<uint8_t> invalid_superres_denom = {7};
+
+static const vector<uint8_t> default_superres_kf_denom = {8};
+static const vector<uint8_t> valid_superres_kf_denom = {8, 9, 10, 11, 12, 13, 14, 15, 16};
+static const vector<uint8_t> invalid_superres_kf_denom = {7};
 
 }  // namespace svt_av1_test_params
 

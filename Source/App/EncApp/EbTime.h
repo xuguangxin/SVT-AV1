@@ -1,6 +1,12 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 #ifndef EbTime_h
@@ -14,11 +20,12 @@ extern "C" {
 
 #define NANOSECS_PER_SEC ((uint32_t)(1000000000L))
 
-void StartTime(uint64_t *Startseconds, uint64_t *Startuseconds);
-void FinishTime(uint64_t *Finishseconds, uint64_t *Finishuseconds);
-void ComputeOverallElapsedTime(uint64_t Startseconds, uint64_t Startuseconds, uint64_t Finishseconds, uint64_t Finishuseconds, double *duration);
-void ComputeOverallElapsedTimeMs(uint64_t Startseconds, uint64_t Startuseconds, uint64_t Finishseconds, uint64_t Finishuseconds, double *duration);
-void Injector(uint64_t processedFrameCount, uint32_t injector_frame_rate);
+void start_time(uint64_t *start_seconds, uint64_t *start_u_seconds);
+void finish_time(uint64_t *finish_seconds, uint64_t *finish_u_seconds);
+void compute_overall_elapsed_time(uint64_t start_seconds, uint64_t start_u_seconds,
+                                  uint64_t finish_seconds, uint64_t finish_u_seconds,
+                                  double *duration);
+void injector(uint64_t processed_frame_count, uint32_t injector_frame_rate);
 
 #ifdef __cplusplus
 }

@@ -4,9 +4,9 @@
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 #include <stdlib.h>
@@ -94,26 +94,26 @@ void AV1CornerMatchTest::RunCheckOutput(int run_times) {
     double res_simd = target_func(input1, w, x1, y1, input2, w, x2, y2);
 
     if (run_times > 1) {
-      EbStartTime(&start_time_seconds, &start_time_useconds);
+      eb_start_time(&start_time_seconds, &start_time_useconds);
       for (j = 0; j < run_times; j++) {
         av1_compute_cross_correlation_c(input1, w, x1, y1, input2, w, x2, y2);
       }
-      EbStartTime(&middle_time_seconds, &middle_time_useconds);
+      eb_start_time(&middle_time_seconds, &middle_time_useconds);
 
       for (j = 0; j < run_times; j++) {
         target_func(input1, w, x1, y1, input2, w, x2, y2);
       }
 
-      EbStartTime(&finish_time_seconds, &finish_time_useconds);
+      eb_start_time(&finish_time_seconds, &finish_time_useconds);
 
 
-       EbComputeOverallElapsedTimeMs(start_time_seconds,
+       eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                     start_time_useconds,
                                     middle_time_seconds,
                                     middle_time_useconds,
                                     &time);
       time_c += time;
-      EbComputeOverallElapsedTimeMs(middle_time_seconds,
+      eb_compute_overall_elapsed_time_ms(middle_time_seconds,
                                     middle_time_useconds,
                                     finish_time_seconds,
                                     finish_time_useconds,

@@ -1,7 +1,14 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
+
 
 /******************************************************************************
  * @file InvTxfm2dAsmTest.c
@@ -112,7 +119,7 @@ static const InvSqrTxfmFuncPair inv_txfm_c_sse4_1_func_pairs[TX_64X64 + 1] = {
 };
 
 // from TX_4X8 to TX_SIZES_ALL
-static const InvRectTxfm2dType1Func rect_type1_ref_funcs[TX_SIZES_ALL] = {
+static const InvRectTxfm2dType1Func rect_type1_ref_funcs_c[TX_SIZES_ALL] = {
     // square transform
     nullptr,
     nullptr,
@@ -133,6 +140,29 @@ static const InvRectTxfm2dType1Func rect_type1_ref_funcs[TX_SIZES_ALL] = {
     eb_av1_inv_txfm2d_add_32x8_c,
     eb_av1_inv_txfm2d_add_16x64_c,
     eb_av1_inv_txfm2d_add_64x16_c};
+
+#ifndef NON_AVX512_SUPPORT
+static const InvRectTxfm2dType1Func rect_type1_ref_funcs_avx512[TX_SIZES_ALL] = {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,  // 4x8 and 8x4
+    nullptr,
+    nullptr,
+    eb_av1_inv_txfm2d_add_16x32_avx512,
+    eb_av1_inv_txfm2d_add_32x16_avx512,
+    eb_av1_inv_txfm2d_add_32x64_avx512,
+    eb_av1_inv_txfm2d_add_64x32_avx512,
+    nullptr,
+    nullptr,  // 4x16 and 16x4
+    nullptr,
+    nullptr,
+    eb_av1_inv_txfm2d_add_16x64_avx512,
+    eb_av1_inv_txfm2d_add_64x16_avx512};
+#endif
 
 static const InvRectType2TxfmFuncPair inv_4x8{eb_av1_inv_txfm2d_add_4x8_c,
                                               eb_av1_inv_txfm2d_add_4x8_sse4_1};
@@ -214,10 +244,10 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
         aom_clear_system_state();
     }
 
-    void run_sqr_txfm_match_test(const TxSize tx_size, int asm_type) {
+    void run_sqr_txfm_match_test(const TxSize tx_size, int is_asm_kernel) {
         const int width = tx_size_wide[tx_size];
         const int height = tx_size_high[tx_size];
-        InvSqrTxfmFuncPair pair = (asm_type == 0)
+        InvSqrTxfmFuncPair pair = (is_asm_kernel == 0)
                                       ? inv_txfm_c_avx2_func_pairs[tx_size]
                                       : inv_txfm_c_sse4_1_func_pairs[tx_size];
         if (pair.ref_func == nullptr || pair.test_func == nullptr)
@@ -252,18 +282,19 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
                                  output_test_,
                                  height * stride_ * sizeof(output_test_[0])))
                     << "loop: " << k << " tx_type: " << tx_type
-                    << " tx_size: " << tx_size << " asm_type: " << asm_type;
+                    << " tx_size: " << tx_size
+                    << " is_asm_kernel: " << is_asm_kernel;
             }
         }
     }
 
-    void run_rect_type1_txfm_match_test(const TxSize tx_size) {
+    void run_rect_type1_txfm_match_test(const TxSize tx_size, const InvRectTxfm2dType1Func *function_arr) {
         const int width = tx_size_wide[tx_size];
         const int height = tx_size_high[tx_size];
         const int max_eob = av1_get_max_eob(tx_size);
 
         const InvRectTxfm2dType1Func test_func = eb_av1_highbd_inv_txfm_add_avx2;
-        const InvRectTxfm2dType1Func ref_func = rect_type1_ref_funcs[tx_size];
+        const InvRectTxfm2dType1Func ref_func = function_arr[tx_size];
         if (ref_func == nullptr)
             return;
 
@@ -449,17 +480,17 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
         const TxSize htf_tx_size[num_htf_sizes] = {
             TX_16X64, TX_32X64, TX_64X16, TX_64X32, TX_64X64};
         const HandleTxfmFunc htf_ref_funcs[num_htf_sizes] = {
-            HandleTransform16x64_c,
-            HandleTransform32x64_c,
-            HandleTransform64x16_c,
-            HandleTransform64x32_c,
-            HandleTransform64x64_c};
+            handle_transform16x64_c,
+            handle_transform32x64_c,
+            handle_transform64x16_c,
+            handle_transform64x32_c,
+            handle_transform64x64_c};
         const HandleTxfmFunc htf_asm_funcs[num_htf_sizes] = {
-            HandleTransform16x64_avx2,
-            HandleTransform32x64_avx2,
-            HandleTransform64x16_avx2,
-            HandleTransform64x32_avx2,
-            HandleTransform64x64_avx2};
+            handle_transform16x64_avx2,
+            handle_transform32x64_avx2,
+            handle_transform64x16_avx2,
+            handle_transform64x32_avx2,
+            handle_transform64x64_avx2};
         DECLARE_ALIGNED(32, int32_t, input[MAX_TX_SQUARE]);
 
         for (int idx = 0; idx < num_htf_sizes; ++idx) {
@@ -483,7 +514,7 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
         }
     }
 
-    void run_HandleTransform_speed_test() {
+    void run_handle_transform_speed_test() {
         using HandleTxfmFunc = uint64_t (*)(int32_t * output);
         const int num_htf_sizes = 5;
         const TxSize htf_tx_size[num_htf_sizes] = {
@@ -491,17 +522,17 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
         const int widths[num_htf_sizes] = {16, 32, 64, 64, 64};
         const int heights[num_htf_sizes] = {64, 64, 16, 32, 64};
         const HandleTxfmFunc htf_ref_funcs[num_htf_sizes] = {
-            HandleTransform16x64_c,
-            HandleTransform32x64_c,
-            HandleTransform64x16_c,
-            HandleTransform64x32_c,
-            HandleTransform64x64_c};
+            handle_transform16x64_c,
+            handle_transform32x64_c,
+            handle_transform64x16_c,
+            handle_transform64x32_c,
+            handle_transform64x64_c};
         const HandleTxfmFunc htf_asm_funcs[num_htf_sizes] = {
-            HandleTransform16x64_avx2,
-            HandleTransform32x64_avx2,
-            HandleTransform64x16_avx2,
-            HandleTransform64x32_avx2,
-            HandleTransform64x64_avx2};
+            handle_transform16x64_avx2,
+            handle_transform32x64_avx2,
+            handle_transform64x16_avx2,
+            handle_transform64x32_avx2,
+            handle_transform64x64_avx2};
         DECLARE_ALIGNED(32, int32_t, input[MAX_TX_SQUARE]);
         double time_c, time_o;
         uint64_t start_time_seconds, start_time_useconds;
@@ -516,23 +547,23 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
             eb_buf_random_s32(input_, MAX_TX_SQUARE);
             memcpy(input, input_, MAX_TX_SQUARE * sizeof(int32_t));
 
-            EbStartTime(&start_time_seconds, &start_time_useconds);
+            eb_start_time(&start_time_seconds, &start_time_useconds);
 
             for (uint64_t i = 0; i < num_loop; i++)
                 energy_ref = htf_ref_funcs[idx](input_);
 
-            EbStartTime(&middle_time_seconds, &middle_time_useconds);
+            eb_start_time(&middle_time_seconds, &middle_time_useconds);
 
             for (uint64_t i = 0; i < num_loop; i++)
                 energy_asm = htf_asm_funcs[idx](input);
 
-            EbStartTime(&finish_time_seconds, &finish_time_useconds);
-            EbComputeOverallElapsedTimeMs(start_time_seconds,
+            eb_start_time(&finish_time_seconds, &finish_time_useconds);
+            eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                           start_time_useconds,
                                           middle_time_seconds,
                                           middle_time_useconds,
                                           &time_c);
-            EbComputeOverallElapsedTimeMs(middle_time_seconds,
+            eb_compute_overall_elapsed_time_ms(middle_time_seconds,
                                           middle_time_useconds,
                                           finish_time_seconds,
                                           finish_time_useconds,
@@ -589,9 +620,9 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
                                        uint8_t bd);
 
         const FwdTxfm2dFunc fwd_txfm_func[TX_SIZES_ALL] = {
-            Av1TransformTwoD_4x4_c,   Av1TransformTwoD_8x8_c,
-            Av1TransformTwoD_16x16_c, Av1TransformTwoD_32x32_c,
-            Av1TransformTwoD_64x64_c, eb_av1_fwd_txfm2d_4x8_c,
+            av1_transform_two_d_4x4_c,   av1_transform_two_d_8x8_c,
+            av1_transform_two_d_16x16_c, av1_transform_two_d_32x32_c,
+            av1_transform_two_d_64x64_c, eb_av1_fwd_txfm2d_4x8_c,
             eb_av1_fwd_txfm2d_8x4_c,     eb_av1_fwd_txfm2d_8x16_c,
             eb_av1_fwd_txfm2d_16x8_c,    eb_av1_fwd_txfm2d_16x32_c,
             eb_av1_fwd_txfm2d_32x16_c,   eb_av1_fwd_txfm2d_32x64_c,
@@ -619,11 +650,11 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
             pixel_input_, input_, stride_, tx_type, static_cast<uint8_t>(bd_));
         // post-process, re-pack the coeffcients
         switch (tx_size) {
-        case TX_64X64: HandleTransform64x64_c(input_); break;
-        case TX_64X32: HandleTransform64x32_c(input_); break;
-        case TX_32X64: HandleTransform32x64_c(input_); break;
-        case TX_64X16: HandleTransform64x16_c(input_); break;
-        case TX_16X64: HandleTransform16x64_c(input_); break;
+        case TX_64X64: handle_transform64x64_c(input_); break;
+        case TX_64X32: handle_transform64x32_c(input_); break;
+        case TX_32X64: handle_transform32x64_c(input_); break;
+        case TX_64X16: handle_transform64x16_c(input_); break;
+        case TX_16X64: handle_transform16x64_c(input_); break;
         default: break;
         }
         return;
@@ -644,19 +675,27 @@ class InvTxfm2dAsmTest : public ::testing::TestWithParam<InvTxfm2dParam> {
 };
 
 TEST_P(InvTxfm2dAsmTest, sqr_txfm_match_test) {
-    for (int asm_type = 0; asm_type < 2; ++asm_type) {
-        for (int i = TX_4X4; i <= TX_64X64; i++) {
-            const TxSize tx_size = static_cast<TxSize>(i);
-            run_sqr_txfm_match_test(tx_size, asm_type);
-        }
+    for (int i = TX_4X4; i <= TX_64X64; i++) {
+        const TxSize tx_size = static_cast<TxSize>(i);
+        run_sqr_txfm_match_test(tx_size, 0);
+        run_sqr_txfm_match_test(tx_size, 1);
     }
 }
 
 TEST_P(InvTxfm2dAsmTest, rect_type1_txfm_match_test) {
     for (int i = TX_4X8; i < TX_SIZES_ALL; i++) {
         const TxSize tx_size = static_cast<TxSize>(i);
-        run_rect_type1_txfm_match_test(tx_size);
+        run_rect_type1_txfm_match_test(tx_size,rect_type1_ref_funcs_c);
     }
+
+#ifndef NON_AVX512_SUPPORT
+    if (get_cpu_flags_to_use() & CPU_FLAGS_AVX512F) {
+        for (int i = TX_4X8; i < TX_SIZES_ALL; i++) {
+            const TxSize tx_size = static_cast<TxSize>(i);
+            run_rect_type1_txfm_match_test(tx_size,rect_type1_ref_funcs_avx512);
+        }
+    }
+#endif
 }
 
 TEST_P(InvTxfm2dAsmTest, rect_type2_txfm_match_test) {
@@ -678,7 +717,7 @@ TEST_P(InvTxfm2dAsmTest, HandleTransform_match_test) {
 }
 
 TEST_P(InvTxfm2dAsmTest, DISABLED_HandleTransform_speed_test) {
-    run_HandleTransform_speed_test();
+    run_handle_transform_speed_test();
 }
 
 INSTANTIATE_TEST_CASE_P(

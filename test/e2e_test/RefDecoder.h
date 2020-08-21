@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file RefDecoder.h
@@ -45,14 +51,14 @@ class RefDecoder {
         /*!\brief Algorithm does not have required capability */
         REF_CODEC_INCAPABLE = 0 - AOM_CODEC_INCAPABLE,
 
-        /*!\brief The given bitstream is not supported.
+        /*!\brief The given Bitstream is not supported.
          *
-         * The bitstream was unable to be parsed at the highest level. The
+         * The Bitstream was unable to be parsed at the highest level. The
          * decoder is unable to proceed. This error \ref SHOULD be treated as
          * fatal to the stream. */
         REF_CODEC_UNSUP_BITSTREAM = 0 - AOM_CODEC_UNSUP_BITSTREAM,
 
-        /*!\brief Encoded bitstream uses an unsupported feature
+        /*!\brief Encoded Bitstream uses an unsupported feature
          *
          * The decoder does not implement a feature required by the encoder.
          * This return code should only be used for features that prevent future
@@ -106,7 +112,7 @@ class RefDecoder {
         int enable_jnt_comp;
         int enable_ref_frame_mvs;
         int enable_warped_motion;
-        int enable_cdef;
+        int cdef_level;
         int enable_restoration;
         int film_grain_params_present;
         int enable_superres;

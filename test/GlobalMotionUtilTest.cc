@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file GlobalMotionUtilTest.cc
@@ -62,7 +68,6 @@ using AffineMat = struct {
 };
 
 static const int CoordinateMax = (1 << 16) - 1;
-static const int CoordinateHalf = (1 << 15);
 static const int PointCountMin = 15; /**< 3*MINPTS_MULTIPLIER */
 
 /**
@@ -172,13 +177,11 @@ class RansacTest : public ::testing::TestWithParam<TransformationType> {
             delete[] points;
         if (num_inliers_by_motion)
             delete[] num_inliers_by_motion;
-        if (motions) {
-            for (int i = 0; i < num_motions; i++) {
-                if (motions[i].inliers)
-                    delete[] motions[i].inliers;
-            }
-            delete[] motions;
+        for (int i = 0; i < num_motions; i++) {
+            if (motions[i].inliers)
+                delete[] motions[i].inliers;
         }
+        delete[] motions;
     }
 
     /* clang-format off */

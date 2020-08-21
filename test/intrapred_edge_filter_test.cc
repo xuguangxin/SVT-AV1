@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file intrapred_edge_filter_test.cc
@@ -155,7 +161,7 @@ static void eb_av1_filter_intra_edge_c(uint8_t *p, int sz, int strength) {
     const int filt = strength - 1;
     uint8_t edge[129];
 
-    memcpy(edge, p, sz * sizeof(*p));
+    eb_memcpy_c(edge, p, sz * sizeof(*p));
     for (int i = 1; i < sz; i++) {
         int s = 0;
         for (int j = 0; j < INTRA_EDGE_TAPS; j++) {

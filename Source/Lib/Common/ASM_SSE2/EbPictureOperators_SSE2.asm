@@ -1,6 +1,12 @@
 ;
 ; Copyright(c) 2019 Intel Corporation
-; SPDX - License - Identifier: BSD - 2 - Clause - Patent
+;
+; This source code is subject to the terms of the BSD 2 Clause License and
+; the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+; was not distributed with this source code in the LICENSE file, you can
+; obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+; Media Patent License 1.0 was not distributed with this source code in the
+; PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 ;
 
 %include "x64inc.asm"
@@ -206,146 +212,6 @@ Label_PictureCopyKernel_SSE2_WIDTH16:
     jne             Label_PictureCopyKernel_SSE2_WIDTH16
 
     XMM_RESTORE
-    ret
-; ----------------------------------------------------------------------------------------
-
-cglobal zero_out_coeff4x4_sse
-
-    lea             r0,             [r0+2*r2]
-    lea             r3,             [r1+2*r1]
-    pxor            mm0,            mm0
-
-    movq            [r0],           mm0
-    movq            [r0+2*r1],      mm0
-    movq            [r0+4*r1],      mm0
-    movq            [r0+2*r3],      mm0
-
-%if NEED_EMMS
-    emms
-%endif
-
-    ret
-
-; ----------------------------------------------------------------------------------------
-
-cglobal zero_out_coeff8x8_sse2
-
-; TODO: use "movdqa" if coeff_buffer is guaranteed to be 16-byte aligned.
-
-    lea             r0,             [r0+2*r2]
-    lea             r3,             [r1+2*r1]
-    pxor            xmm0,           xmm0
-
-    movdqu          [r0],           xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+2*r3],      xmm0
-    lea             r0,             [r0+8*r1]
-    movdqu          [r0],           xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+2*r3],      xmm0
-
-    ret
-
-; ----------------------------------------------------------------------------------------
-
-cglobal zero_out_coeff16x16_sse2
-
-; TODO: use "movdqa" if coeff_buffer is guaranteed to be 16-byte aligned.
-
-    lea             r0,             [r0+2*r2]
-    lea             r3,             [r1+2*r1]
-    pxor            xmm0,           xmm0
-
-    movdqu          [r0],           xmm0
-    movdqu          [r0+16],        xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+2*r1+16],   xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+4*r1+16],   xmm0
-    movdqu          [r0+2*r3],      xmm0
-    movdqu          [r0+2*r3+16],   xmm0
-    lea             r0,             [r0+8*r1]
-    movdqu          [r0],           xmm0
-    movdqu          [r0+16],        xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+2*r1+16],   xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+4*r1+16],   xmm0
-    movdqu          [r0+2*r3],      xmm0
-    movdqu          [r0+2*r3+16],   xmm0
-    lea             r0,             [r0+8*r1]
-
-    movdqu          [r0],           xmm0
-    movdqu          [r0+16],        xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+2*r1+16],   xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+4*r1+16],   xmm0
-    movdqu          [r0+2*r3],      xmm0
-    movdqu          [r0+2*r3+16],   xmm0
-    lea             r0,             [r0+8*r1]
-    movdqu          [r0],           xmm0
-    movdqu          [r0+16],        xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+2*r1+16],   xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+4*r1+16],   xmm0
-    movdqu          [r0+2*r3],      xmm0
-    movdqu          [r0+2*r3+16],   xmm0
-
-    ret
-
-; ----------------------------------------------------------------------------------------
-
-cglobal zero_out_coeff32x32_sse2
-
-; TODO: use "movdqa" if coeff_buffer is guaranteed to be 16-byte aligned.
-
-    lea             r0,             [r0+2*r2]
-    lea             r3,             [r1+2*r1]
-    mov             r4,             4
-    pxor            xmm0,           xmm0
-
-Label_ZeroOutCoeff32x32_SSE2_01:
-    movdqu          [r0],           xmm0
-    movdqu          [r0+16],        xmm0
-    movdqu          [r0+32],        xmm0
-    movdqu          [r0+48],        xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+2*r1+16],   xmm0
-    movdqu          [r0+2*r1+32],   xmm0
-    movdqu          [r0+2*r1+48],   xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+4*r1+16],   xmm0
-    movdqu          [r0+4*r1+32],   xmm0
-    movdqu          [r0+4*r1+48],   xmm0
-    movdqu          [r0+2*r3],      xmm0
-    movdqu          [r0+2*r3+16],   xmm0
-    movdqu          [r0+2*r3+32],   xmm0
-    movdqu          [r0+2*r3+48],   xmm0
-    lea             r0,             [r0+8*r1]
-    movdqu          [r0],           xmm0
-    movdqu          [r0+16],        xmm0
-    movdqu          [r0+32],        xmm0
-    movdqu          [r0+48],        xmm0
-    movdqu          [r0+2*r1],      xmm0
-    movdqu          [r0+2*r1+16],   xmm0
-    movdqu          [r0+2*r1+32],   xmm0
-    movdqu          [r0+2*r1+48],   xmm0
-    movdqu          [r0+4*r1],      xmm0
-    movdqu          [r0+4*r1+16],   xmm0
-    movdqu          [r0+4*r1+32],   xmm0
-    movdqu          [r0+4*r1+48],   xmm0
-    movdqu          [r0+2*r3],      xmm0
-    movdqu          [r0+2*r3+16],   xmm0
-    movdqu          [r0+2*r3+32],   xmm0
-    movdqu          [r0+2*r3+48],   xmm0
-    lea             r0,             [r0+8*r1]
-    sub             r4,             1
-    jne             Label_ZeroOutCoeff32x32_SSE2_01
-
     ret
 
 ; ----------------------------------------------------------------------------------------
@@ -620,6 +486,8 @@ Label_PictureAverageKernel_SSE2_WIDTH16:
     ret
 
 ; ----------------------------------------------------------------------------------------
-    cglobal Log2f_SSE2
+    cglobal Log2f_ASM
+;   If (r0 == 0) then bsr return undefined behavior. For 0 return 0
+    or r0, 1
     bsr rax, r0
     ret

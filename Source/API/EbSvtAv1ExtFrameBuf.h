@@ -1,6 +1,12 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 #ifndef EbSvtAv1ExtFrameBuf_h
@@ -10,23 +16,23 @@
 extern "C" {
 #endif // __cplusplus
 
-#include "stdint.h"
+#include <stdint.h>
 
 /*!\brief External frame buffer
  *
  * This structure holds allocated frame buffers used by the decoder.
  */
 typedef struct EbExtFrameBuf {
-   /* Pointer to the memory allocates externally for the codec
+    /* Pointer to the memory allocates externally for the codec
     * picture buffer */
-  uint8_t       *buffer;
+    uint8_t *buffer;
 
-  /* Size of the memory allocates externally for the codec
+    /* Size of the memory allocates externally for the codec
    * picture buffer */
-  uint32_t       buffer_size;
+    uint32_t buffer_size;
 
-  /* Pointer to private data associated with allocating the memory */
-  void          *private_data;
+    /* Pointer to private data associated with allocating the memory */
+    void *private_data;
 } EbExtFrameBuf;
 
 /* Callback function to allocate frame buffer.
@@ -37,10 +43,8 @@ typedef struct EbExtFrameBuf {
  * @  *frame_buf pointer to the frame buffer structure to be allocated
  * @  min_size  requested data size in bytes.
  * @  private_data is the private data that can be used by the allocator*/
-typedef int (*eb_allocate_frame_buffer)(
-            EbExtFrameBuf   *frame_buf,
-            uint32_t        min_size,
-            void            *private_data);
+typedef int (*EbAllocateFrameBuffer)(EbExtFrameBuf *frame_buf, uint32_t min_size,
+                                     void *private_data);
 
 /* Callback function to release frame buffer.
  *
@@ -52,9 +56,7 @@ typedef int (*eb_allocate_frame_buffer)(
  * @  *frame_buf pointer to the frame buffer structure to be allocated
  * @  min_size  requested data size in bytes.
  * @  private_data is the private data that can be used by the allocator*/
-typedef int (*eb_release_frame_buffer)(
-            EbExtFrameBuf   *fb,
-            void            *private_data);
+typedef int (*EbReleaseFrameBuffer)(EbExtFrameBuf *fb, void *private_data);
 
 #ifdef __cplusplus
 }

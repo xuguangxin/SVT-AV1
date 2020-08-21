@@ -4,13 +4,15 @@
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 #ifndef EbDecObmc_h
 #define EbDecObmc_h
+
+#include "EbDecHandle.h"
 
 #define MAX_OBMC_LEN 32
 
@@ -22,14 +24,11 @@ typedef struct ObmcCtx {
 
     int dst_stride[MAX_MB_PLANE];
 
-
 } ObmcCtx;
 
-static const int max_neighbor_obmc[6] = { 0, 1, 2, 3, 4, 4 };
+static const int max_neighbor_obmc[6] = {0, 1, 2, 3, 4, 4};
 
-void dec_build_obmc_inter_predictors_sb(EbDecHandle *dec_handle,
-    PartitionInfo_t *pi, int mi_row, int mi_col);
+void dec_build_obmc_inter_predictors_sb(void *pv_dec_mod_ctx, EbDecHandle *dec_handle,
+                                        PartitionInfo *pi, int mi_row, int mi_col);
 
-
-#endif  // EbDecObmc_h
-
+#endif // EbDecObmc_h

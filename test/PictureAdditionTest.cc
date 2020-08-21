@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file PictureAdditionTest.cc
@@ -9,7 +15,6 @@
  * @brief Unit test for Residual functions:
  * - picture_addition_kernel{m}x{n}_{sse,sse2}_intrin
  * - picture_addition_kernel{m}x{n}_av1_sse2_intrin
- * - picture_addition_kernel16bit_sse2_intrin
  *
  * @author Cidana-Ivy
  *
@@ -29,16 +34,15 @@
 #endif
 
 #include "EbPictureOperators.h"
-#include "EbIntraPrediction.h"
+#include "EbEncIntraPrediction.h"
 #include "random.h"
 #include "util.h"
 
+#if !REMOVE_UNUSED_CODE
 using svt_av1_test_tool::SVTRandom;  // to generate the random
 
 namespace {
 typedef enum { PRED_MIN, PRED_MAX, ALL_MIN, ALL_MAX, ALL_RANDOM } TestPattern;
-TestPattern TEST_PATTERNS[] = {
-    PRED_MIN, PRED_MAX, ALL_MIN, ALL_MAX, ALL_RANDOM};
 
 typedef std::tuple<uint32_t, uint32_t> AreaSize;
 
@@ -61,28 +65,10 @@ typedef struct PictureAdditionTestParam {
     HbdPictureAdditionFunc hbd_test_func;
 } PictureAdditionTestParam;
 typedef std::tuple<PictureAdditionTestParam, TestPattern> TestParam;
-PictureAdditionTestParam TEST_PARAMS[] = {
-    {AreaSize(4, 4),
-     &picture_addition_kernel4x4_sse_intrin,
-     &picture_addition_kernel4x4_av1_sse2_intrin},
-    {AreaSize(8, 8),
-     &picture_addition_kernel8x8_sse2_intrin,
-     &picture_addition_kernel8x8_av1_sse2_intrin},
-    {AreaSize(16, 16),
-     &picture_addition_kernel16x16_sse2_intrin,
-     &picture_addition_kernel16x16_av1_sse2_intrin},
-    {AreaSize(32, 32),
-     &picture_addition_kernel32x32_sse2_intrin,
-     &picture_addition_kernel32x32_av1_sse2_intrin},
-    {AreaSize(64, 64),
-     &picture_addition_kernel64x64_sse2_intrin,
-     &picture_addition_kernel64x64_av1_sse2_intrin}};
-
 /**
  * @brief Unit test for Picture Addition functions include:
  *  - picture_addition_kernel{m}x{n}_{sse,sse2}_intrin
  *  - picture_addition_kernel{m}x{n}_av1_sse2_intrin
- *  - picture_addition_kernel16bit_sse2_intrin
  *
  * Test strategy:
  * This test case combines different AreaSize and
@@ -320,14 +306,6 @@ class PictureAdditionTest : public ::testing::Test,
 
     void run_16bit_test() {
         prepare_16bit_data();
-        picture_addition_kernel16bit_sse2_intrin(pred16bit_,
-                                                 pred_stride_,
-                                                 residual_,
-                                                 residual_stride_,
-                                                 recon1_16bit_,
-                                                 recon_stride_,
-                                                 area_width_,
-                                                 area_height_);
         picture_addition_kernel16_bit(pred16bit_,
                                       pred_stride_,
                                       residual_int32_,
@@ -361,8 +339,5 @@ TEST_P(PictureAdditionTest, PictureAddition16bitTest) {
     run_16bit_test();
 };
 
-INSTANTIATE_TEST_CASE_P(PictureAddition, PictureAdditionTest,
-                        ::testing::Combine(::testing::ValuesIn(TEST_PARAMS),
-                                           ::testing::ValuesIn(TEST_PATTERNS)));
-
 }  // namespace
+#endif

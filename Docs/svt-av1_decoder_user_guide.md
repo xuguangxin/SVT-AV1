@@ -3,24 +3,13 @@
 ## Table of Contents
 
 1. [Introduction](#introduction)
-2. [Known Limitations](#known-limitations)
-3. [Sample Application Guide](#sample-application-guide)
+2. [Sample Application Guide](#sample-application-guide)
     - [Running the decoder](#running-the-decoder)
-4. [Legal Disclaimer](#legal-disclaimer)
+3. [Legal Disclaimer](#legal-disclaimer)
 
 ## Introduction
 
 This document describes how to use the Scalable Video Technology for AV1 Decoder (SVT-AV1). In particular, this user guide describes how to run the sample application with the respective dynamically linked library.
-
-## Known Limitations
-
-Initial version:
-
-- Supports all frames without loopfilter (deblocking, cdef and self guided restoration filters not supported)
-- Screen content tools are not supported
-- Following Inter tools are not supported : (OBMC, COMPOUND_INTRA, COMPOUND_DISTANCE, COMPOUND_WEDGE, COMPOUND_DIFFWTD, Temporal Scan)
-- Supports only 8-bit and 10-bit 4:2:0 content
-- Tested only on Windows
 
 ## Sample Application Guide
 
@@ -33,23 +22,23 @@ This section describes how to run the sample decoder application `SvtAv1DecApp.e
 The sample application typically takes the following command line parameters:
 
 ``` none
--help                     Show usage options and exit
--i <arg>                  Input file name
--o <arg>                  Output file name
--skip <arg>               Skip the first n input frames
--limit <arg>              Stop decoding after n frames
--bit-depth <arg>          Input bitdepth. [8, 10, 12]
--w <arg>                  Input picture width
--h <arg>                  Input picture height
--colour-space <arg>       Input picture colour space. [400, 420, 422, 444]
--md5                      MD5 support flag
+ -help                     Show usage options and exit
+ -i <arg>                  Input file name
+ -o <arg>                  Output file name
+ -skip <arg>               Skip the first n input frames
+ -limit <arg>              Stop decoding after n frames
+ -bit-depth <arg>          Input bitdepth. [8, 10]
+ -w <arg>                  Input picture width
+ -h <arg>                  Input picture height
+ -colour-space <arg>       Input picture colour space. [400, 420, 422, 444]
+ -threads <arg>            Number of threads to be launched
+ -parallel-frames <arg>    Number of frames to be processed in parallel
+ -md5                      MD5 support flag
+ -fps-frm                  Show fps after each frame decoded
+ -fps-summary              Show fps summary -skip-film-grain
 ```
 
 Sample usage: `SvtAv1DecApp.exe -i test.ivf -o out.yuv`
-
-#### List of all configuration parameters
-
-- _WIP_
 
 ## Legal Disclaimer
 

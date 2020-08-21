@@ -1,6 +1,12 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 #ifndef EbMalloc_h
 #define EbMalloc_h
@@ -14,186 +20,167 @@
 #define DEBUG_MEMORY_USAGE
 #endif
 
+void eb_print_alloc_fail(const char* file, int line);
+
 #ifdef DEBUG_MEMORY_USAGE
-void eb_add_mem_entry(void* ptr,  EbPtrType type, size_t count, const char* file, uint32_t line);
+void eb_print_memory_usage(void);
+void eb_increase_component_count(void);
+void eb_decrease_component_count(void);
+void eb_add_mem_entry(void* ptr, EbPtrType type, size_t count, const char* file, uint32_t line);
 void eb_remove_mem_entry(void* ptr, EbPtrType type);
 
-#define EB_ADD_MEM_ENTRY(p, type, count) \
-    eb_add_mem_entry(p, type, count, __FILE__, __LINE__)
+#define EB_ADD_MEM_ENTRY(p, type, count) eb_add_mem_entry(p, type, count, __FILE__, __LINE__)
 
-#define EB_REMOVE_MEM_ENTRY(p, type) \
-    eb_remove_mem_entry(p, type);
+#define EB_REMOVE_MEM_ENTRY(p, type) eb_remove_mem_entry(p, type);
 
 #else
-
-#define EB_ADD_MEM_ENTRY(p, type, count)
-#define EB_REMOVE_MEM_ENTRY(p, type)
+#define eb_print_memory_usage() \
+    do {                        \
+    } while (0)
+#define eb_increase_component_count() \
+    do {                              \
+    } while (0)
+#define eb_decrease_component_count() \
+    do {                              \
+    } while (0)
+#define EB_ADD_MEM_ENTRY(p, type, count) \
+    do {                                 \
+    } while (0)
+#define EB_REMOVE_MEM_ENTRY(p, type) \
+    do {                             \
+    } while (0)
 
 #endif //DEBUG_MEMORY_USAGE
 
-#define EB_NO_THROW_ADD_MEM(p, size, type) \
-    do { \
-        if (!p) { \
-            fprintf(stderr,"allocate memory failed, at %s, L%d\n", __FILE__, __LINE__); \
-        } else { \
-            EB_ADD_MEM_ENTRY(p, type, size); \
-        } \
+#define EB_NO_THROW_ADD_MEM(p, size, type)                                               \
+    do {                                                                                 \
+        if (!p)                                                                          \
+            eb_print_alloc_fail(__FILE__, __LINE__);                                     \
+        else                                                                             \
+            EB_ADD_MEM_ENTRY(p, type, size);                                             \
     } while (0)
 
-#define EB_CHECK_MEM(p) \
-    do { \
-        if (!p) {\
+#define EB_CHECK_MEM(p)                           \
+    do {                                          \
+        if (!p)                                   \
             return EB_ErrorInsufficientResources; \
-        } \
     } while (0)
 
-#define EB_ADD_MEM(p, size, type) \
-    do { \
+#define EB_ADD_MEM(p, size, type)           \
+    do {                                    \
         EB_NO_THROW_ADD_MEM(p, size, type); \
-        EB_CHECK_MEM(p); \
+        EB_CHECK_MEM(p);                    \
     } while (0)
 
-#define EB_NO_THROW_MALLOC(pointer, size) \
-    do { \
-        void* p = malloc(size); \
+#define EB_NO_THROW_MALLOC(pointer, size)       \
+    do {                                        \
+        void* p = malloc(size);                 \
         EB_NO_THROW_ADD_MEM(p, size, EB_N_PTR); \
-        *(void**)&(pointer) = p; \
+        pointer = p;                            \
     } while (0)
 
-#define EB_MALLOC(pointer, size) \
-    do { \
+#define EB_MALLOC(pointer, size)           \
+    do {                                   \
         EB_NO_THROW_MALLOC(pointer, size); \
-        EB_CHECK_MEM(pointer); \
+        EB_CHECK_MEM(pointer);             \
     } while (0)
 
-#define EB_NO_THROW_CALLOC(pointer, count, size) \
-    do { \
-        void* p = calloc(count, size); \
-        EB_NO_THROW_ADD_MEM(p, count * size, EB_C_PTR); \
-        *(void**)&(pointer) = p; \
+#define EB_NO_THROW_CALLOC(pointer, count, size)             \
+    do {                                                     \
+        pointer = calloc(count, size);                       \
+        EB_NO_THROW_ADD_MEM(pointer, count* size, EB_C_PTR); \
     } while (0)
 
-#define EB_CALLOC(pointer, count, size) \
-    do { \
+#define EB_CALLOC(pointer, count, size)           \
+    do {                                          \
         EB_NO_THROW_CALLOC(pointer, count, size); \
-        EB_CHECK_MEM(pointer); \
+        EB_CHECK_MEM(pointer);                    \
     } while (0)
 
-#define EB_FREE(pointer) \
-    do {\
-        free(pointer); \
+#define EB_FREE(pointer)                        \
+    do {                                        \
         EB_REMOVE_MEM_ENTRY(pointer, EB_N_PTR); \
-        pointer = NULL; \
+        free(pointer);                          \
+        pointer = NULL;                         \
     } while (0)
-
 
 #define EB_MALLOC_ARRAY(pa, count) \
-    do {\
-        size_t size = sizeof(*(pa)); \
-        EB_MALLOC(pa, (count)*size); \
-    } while (0)
+    do { EB_MALLOC(pa, sizeof(*(pa)) * (count)); } while (0)
 
 #define EB_CALLOC_ARRAY(pa, count) \
-    do {\
-        size_t size = sizeof(*(pa)); \
-        EB_CALLOC(pa, count, size); \
-    } while (0)
+    do { EB_CALLOC(pa, count, sizeof(*(pa))); } while (0)
 
-#define EB_FREE_ARRAY(pa) \
-    EB_FREE(pa);
-
+#define EB_FREE_ARRAY(pa) EB_FREE(pa);
 
 #define EB_ALLOC_PTR_ARRAY(pa, count) \
-    do {\
-        size_t size = sizeof(*(pa)); \
-        EB_CALLOC(pa, count, size); \
+    do { EB_CALLOC(pa, count, sizeof(*(pa))); } while (0)
+
+#define EB_FREE_PTR_ARRAY(pa, count)                           \
+    do {                                                       \
+        if (pa) {                                              \
+            for (size_t i = 0; i < count; i++) EB_FREE(pa[i]); \
+            EB_FREE(pa);                                       \
+        }                                                      \
     } while (0)
 
-#define EB_FREE_PTR_ARRAY(pa, count) \
-    do {\
-        if (pa) { \
-            uint32_t i; \
-            for (i = 0; i < count; i++) { \
-                EB_FREE(pa[i]); \
-            } \
-            EB_FREE(pa); \
-        } \
+#define EB_MALLOC_2D(p2d, width, height)                                     \
+    do {                                                                     \
+        EB_MALLOC_ARRAY(p2d, width);                                         \
+        EB_MALLOC_ARRAY(p2d[0], (width) * (height));                         \
+        for (size_t w = 1; w < (width); w++) p2d[w] = p2d[0] + w * (height); \
     } while (0)
 
-
-#define EB_MALLOC_2D(p2d, width, height) \
-    do {\
-        EB_MALLOC_ARRAY(p2d, width); \
-        EB_MALLOC_ARRAY(p2d[0], width * height); \
-        for (uint32_t w = 1; w < width; w++) { \
-            p2d[w] = p2d[0] + w * height; \
-        } \
+#define EB_CALLOC_2D(p2d, width, height)                                     \
+    do {                                                                     \
+        EB_MALLOC_ARRAY(p2d, width);                                         \
+        EB_CALLOC_ARRAY(p2d[0], (width) * (height));                         \
+        for (size_t w = 1; w < (width); w++) p2d[w] = p2d[0] + w * (height); \
     } while (0)
 
-#define EB_CALLOC_2D(p2d, width, height) \
-    do {\
-        EB_MALLOC_ARRAY(p2d, width); \
-        EB_CALLOC_ARRAY(p2d[0], width * height); \
-        for (uint32_t w = 1; w < width; w++) { \
-             p2d[w] = p2d[0] + w * height; \
-        } \
+#define EB_FREE_2D(p2d)            \
+    do {                           \
+        if (p2d)                   \
+            EB_FREE_ARRAY(p2d[0]); \
+        EB_FREE_ARRAY(p2d);        \
     } while (0)
-
-#define EB_FREE_2D(p2d) \
-    do { \
-        if (p2d) EB_FREE_ARRAY(p2d[0]); \
-        EB_FREE_ARRAY(p2d); \
-    } while (0)
-
 
 #ifdef _WIN32
-#define EB_MALLOC_ALIGNED(pointer, size) \
-    do {\
-        void* p = _aligned_malloc(size,ALVALUE); \
-        EB_ADD_MEM(p, size, EB_A_PTR); \
-        *(void**)&(pointer) = p; \
+#define EB_MALLOC_ALIGNED(pointer, size)          \
+    do {                                          \
+        pointer = _aligned_malloc(size, ALVALUE); \
+        EB_ADD_MEM(pointer, size, EB_A_PTR);      \
     } while (0)
 
-#define EB_FREE_ALIGNED(pointer) \
-    do { \
-        _aligned_free(pointer); \
+#define EB_FREE_ALIGNED(pointer)                \
+    do {                                        \
         EB_REMOVE_MEM_ENTRY(pointer, EB_A_PTR); \
-        pointer = NULL; \
+        _aligned_free(pointer);                 \
+        pointer = NULL;                         \
     } while (0)
 #else
-#define EB_MALLOC_ALIGNED(pointer, size) \
-    do {\
-        if (posix_memalign((void**)(&(pointer)), ALVALUE, size) != 0) \
-            return EB_ErrorInsufficientResources; \
-        EB_ADD_MEM(pointer, size, EB_A_PTR); \
+#define EB_MALLOC_ALIGNED(pointer, size)                            \
+    do {                                                            \
+        if (posix_memalign((void**)&(pointer), ALVALUE, size) != 0) \
+            return EB_ErrorInsufficientResources;                   \
+        EB_ADD_MEM(pointer, size, EB_A_PTR);                        \
     } while (0)
 
-#define EB_FREE_ALIGNED(pointer) \
-    do { \
-        free(pointer); \
+#define EB_FREE_ALIGNED(pointer)                \
+    do {                                        \
         EB_REMOVE_MEM_ENTRY(pointer, EB_A_PTR); \
-        pointer = NULL; \
+        free(pointer);                          \
+        pointer = NULL;                         \
     } while (0)
 #endif
 
+#define EB_MALLOC_ALIGNED_ARRAY(pa, count) EB_MALLOC_ALIGNED(pa, sizeof(*(pa)) * (count))
 
-#define EB_MALLOC_ALIGNED_ARRAY(pa, count) \
-    EB_MALLOC_ALIGNED(pa, sizeof(*(pa))*(count))
-
-#define EB_CALLOC_ALIGNED_ARRAY(pa, count) \
-    do { \
-        size_t size = sizeof(*(pa))*(count); \
-        EB_MALLOC_ALIGNED(pa, size); \
-        memset(pa, 0, size); \
+#define EB_CALLOC_ALIGNED_ARRAY(pa, count)              \
+    do {                                                \
+        EB_MALLOC_ALIGNED(pa, sizeof(*(pa)) * (count)); \
+        memset(pa, 0, sizeof(*(pa)) * (count));         \
     } while (0)
 
-#define EB_FREE_ALIGNED_ARRAY(pa) \
-    EB_FREE_ALIGNED(pa)
-
-
-void eb_print_memory_usage();
-void eb_increase_component_count();
-void eb_decrease_component_count();
-
+#define EB_FREE_ALIGNED_ARRAY(pa) EB_FREE_ALIGNED(pa)
 
 #endif //EbMalloc_h

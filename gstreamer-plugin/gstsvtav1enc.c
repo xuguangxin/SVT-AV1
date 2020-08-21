@@ -98,7 +98,7 @@ enum
 #define PROP_RC_MODE_CQP 0
 #define PROP_RC_MODE_VBR 1
 
-#define PROP_ENCMODE_DEFAULT                7
+#define PROP_ENCMODE_DEFAULT                8
 #define PROP_SPEEDCONTROL_DEFAULT           60
 #define PROP_HIERARCHICAL_LEVEL_DEFAULT     4
 #define PROP_P_FRAMES_DEFAULT               0
@@ -193,8 +193,8 @@ gst_svtav1enc_class_init (GstSvtAv1EncClass * klass)
       g_param_spec_uint ("speed", "speed (Encoder Mode)",
           "Quality vs density tradeoff point"
           " that the encoding is to be performed at"
-          " (0 is the highest quality, 7 is the highest speed) ",
-          0, 7, PROP_ENCMODE_DEFAULT,
+          " (0 is the highest quality, 8 is the highest speed) ",
+          0, 8, PROP_ENCMODE_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
 
@@ -312,13 +312,13 @@ gst_svtav1enc_init (GstSvtAv1Enc * svtav1enc)
   svtav1enc->dts_offset = 0;
 
   EbErrorType res =
-      eb_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
+      svt_av1_enc_init_handle(&svtav1enc->svt_encoder, NULL, svtav1enc->svt_config);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "eb_init_handle failed with error %d", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, INIT, (NULL), ("svt_av1_enc_init_handle failed with error %d", res));
     GST_OBJECT_UNLOCK (svtav1enc);
     return;
   }
-  /* setting configuration here since eb_init_handle overrides it */
+  /* setting configuration here since svt_av1_enc_init_handle overrides it */
   set_default_svt_configuration (svtav1enc->svt_config);
   GST_OBJECT_UNLOCK (svtav1enc);
 }
@@ -363,9 +363,9 @@ gst_svtav1enc_set_property (GObject * object, guint property_id,
     case PROP_PRED_STRUCTURE:
         svtav1enc->svt_config->pred_structure = g_value_get_uint(value);
         break;
-    case PROP_P_FRAMES:
-      svtav1enc->svt_config->base_layer_switch_mode = g_value_get_boolean (value);
-      break;
+
+
+
     case PROP_QP:
       svtav1enc->svt_config->qp = g_value_get_uint (value);
       break;
@@ -426,10 +426,10 @@ gst_svtav1enc_get_property (GObject * object, guint property_id,
     case PROP_B_PYRAMID:
       g_value_set_uint (value, svtav1enc->svt_config->hierarchical_levels);
       break;
-    case PROP_P_FRAMES:
-      g_value_set_boolean (value,
-          svtav1enc->svt_config->base_layer_switch_mode == 1);
-      break;
+
+
+
+
     case PROP_PRED_STRUCTURE:
       g_value_set_uint (value, svtav1enc->svt_config->pred_structure);
       break;
@@ -499,7 +499,7 @@ gst_svtav1enc_finalize (GObject * object)
   GST_DEBUG_OBJECT (svtav1enc, "finalizing svtav1enc");
 
   GST_OBJECT_LOCK (svtav1enc);
-  eb_deinit_handle(svtav1enc->svt_encoder);
+  svt_av1_enc_deinit_handle(svtav1enc->svt_encoder);
   svtav1enc->svt_encoder = NULL;
   g_free (svtav1enc->svt_config);
   GST_OBJECT_UNLOCK (svtav1enc);
@@ -581,9 +581,9 @@ gst_svtav1enc_configure_svt (GstSvtAv1Enc * svtav1enc)
   }
 
   EbErrorType res =
-      eb_svt_enc_set_parameter(svtav1enc->svt_encoder, svtav1enc->svt_config);
+      svt_av1_enc_set_parameter(svtav1enc->svt_encoder, svtav1enc->svt_config);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "eb_svt_enc_set_parameter failed with error %d", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, INIT, (NULL), ("svt_av1_enc_set_parameter failed with error %d", res));
     return FALSE;
   }
   return TRUE;
@@ -593,11 +593,11 @@ gboolean
 gst_svtav1enc_start_svt (GstSvtAv1Enc * svtav1enc)
 {
   G_LOCK (init_mutex);
-  EbErrorType res = eb_init_encoder(svtav1enc->svt_encoder);
+  EbErrorType res = svt_av1_enc_init(svtav1enc->svt_encoder);
   G_UNLOCK (init_mutex);
 
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "eb_init_encoder failed with error %d", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, INIT, (NULL), ("svt_av1_enc_init failed with error %d", res));
     return FALSE;
   }
   return TRUE;
@@ -612,25 +612,55 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->intra_period_length = PROP_GOP_SIZE_DEFAULT - 1;
   svt_config->intra_refresh_type = PROP_INTRA_REFRESH_DEFAULT;
   svt_config->enc_mode = PROP_ENCMODE_DEFAULT;
+  svt_config->snd_pass_enc_mode = PROP_ENCMODE_DEFAULT + 1;
   svt_config->frame_rate = 25;
   svt_config->frame_rate_denominator = 1;
   svt_config->frame_rate_numerator = 25;
   svt_config->hierarchical_levels = PROP_HIERARCHICAL_LEVEL_DEFAULT;
-  svt_config->base_layer_switch_mode = PROP_P_FRAMES_DEFAULT;
   svt_config->pred_structure = PROP_PRED_STRUCTURE_DEFAULT;
   svt_config->scene_change_detection = PROP_SCD_DEFAULT;
   svt_config->look_ahead_distance = (uint32_t)~0;
-  svt_config->frames_to_be_encoded = 0;
-  svt_config->rate_control_mode = PROP_RC_MODE_DEFAULT;
+  svt_config->rate_control_mode = PROP_RC_MODE_DEFAULT; // todo: add CVBR
   svt_config->target_bit_rate = PROP_BITRATE_DEFAULT;
   svt_config->max_qp_allowed = PROP_QP_MAX_DEFAULT;
   svt_config->min_qp_allowed = PROP_QP_MIN_DEFAULT;
+  svt_config->screen_content_mode = FALSE;
+  svt_config->intrabc_mode = -1;
+  svt_config->enable_adaptive_quantization = FALSE;
   svt_config->qp = PROP_QP_DEFAULT;
   svt_config->use_qp_file = FALSE;
   svt_config->disable_dlf_flag = (PROP_DEBLOCKING_DEFAULT == FALSE);
   svt_config->enable_denoise_flag = FALSE;
   svt_config->film_grain_denoise_strength = FALSE;
   svt_config->enable_warped_motion = FALSE;
+  svt_config->enable_global_motion = TRUE;
+  svt_config->cdef_level = -1;
+  svt_config->enable_restoration_filtering = -1;
+  svt_config->sg_filter_mode = -1;
+  svt_config->wn_filter_mode = -1;
+  svt_config->edge_skp_angle_intra = -1;
+  svt_config->intra_angle_delta = -1;
+  svt_config->inter_intra_compound = -1;
+  svt_config->enable_paeth = -1;
+  svt_config->enable_smooth = -1;
+  svt_config->enable_mfmv = -1;
+  svt_config->enable_redundant_blk = -1;
+  svt_config->spatial_sse_full_loop_level = -1;
+  svt_config->over_bndry_blk = -1;
+  svt_config->new_nearest_comb_inject = -1;
+  svt_config->prune_ref_rec_part = -1;
+  svt_config->nsq_table = -1;
+  svt_config->frame_end_cdf_update = -1;
+  svt_config->pred_me = -1;
+  svt_config->bipred_3x3_inject = -1;
+  svt_config->compound_level = -1;
+  svt_config->set_chroma_mode = -1;
+  svt_config->disable_cfl_flag = -1;
+  svt_config->obmc_level = 1;
+  svt_config->rdoq_level = -1;
+  svt_config->filter_intra_level = 1;
+  svt_config->enable_intra_edge_filter = -1;
+  svt_config->pic_based_rate_est = -1;
   svt_config->use_default_me_hme = TRUE;
   svt_config->enable_hme_flag = TRUE;
   svt_config->enable_hme_level0_flag = TRUE;
@@ -640,6 +670,9 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->in_loop_me_flag = TRUE;
   svt_config->search_area_width = 16;
   svt_config->search_area_height = 7;
+  svt_config->enable_hbd_mode_decision = 1;
+  svt_config->palette_level = -1;
+  // HME parameters
   svt_config->number_hme_search_region_in_width = 2;
   svt_config->number_hme_search_region_in_height = 2;
   svt_config->hme_level0_total_search_area_width = 64;
@@ -658,25 +691,58 @@ set_default_svt_configuration (EbSvtAv1EncConfiguration * svt_config)
   svt_config->hme_level2_search_area_in_height_array[1] = 1;
   svt_config->channel_id = 0;
   svt_config->active_channel_count = 1;
+  svt_config->recon_enabled = FALSE;
+
+  // thread affinity
   svt_config->logical_processors = PROP_CORES_DEFAULT;
   svt_config->target_socket = PROP_SOCKET_DEFAULT;
-  svt_config->recon_enabled = FALSE;
-  //svt_config->tile_columns = 0;
-  //svt_config->tile_rows = 0;
-  svt_config->stat_report = FALSE;
-  svt_config->high_dynamic_range_input = FALSE;
-  svt_config->encoder_bit_depth = 8;
-  svt_config->compressed_ten_bit_format = FALSE;
+  svt_config->unpin = 1;
+
+  // tile based encoding
+  svt_config->tile_columns = 0;
+  svt_config->tile_rows = 0;
+  svt_config->unrestricted_motion_vector = 1;
+
+  // alt-ref
+  svt_config->tf_level = 1;
+  svt_config->altref_strength = 5;
+  svt_config->altref_nframes = 7;
+  svt_config->enable_overlays = FALSE;
+
+  // super resolution
+  svt_config->superres_mode = FALSE; // SUPERRES_NONE
+  svt_config->superres_denom = 8;
+  svt_config->superres_kf_denom = 8;
+  svt_config->superres_qthres = 43;
+
+  svt_config->sq_weight = 100;
+
+  svt_config->md_stage_1_cand_prune_th = 75;
+  svt_config->md_stage_1_class_prune_th = 100;
+  svt_config->md_stage_2_3_cand_prune_th = 15;
+  svt_config->md_stage_2_3_class_prune_th = 25;
+
+  // latency
+  svt_config->injector_frame_rate = PROP_SPEEDCONTROL_DEFAULT;
+  svt_config->speed_control_flag = FALSE;
+  svt_config->super_block_size = 128;
+
+  // Annex A
   svt_config->profile = 0;
   svt_config->tier = 0;
   svt_config->level = 0;
-  svt_config->injector_frame_rate = PROP_SPEEDCONTROL_DEFAULT;
-  svt_config->speed_control_flag = FALSE;
+
+  svt_config->stat_report = FALSE;
+  svt_config->high_dynamic_range_input = FALSE;
+  svt_config->encoder_bit_depth = 8;
+  svt_config->is_16bit_pipeline = 0; // todo
+  svt_config->encoder_color_format = 1; // todo. Only 420 for now.
+  svt_config->compressed_ten_bit_format = FALSE;
   svt_config->sb_sz = 64;
-  svt_config->super_block_size = 128;
   svt_config->partition_depth = 4;
   svt_config->enable_qp_scaling_flag = 0;
-  svt_config->asm_type = 1;
+  svt_config->use_cpu_flags = CPU_FLAGS_ALL;
+  svt_config->ten_bit_format = FALSE;
 }
 
 GstFlowReturn
@@ -691,7 +757,7 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
 
   if (!gst_video_frame_map (&video_frame, &svtav1enc->state->info,
           frame->input_buffer, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (svtav1enc, "couldn't map input frame");
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("couldn't map input frame"));
     return GST_FLOW_ERROR;
   }
 
@@ -721,9 +787,9 @@ gst_svtav1enc_encode (GstSvtAv1Enc * svtav1enc, GstVideoCodecFrame * frame)
     input_buffer->pic_type = EB_AV1_KEY_PICTURE;
   }
 
-  res = eb_svt_enc_send_picture(svtav1enc->svt_encoder, input_buffer);
+  res = svt_av1_enc_send_picture(svtav1enc->svt_encoder, input_buffer);
   if (res != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "Issue %d sending picture to SVT-AV1.", res);
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("error in sending picture to encoder"));
     ret = GST_FLOW_ERROR;
   }
   gst_video_frame_unmap (&video_frame);
@@ -744,10 +810,10 @@ gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc)
   input_buffer.flags = EB_BUFFERFLAG_EOS;
   input_buffer.p_buffer = NULL;
 
-  ret = eb_svt_enc_send_picture(svtav1enc->svt_encoder, &input_buffer);
+  ret = svt_av1_enc_send_picture(svtav1enc->svt_encoder, &input_buffer);
 
   if (ret != EB_ErrorNone) {
-    GST_ERROR_OBJECT (svtav1enc, "couldn't send EOS frame.");
+    GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("couldn't send EOS frame."));
     return FALSE;
   }
 
@@ -787,7 +853,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
     EbBufferHeaderType *output_buf = NULL;
 
     res =
-        eb_svt_get_packet(svtav1enc->svt_encoder, &output_buf,
+        svt_av1_enc_get_packet(svtav1enc->svt_encoder, &output_buf,
         done_sending_pics);
 
     if (output_buf != NULL)
@@ -795,7 +861,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
           ((output_buf->flags & EB_BUFFERFLAG_EOS) == EB_BUFFERFLAG_EOS);
 
     if (res == EB_ErrorMax) {
-      GST_ERROR_OBJECT (svtav1enc, "Error while encoding, return\n");
+      GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("encode failed"));
       return GST_FLOW_ERROR;
     } else if (res != EB_NoErrorEmptyQueue && output_frames && output_buf) {
       /* if p_app_private is indeed propagated, get the frame through it
@@ -809,8 +875,10 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
         frame_list_element = g_list_find_custom (pending_frames,
             &output_buf->pts, compare_video_code_frame_and_pts);
 
-        if (frame_list_element == NULL)
+        if (frame_list_element == NULL) {
+          GST_ELEMENT_ERROR (svtav1enc, LIBRARY, ENCODE, (NULL), ("failed to get unfinished frame"));
           return GST_FLOW_ERROR;
+        }
 
         frame = (GstVideoCodecFrame *) frame_list_element->data;
       }
@@ -850,7 +918,7 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
           G_GINT64_FORMAT " SliceType:%d\n", svtav1enc->frame_count,
            (frame->dts), (frame->pts), output_buf->pic_type);
 
-      eb_svt_release_out_buffer(&output_buf);
+      svt_av1_enc_release_out_buffer(&output_buf);
       output_buf = NULL;
 
       ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (svtav1enc), frame);
@@ -924,7 +992,7 @@ gst_svtav1enc_stop (GstVideoEncoder * encoder)
   GST_OBJECT_UNLOCK (svtav1enc);
 
   GST_OBJECT_LOCK (svtav1enc);
-  eb_deinit_encoder(svtav1enc->svt_encoder);
+  svt_av1_enc_deinit(svtav1enc->svt_encoder);
   /* Destruct the buffer memory pool */
   gst_svthevenc_deallocate_svt_buffers (svtav1enc);
   GST_OBJECT_UNLOCK (svtav1enc);

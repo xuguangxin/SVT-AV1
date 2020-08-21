@@ -4,9 +4,9 @@
 ; This source code is subject to the terms of the BSD 2 Clause License and
 ; the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
 ; was not distributed with this source code in the LICENSE file, you can
-; obtain it at www.aomedia.org/license/software. If the Alliance for Open
+; obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
 ; Media Patent License 1.0 was not distributed with this source code in the
-; PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+; PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 ;
 
 ;
@@ -15,7 +15,7 @@
 
 SECTION .text
 
-; void aom_subtract_block(int rows, int cols,
+; void eb_aom_subtract_block(int rows, int cols,
 ;                         int16_t *diff, ptrdiff_t diff_stride,
 ;                         const uint8_t *src, ptrdiff_t src_stride,
 ;                         const uint8_t *pred, ptrdiff_t pred_stride)
@@ -38,10 +38,10 @@ cglobal subtract_block, 7, 7, 8, \
   je .case_64
 
 %macro loop16 6
-  mova                  m0, [srcq+%1]
-  mova                  m4, [srcq+%2]
-  mova                  m1, [predq+%3]
-  mova                  m5, [predq+%4]
+  movu                  m0, [srcq+%1]
+  movu                  m4, [srcq+%2]
+  movu                  m1, [predq+%3]
+  movu                  m5, [predq+%4]
   punpckhbw             m2, m0, m7
   punpckhbw             m3, m1, m7
   punpcklbw             m0, m7
@@ -54,10 +54,10 @@ cglobal subtract_block, 7, 7, 8, \
   punpcklbw             m5, m7
   psubw                 m1, m3
   psubw                 m4, m5
-  mova [diffq+mmsize*0+%5], m0
-  mova [diffq+mmsize*1+%5], m2
-  mova [diffq+mmsize*0+%6], m4
-  mova [diffq+mmsize*1+%6], m1
+  movu [diffq+mmsize*0+%5], m0
+  movu [diffq+mmsize*1+%5], m2
+  movu [diffq+mmsize*0+%6], m4
+  movu [diffq+mmsize*1+%6], m1
 %endmacro
 
   mov             pred_str, pred_stridemp
@@ -118,8 +118,8 @@ cglobal subtract_block, 7, 7, 8, \
   punpcklbw             m3, m7
   psubw                 m0, m1
   psubw                 m2, m3
-  mova             [diffq], m0
-  mova [diffq+diff_strideq*2], m2
+  movu             [diffq], m0
+  movu [diffq+diff_strideq*2], m2
 %endmacro
 
 .case_8:

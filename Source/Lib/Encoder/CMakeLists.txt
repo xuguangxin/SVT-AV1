@@ -1,40 +1,21 @@
 #
 # Copyright(c) 2019 Intel Corporation
-# SPDX - License - Identifier: BSD - 2 - Clause - Patent
 #
+# This source code is subject to the terms of the BSD 2 Clause License and
+# the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+# was not distributed with this source code in the LICENSE file, you can
+# obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+# Media Patent License 1.0 was not distributed with this source code in the
+# PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+#
+
 # Encoder Library directory CMakeLists.txt
 
 # Shared Encoder Version
 set(ENC_VERSION_MAJOR 0)
-set(ENC_VERSION_MINOR 7)
-set(ENC_VERSION_PATCH 5)
+set(ENC_VERSION_MINOR 8)
+set(ENC_VERSION_PATCH 4)
 set(ENC_VERSION ${ENC_VERSION_MAJOR}.${ENC_VERSION_MINOR}.${ENC_VERSION_PATCH})
-
-# Include Encoder Subdirectories
-include_directories(${PROJECT_SOURCE_DIR}/Source/API/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/Codec/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/C_DEFAULT/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE2/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSSE3/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE4_1/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX2/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX512/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/Codec/)
-
-link_directories(${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE2/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/C_DEFAULT/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSSE3/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE4_1/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX2/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX512/
-    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/Codec/)
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Bin/${CMAKE_BUILD_TYPE}/)
-
-file(GLOB all_files
-    "Codec/*.h"
-    "Codec/*.c")
 
 if(UNIX)
     if(NOT APPLE)
@@ -54,17 +35,97 @@ if(COVERAGE)
     endif()
 endif()
 
+include_directories(${PROJECT_SOURCE_DIR}/Source/API/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/Codec/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Common/C_DEFAULT/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/C_DEFAULT/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/Codec/
+    ${PROJECT_SOURCE_DIR}/third_party/fastfeat/)
+link_directories(${PROJECT_SOURCE_DIR}/Source/Lib/Common/Codec/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/C_DEFAULT/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/Codec/
+    ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/Globals/)
+
+add_subdirectory(C_DEFAULT)
+add_subdirectory(Codec)
+add_subdirectory(Globals)
+if(X86)
+    # Include Encoder Subdirectories
+    include_directories(${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSSE3/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE4_1/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX512/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSSE3/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE4_1/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_AVX2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_AVX512/)
+
+    link_directories(
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/C_DEFAULT/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSSE3/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_SSE4_1/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Common/ASM_AVX512/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSSE3/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_SSE4_1/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_AVX2/
+        ${PROJECT_SOURCE_DIR}/Source/Lib/Encoder/ASM_AVX512/)
+    add_subdirectory(ASM_SSE2)
+    add_subdirectory(ASM_SSSE3)
+    add_subdirectory(ASM_SSE4_1)
+    add_subdirectory(ASM_AVX2)
+    add_subdirectory(ASM_AVX512)
+endif()
+
+# Required for cmake to be able to tell Xcode how to link all of the object files
+if(CMAKE_GENERATOR STREQUAL "Xcode")
+    file(WRITE ${PROJECT_BINARY_DIR}/dummy.c "")
+endif()
+
+file(GLOB all_files
+    "*.h"
+    "*.c")
+
+get_target_property(common_lib_source common_lib INTERFACE_SOURCES)
+if(common_lib_source)
+    list(APPEND all_files ${common_lib_source} ${PROJECT_BINARY_DIR}/dummy.c)
+endif()
+
 # Encoder Lib Source Files
-add_library(SvtAv1Enc
-    ${all_files}
-    $<TARGET_OBJECTS:COMMON_CODEC>
-    $<TARGET_OBJECTS:FASTFEAT>
-    $<TARGET_OBJECTS:COMMON_C_DEFAULT>
-    $<TARGET_OBJECTS:COMMON_ASM_SSE2>
-    $<TARGET_OBJECTS:COMMON_ASM_SSSE3>
-    $<TARGET_OBJECTS:COMMON_ASM_SSE4_1>
-    $<TARGET_OBJECTS:COMMON_ASM_AVX2>
-    $<TARGET_OBJECTS:COMMON_ASM_AVX512>)
+if(X86)
+    add_library(SvtAv1Enc
+        ${all_files}
+        $<TARGET_OBJECTS:COMMON_CODEC>
+        $<TARGET_OBJECTS:FASTFEAT>
+        $<TARGET_OBJECTS:COMMON_C_DEFAULT>
+        $<TARGET_OBJECTS:COMMON_ASM_SSE2>
+        $<TARGET_OBJECTS:COMMON_ASM_SSSE3>
+        $<TARGET_OBJECTS:COMMON_ASM_SSE4_1>
+        $<TARGET_OBJECTS:COMMON_ASM_AVX2>
+        $<TARGET_OBJECTS:COMMON_ASM_AVX512>
+        $<TARGET_OBJECTS:ENCODER_GLOBALS>
+        $<TARGET_OBJECTS:ENCODER_CODEC>
+        $<TARGET_OBJECTS:ENCODER_C_DEFAULT>
+        $<TARGET_OBJECTS:ENCODER_ASM_SSE2>
+        $<TARGET_OBJECTS:ENCODER_ASM_SSSE3>
+        $<TARGET_OBJECTS:ENCODER_ASM_SSE4_1>
+        $<TARGET_OBJECTS:ENCODER_ASM_AVX2>
+        $<TARGET_OBJECTS:ENCODER_ASM_AVX512>)
+else()
+    add_library(SvtAv1Enc
+        ${all_files}
+        $<TARGET_OBJECTS:COMMON_CODEC>
+        $<TARGET_OBJECTS:FASTFEAT>
+        $<TARGET_OBJECTS:COMMON_C_DEFAULT>
+        $<TARGET_OBJECTS:ENCODER_GLOBALS>
+        $<TARGET_OBJECTS:ENCODER_CODEC>
+        $<TARGET_OBJECTS:ENCODER_C_DEFAULT>)
+endif()
+
 set_target_properties(SvtAv1Enc PROPERTIES VERSION ${ENC_VERSION})
 set_target_properties(SvtAv1Enc PROPERTIES SOVERSION ${ENC_VERSION_MAJOR})
 target_link_libraries(SvtAv1Enc ${PLATFORM_LIBS})

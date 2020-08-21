@@ -4,9 +4,9 @@
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 #include <math.h>
@@ -131,13 +131,13 @@ void AV1FrameErrorTest::RunSpeedTest(frame_error_func test_impl, int width,
         uint64_t start_time_seconds, start_time_useconds;
         uint64_t finish_time_seconds, finish_time_useconds;
 
-        EbStartTime(&start_time_seconds, &start_time_useconds);
+        eb_start_time(&start_time_seconds, &start_time_useconds);
         frame_error_func func = funcs[i];
         for (int j = 0; j < num_loops; ++j) {
             func(ref, stride, dst, width, height, stride);
         }
-        EbStartTime(&finish_time_seconds, &finish_time_useconds);
-        EbComputeOverallElapsedTimeMs(start_time_seconds,
+        eb_start_time(&finish_time_seconds, &finish_time_useconds);
+        eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                       start_time_useconds,
                                       finish_time_seconds,
                                       finish_time_useconds,

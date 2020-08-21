@@ -1,17 +1,13 @@
 /*
  * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
-
-/*
  * Copyright (c) 2016, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 #include <stdlib.h>
@@ -235,9 +231,9 @@ TEST_CLASS(BlendA64Mask1DTest8B, blend_a64_vmask_ref,
            aom_blend_a64_vmask_c, Vert_Blend_C)
 // Intrinsic
 TEST_CLASS(BlendA64Mask1DTest8B, blend_a64_hmask_ref,
-           aom_blend_a64_hmask_sse4_1, Horz_Blend_SSE4_1)
+           eb_aom_blend_a64_hmask_sse4_1, Horz_Blend_SSE4_1)
 TEST_CLASS(BlendA64Mask1DTest8B, blend_a64_vmask_ref,
-           aom_blend_a64_vmask_sse4_1, Vert_Blend_SSE4_1)
+           eb_aom_blend_a64_vmask_sse4_1, Vert_Blend_SSE4_1)
 
 //////////////////////////////////////////////////////////////////////////////
 // HBD version
@@ -339,8 +335,8 @@ TEST_CLASS(BlendA64Mask1DTestHBD, highbd_blend_a64_vmask_ref,
            aom_highbd_blend_a64_vmask_c, Vert_Blend_Hbd_C)
 // Intrinsic
 TEST_CLASS(BlendA64Mask1DTestHBD, highbd_blend_a64_hmask_ref,
-           aom_highbd_blend_a64_hmask_sse4_1, Horz_Blend_Hbd_SSE4_1)
+           eb_aom_highbd_blend_a64_hmask_sse4_1_8bit, Horz_Blend_Hbd_SSE4_1)
 TEST_CLASS(BlendA64Mask1DTestHBD, highbd_blend_a64_vmask_ref,
-           aom_highbd_blend_a64_vmask_sse4_1, Vert_Blend_Hbd_SSE4_1)
+           eb_aom_highbd_blend_a64_vmask_sse4_1_8bit, Vert_Blend_Hbd_SSE4_1)
 
 }; // namespace

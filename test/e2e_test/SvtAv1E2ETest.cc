@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright (c) 2019, Alliance for Open Media. All rights reserved
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file SvtAv1E2ETest.cc
@@ -114,7 +120,6 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     {"IntraPeriodTest2", {{"IntraPeriod", "10"}}, default_test_vectors},
 
     // TODO: add intra_refresh_type, hierarchical_levels, pred_structure
-    // and base_layer_switch_mode
 
     // test qps, default is 50
     {"QpTest1", {{"RateControlMode", "0"}, {"QP", "0"}}, default_test_vectors},
@@ -137,9 +142,9 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     // test constrained intra, default is 0
     {"ConstrainIntraTest1", {{"ConstrainedIntra", "1"}}, default_test_vectors},
 
-    // test rate control modes, default is 0, 1 is not supported
+    // test rate control modes, default is 0, 1 and 2 is supported
     {"RateControlTest1", {{"RateControlMode", "2"}}, default_test_vectors},
-    {"RateControlTest2", {{"RateControlMode", "3"}}, default_test_vectors},
+    {"RateControlTest2", {{"RateControlMode", "1"}}, default_test_vectors},
 
     // test scene change detection, default is 1
     {"SCDTest1", {{"SceneChangeDetection", "0"}}, default_test_vectors},
@@ -156,15 +161,15 @@ static const std::vector<EncTestSetting> default_enc_settings = {
     // test enable_adaptive_quantization, default is 0
     {"AdapQTest1", {{"AdaptiveQuantization", "1"}}, default_test_vectors},
 
-    // test enable_altrefs, defalt is 1;
-    {"AltrefTest1", {{"EnableAltRefs", "0"}}, default_test_vectors},
+    // test tf_level, default is -1;
+    {"AltrefTest1", {{"TfLevel", "0"}}, default_test_vectors},
 
     // test tile settings
     {"TileTest1", {{"TileRow", "1"}}, default_test_vectors},
     {"TileTest2", {{"TileCol", "1"}}, default_test_vectors},
     {"TileTest3", {{"TileCol", "1"}, {"TileRow", "1"}}, default_test_vectors},
 
-    {"SpeedControlTest1", {{"SpeedControlFlag", "1"}}, default_test_vectors},
+    {"SpeedControlTest1", {{"speed_control_flag", "1"}}, default_test_vectors},
 
     // Validate by setting a low bitrate and MaxQpAllowed, push the encoder to producing
     // large partitions.
@@ -202,8 +207,10 @@ static const std::vector<EncTestSetting> default_enc_settings = {
 
     // test by using a dummy source of color bar
     {"DummySrcTest1", {{"EncoderMode", "8"}}, dummy_test_vectors},
-    {"DummySrcTest2", {{"EncoderMode", "8"}, {"Profile", "2"}}, dummy_422_test_vectors},
-    {"DummySrcTest3", {{"EncoderMode", "8"}, {"Profile", "1"}}, dummy_444_test_vectors},
+
+    // only 420 input is supported
+    //{"DummySrcTest2", {{"EncoderMode", "8"}, {"Profile", "2"}}, dummy_422_test_vectors},
+    //{"DummySrcTest3", {{"EncoderMode", "8"}, {"Profile", "1"}}, dummy_444_test_vectors},
 };
 
 /* clang-format on */

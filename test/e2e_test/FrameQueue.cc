@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file FrameQueue.cc
@@ -83,13 +89,13 @@ class FrameQueueFile : public FrameQueue {
             }
 
             rewind(recon_file_);
-            uint64_t frameNum = frame->timestamp;
-            while (frameNum > 0) {
+            uint64_t frame_num = frame->timestamp;
+            while (frame_num > 0) {
                 int ret = fseeko(recon_file_, frame->buf_size, SEEK_CUR);
                 if (ret != 0) {
                     return;
                 }
-                frameNum--;
+                frame_num--;
             }
             fwrite(frame->buffer, 1, frame->buf_size, recon_file_);
             fflush(recon_file_);

@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file subtract_avg_cfl_test.cc
@@ -23,7 +29,7 @@
 #undef _GNU_SOURCE  // defined in EbThreads.h
 #endif
 #include "gtest/gtest.h"
-#include "EbIntraPrediction.h"
+#include "EbEncIntraPrediction.h"
 #include "aom_dsp_rtcd.h"
 #include "random.h"
 #include "util.h"
@@ -65,7 +71,7 @@ static TxSize TEST_PARAMS[] = {TX_4X4,
                                TX_32X16,
                                TX_32X32};
 
-typedef cfl_subtract_average_fn (*get_sub_avg_fn)(TxSize tx_size);
+typedef CflSubtractAverageFn (*get_sub_avg_fn)(TxSize tx_size);
 
 /** CFL_SUB_AVG_FN is a wrapper for subtract_average_avx2 to setup function
  * arguments easier, defines it to enable AVX2 subtract average functions */
@@ -143,9 +149,9 @@ class CflSubAvgTest : public ::testing::TestWithParam<TxSize> {
     const TxSize tx_size_;                /**< tranform type of this test */
     uint32_t width_;                      /**< width of test data */
     uint32_t height_;                     /**< height of test data */
-    cfl_subtract_average_fn
+    CflSubtractAverageFn
         sub_avg_tst_; /**< asm subtract average function for test*/
-    cfl_subtract_average_fn
+    CflSubtractAverageFn
         sub_avg_ref_; /**< c subtract average function for reference*/
 };
 

@@ -1,17 +1,13 @@
 /*
+ * Copyright(c) 2019 Netflix, Inc.
  * Copyright (c) 2016, Alliance for Open Media. All rights reserved
  *
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
- */
-
-/*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 
 /******************************************************************************
@@ -72,7 +68,7 @@ TxType1D get_txfm1d_types(TxfmType txfm_type);
 void reference_txfm_2d(const double *in, double *out, TxType tx_type,
                        TxSize tx_size, double scale_factor);
 
-double get_scale_factor(Txfm2DFlipCfg &cfg, const int tx_width,
+double get_scale_factor(Txfm2dFlipCfg &cfg, const int tx_width,
                         const int tx_height);
 
 }  // namespace svt_av1_test_reference

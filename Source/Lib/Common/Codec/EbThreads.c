@@ -1,6 +1,12 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 // Summary:
@@ -9,13 +15,19 @@
 // and mutexs.  The goal is to eliminiate platform #define
 // in the code.
 
+#if defined(__has_feature)
+#  if __has_feature(thread_sanitizer)
+#    define EB_THREAD_SANITIZER_ENABLED
+#  endif
+#endif
+
 /****************************************
  * Universal Includes
  ****************************************/
 #include <stdlib.h>
-#include "EbDefinitions.h"
 #include "EbThreads.h"
- /****************************************
+#include "EbLog.h"
+/****************************************
   * Win32 Includes
   ****************************************/
 #ifdef _WIN32
@@ -28,14 +40,16 @@
 #include <semaphore.h>
 #include <unistd.h>
 #endif // _WIN32
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#endif
 #if PRINTF_TIME
 #include <time.h>
 #ifdef _WIN32
-void printfTime(const char *fmt, ...)
-{
+void printfTime(const char *fmt, ...) {
     va_list args;
     va_start(args, fmt);
-    printf("  [%i ms]\t", ((int32_t)clock()));
+    SVT_LOG("  [%i ms]\t", ((int32_t)clock()));
     vprintf(fmt, args);
     va_end(args);
 }
@@ -45,59 +59,60 @@ void printfTime(const char *fmt, ...)
 /****************************************
  * eb_create_thread
  ****************************************/
-EbHandle eb_create_thread(
-    void *thread_function(void *),
-    void *thread_context)
-{
+EbHandle eb_create_thread(void *thread_function(void *), void *thread_context) {
     EbHandle thread_handle = NULL;
 
 #ifdef _WIN32
 
     thread_handle = (EbHandle)CreateThread(
-        NULL,                           // default security attributes
-        0,                              // default stack size
+        NULL, // default security attributes
+        0, // default stack size
         (LPTHREAD_START_ROUTINE)thread_function, // function to be tied to the new thread
-        thread_context,                  // context to be tied to the new thread
-        0,                              // thread active when created
-        NULL);                          // new thread ID
+        thread_context, // context to be tied to the new thread
+        0, // thread active when created
+        NULL); // new thread ID
 
 #else
 
+    int ret;
+    pthread_t *th;
     pthread_attr_t attr;
-    struct sched_param param = {
-        .sched_priority = 99
-    };
+
+    th = malloc(sizeof(pthread_t));
+    if (th == NULL)
+        return NULL;
+
+#ifndef EB_THREAD_SANITIZER_ENABLED
     pthread_attr_init(&attr);
     pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
-    pthread_attr_setschedparam(&attr, &param);
-
     pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
 
-    thread_handle = (pthread_t*)malloc(sizeof(pthread_t));
-    if (thread_handle != NULL) {
-        int32_t ret = pthread_create(
-            (pthread_t*)thread_handle,      // Thread handle
-            &attr,                       // attributes
-            thread_function,                 // function to be run by new thread
-            thread_context);
+    struct sched_param param = {.sched_priority = 99};
+    pthread_attr_setschedparam(&attr, &param);
 
-        if (ret != 0) {
-            if (ret == EPERM) {
-                pthread_cancel(*((pthread_t*)thread_handle));
-                free(thread_handle);
-
-                thread_handle = (pthread_t*)malloc(sizeof(pthread_t));
-                if (thread_handle != NULL) {
-                    pthread_create(
-                        (pthread_t*)thread_handle,      // Thread handle
-                        (const pthread_attr_t*)EB_NULL,                        // attributes
-                        thread_function,                 // function to be run by new thread
-                        thread_context);
-                }
-            }
-        }
-    }
+    ret = pthread_create(th, &attr, thread_function, thread_context);
     pthread_attr_destroy(&attr);
+
+    if (ret == EPERM) {
+        // When creating the thread failed because setting scheduling
+        // parameters failed, retry creating the thread without them.
+        ret = pthread_create(th, NULL, thread_function, thread_context);
+    }
+#else
+    // When running with thread sanitizer, we are not running as root
+    // so the above priority change will always fail, which will cause
+    // issues with the thread sanitizer.
+    // See https://github.com/google/sanitizers/issues/1088
+    // Therefore we never try this, with the thread sanitizer
+    // and just create a normal thread here.
+    ret = pthread_create(th, NULL, thread_function, thread_context);
+#endif
+
+    if (ret != 0) {
+        free(th);
+        return NULL;
+    }
+    thread_handle = th;
 #endif // _WIN32
 
     return thread_handle;
@@ -153,87 +168,67 @@ EbHandle eb_create_thread(
 /****************************************
  * eb_destroy_thread
  ****************************************/
-EbErrorType eb_destroy_thread(
-    EbHandle thread_handle)
-{
+EbErrorType eb_destroy_thread(EbHandle thread_handle) {
     EbErrorType error_return = EB_ErrorNone;
 
 #ifdef _WIN32
-    error_return = !TerminateThread((HANDLE)thread_handle, 0) ? EB_ErrorDestroyThreadFailed : EB_ErrorNone;
+    WaitForSingleObject(thread_handle, INFINITE);
+    error_return = CloseHandle(thread_handle) ? EB_ErrorNone : EB_ErrorDestroyThreadFailed;
 #else
-    error_return = pthread_cancel(*((pthread_t*)thread_handle)) ? EB_ErrorDestroyThreadFailed : EB_ErrorNone;
-    pthread_join(*((pthread_t*)thread_handle), NULL);
+    pthread_join(*((pthread_t *)thread_handle), NULL);
     free(thread_handle);
 #endif // _WIN32
 
     return error_return;
 }
-#if defined(__APPLE__)
-static int32_t semaphore_id(void)
-{
-    static unsigned id = 0;
-    return id++;
-}
-#endif
 
 /***************************************
  * eb_create_semaphore
  ***************************************/
 EbHandle eb_create_semaphore(uint32_t initial_count, uint32_t max_count)
 {
-#ifdef _WIN32
-    EbHandle semaphore_handle = NULL;
-    (void)max_count;
+    EbHandle semaphore_handle;
 
-    semaphore_handle = (EbHandle)CreateSemaphore(
-        NULL,                           // default security attributes
-        initial_count,                   // initial semaphore count
-        max_count,                       // maximum semaphore count
-        NULL);                          // semaphore is not named
-    return semaphore_handle;
-
+#if defined(_WIN32)
+    semaphore_handle = (EbHandle)CreateSemaphore(NULL, // default security attributes
+                                                 initial_count, // initial semaphore count
+                                                 max_count, // maximum semaphore count
+                                                 NULL); // semaphore is not named
 #elif defined(__APPLE__)
     UNUSED(max_count);
-    char name[15];
-    sprintf(name, "/sem_%05d_%03d", getpid(), semaphore_id());
-    sem_t *s = sem_open(name, O_CREAT | O_EXCL, 0644, initial_count);
-    if (s == SEM_FAILED) {
-        fprintf(stderr, "errno: %d\n", errno);
-        return NULL;
-    }
-    sem_unlink(name);
-    return s;
+    semaphore_handle = (EbHandle)dispatch_semaphore_create(initial_count);
 #else
-    EbHandle semaphore_handle = NULL;
-    (void)max_count;
+    UNUSED(max_count);
 
-    semaphore_handle = (sem_t*)malloc(sizeof(sem_t));
-    sem_init(
-        (sem_t*)semaphore_handle,       // semaphore handle
-        0,                              // shared semaphore (not local)
-        initial_count);                  // initial count
+    semaphore_handle = (sem_t *)malloc(sizeof(sem_t));
+    sem_init((sem_t *)semaphore_handle, // semaphore handle
+             0, // shared semaphore (not local)
+             initial_count); // initial count
+#endif
+
     return semaphore_handle;
-
-#endif // _WIN32
 }
 
 /***************************************
  * eb_post_semaphore
  ***************************************/
-EbErrorType eb_post_semaphore(
-    EbHandle semaphore_handle)
+EbErrorType eb_post_semaphore(EbHandle semaphore_handle)
 {
-    EbErrorType return_error = EB_ErrorNone;
+    EbErrorType return_error;
 
 #ifdef _WIN32
-    return_error = !ReleaseSemaphore(
-        semaphore_handle,    // semaphore handle
-        1,                  // amount to increment the semaphore
-        NULL)               // pointer to previous count (optional)
-        ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
+    return_error = !ReleaseSemaphore(semaphore_handle, // semaphore handle
+                                     1, // amount to increment the semaphore
+                                     NULL) // pointer to previous count (optional)
+                       ? EB_ErrorSemaphoreUnresponsive
+                       : EB_ErrorNone;
+#elif defined(__APPLE__)
+    dispatch_semaphore_signal((dispatch_semaphore_t)semaphore_handle);
+    return_error = EB_ErrorNone;
 #else
-    return_error = sem_post((sem_t*)semaphore_handle) ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
-#endif // _WIN32
+    return_error =
+        sem_post((sem_t *)semaphore_handle) ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
+#endif
 
     return return_error;
 }
@@ -241,16 +236,26 @@ EbErrorType eb_post_semaphore(
 /***************************************
  * eb_block_on_semaphore
  ***************************************/
-EbErrorType eb_block_on_semaphore(
-    EbHandle semaphore_handle)
+EbErrorType eb_block_on_semaphore(EbHandle semaphore_handle)
 {
-    EbErrorType return_error = EB_ErrorNone;
+    EbErrorType return_error;
 
 #ifdef _WIN32
-    return_error = WaitForSingleObject((HANDLE)semaphore_handle, INFINITE) ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
+    return_error = WaitForSingleObject((HANDLE)semaphore_handle, INFINITE)
+                       ? EB_ErrorSemaphoreUnresponsive
+                       : EB_ErrorNone;
+#elif defined(__APPLE__)
+    return_error =
+        dispatch_semaphore_wait((dispatch_semaphore_t)semaphore_handle, DISPATCH_TIME_FOREVER)
+            ? EB_ErrorSemaphoreUnresponsive
+            : EB_ErrorNone;
 #else
-    return_error = sem_wait((sem_t*)semaphore_handle) ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
-#endif // _WIN32
+    int ret;
+    do {
+        ret = sem_wait((sem_t *)semaphore_handle);
+    } while(ret == -1 && errno == EINTR);
+    return_error = ret ? EB_ErrorSemaphoreUnresponsive : EB_ErrorNone;
+#endif
 
     return return_error;
 }
@@ -260,43 +265,43 @@ EbErrorType eb_block_on_semaphore(
  ***************************************/
 EbErrorType eb_destroy_semaphore(EbHandle semaphore_handle)
 {
-    EbErrorType return_error = EB_ErrorNone;
+    EbErrorType return_error;
 
 #ifdef _WIN32
-    return_error = !CloseHandle((HANDLE)semaphore_handle) ? EB_ErrorDestroySemaphoreFailed : EB_ErrorNone;
+    return_error =
+        !CloseHandle((HANDLE)semaphore_handle) ? EB_ErrorDestroySemaphoreFailed : EB_ErrorNone;
 #elif defined(__APPLE__)
-    return_error = sem_close(semaphore_handle);
+    dispatch_release((dispatch_semaphore_t)semaphore_handle);
+    return_error = EB_ErrorNone;
 #else
-    return_error = sem_destroy((sem_t*)semaphore_handle) ? EB_ErrorDestroySemaphoreFailed : EB_ErrorNone;
+    return_error =
+        sem_destroy((sem_t *)semaphore_handle) ? EB_ErrorDestroySemaphoreFailed : EB_ErrorNone;
     free(semaphore_handle);
-#endif // _WIN32
+#endif
 
     return return_error;
 }
 /***************************************
  * eb_create_mutex
  ***************************************/
-EbHandle eb_create_mutex(
-    void)
+EbHandle eb_create_mutex(void)
 {
-    EbHandle mutex_handle = NULL;
+    EbHandle mutex_handle;
 
 #ifdef _WIN32
-    mutex_handle = (EbHandle)CreateMutex(
-        NULL,                   // default security attributes
-        FALSE,                  // FALSE := not initially owned
-        NULL);                  // mutex is not named
+    mutex_handle = (EbHandle)CreateMutex(NULL, // default security attributes
+                                         FALSE, // FALSE := not initially owned
+                                         NULL); // mutex is not named
 
 #else
 
     mutex_handle = (EbHandle)malloc(sizeof(pthread_mutex_t));
 
     if (mutex_handle != NULL) {
-        pthread_mutex_init(
-            (pthread_mutex_t*)mutex_handle,
-            NULL);                  // default attributes
+        pthread_mutex_init((pthread_mutex_t *)mutex_handle,
+                           NULL); // default attributes
     }
-#endif // _WIN32
+#endif
 
     return mutex_handle;
 }
@@ -304,16 +309,16 @@ EbHandle eb_create_mutex(
 /***************************************
  * EbPostMutex
  ***************************************/
-EbErrorType eb_release_mutex(
-    EbHandle mutex_handle)
+EbErrorType eb_release_mutex(EbHandle mutex_handle)
 {
-    EbErrorType return_error = EB_ErrorNone;
+    EbErrorType return_error;
 
 #ifdef _WIN32
     return_error = !ReleaseMutex((HANDLE)mutex_handle) ? EB_ErrorCreateMutexFailed : EB_ErrorNone;
 #else
-    return_error = pthread_mutex_unlock((pthread_mutex_t*)mutex_handle) ? EB_ErrorCreateMutexFailed : EB_ErrorNone;
-#endif // _WIN32
+    return_error = pthread_mutex_unlock((pthread_mutex_t *)mutex_handle) ? EB_ErrorCreateMutexFailed
+                                                                         : EB_ErrorNone;
+#endif
 
     return return_error;
 }
@@ -321,35 +326,17 @@ EbErrorType eb_release_mutex(
 /***************************************
  * eb_block_on_mutex
  ***************************************/
-EbErrorType eb_block_on_mutex(
-    EbHandle mutex_handle)
+EbErrorType eb_block_on_mutex(EbHandle mutex_handle)
 {
-    EbErrorType return_error = EB_ErrorNone;
+    EbErrorType return_error;
 
 #ifdef _WIN32
-    return_error = WaitForSingleObject((HANDLE)mutex_handle, INFINITE) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
+    return_error = WaitForSingleObject((HANDLE)mutex_handle, INFINITE) ? EB_ErrorMutexUnresponsive
+                                                                       : EB_ErrorNone;
 #else
-    return_error = pthread_mutex_lock((pthread_mutex_t*)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
-#endif // _WIN32
-
-    return return_error;
-}
-
-/***************************************
- * eb_block_on_mutex_timeout
- ***************************************/
-EbErrorType eb_block_on_mutex_timeout(
-    EbHandle mutex_handle,
-    uint32_t    timeout)
-{
-    EbErrorType return_error = EB_ErrorNone;
-
-#ifdef _WIN32
-    WaitForSingleObject((HANDLE)mutex_handle, timeout);
-#else
-    return_error = pthread_mutex_lock((pthread_mutex_t*)mutex_handle) ? EB_ErrorMutexUnresponsive : EB_ErrorNone;
-    (void)timeout;
-#endif // _WIN32
+    return_error = pthread_mutex_lock((pthread_mutex_t *)mutex_handle) ? EB_ErrorMutexUnresponsive
+                                                                       : EB_ErrorNone;
+#endif
 
     return return_error;
 }
@@ -357,17 +344,18 @@ EbErrorType eb_block_on_mutex_timeout(
 /***************************************
  * eb_destroy_mutex
  ***************************************/
-EbErrorType eb_destroy_mutex(
-    EbHandle mutex_handle)
+EbErrorType eb_destroy_mutex(EbHandle mutex_handle)
 {
-    EbErrorType return_error = EB_ErrorNone;
+    EbErrorType return_error;
 
 #ifdef _WIN32
     return_error = CloseHandle((HANDLE)mutex_handle) ? EB_ErrorDestroyMutexFailed : EB_ErrorNone;
 #else
-    return_error = pthread_mutex_destroy((pthread_mutex_t*)mutex_handle) ? EB_ErrorDestroyMutexFailed : EB_ErrorNone;
+    return_error = pthread_mutex_destroy((pthread_mutex_t *)mutex_handle)
+                       ? EB_ErrorDestroyMutexFailed
+                       : EB_ErrorNone;
     free(mutex_handle);
-#endif // _WIN32
+#endif
 
     return return_error;
 }

@@ -1,7 +1,13 @@
 /*
  * Copyright(c) 2019 Intel Corporation
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 #ifndef EbUnitTestUtility_h
 #define EbUnitTestUtility_h
@@ -180,9 +186,9 @@ extern void eb_unit_test_log_image_u32(const char *const nameBuf,
                                        const uint32_t height,
                                        const ptrdiff_t stride);
 
-extern void EbStartTime(uint64_t *Startseconds, uint64_t *Startuseconds);
-extern void EbFinishTime(uint64_t *Finishseconds, uint64_t *Finishuseconds);
-extern void EbComputeOverallElapsedTimeMs(uint64_t Startseconds,
+extern void eb_start_time(uint64_t *Startseconds, uint64_t *Startuseconds);
+extern void eb_finish_time(uint64_t *Finishseconds, uint64_t *Finishuseconds);
+extern void eb_compute_overall_elapsed_time_ms(uint64_t Startseconds,
                                           uint64_t Startuseconds,
                                           uint64_t Finishseconds,
                                           uint64_t Finishuseconds,

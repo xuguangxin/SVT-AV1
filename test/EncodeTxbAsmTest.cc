@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file EncodeTxbAsmTest.cc
@@ -214,17 +220,17 @@ class EncodeTxbInitLevelTest
         // prepare data, same input, differente output by default.
         prepare_data(tx_size);
 
-        EbStartTime(&start_time_seconds, &start_time_useconds);
+        eb_start_time(&start_time_seconds, &start_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++)
             ref_func_(input_coeff_, width, height, levels_ref_);
 
-        EbStartTime(&middle_time_seconds, &middle_time_useconds);
+        eb_start_time(&middle_time_seconds, &middle_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++)
             test_func(input_coeff_, width, height, levels_test_);
 
-        EbStartTime(&finish_time_seconds, &finish_time_useconds);
+        eb_start_time(&finish_time_seconds, &finish_time_useconds);
 
         // compare the result
         const int stride = width + TX_PAD_HOR;
@@ -237,12 +243,12 @@ class EncodeTxbInitLevelTest
         }
 
         if (is_speed) {
-            EbComputeOverallElapsedTimeMs(start_time_seconds,
+            eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                           start_time_useconds,
                                           middle_time_seconds,
                                           middle_time_useconds,
                                           &time_c);
-            EbComputeOverallElapsedTimeMs(middle_time_seconds,
+            eb_compute_overall_elapsed_time_ms(middle_time_seconds,
                                           middle_time_useconds,
                                           finish_time_seconds,
                                           finish_time_useconds,

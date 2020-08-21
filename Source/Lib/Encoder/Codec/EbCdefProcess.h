@@ -1,42 +1,26 @@
 /*
 * Copyright(c) 2019 Intel Corporation
-* SPDX - License - Identifier: BSD - 2 - Clause - Patent
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
 */
 
 #ifndef EbCdefProcess_h
 #define EbCdefProcess_h
 
-#include "EbDefinitions.h"
-
 #include "EbSystemResourceManager.h"
-#include "EbPictureBufferDesc.h"
-#include "EbSequenceControlSet.h"
-#include "EbUtility.h"
-#include "EbPsnr.h"
-#include "EbPictureControlSet.h"
 #include "EbObject.h"
-/**************************************
- * Cdef Context
- **************************************/
-typedef struct CdefContext_s
-{
-    EbDctor                       dctor;
-    EbFifo                       *cdef_input_fifo_ptr;
-    EbFifo                       *cdef_output_fifo_ptr;
-} CdefContext_t;
 
 /**************************************
  * Extern Function Declarations
  **************************************/
-extern EbErrorType cdef_context_ctor(
-    CdefContext_t           *context_ptr,
-    EbFifo                       *cdef_input_fifo_ptr,
-    EbFifo                       *cdef_output_fifo_ptr,
-    EbBool                  is16bit,
-    uint32_t                max_input_luma_width,
-    uint32_t                max_input_luma_height
-   );
+extern EbErrorType cdef_context_ctor(EbThreadContext *  thread_context_ptr,
+                                     const EbEncHandle *enc_handle_ptr, int index);
 
-extern void* cdef_kernel(void *input_ptr);
+extern void *cdef_kernel(void *input_ptr);
 
 #endif

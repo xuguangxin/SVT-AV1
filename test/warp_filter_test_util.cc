@@ -4,9 +4,9 @@
  * This source code is subject to the terms of the BSD 2 Clause License and
  * the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
  * was not distributed with this source code in the LICENSE file, you can
- * obtain it at www.aomedia.org/license/software. If the Alliance for Open
+ * obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
  * Media Patent License 1.0 was not distributed with this source code in the
- * PATENTS file, you can obtain it at www.aomedia.org/license/patent.
+ * PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
  */
 // workaround to eliminate the compiling warning on linux
 // The macro will conflict with definition in gtest.h
@@ -20,6 +20,7 @@
 #include "EbUnitTestUtility.h"
 #include "EbWarpedMotion.h"
 #include "warp_filter_test_util.h"
+#include "convolve.h"
 
 using std::make_tuple;
 using std::tuple;
@@ -167,7 +168,6 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
     uint8_t *output = new uint8_t[output_n];
     int32_t mat[8];
     int16_t alpha, beta, gamma, delta;
-    ConvolveParams conv_params = get_conv_params(ref, 0, 0, bd);
     ConvBufType *dsta = new ConvBufType[output_n];
     generate_warped_model(rnd_,
                           mat,
@@ -192,7 +192,7 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
     sub_y = 0;
     int do_average = 0;
 
-    conv_params =
+    ConvolveParams conv_params =
         get_conv_params_no_round(ref, do_average, 0, dsta, out_w, 1, bd);
     conv_params.use_jnt_comp_avg = 0;
 
@@ -201,7 +201,7 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
     uint64_t start_time_seconds, start_time_useconds;
     uint64_t finish_time_seconds, finish_time_useconds;
 
-    EbStartTime(&start_time_seconds, &start_time_useconds);
+    eb_start_time(&start_time_seconds, &start_time_useconds);
 
     for (int i = 0; i < num_loops; ++i)
         test_impl(mat,
@@ -223,8 +223,8 @@ void AV1WarpFilterTest::RunSpeedTest(warp_affine_func test_impl) {
                   gamma,
                   delta);
 
-    EbStartTime(&finish_time_seconds, &finish_time_useconds);
-    EbComputeOverallElapsedTimeMs(start_time_seconds,
+    eb_start_time(&finish_time_seconds, &finish_time_useconds);
+    eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                   start_time_useconds,
                                   finish_time_seconds,
                                   finish_time_useconds,
@@ -496,7 +496,7 @@ void AV1HighbdWarpFilterTest::RunSpeedTest(highbd_warp_affine_func test_impl) {
     uint64_t start_time_seconds_ref, start_time_useconds_ref;
     uint64_t finish_time_seconds_ref, finish_time_useconds_ref;
 
-    EbStartTime(&start_time_seconds_tst, &start_time_useconds_tst);
+    eb_start_time(&start_time_seconds_tst, &start_time_useconds_tst);
 
     for (int i = 0; i < num_loops; ++i)
         test_impl(mat,
@@ -519,14 +519,14 @@ void AV1HighbdWarpFilterTest::RunSpeedTest(highbd_warp_affine_func test_impl) {
                   gamma,
                   delta);
 
-    EbStartTime(&finish_time_seconds_tst, &finish_time_useconds_tst);
-    EbComputeOverallElapsedTimeMs(start_time_seconds_tst,
+    eb_start_time(&finish_time_seconds_tst, &finish_time_useconds_tst);
+    eb_compute_overall_elapsed_time_ms(start_time_seconds_tst,
                                   start_time_useconds_tst,
                                   finish_time_seconds_tst,
                                   finish_time_useconds_tst,
                                   &elapsed_time_tst);
 
-    EbStartTime(&start_time_seconds_ref, &start_time_useconds_ref);
+    eb_start_time(&start_time_seconds_ref, &start_time_useconds_ref);
 
     for (int i = 0; i < num_loops; ++i)
         eb_av1_highbd_warp_affine_c(mat,
@@ -549,8 +549,8 @@ void AV1HighbdWarpFilterTest::RunSpeedTest(highbd_warp_affine_func test_impl) {
                                     gamma,
                                     delta);
 
-    EbStartTime(&finish_time_seconds_ref, &finish_time_useconds_ref);
-    EbComputeOverallElapsedTimeMs(start_time_seconds_ref,
+    eb_start_time(&finish_time_seconds_ref, &finish_time_useconds_ref);
+    eb_compute_overall_elapsed_time_ms(start_time_seconds_ref,
                                   start_time_useconds_ref,
                                   finish_time_seconds_ref,
                                   finish_time_useconds_ref,

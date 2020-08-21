@@ -1,7 +1,13 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
 
 /******************************************************************************
  * @file ResidualTest.cc
@@ -10,7 +16,6 @@
  * - residual_kernel_avx2
  * - residual_kernel16bit_sse2_intrin
  * - residual_kernel_sub_sampled{w}x{h}_sse_intrin
- * - sum_residual8bit_avx2_intrin
  *
  * @author Cidana-Ivy, Cidana-Wenyao
  *
@@ -31,7 +36,7 @@
 
 #include "EbDefinitions.h"
 #include "EbPictureOperators.h"
-#include "EbIntraPrediction.h"
+#include "EbEncIntraPrediction.h"
 #include "EbUtility.h"
 #include "EbUnitTestUtility.h"
 #include "aom_dsp_rtcd.h"
@@ -195,8 +200,8 @@ class ResidualKernelTest
                           area_width_,
                           area_height_);
 
-        for (int i = 0; i < sizeof(residual_kernel8bit_func_table) /
-                                sizeof(*residual_kernel8bit_func_table);
+        for (int i = 0; i < (int) (sizeof(residual_kernel8bit_func_table) /
+                                sizeof(*residual_kernel8bit_func_table));
              i++) {
             eb_buf_random_s16(residual2_, test_size_);
             residual_kernel8bit_func_table[i](input_,
@@ -221,7 +226,7 @@ class ResidualKernelTest
 
         prepare_data();
 
-        EbStartTime(&start_time_seconds, &start_time_useconds);
+        eb_start_time(&start_time_seconds, &start_time_useconds);
 
         for (uint64_t i = 0; i < num_loop; i++) {
             residual_kernel8bit_c(input_,
@@ -234,19 +239,19 @@ class ResidualKernelTest
                           area_height_);
         }
 
-        EbStartTime(&middle_time_seconds, &middle_time_useconds);
-        EbComputeOverallElapsedTimeMs(start_time_seconds,
+        eb_start_time(&middle_time_seconds, &middle_time_useconds);
+        eb_compute_overall_elapsed_time_ms(start_time_seconds,
                                       start_time_useconds,
                                       middle_time_seconds,
                                       middle_time_useconds,
                                       &time_c);
 
-        for (int i = 0; i < sizeof(residual_kernel8bit_func_table) /
-                                sizeof(*residual_kernel8bit_func_table);
+        for (int i = 0; i < (int) (sizeof(residual_kernel8bit_func_table) /
+                                sizeof(*residual_kernel8bit_func_table));
              i++) {
             eb_buf_random_s16(residual2_, test_size_);
 
-            EbStartTime(&middle_time_seconds, &middle_time_useconds);
+            eb_start_time(&middle_time_seconds, &middle_time_useconds);
 
             for (uint64_t j = 0; j < num_loop; j++) {
                 residual_kernel8bit_func_table[i](input_,
@@ -260,8 +265,8 @@ class ResidualKernelTest
             }
             check_residuals(area_width_, area_height_);
 
-            EbStartTime(&finish_time_seconds, &finish_time_useconds);
-            EbComputeOverallElapsedTimeMs(middle_time_seconds,
+            eb_start_time(&finish_time_seconds, &finish_time_useconds);
+            eb_compute_overall_elapsed_time_ms(middle_time_seconds,
                                               middle_time_useconds,
                                               finish_time_seconds,
                                               finish_time_useconds,
@@ -285,7 +290,7 @@ class ResidualKernelTest
                                          residual_stride_,
                                          area_width_,
                                          area_height_);
-        residual_kernel16bit(input16bit_,
+        residual_kernel16bit_c(input16bit_,
                              input_stride_,
                              pred16bit_,
                              pred_stride_,
@@ -327,14 +332,6 @@ typedef struct SubSampledParam {
     AreaSize area_size;
     SUB_SAMPLED_TEST_FUNC test_func;
 } SubSampledParam;
-
-SubSampledParam SUB_SAMPLED_PARAMS[] = {
-    {AreaSize(4, 4), &residual_kernel_sub_sampled4x4_sse_intrin},
-    {AreaSize(8, 8), &residual_kernel_sub_sampled8x8_sse2_intrin},
-    {AreaSize(16, 16), &residual_kernel_sub_sampled16x16_sse2_intrin},
-    {AreaSize(32, 32), &residual_kernel_sub_sampled32x32_sse2_intrin},
-    {AreaSize(64, 64), &residual_kernel_sub_sampled64x64_sse2_intrin}};
-
 typedef std::tuple<TestPattern, SubSampledParam> TestSubParam;
 
 class ResidualSubSampledTest
@@ -362,15 +359,6 @@ class ResidualSubSampledTest
                                area_width_,
                                area_height_,
                                false);
-        residual_kernel_subsampled(input_,
-                                   input_stride_,
-                                   pred_,
-                                   pred_stride_,
-                                   residual2_,
-                                   residual_stride_,
-                                   area_width_,
-                                   area_height_,
-                                   false);
 
         check_residuals(area_width_, area_height_);
     }
@@ -381,11 +369,6 @@ class ResidualSubSampledTest
 TEST_P(ResidualSubSampledTest, MatchTest) {
     run_sub_sample_test();
 };
-
-INSTANTIATE_TEST_CASE_P(
-    ResidualUtil, ResidualSubSampledTest,
-    ::testing::Combine(::testing::ValuesIn(TEST_PATTERNS),
-                       ::testing::ValuesIn(SUB_SAMPLED_PARAMS)));
 
 typedef std::tuple<int, TestPattern> TestSumParam;
 
@@ -428,29 +411,11 @@ class ResidualSumTest : public ::testing::Test,
         default: break;
         }
     }
-
-    void run_test() {
-        int32_t sum_block1 = 0, sum_block2 = 0;
-        prepare_data();
-
-        sum_block1 =
-            sum_residual8bit_avx2_intrin(residual_, size_, residual_stride_);
-        sum_block2 = sum_residual_c(residual_, size_, residual_stride_);
-
-        EXPECT_EQ(sum_block1, sum_block2)
-            << "compare sum residual result error";
-    }
-
     uint32_t size_;
     TestPattern test_pattern_;
     int16_t *residual_;
     uint32_t residual_stride_;
 };
-
-TEST_P(ResidualSumTest, MatchTest) {
-    run_test();
-};
-
 INSTANTIATE_TEST_CASE_P(ResidualUtil, ResidualSumTest,
                         ::testing::Combine(::testing::Values(4, 8, 16, 32, 64),
                                            ::testing::ValuesIn(TEST_PATTERNS)));

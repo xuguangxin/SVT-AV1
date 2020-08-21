@@ -1,7 +1,14 @@
 /*
- * Copyright(c) 2019 Netflix, Inc.
- * SPDX - License - Identifier: BSD - 2 - Clause - Patent
- */
+* Copyright(c) 2019 Netflix, Inc.
+*
+* This source code is subject to the terms of the BSD 2 Clause License and
+* the Alliance for Open Media Patent License 1.0. If the BSD 2 Clause License
+* was not distributed with this source code in the LICENSE file, you can
+* obtain it at https://www.aomedia.org/license/software-license. If the Alliance for Open
+* Media Patent License 1.0 was not distributed with this source code in the
+* PATENTS file, you can obtain it at https://www.aomedia.org/license/patent-license.
+*/
+
 /******************************************************************************
  * @file RefDecoder.cc
  *
@@ -173,10 +180,10 @@ typedef enum ATTRIBUTE_PACKED {
     COMP_INTER_MODE_NUM = COMP_INTER_MODE_END - COMP_INTER_MODE_START,
     INTRA_MODES = PAETH_PRED + 1,  // PAETH_PRED has to be the last intra mode.
     INTRA_INVALID = MB_MODE_COUNT  // For uv_mode in inter blocks
-} PREDICTION_MODE;
+} PredictionMode;
 
 // TODO(ltrudeau) Do we really want to pack this?
-// TODO(ltrudeau) Do we match with PREDICTION_MODE?
+// TODO(ltrudeau) Do we match with PredictionMode?
 typedef enum ATTRIBUTE_PACKED {
     UV_DC_PRED,        // Average of above and left pixels
     UV_V_PRED,         // Vertical
@@ -194,14 +201,14 @@ typedef enum ATTRIBUTE_PACKED {
     UV_CFL_PRED,       // Chroma-from-Luma
     UV_INTRA_MODES,
     UV_MODE_INVALID,  // For uv_mode in inter blocks
-} UV_PREDICTION_MODE;
+} UvPredictionMode;
 
 typedef enum ATTRIBUTE_PACKED {
     SIMPLE_TRANSLATION,
     OBMC_CAUSAL,    // 2-sided OBMC
     WARPED_CAUSAL,  // 2-sided WARPED
     MOTION_MODES
-} MOTION_MODE;
+} MotionMode;
 
 using namespace svt_av1_e2e_tools;
 
@@ -413,7 +420,7 @@ void RefDecoder::trans_video_frame(const void* image_handle,
     memcpy(frame.planes, image->planes, sizeof(frame.planes));
     frame.bits_per_sample = image->bit_depth;
     // there is mismatch between "bit_depth" and "fmt", following is a patch
-    if (image->fmt | AOM_IMG_FMT_HIGHBITDEPTH)
+    if (image->fmt && AOM_IMG_FMT_HIGHBITDEPTH)
         frame.bits_per_sample = 10;
     frame.timestamp =
         init_timestamp_ + ((uint64_t)dec_frame_cnt_ * frame_interval_);
