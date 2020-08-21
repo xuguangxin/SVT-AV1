@@ -929,7 +929,9 @@ static int firstpass_inter_prediction(
     return this_inter_error;
 }
 
+#if !SWITCH_MODE_BASED_ON_STATISTICS
 void soft_cycles_reduction_mrp(ModeDecisionContext *context_ptr, uint8_t *mrp_level);
+#endif
 void set_inter_inter_distortion_based_reference_pruning_controls(
     ModeDecisionContext *mdctxt, uint8_t inter_inter_distortion_based_reference_pruning_mode) ;
 void set_inter_comp_controls(ModeDecisionContext *mdctxt, uint8_t inter_comp_mode);
@@ -946,7 +948,9 @@ extern EbErrorType first_pass_signal_derivation_block(
     // Set inter_inter_distortion_based_reference_pruning
     context_ptr->inter_inter_distortion_based_reference_pruning = 0;
 
+#if !SWITCH_MODE_BASED_ON_STATISTICS
     soft_cycles_reduction_mrp(context_ptr, &context_ptr->inter_inter_distortion_based_reference_pruning);
+#endif
     set_inter_inter_distortion_based_reference_pruning_controls(context_ptr, context_ptr->inter_inter_distortion_based_reference_pruning);
 
     // set compound_types_to_try
@@ -1459,26 +1463,6 @@ EbErrorType first_pass_signal_derivation_multi_processes(SequenceControlSet *   
     // 1                 ON
     pcs_ptr->tx_size_search_mode = 1;
 
-    // Assign whether to use TXS in inter classes (if TXS is ON)
-    // 0 OFF - TXS in intra classes only
-    // 1 ON - TXS in all classes
-    // 2 ON - INTER TXS restricted to max 1 depth
-    pcs_ptr->txs_in_inter_classes = 0;
-
-    // inter intra pred                      Settings
-    // 0                                     OFF
-    // 1                                     FULL
-    // 2                                     FAST 1 : Do not inject for non basic inter
-    // 3                                     FAST 2 : 1 + MRP pruning/ similar based disable + NIC tuning
-    pcs_ptr->enable_inter_intra = 0;
-
-    // Set compound mode      Settings
-    // 0                      OFF: No compond mode search : AVG only
-    // 1                      ON: Full
-    // 2                      ON: Fast : similar based disable
-    // 3                      ON: Fast : MRP pruning/ similar based disable
-    pcs_ptr->compound_mode = 0;
-
     // Set frame end cdf update mode      Settings
     // 0                                  OFF
     // 1                                  ON
@@ -1532,6 +1516,10 @@ void set_depth_cycle_redcution_controls(ModeDecisionContext *mdctxt, uint8_t dep
 void adaptive_md_cycles_redcution_controls(ModeDecisionContext *mdctxt, uint8_t adaptive_md_cycles_red_mode);
 void set_obmc_controls(ModeDecisionContext *mdctxt, uint8_t obmc_mode) ;
 void set_txs_cycle_reduction_controls(ModeDecisionContext *mdctxt, uint8_t txs_cycles_red_mode);
+
+void coeff_based_switch_md_controls(ModeDecisionContext *mdctxt, uint8_t switch_md_mode_based_on_sq_coeff_level);
+void md_subpel_me_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_me_level);
+void md_subpel_pme_controls(ModeDecisionContext *mdctxt, uint8_t md_subpel_pme_level);
 #if !REMOVE_USELESS_CODE
 void set_inter_intra_distortion_based_reference_pruning_controls(ModeDecisionContext *mdctxt, uint8_t inter_intra_distortion_based_reference_pruning_mode);
 void set_block_based_depth_reduction_controls(ModeDecisionContext *mdctxt, uint8_t block_based_depth_reduction_level);
@@ -1658,6 +1646,12 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // 2                    Reduced set
     context_ptr->bipred3x3_injection = 0;
 
+    // Level   Settings
+    // 0       OFF: No compound mode search : AVG only
+    // 1       ON: Full - AVG/DIST/DIFF/WEDGE
+    // 2       ON: Fast - Use AVG only for non-closest ref frames or ref frames with high distortion
+    context_ptr->inter_compound_mode = 0;
+
     // Level                Settings
     // 0                    Level 0: OFF
     // 1                    Level 1: sub-pel refinement off
@@ -1765,18 +1759,22 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     // md_stage_1_cand_prune_th (for single candidate removal per class)
     // Remove candidate if deviation to the best is higher than md_stage_1_cand_prune_th
-        context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+    context_ptr->md_stage_1_cand_prune_th = (uint64_t)~0;
+    // md_stage_1_class_prune_th (for class removal)
+    // Remove class if deviation to the best higher than TH_C
+
+    context_ptr->md_stage_1_class_prune_th = (uint64_t)~0;
 
     // md_stage_2_3_cand_prune_th (for single candidate removal per class)
     // Remove candidate if deviation to the best is higher than
     // md_stage_2_3_cand_prune_th
-        context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
+    context_ptr->md_stage_2_3_cand_prune_th = (uint64_t)~0;
 
     // md_stage_2_3_class_prune_th (for class removal)
     // Remove class if deviation to the best is higher than
     // md_stage_2_3_class_prune_th
 
-        context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
+    context_ptr->md_stage_2_3_class_prune_th = (uint64_t)~0;
 
     context_ptr->coeff_area_based_bypass_nsq_th = 0;
 
@@ -1786,7 +1784,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     // NsqCycleRControls*nsq_cycle_red_ctrls = &context_ptr->nsq_cycles_red_ctrls;
     // Overwrite allcation action when nsq_cycles_reduction th is higher.
-        context_ptr->nsq_cycles_reduction_th = 0;
+    context_ptr->nsq_cycles_reduction_th = 0;
 
     // Depth cycles reduction level: TBD
     uint8_t depth_cycles_red_mode = 0;
@@ -1800,25 +1798,21 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     // skip HA, HB, and H4 if h_cost > (weighted sq_cost)
     // skip VA, VB, and V4 if v_cost > (weighted sq_cost)
     context_ptr->sq_weight = (uint32_t)~0;
-    // nsq_hv_level  needs sq_weight to be ON
-    // 0: OFF
-    // 1: ON 10% + skip HA/HB/H4  or skip VA/VB/V4
-    // 2: ON 10% + skip HA/HB  or skip VA/VB   ,  5% + skip H4  or skip V4
-    context_ptr->nsq_hv_level = 0;
 
     // Set pred ME full search area
     context_ptr->pred_me_full_pel_search_width = PRED_ME_FULL_PEL_REF_WINDOW_WIDTH_15;
     context_ptr->pred_me_full_pel_search_height = PRED_ME_FULL_PEL_REF_WINDOW_HEIGHT_15;
 
     // Set coeff_based_nsq_cand_reduction
-    context_ptr->coeff_based_nsq_cand_reduction = EB_FALSE;
+    context_ptr->switch_md_mode_based_on_sq_coeff = 0;
+    coeff_based_switch_md_controls(context_ptr, context_ptr->switch_md_mode_based_on_sq_coeff);
 
     // Set pic_obmc_level @ MD
     context_ptr->md_pic_obmc_level = 0;
     set_obmc_controls(context_ptr, context_ptr->md_pic_obmc_level);
 
     // Set enable_inter_intra @ MD
-    context_ptr->md_enable_inter_intra = 0;
+    context_ptr->md_inter_intra_level = 0;
 
     // Set enable_paeth @ MD
     context_ptr->md_enable_paeth = 0;
@@ -1828,6 +1822,29 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     // Set md_tx_size_search_mode @ MD
     context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
+    
+    // Assign whether to use TXS in inter classes (if TXS is ON)
+    // 0 OFF - Use TXS for intra candidates only
+    // 1 ON  - Use TXS for all candidates
+    // 2 ON  - INTER TXS restricted to max 1 depth
+    context_ptr->txs_in_inter_classes = 0;
+
+
+    // Each NIC scaling level corresponds to a scaling factor, given by the below {x,y}
+    // combinations, where x is the numerator, and y is the denominator.  e.g. {1,8} corresponds
+    // to 1/8x scaling of the base NICs, which are set in set_md_stage_counts().
+    //{10,8 },    // level0
+    //{ 8,8 },    // level1
+    //{ 7,8 },    // level2
+    //{ 6,8 },    // level3
+    //{ 5,8 },    // level4
+    //{ 4,8 },    // level5
+    //{ 3,8 },    // level6
+    //{ 2,8 },    // level7
+    //{ 3,16},    // level8
+    //{ 1,8 },    // level9
+    //{ 1,16}     // level10
+    context_ptr->nic_scaling_level = 9;
 
     uint8_t txs_cycles_reduction_level = 0;
     set_txs_cycle_reduction_controls(context_ptr, txs_cycles_reduction_level);
@@ -1842,6 +1859,9 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     // Set md_allow_intrabc @ MD
     context_ptr->md_allow_intrabc = 0;
+
+    // Set md_palette_level @ MD
+    context_ptr->md_palette_level = 0;
 
     // intra_similar_mode
     // 0: OFF
@@ -1862,6 +1882,16 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->md_subpel_search_level = 0;
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
 #endif
+    
+    context_ptr->md_nsq_mv_search_level = 4;
+    md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
+
+    context_ptr->md_subpel_me_level = 2;
+    md_subpel_me_controls(context_ptr, context_ptr->md_subpel_me_level);
+
+
+    context_ptr->md_subpel_pme_level = 2;
+    md_subpel_pme_controls(context_ptr, context_ptr->md_subpel_pme_level);
 
     // Set max_ref_count @ MD
     context_ptr->md_max_ref_count = 4;
@@ -1882,6 +1912,9 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->full_cost_shut_fast_rate_flag = EB_FALSE;
 
     context_ptr->skip_intra = 0;
+
+    context_ptr->mds3_intra_prune_th = (uint16_t)~0;
+    context_ptr->skip_cfl_cost_dev_th = (uint16_t)~0;
 
     return return_error;
 }
