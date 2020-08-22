@@ -26,6 +26,7 @@
 #include "dwt.h" // to move to firstpass.c
 #include "EbPictureDecisionProcess.h"
 #include "EbModeDecisionConfigurationProcess.h"
+#include "mv.h"
 
 #define OUTPUT_FPF 0
 
