@@ -1822,7 +1822,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
 
     // Set md_tx_size_search_mode @ MD
     context_ptr->md_tx_size_search_mode = pcs_ptr->parent_pcs_ptr->tx_size_search_mode;
-    
+
     // Assign whether to use TXS in inter classes (if TXS is ON)
     // 0 OFF - Use TXS for intra candidates only
     // 1 ON  - Use TXS for all candidates
@@ -1882,7 +1882,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->md_subpel_search_level = 0;
     md_subpel_search_controls(context_ptr, context_ptr->md_subpel_search_level, enc_mode);
 #endif
-    
+
     context_ptr->md_nsq_mv_search_level = 4;
     md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
 
