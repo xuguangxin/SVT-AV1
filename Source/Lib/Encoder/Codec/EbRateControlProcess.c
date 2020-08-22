@@ -5911,7 +5911,7 @@ int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval) {
   return AOMMAX(interval, min_gf_interval);
 }
 
-#define INT_MAX 0x7fffffff
+//#define INT_MAX 0x7fffffff
 #define BPER_MB_NORMBITS 9
 #define FRAME_OVERHEAD_BITS 200
 void av1_rc_init(SequenceControlSet *scs_ptr) {

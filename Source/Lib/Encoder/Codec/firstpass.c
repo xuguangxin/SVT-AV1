@@ -1538,7 +1538,6 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     ModeDecisionContext *context_ptr) {
     EbErrorType return_error = EB_ErrorNone;
 
-    EbEncMode enc_mode = pcs_ptr->enc_mode;
     uint8_t pd_pass = context_ptr->pd_pass;
     // sb_classifier levels
     // Level                Settings
