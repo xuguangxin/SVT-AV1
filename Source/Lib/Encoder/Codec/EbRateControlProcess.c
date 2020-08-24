@@ -3810,7 +3810,6 @@ enum {
 // that are not marked as coded with 0,0 motion in the first pass.
 #define FAST_MOVING_KF_GROUP_THRESH 5
 #define MEDIUM_MOVING_KF_GROUP_THRESH 30
-#define STATIC_KF_GROUP_THRESH 70
 #define MAX_QPS_COMP_I 150
 #define MAX_QPS_COMP_I_LR 42
 #define MAX_QPS_COMP_NONI 300

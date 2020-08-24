@@ -1885,7 +1885,7 @@ EbErrorType first_pass_signal_derivation_enc_dec_kernel(
     context_ptr->md_nsq_mv_search_level = 4;
     md_nsq_motion_search_controls(context_ptr, context_ptr->md_nsq_mv_search_level);
 
-    context_ptr->md_subpel_me_level = 2;
+    context_ptr->md_subpel_me_level = 0;
     md_subpel_me_controls(context_ptr, context_ptr->md_subpel_me_level);
 
 

@@ -10598,6 +10598,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              uint32_t qp, uint32_t *y_count_non_zero_coeffs, uint64_t *y_coeff_bits,
 #endif
                              uint64_t *y_full_distortion) {
+#if TWOPASS_RC
+    SequenceControlSet *scs_ptr           = (SequenceControlSet *)pcs_ptr->scs_wrapper_ptr->object_ptr;
+#endif
     uint32_t full_lambda = context_ptr->hbd_mode_decision
         ? context_ptr->full_lambda_md[EB_10_BIT_MD]
         : context_ptr->full_lambda_md[EB_8_BIT_MD];
@@ -10650,6 +10653,9 @@ void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                 continue;
         }
 #if TX_EARLY_EXIT
+#if TWOPASS_RC
+        if (!scs_ptr->use_output_stat_file)
+#endif
         // Variance/cost_depth_1-to-cost_depth_0 based early txs exit
         if (context_ptr->source_variance < TXS_EXIT_VAR_TH && context_ptr->tx_depth == 2 && best_tx_depth == 0)
             continue;
@@ -15118,9 +15124,15 @@ EB_EXTERN EbErrorType mode_decision_sb(SequenceControlSet *scs_ptr, PictureContr
         uint8_t  redundant_blk_avail = 0;
         uint16_t redundant_blk_mds;
 #if SWITCH_MODE_BASED_ON_SQ_COEFF || SWITCH_MODE_BASED_ON_STATISTICS
+#if TWOPASS_RC
+        if (!scs_ptr->use_output_stat_file) {
+#endif
         // Reset settings, in case they were over-written by previous block
         signal_derivation_enc_dec_kernel_oq(scs_ptr, pcs_ptr, context_ptr,0);
         signal_derivation_block(pcs_ptr, context_ptr,0);
+#if TWOPASS_RC
+        }
+#endif
 #endif
 #if SWITCH_MODE_BASED_ON_STATISTICS
         // Use more aggressive (faster, but less accurate) settigns for unlikely paritions (incl. SQ)

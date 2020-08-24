@@ -22,7 +22,6 @@
 #if TWOPASS_RC
 
 //#define INT_MAX 0x7fffffff
-#define STATIC_KF_GROUP_THRESH 99
 
 #define DEFAULT_KF_BOOST 2300
 #define DEFAULT_GF_BOOST 2000
