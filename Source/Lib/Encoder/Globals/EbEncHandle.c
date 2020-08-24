@@ -2097,6 +2097,10 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
     scs_ptr->static_config.super_block_size = (scs_ptr->static_config.rate_control_mode > 0) ? 64 : scs_ptr->static_config.super_block_size;
 #endif
    // scs_ptr->static_config.hierarchical_levels = (scs_ptr->static_config.rate_control_mode > 1) ? 3 : scs_ptr->static_config.hierarchical_levels;
+#if FIRST_PASS_SETUP
+    if (scs_ptr->use_output_stat_file)
+        scs_ptr->static_config.hierarchical_levels = 0;
+#endif
     // Configure the padding
     scs_ptr->left_padding = BLOCK_SIZE_64 + 4;
     scs_ptr->top_padding = BLOCK_SIZE_64 + 4;
@@ -2196,6 +2200,10 @@ void set_param_based_on_input(SequenceControlSet *scs_ptr)
 #endif
     else
         scs_ptr->over_boundary_block_mode = scs_ptr->static_config.over_bndry_blk;
+#if FIRST_PASS_SETUP
+    if (scs_ptr->use_output_stat_file)
+        scs_ptr->over_boundary_block_mode = 0;
+#endif
     if (scs_ptr->static_config.enable_mfmv == DEFAULT)
 #if !UNIFY_SC_NSC
         if (scs_ptr->static_config.screen_content_mode == 1)
