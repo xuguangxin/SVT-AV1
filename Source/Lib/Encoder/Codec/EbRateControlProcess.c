@@ -6954,6 +6954,7 @@ void *rate_control_kernel(void *input_ptr) {
                     pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
                     pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_height);
             }
+            else
 #endif
             if (scs_ptr->static_config.rate_control_mode) {
                 pcs_ptr->parent_pcs_ptr->intra_selected_org_qp = 0;
