@@ -168,15 +168,15 @@ static EbErrorType encode(int32_t argc, char *argv[], EncodePass pass) {
                 start_time((uint64_t *)&configs[inst_cnt]->performance_context.lib_start_time[0],
                            (uint64_t *)&configs[inst_cnt]->performance_context.lib_start_time[1]);
 
-#if TWOPASS_RC
                 if (pass == ENCODE_FIRST_PASS) {
                     //TODO: remove this if we can use a quick first pass in svt av1 library.
                     configs[inst_cnt]->enc_mode = MAX_ENC_PRESET;
+#if TWOPASS_RC
                     configs[inst_cnt]->look_ahead_distance = 1;
                     configs[inst_cnt]->enable_tpl_la = 0;
                     configs[inst_cnt]->rate_control_mode = 0;
-                }
 #endif
+                }
 
                 return_errors[inst_cnt] = init_encoder(
                     configs[inst_cnt], app_callbacks[inst_cnt], inst_cnt);
