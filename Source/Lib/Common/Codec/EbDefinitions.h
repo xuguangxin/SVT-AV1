@@ -532,6 +532,7 @@ extern "C" {
 #define FORCE_DECODE_ORDER   1
 #define FIRST_PASS_SETUP     1
 #define FASTER_FIRST_PASS    1
+#define FIX_TPL              1  // fixed tpl poc128 error
 
 
 
