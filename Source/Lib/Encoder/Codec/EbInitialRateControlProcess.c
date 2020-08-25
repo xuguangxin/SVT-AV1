@@ -2099,6 +2099,11 @@ void *initial_rate_control_kernel(void *input_ptr) {
                 determine_picture_offset_in_queue(
                     encode_context_ptr, pcs_ptr, in_results_ptr);
 
+#if TWOPASS_RC
+            if (scs_ptr->use_input_stat_file && scs_ptr->static_config.rate_control_mode == 1)
+                ; //skip 2pass VBR
+            else
+#endif
             if (scs_ptr->static_config.rate_control_mode) {
                 // Getting the Histogram Queue Data
                 get_histogram_queue_data(scs_ptr, encode_context_ptr, pcs_ptr);
@@ -2216,6 +2221,11 @@ void *initial_rate_control_kernel(void *input_ptr) {
                         else
                             pcs_ptr->end_of_sequence_region = EB_FALSE;
 
+#if TWOPASS_RC
+                        if (scs_ptr->use_input_stat_file && scs_ptr->static_config.rate_control_mode == 1)
+                            ; //skip 2pass VBR
+                        else
+#endif
                         if (scs_ptr->static_config.rate_control_mode) {
                             // Determine offset from the Head Ptr for HLRC histogram queue and set the life count
                             if (scs_ptr->static_config.look_ahead_distance != 0) {

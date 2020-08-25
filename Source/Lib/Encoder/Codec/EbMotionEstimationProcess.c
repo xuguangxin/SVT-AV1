@@ -2306,7 +2306,11 @@ void *motion_estimation_kernel(void *input_ptr) {
 
             eb_block_on_mutex(pcs_ptr->rc_distortion_histogram_mutex);
 
-            if (scs_ptr->static_config.rate_control_mode) {
+            if (scs_ptr->static_config.rate_control_mode
+#if TWOPASS_RC
+                && !(scs_ptr->use_input_stat_file && scs_ptr->static_config.rate_control_mode == 1) //skip 2pass VBR
+#endif
+                ) {
                 if (pcs_ptr->slice_type != I_SLICE) {
                     for (uint32_t y_sb_index = y_sb_start_index; y_sb_index < y_sb_end_index;
                          ++y_sb_index)

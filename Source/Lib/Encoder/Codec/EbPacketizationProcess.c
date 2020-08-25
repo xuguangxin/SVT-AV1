@@ -87,6 +87,10 @@ EbErrorType packetization_context_ctor(EbThreadContext *  thread_context_ptr,
 }
 
 void update_rc_rate_tables(PictureControlSet *pcs_ptr, SequenceControlSet *scs_ptr) {
+#if TWOPASS_RC
+    if (scs_ptr->use_input_stat_file && scs_ptr->static_config.rate_control_mode == 1)
+        return; //skip update for 2pass VBR
+#endif
     // SB Loop
     if (scs_ptr->static_config.rate_control_mode > 0) {
         EncodeContext *encode_context_ptr = (EncodeContext *)scs_ptr->encode_context_ptr;
