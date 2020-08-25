@@ -2625,9 +2625,13 @@ uint32_t get_passes(int32_t argc, char *const argv[], EncodePass pass[MAX_ENCODE
         || find_token(argc, argv, ENCMODE_TOKEN, config_string) == 0) {
         preset = strtol(config_string, NULL, 0);
     }
-    if (preset > 4) {
+    int rc_mode = 0;
+    if (find_token(argc, argv, RATE_CONTROL_ENABLE_TOKEN, config_string) == 0 )
+        rc_mode = strtol(config_string, NULL, 0);
+
+    if (preset > 3 && rc_mode == 0) {
         fprintf(stderr,
-            "\nWarn: --passes 2 for preset > 4 is not supported yet, force single pass\n\n");
+            "\nWarn: --passes 2 CRF for preset > 3 is not supported yet, force single pass\n\n");
         pass[0] = ENCODE_SINGLE_PASS;
         return 1;
     }
