@@ -1774,17 +1774,18 @@ ConfigEntry config_entry[] = {
  **********************************/
 #if TWOPASS_RC
 void eb_2pass_config_update(EbConfig *config_ptr) {
-    if (config_ptr->pass == ENCODE_FIRST_PASS) {
+    if (config_ptr->pass == ENCODE_FIRST_PASS || config_ptr->output_stat_file) {
         config_ptr->enc_mode = MAX_ENC_PRESET;
         config_ptr->look_ahead_distance = 1;
         config_ptr->enable_tpl_la = 0;
         config_ptr->rate_control_mode = 0;
+        config_ptr->intra_refresh_type     = 2;
     }
-    else if (config_ptr->pass == ENCODE_LAST_PASS) {
+    else if (config_ptr->pass == ENCODE_LAST_PASS || config_ptr->input_stat_file) {
         config_ptr->look_ahead_distance = 16;
         config_ptr->enable_tpl_la = 1;
+        config_ptr->intra_refresh_type     = 2;
     }
-    config_ptr->intra_refresh_type     = 2;
     return;
 }
 #endif

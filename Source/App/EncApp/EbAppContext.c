@@ -79,7 +79,9 @@ EbErrorType copy_configuration_parameters(EbConfig *config, EbAppContext *callba
 
     // Assign Instance index to the library
     callback_data->instance_idx = (uint8_t)instance_idx;
-
+#if TWOPASS_RC
+     eb_2pass_config_update(config);
+     #endif
     // Initialize Port Activity Flags
     callback_data->output_stream_port_active                = APP_PortActive;
     callback_data->eb_enc_parameters.source_width           = config->source_width;
