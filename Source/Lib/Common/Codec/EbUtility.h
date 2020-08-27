@@ -150,7 +150,6 @@ extern const CodedBlockStats* get_coded_blk_stats(const uint32_t cu_idx);
 
 #define TU_ORIGIN_ADJUST(cu_origin, cu_size, offset) ((((cu_size) * (offset)) >> 2) + (cu_origin))
 #define TU_SIZE_ADJUST(cu_size, tuDepth) ((cu_size) >> (tuDepth))
-extern uint64_t log2f_64(uint64_t x);
 
 /****************************
      * MACROS
