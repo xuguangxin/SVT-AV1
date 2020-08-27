@@ -286,8 +286,8 @@ typedef struct RateControlLayerContext {
  **************************************/
 #if TWOPASS_RC
 double eb_av1_convert_qindex_to_q(int32_t qindex, AomBitDepth bit_depth);
-int av1_rc_get_default_min_gf_interval(int width, int height, double framerate);
-int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
+int svt_av1_rc_get_default_min_gf_interval(int width, int height, double framerate);
+int svt_av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval);
 double av1_get_gfu_boost_projection_factor(double min_factor, double max_factor, int frame_count);
 #endif
 

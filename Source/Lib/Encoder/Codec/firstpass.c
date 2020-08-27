@@ -84,7 +84,7 @@ static AOM_INLINE void output_stats(SequenceControlSet *scs_ptr, FIRSTPASS_STATS
     eb_release_mutex(scs_ptr->encode_context_ptr->stat_file_mutex);
 }
 #if TWOPASS_RC
-void av1_twopass_zero_stats(FIRSTPASS_STATS *section) {
+void svt_av1_twopass_zero_stats(FIRSTPASS_STATS *section) {
     section->frame                    = 0.0;
     section->weight                   = 0.0;
     section->intra_error              = 0.0;
@@ -135,7 +135,7 @@ void svt_av1_accumulate_stats(FIRSTPASS_STATS *section, const FIRSTPASS_STATS *f
     section->count += frame->count;
     section->duration += frame->duration;
 }
-void av1_end_first_pass(PictureParentControlSet *pcs_ptr) {
+void svt_av1_end_first_pass(PictureParentControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
     TWO_PASS *          twopass = &scs_ptr->twopass;
 
@@ -219,7 +219,7 @@ void accumulate_mv_stats(const MV best_mv, const FULLPEL_MV mv, const int mb_row
 //   twopass->stats_buf_ctx->stats_in_end: the pointer to the current stats,
 //                                         update its value and its position
 //                                         in the buffer.
-static void update_firstpass_stats(PictureParentControlSet *pcs_ptr, //AV1_COMP *cpi,
+static void update_firstpass_stats(PictureParentControlSet *pcs_ptr,
                                    const FRAME_STATS *const stats, const double raw_err_stdev,
                                    const int frame_number, const int64_t ts_duration) {
     SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
@@ -456,9 +456,9 @@ extern EbErrorType av1_inter_full_cost(PictureControlSet *pcs_ptr, ModeDecisionC
                                        uint64_t lambda, uint64_t *y_coeff_bits,
                                        uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits,
                                        BlockSize bsize);
-const EbPredictionFunc product_prediction_fun_table[3];
+const EbPredictionFunc svt_product_prediction_fun_table[3];
 
-const EbAv1FullCostFunc av1_product_full_cost_func_table[3];
+const EbAv1FullCostFunc svt_av1_product_full_cost_func_table[3];
 
 void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
@@ -513,7 +513,7 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
     // Set Skip Flag
     candidate_ptr->skip_flag = EB_FALSE;
 
-    product_prediction_fun_table[candidate_ptr->type](
+    svt_product_prediction_fun_table[candidate_ptr->type](
         context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
     // Initialize luma CBF
@@ -580,7 +580,7 @@ extern void first_pass_loop_core(PictureControlSet *pcs_ptr, BlkStruct *blk_ptr,
 
     //ALL PLANE
     // Omar: please check if removing this is lossless, if yes remove the call and the related ported code
-    av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
+    svt_av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
                                                           context_ptr,
                                                           candidate_buffer,
                                                           blk_ptr,
@@ -732,7 +732,7 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
 }
 /***************************************************************************
 * Computes and returns the inter prediction error from the last frame.
-* Computes inter prediction errors from the golden and alt ref frams and
+* Computes inter prediction errors from the golden and alt ref frames and
 * Updates stats accordingly.
 * Modifies:
 *    stats: many member params in it.
@@ -834,7 +834,7 @@ static int firstpass_inter_prediction(
             // Initialize tx_depth
             candidate_buffer->candidate_ptr->tx_depth = 0;
             candidate_buffer->candidate_ptr->interp_filters   = 0;
-            product_prediction_fun_table[candidate_ptr->type](
+            svt_product_prediction_fun_table[candidate_ptr->type](
                 context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
             gf_motion_error =
@@ -1194,7 +1194,7 @@ extern void first_pass_md_encode_block(PictureControlSet *pcs_ptr, ModeDecisionC
     candidate_buffer = candidate_buffer_ptr_array[candidate_index];
 
     bestcandidate_buffers[0] = candidate_buffer;
-    uint8_t sq_index         = LOG2F(context_ptr->blk_geom->sq_size) - 2;
+    uint8_t sq_index         = eb_log2f(context_ptr->blk_geom->sq_size) - 2;
     if (context_ptr->blk_geom->shape == PART_N) {
         context_ptr->parent_sq_type[sq_index] = candidate_buffer->candidate_ptr->type;
 

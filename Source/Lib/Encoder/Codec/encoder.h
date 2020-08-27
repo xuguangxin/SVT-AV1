@@ -160,7 +160,7 @@ typedef struct {
   aom_bit_depth_t bit_depth;
   int subsampling_x;
   int subsampling_y;
-} FRAME_INFO;
+} FrameInfo;
 
 typedef struct EncodeFrameInput {
   //YV12_BUFFER_CONFIG *source;
@@ -700,7 +700,7 @@ typedef struct AV1_COMP {
   /*!
    * Stores the frame parameters during encoder initialization.
    */
-  FRAME_INFO frame_info;
+  FrameInfo frame_info;
 
   /*!
    * Structure to store the dimensions of current frame.

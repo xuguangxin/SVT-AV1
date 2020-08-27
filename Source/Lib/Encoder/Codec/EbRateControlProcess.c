@@ -5840,7 +5840,7 @@ static void sb_qp_derivation(PictureControlSet *pcs_ptr) {
 #endif
 
 #if TWOPASS_RC
-int av1_find_qindex(double desired_q, aom_bit_depth_t bit_depth,
+static int av1_find_qindex(double desired_q, aom_bit_depth_t bit_depth,
     int best_qindex, int worst_qindex) {
     assert(best_qindex <= worst_qindex);
     int low = best_qindex;
@@ -5864,7 +5864,7 @@ static int find_fp_qindex(aom_bit_depth_t bit_depth) {
     aom_clear_system_state();
     return av1_find_qindex(FIRST_PASS_Q, bit_depth, 0, QINDEX_RANGE - 1);
 }
-int av1_rc_get_default_min_gf_interval(int width, int height,
+int svt_av1_rc_get_default_min_gf_interval(int width, int height,
                                        double framerate) {
   // Assume we do not need any constraint lower than 4K 20 fps
   static const double factor_safe = 3840 * 2160 * 20.0;
@@ -5903,7 +5903,7 @@ void set_rc_buffer_sizes(SequenceControlSet *scs_ptr) {
       (maximum == 0) ? bandwidth / 8 : maximum * bandwidth / 1000;
 }
 
-int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval) {
+int svt_av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval) {
   int interval = AOMMIN(MAX_GF_INTERVAL, (int)(framerate * 0.75));
   interval += (interval & 0x01);  // Round to even value
   interval = AOMMAX(MAX_GF_INTERVAL, interval);
@@ -5913,7 +5913,7 @@ int av1_rc_get_default_max_gf_interval(double framerate, int min_gf_interval) {
 //#define INT_MAX 0x7fffffff
 #define BPER_MB_NORMBITS 9
 #define FRAME_OVERHEAD_BITS 200
-void av1_rc_init(SequenceControlSet *scs_ptr) {
+static void av1_rc_init(SequenceControlSet *scs_ptr) {
   EncodeContext *encode_context_ptr        = scs_ptr->encode_context_ptr;
   RATE_CONTROL *rc                         = &encode_context_ptr->rc;
   const RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
@@ -5968,11 +5968,11 @@ void av1_rc_init(SequenceControlSet *scs_ptr) {
   rc->min_gf_interval = encode_context_ptr->gf_cfg.min_gf_interval;
   rc->max_gf_interval = encode_context_ptr->gf_cfg.max_gf_interval;
   if (rc->min_gf_interval == 0)
-    rc->min_gf_interval = av1_rc_get_default_min_gf_interval(
+    rc->min_gf_interval = svt_av1_rc_get_default_min_gf_interval(
         width, height,/*oxcf->frm_dim_cfg.width, oxcf->frm_dim_cfg.height,*/
         scs_ptr->double_frame_rate/*oxcf->input_cfg.init_framerate*/);
   if (rc->max_gf_interval == 0)
-    rc->max_gf_interval = av1_rc_get_default_max_gf_interval(
+    rc->max_gf_interval = svt_av1_rc_get_default_max_gf_interval(
         scs_ptr->double_frame_rate /*oxcf->input_cfg.init_framerate*/, rc->min_gf_interval);
   rc->baseline_gf_interval = (rc->min_gf_interval + rc->max_gf_interval) / 2;
   //rc->avg_frame_low_motion = 0;
@@ -6316,7 +6316,7 @@ static int find_closest_qindex_by_rate(int desired_bits_per_mb,
   return (curr_bit_diff <= prev_bit_diff) ? curr_q : prev_q;
 }
 
-int av1_rc_regulate_q(PictureControlSet *pcs_ptr, int target_bits_per_frame,
+static int av1_rc_regulate_q(PictureControlSet *pcs_ptr, int target_bits_per_frame,
                       int active_best_quality, int active_worst_quality,
                       int width, int height) {
   const int MBs = ((width + 15) / 16) * ((height + 15) / 16);//av1_get_MBs(width, height);
@@ -6456,7 +6456,7 @@ static int rc_pick_q_and_bounds(PictureControlSet *pcs_ptr) {
     return q;
 }
 
-int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs,
+static int av1_estimate_bits_at_q(FrameType frame_type, int q, int mbs,
                            double correction_factor,
                            AomBitDepth bit_depth) {
   const int bpm =
@@ -6739,7 +6739,7 @@ void update_rc_counts(PictureParentControlSet *ppcs_ptr) {
     ++gf_group->index;
 }
 
-void av1_rc_set_frame_target(PictureControlSet *pcs_ptr, int target, int width, int height) {
+static void av1_rc_set_frame_target(PictureControlSet *pcs_ptr, int target, int width, int height) {
     SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *rc = &encode_context_ptr->rc;
@@ -6803,7 +6803,7 @@ static INLINE void set_refresh_frame_flags(
   refresh_frame_flags->alt_ref_frame = refresh_arf;
 }
 
-void av1_configure_buffer_updates(
+static void av1_configure_buffer_updates(
     PictureControlSet *pcs_ptr, RefreshFrameFlagsInfo *const refresh_frame_flags,
     int force_refresh_all) {
   // NOTE(weitinglin): Should we define another function to take care of
@@ -6868,7 +6868,7 @@ void av1_configure_buffer_updates(
     set_refresh_frame_flags(refresh_frame_flags, true, true, true);
 }
 
-void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
+static void av1_set_target_rate(PictureControlSet *pcs_ptr, int width, int height) {
     SequenceControlSet *        scs_ptr            = pcs_ptr->parent_pcs_ptr->scs_ptr;
     EncodeContext *             encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *              rc                 = &encode_context_ptr->rc;
@@ -6948,7 +6948,7 @@ void *rate_control_kernel(void *input_ptr) {
                     set_rc_buffer_sizes(scs_ptr);
                     av1_rc_init(scs_ptr);
                 }
-                av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
+                svt_av1_get_second_pass_params(pcs_ptr->parent_pcs_ptr);
                 av1_configure_buffer_updates(pcs_ptr, &(pcs_ptr->parent_pcs_ptr->refresh_frame), 0);
                 av1_set_target_rate(pcs_ptr,
                     pcs_ptr->parent_pcs_ptr->av1_cm->frm_size.frame_width,
@@ -7344,7 +7344,7 @@ void *rate_control_kernel(void *input_ptr) {
                 1//scs_ptr->static_config.look_ahead_distance != 0
                 ) {
                 av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
-                av1_twopass_postencode_update(parentpicture_control_set_ptr);
+                svt_av1_twopass_postencode_update(parentpicture_control_set_ptr);
             }
 #endif
             if (scs_ptr->static_config.rate_control_mode != 0) {
@@ -7367,7 +7367,7 @@ void *rate_control_kernel(void *input_ptr) {
                     if (scs_ptr->use_input_stat_file &&
                         scs_ptr->static_config.look_ahead_distance != 0) {
                         av1_rc_postencode_update(parentpicture_control_set_ptr, (parentpicture_control_set_ptr->total_num_bits + 7) >> 3);
-                        av1_twopass_postencode_update(parentpicture_control_set_ptr);
+                        svt_av1_twopass_postencode_update(parentpicture_control_set_ptr);
                     } else
 #endif
                     frame_level_rc_feedback_picture_vbr(

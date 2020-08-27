@@ -35,11 +35,11 @@ static EbErrorType create_stats_buffer(FIRSTPASS_STATS **frame_stats_buffer,
     // stats_buf_context->total_left_stats = aom_calloc(1, sizeof(FIRSTPASS_STATS));
     EB_MALLOC_ARRAY(stats_buf_context->total_left_stats, 1);
     if (stats_buf_context->total_left_stats == NULL) return EB_ErrorInsufficientResources;
-    av1_twopass_zero_stats(stats_buf_context->total_left_stats);
+    svt_av1_twopass_zero_stats(stats_buf_context->total_left_stats);
     // stats_buf_context->total_stats = aom_calloc(1, sizeof(FIRSTPASS_STATS));
     EB_MALLOC_ARRAY(stats_buf_context->total_stats, 1);
     if (stats_buf_context->total_stats == NULL) return EB_ErrorInsufficientResources;
-    av1_twopass_zero_stats(stats_buf_context->total_stats);
+    svt_av1_twopass_zero_stats(stats_buf_context->total_stats);
     return res;
 }
 

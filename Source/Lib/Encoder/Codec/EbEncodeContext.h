@@ -207,7 +207,7 @@ typedef struct EncodeContext {
 #endif
 #endif
 #if TWOPASS_RC
-    FRAME_INFO     frame_info;
+    FrameInfo      frame_info;
     TwoPassCfg     two_pass_cfg; // two pass datarate control
     RATE_CONTROL   rc;
     RateControlCfg rc_cfg;

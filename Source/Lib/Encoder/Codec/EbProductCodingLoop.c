@@ -94,7 +94,7 @@ int svt_av1_allow_palette(int allow_palette, BlockSize sb_type);
 *
 *******************************************/
 
-const EbPredictionFunc product_prediction_fun_table[3] = {
+const EbPredictionFunc svt_product_prediction_fun_table[3] = {
     NULL, inter_pu_prediction_av1, eb_av1_intra_prediction_cl};
 
 const EbFastCostFunc av1_product_fast_cost_func_table[3] = {
@@ -103,7 +103,7 @@ const EbFastCostFunc av1_product_fast_cost_func_table[3] = {
     av1_intra_fast_cost /*INTRA */
 };
 
-const EbAv1FullCostFunc av1_product_full_cost_func_table[3] = {
+const EbAv1FullCostFunc svt_av1_product_full_cost_func_table[3] = {
     NULL,
     av1_inter_full_cost, /*INTER */
     av1_intra_full_cost /*INTRA */
@@ -1104,7 +1104,7 @@ void fast_loop_core(ModeDecisionCandidateBuffer *candidate_buffer, PictureContro
 #if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_FALSE;
 #endif
-    product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc
+    svt_product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc
                                      ? INTER_MODE
                                      : candidate_ptr->type](
         context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
@@ -5082,7 +5082,7 @@ void md_sub_pel_search(PictureControlSet *pcs_ptr, ModeDecisionContext *context_
 #else
             context_ptr->md_staging_skip_inter_chroma_pred    = EB_TRUE;
 #endif
-            product_prediction_fun_table[INTER_MODE](
+            svt_product_prediction_fun_table[INTER_MODE](
                 hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
             // Distortion
@@ -6462,7 +6462,7 @@ uint32_t early_intra_evaluation(PictureControlSet *pcs_ptr, ModeDecisionContext 
 #if REFACTOR_SIGNALS
     context_ptr->uv_intra_comp_only = EB_FALSE;
 #endif
-    product_prediction_fun_table[INTRA_MODE](
+    svt_product_prediction_fun_table[INTRA_MODE](
         hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
     // Distortion
@@ -8546,7 +8546,7 @@ void check_best_indepedant_cfl(PictureControlSet *pcs_ptr, EbPictureBufferDesc *
 #else
         context_ptr->md_staging_skip_inter_chroma_pred = EB_FALSE;
 #endif
-        product_prediction_fun_table[candidate_buffer->candidate_ptr->type](
+        svt_product_prediction_fun_table[candidate_buffer->candidate_ptr->type](
             context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
         // Cb Residual
@@ -11247,7 +11247,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
 #else
         if (context_ptr->md_staging_skip_full_pred == EB_FALSE) {
 #endif
-            product_prediction_fun_table[candidate_ptr->type](
+            svt_product_prediction_fun_table[candidate_ptr->type](
                 context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
         }
     }
@@ -11258,9 +11258,9 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
             if (context_ptr->md_staging_perform_intra_chroma_pred) {
                 context_ptr->uv_intra_comp_only = EB_TRUE;
 #if REMOVE_CHROMA_INTRA_S0
-                product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc ? INTER_MODE : candidate_ptr->type](
+                svt_product_prediction_fun_table[candidate_buffer->candidate_ptr->use_intrabc ? INTER_MODE : candidate_ptr->type](
 #else
-                product_prediction_fun_table[candidate_ptr->type](
+                svt_product_prediction_fun_table[candidate_ptr->type](
 #endif
                     context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
             }
@@ -11552,7 +11552,7 @@ void full_loop_core(PictureControlSet *pcs_ptr, SuperBlock *sb_ptr, BlkStruct *b
         : EB_FALSE;
 
     //ALL PLANE
-    av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
+    svt_av1_product_full_cost_func_table[candidate_ptr->type](pcs_ptr,
                                                           context_ptr,
                                                           candidate_buffer,
                                                           blk_ptr,
@@ -12668,7 +12668,7 @@ static void search_best_independent_uv_mode(PictureControlSet *  pcs_ptr,
             &context_ptr->fast_candidate_array[uv_mode_count + start_fast_buffer_index];
 
         context_ptr->md_staging_skip_chroma_pred = EB_FALSE;
-        product_prediction_fun_table[candidate_buffer->candidate_ptr->type](
+        svt_product_prediction_fun_table[candidate_buffer->candidate_ptr->type](
             context_ptr->hbd_mode_decision, context_ptr, pcs_ptr, candidate_buffer);
 
         uint32_t chroma_fast_distortion;

@@ -32,7 +32,7 @@ static void init_gf_stats(GF_GROUP_STATS *gf_stats);
 // bars and partially discounts other 0 energy areas.
 #define MIN_ACTIVE_AREA 0.5
 #define MAX_ACTIVE_AREA 1.0
-static double calculate_active_area(const FRAME_INFO *frame_info,
+static double calculate_active_area(const FrameInfo *frame_info,
                                     const FIRSTPASS_STATS *this_frame) {
   const double active_pct =
       1.0 -
@@ -44,7 +44,7 @@ static double calculate_active_area(const FRAME_INFO *frame_info,
 // Calculate a modified Error used in distributing bits between easier and
 // harder frames.
 #define ACT_AREA_CORRECTION 0.5
-static double calculate_modified_err(const FRAME_INFO *frame_info,
+static double calculate_modified_err(const FrameInfo *frame_info,
                                      const TWO_PASS *twopass,
                                      const TwoPassCfg *two_pass_cfg,
                                      const FIRSTPASS_STATS *this_frame) {
@@ -257,7 +257,7 @@ static int get_twopass_worst_quality(PictureParentControlSet *pcs_ptr, const dou
 #define SR_DIFF_MAX 128.0
 #define NCOUNT_FRAME_II_THRESH 5.0
 
-static double get_sr_decay_rate(const FRAME_INFO *frame_info,
+static double get_sr_decay_rate(const FrameInfo *frame_info,
                                 const FIRSTPASS_STATS *frame) {
   const int num_mbs = frame_info->num_mbs;
   double sr_diff = (frame->sr_coded_error - frame->coded_error) / num_mbs;
@@ -285,7 +285,7 @@ static double get_sr_decay_rate(const FRAME_INFO *frame_info,
 
 // This function gives an estimate of how badly we believe the prediction
 // quality is decaying from frame to frame.
-static double get_zero_motion_factor(const FRAME_INFO *frame_info,
+static double get_zero_motion_factor(const FrameInfo *frame_info,
                                      const FIRSTPASS_STATS *frame) {
   const double zero_motion_pct = frame->pcnt_inter - frame->pcnt_motion;
   double sr_decay = get_sr_decay_rate(frame_info, frame);
@@ -294,7 +294,7 @@ static double get_zero_motion_factor(const FRAME_INFO *frame_info,
 
 #define ZM_POWER_FACTOR 0.75
 
-static double get_prediction_decay_rate(const FRAME_INFO *frame_info,
+static double get_prediction_decay_rate(const FrameInfo *frame_info,
                                         const FIRSTPASS_STATS *next_frame) {
   const double sr_decay_rate = get_sr_decay_rate(frame_info, next_frame);
   const double zero_motion_factor =
@@ -386,7 +386,7 @@ static void accumulate_this_frame_stats(const FIRSTPASS_STATS *stats,
 }
 
 static void accumulate_next_frame_stats(const FIRSTPASS_STATS *stats,
-                                        const FRAME_INFO *frame_info,
+                                        const FrameInfo *frame_info,
                                         const int flash_detected,
                                         const int frames_since_key,
                                         const int cur_idx,
@@ -478,7 +478,7 @@ static void get_features_from_gf_stats(const GF_GROUP_STATS *gf_stats,
 #endif
 
 #define BOOST_FACTOR 12.5
-static double baseline_err_per_mb(const FRAME_INFO *frame_info) {
+static double baseline_err_per_mb(const FrameInfo *frame_info) {
   unsigned int screen_area = frame_info->frame_height * frame_info->frame_width;
 
   // Use a different error per mb factor for calculating boost for
@@ -491,7 +491,7 @@ static double baseline_err_per_mb(const FRAME_INFO *frame_info) {
 }
 
 static double calc_frame_boost(const RATE_CONTROL *rc,
-                               const FRAME_INFO *frame_info,
+                               const FrameInfo *frame_info,
                                const FIRSTPASS_STATS *this_frame,
                                double this_frame_mv_in_out, double max_boost) {
   double frame_boost;
@@ -523,7 +523,7 @@ static double calc_frame_boost(const RATE_CONTROL *rc,
 }
 
 static double calc_kf_frame_boost(const RATE_CONTROL *rc,
-                                  const FRAME_INFO *frame_info,
+                                  const FrameInfo *frame_info,
                                   const FIRSTPASS_STATS *this_frame,
                                   double *sr_accumulator, double max_boost) {
   double frame_boost;
@@ -583,8 +583,8 @@ static int get_projected_gfu_boost(const RATE_CONTROL *rc, int gfu_boost,
 #define GF_MAX_BOOST 90.0
 #define MIN_DECAY_FACTOR 0.01
 #define NORMAL_BOOST 100
-int av1_calc_arf_boost(const TWO_PASS *twopass, const RATE_CONTROL *rc,
-                       FRAME_INFO *frame_info, int offset, int f_frames,
+static int av1_calc_arf_boost(const TWO_PASS *twopass, const RATE_CONTROL *rc,
+                       FrameInfo *frame_info, int offset, int f_frames,
                        int b_frames, int *num_fpstats_used,
                        int *num_fpstats_required) {
   int i;
@@ -819,7 +819,7 @@ static int adjust_boost_bits_for_target_level(PictureControlSet *pcs_ptr,
 #endif
 
 // Allocate bits to each frame in a GF / ARF group
-double layer_fraction[MAX_ARF_LAYERS + 1] = { 1.0,  0.70, 0.55, 0.60,
+static double layer_fraction[MAX_ARF_LAYERS + 1] = { 1.0,  0.70, 0.55, 0.60,
                                               0.60, 1.0,  1.0 };
 static void allocate_gf_group_bits(GF_GROUP *gf_group, RATE_CONTROL *const rc,
                                    int64_t gf_group_bits, int gf_arf_bits,
@@ -955,231 +955,12 @@ static INLINE int detect_gf_cut(PictureParentControlSet *pcs_ptr, int frame_inde
   return 0;
 }
 
-#define MAX_PAD_GF_CHECK 6  // padding length to check for gf length
-#define AVG_SI_THRES 0.6    // thres for average silouette
-#define GF_SHRINK_OUTPUT 0  // print output for gf length decision
-int determine_high_err_gf(double *errs, int *is_high, double *si, int len,
-                          double *ratio, int gf_start, int gf_end,
-                          int before_pad) {
-  (void)gf_start;
-  (void)gf_end;
-  (void)before_pad;
-  // alpha and beta controls the threshold placement
-  // e.g. a smaller alpha makes the lower group more rigid
-  const double alpha = 0.5;
-  const double beta = 1 - alpha;
-  double mean = 0;
-  double mean_low = 0;
-  double mean_high = 0;
-  double prev_mean_low = 0;
-  double prev_mean_high = 0;
-  int count_low = 0;
-  int count_high = 0;
-  // calculate mean of errs
-  for (int i = 0; i < len; i++) {
-    mean += errs[i];
-  }
-  mean /= len;
-  // separate into two initial groups with greater / lower than mean
-  for (int i = 0; i < len; i++) {
-    if (errs[i] <= mean) {
-      is_high[i] = 0;
-      count_low++;
-      prev_mean_low += errs[i];
-    } else {
-      is_high[i] = 1;
-      count_high++;
-      prev_mean_high += errs[i];
-    }
-  }
-  prev_mean_low /= count_low;
-  prev_mean_high /= count_high;
-  // kmeans to refine
-  int count = 0;
-  while (count < 10) {
-    // re-group
-    mean_low = 0;
-    mean_high = 0;
-    count_low = 0;
-    count_high = 0;
-    double thres = prev_mean_low * alpha + prev_mean_high * beta;
-    for (int i = 0; i < len; i++) {
-      if (errs[i] <= thres) {
-        is_high[i] = 0;
-        count_low++;
-        mean_low += errs[i];
-      } else {
-        is_high[i] = 1;
-        count_high++;
-        mean_high += errs[i];
-      }
-    }
-    mean_low /= count_low;
-    mean_high /= count_high;
-
-    // break if not changed much
-    if (fabs((mean_low - prev_mean_low) / (prev_mean_low + 0.00001)) <
-            0.00001 &&
-        fabs((mean_high - prev_mean_high) / (prev_mean_high + 0.00001)) <
-            0.00001)
-      break;
-
-    // update means
-    prev_mean_high = mean_high;
-    prev_mean_low = mean_low;
-
-    count++;
-  }
-
-  // count how many jumps of group changes
-  int num_change = 0;
-  for (int i = 0; i < len - 1; i++) {
-    if (is_high[i] != is_high[i + 1]) num_change++;
-  }
-
-  // get silhouette as a measure of the classification quality
-  double avg_si = 0;
-  // ai: avg dist of its own class, bi: avg dist to the other class
-  double ai, bi;
-  if (count_low > 1 && count_high > 1) {
-    for (int i = 0; i < len; i++) {
-      ai = 0;
-      bi = 0;
-      // calculate average distance to everyone in the same group
-      // and in the other group
-      for (int j = 0; j < len; j++) {
-        if (i == j) continue;
-        if (is_high[i] == is_high[j]) {
-          ai += fabs(errs[i] - errs[j]);
-        } else {
-          bi += fabs(errs[i] - errs[j]);
-        }
-      }
-      if (is_high[i] == 0) {
-        ai = ai / (count_low - 1);
-        bi = bi / count_high;
-      } else {
-        ai = ai / (count_high - 1);
-        bi = bi / count_low;
-      }
-      if (ai <= bi) {
-        si[i] = 1 - ai / (bi + 0.00001);
-      } else {
-        si[i] = bi / (ai + 0.00001) - 1;
-      }
-      avg_si += si[i];
-    }
-    avg_si /= len;
-  }
-
-  int reset = 0;
-  *ratio = mean_high / (mean_low + 0.00001);
-  // if the two groups too similar, or
-  // if too many numbers of changes, or
-  // silhouette is too small, not confident
-  // reset everything to 0 later so we fallback to the original decision
-  if (*ratio < 1.3 || num_change > AOMMAX(len / 3, 6) ||
-      avg_si < AVG_SI_THRES) {
-    reset = 1;
-  }
-
-  if (reset) {
-    memset(is_high, 0, sizeof(is_high[0]) * len);
-    memset(si, 0, sizeof(si[0]) * len);
-  }
-  return reset;
-}
-
 #if GROUP_ADAPTIVE_MAXQ
 #define RC_FACTOR_MIN 0.75
 #define RC_FACTOR_MAX 1.25
 #endif  // GROUP_ADAPTIVE_MAXQ
 #define MIN_FWD_KF_INTERVAL 8
-#define MIN_SHRINK_LEN 6      // the minimum length of gf if we are shrinking
-#define SI_HIGH AVG_SI_THRES  // high quality classification
-#define SI_LOW 0.3            // very unsure classification
-// this function finds an low error frame previously to the current last frame
-// in the gf group, and set the last frame to it.
-// The resulting last frame is then returned by *cur_last_ptr
-// *cur_start_ptr and cut_pos[n] could also change due to shrinking
-// previous gf groups
-void set_last_prev_low_err(int *cur_start_ptr, int *cur_last_ptr, int *cut_pos,
-                           int count_cuts, int before_pad, double ratio,
-                           int *is_high, double *si, int prev_lows,
-                           int min_shrink_len) {
-  int n;
-  int cur_start = *cur_start_ptr;
-  int cur_last = *cur_last_ptr;
-  for (n = cur_last; n >= cur_start + min_shrink_len; n--) {
-    // try to find a point that is very probable to be good
-    if (is_high[n - cur_start + before_pad] == 0 &&
-        si[n - cur_start + before_pad] > SI_HIGH) {
-      *cur_last_ptr = n;
-      return;
-    }
-  }
-  // could not find a low-err point, then let's try find an "unsure"
-  // point at least
-  for (n = cur_last; n >= cur_start + min_shrink_len; n--) {
-    if ((is_high[n - cur_start + before_pad] == 0) ||
-        (is_high[n - cur_start + before_pad] &&
-         si[n - cur_start + before_pad] < SI_LOW)) {
-      *cur_last_ptr = n;
-      return;
-    }
-  }
-  if (prev_lows) {
-    // try with shrinking previous all_zero interval
-    for (n = cur_start + min_shrink_len - 1; n > cur_start; n--) {
-      if (is_high[n - cur_start + before_pad] == 0 &&
-          si[n - cur_start + before_pad] > SI_HIGH) {
-        int tentative_start = n - min_shrink_len;
-        // check if the previous interval can shrink this much
-        int available =
-            tentative_start - cut_pos[count_cuts - 2] > min_shrink_len &&
-            cur_start - tentative_start < prev_lows;
-        // shrinking too agressively may worsen performance
-        // set stricter thres for shorter length
-        double ratio_thres =
-            1.0 * (cur_start - tentative_start) / (double)(min_shrink_len) +
-            1.0;
 
-        if (available && (ratio > ratio_thres)) {
-          cut_pos[count_cuts - 1] = tentative_start;
-          *cur_start_ptr = tentative_start;
-          *cur_last_ptr = n;
-          return;
-        }
-      }
-    }
-  }
-  if (prev_lows) {
-    // try with shrinking previous all_zero interval with unsure points
-    for (n = cur_start + min_shrink_len - 1; n > cur_start; n--) {
-      if ((is_high[n - cur_start + before_pad] == 0) ||
-          (is_high[n - cur_start + before_pad] &&
-           si[n - cur_start + before_pad] < SI_LOW)) {
-        int tentative_start = n - min_shrink_len;
-        // check if the previous interval can shrink this much
-        int available =
-            tentative_start - cut_pos[count_cuts - 2] > min_shrink_len &&
-            cur_start - tentative_start < prev_lows;
-        // shrinking too agressively may worsen performance
-        double ratio_thres =
-            1.0 * (cur_start - tentative_start) / (double)(min_shrink_len) +
-            1.0;
-
-        if (available && (ratio > ratio_thres)) {
-          cut_pos[count_cuts - 1] = tentative_start;
-          *cur_start_ptr = tentative_start;
-          *cur_last_ptr = n;
-          return;
-        }
-      }
-    }
-  }  // prev_lows
-  return;
-}
 // This function imposes the gf group length of future frames in batch based on the intra refresh
 // only supports for 5L
 static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals) {
@@ -1290,7 +1071,7 @@ static void init_gf_stats(GF_GROUP_STATS *gf_stats) {
 // Set parameters for frames between 'start' and 'end' (excluding both).
 static void set_multi_layer_params(const TWO_PASS *twopass,
     GF_GROUP *const gf_group, RATE_CONTROL *rc,
-    FRAME_INFO *frame_info, int start, int end,
+    FrameInfo *frame_info, int start, int end,
     int *cur_frame_idx, int *frame_ind,
     int layer_depth) {
     const int num_frames_to_process = end - start - 1;
@@ -1342,7 +1123,7 @@ static void set_multi_layer_params(const TWO_PASS *twopass,
 }
 static int construct_multi_layer_gf_structure(
     TWO_PASS *twopass, GF_GROUP *const gf_group,
-    RATE_CONTROL *rc, FRAME_INFO *const frame_info, int gf_interval,
+    RATE_CONTROL *rc, FrameInfo *const frame_info, int gf_interval,
     FRAME_UPDATE_TYPE first_frame_update_type) {
     int frame_index = 0;
     int cur_frame_index = 0;
@@ -1404,14 +1185,14 @@ static int construct_multi_layer_gf_structure(
     return frame_index;
 }
 
-void av1_gop_setup_structure(PictureParentControlSet *pcs_ptr,
+static void av1_gop_setup_structure(PictureParentControlSet *pcs_ptr,
     const EncodeFrameParams *const frame_params) {
         SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
         EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
         RATE_CONTROL *const rc = &encode_context_ptr->rc;
         TWO_PASS *const twopass = &scs_ptr->twopass;
         GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
-        FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+        FrameInfo *frame_info = &encode_context_ptr->frame_info;
 
 
     const int key_frame = (frame_params->frame_type == KEY_FRAME);
@@ -1427,6 +1208,10 @@ void av1_gop_setup_structure(PictureParentControlSet *pcs_ptr,
 #endif
 }
 
+static void av1_gop_bit_allocation(RATE_CONTROL *const rc,
+                            GF_GROUP *gf_group, int is_key_frame, int use_arf,
+                            int64_t gf_group_bits);
+int frame_is_kf_gf_arf(PictureParentControlSet *ppcs_ptr);
 // Analyse and define a gf/arf group.
 #define MAX_GF_BOOST 5400
 static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *this_frame,
@@ -1439,7 +1224,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   FIRSTPASS_STATS next_frame;
   const FIRSTPASS_STATS *const start_pos = twopass->stats_in;
   GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
-  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  FrameInfo *frame_info = &encode_context_ptr->frame_info;
   const GFConfig *const gf_cfg = &encode_context_ptr->gf_cfg;
   const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
   int i;
@@ -1755,7 +1540,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
 #ifdef FIXED_ARF_BITS
 #define ARF_BITS_FRACTION 0.75
 #endif
-void av1_gop_bit_allocation(RATE_CONTROL *const rc, GF_GROUP *gf_group, int is_key_frame,
+static void av1_gop_bit_allocation(RATE_CONTROL *const rc, GF_GROUP *gf_group, int is_key_frame,
                             int use_arf, int64_t gf_group_bits) {
     // Calculate the extra bits to be used for boosted frame(s)
 #ifdef FIXED_ARF_BITS
@@ -1980,7 +1765,7 @@ static int define_kf_interval(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS 
   int i = 0, j;
   int frames_to_key = 1;
   int frames_since_key = rc->frames_since_key + 1;
-  FRAME_INFO *const frame_info = &encode_context_ptr->frame_info;
+  FrameInfo *const frame_info = &encode_context_ptr->frame_info;
   int num_stats_used_for_kf_boost = 1;
   int scenecut_detected = 0;
 
@@ -2191,7 +1976,7 @@ static double get_kf_boost_score(PictureParentControlSet *pcs_ptr, double kf_raw
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *const rc = &encode_context_ptr->rc;
   TWO_PASS *const twopass = &scs_ptr->twopass;
-  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  FrameInfo *frame_info = &encode_context_ptr->frame_info;
   const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
   FIRSTPASS_STATS frame_stat;
   av1_zero(frame_stat);
@@ -2246,7 +2031,7 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
     TWO_PASS *const twopass = &scs_ptr->twopass;
     GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
     //CurrentFrame *const current_frame = &pcs_ptr->av1_cm->current_frame;
-    FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+    FrameInfo *frame_info = &encode_context_ptr->frame_info;
     const KeyFrameCfg *const kf_cfg = &encode_context_ptr->kf_cfg;
     const GFConfig *const gf_cfg = &encode_context_ptr->gf_cfg;
     const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
@@ -2457,7 +2242,6 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
     twopass->modified_error_left -= kf_group_err;
 }
 #if 0
-//static int is_skippable_frame(const AV1_COMP *cpi)
 static int is_skippable_frame(PictureControlSet *pcs_ptr) {
   SequenceControlSet *scs_ptr = pcs_ptr->parent_pcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
@@ -2598,7 +2382,7 @@ static void setup_target_rate(PictureParentControlSet *pcs_ptr) {
   rc->base_frame_target = target_rate;
 }
 
-void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
+void svt_av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
     SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *const rc = &encode_context_ptr->rc;
@@ -2754,8 +2538,7 @@ void av1_get_second_pass_params(PictureParentControlSet *pcs_ptr) {
 }
 
 // from aom ratectrl.c
-
-void av1_rc_set_gf_interval_range(SequenceControlSet *scs_ptr,
+static void av1_rc_set_gf_interval_range(SequenceControlSet *scs_ptr,
                                   RATE_CONTROL *const rc) {
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   const uint32_t width  = scs_ptr->seq_header.max_frame_width;
@@ -2771,11 +2554,11 @@ void av1_rc_set_gf_interval_range(SequenceControlSet *scs_ptr,
     rc->max_gf_interval = encode_context_ptr->gf_cfg.max_gf_interval;
     rc->min_gf_interval = encode_context_ptr->gf_cfg.min_gf_interval;
     if (rc->min_gf_interval == 0)
-      rc->min_gf_interval = av1_rc_get_default_min_gf_interval(
+      rc->min_gf_interval = svt_av1_rc_get_default_min_gf_interval(
           width, height, scs_ptr->double_frame_rate);
           //oxcf->frm_dim_cfg.width, oxcf->frm_dim_cfg.height, cpi->framerate);
     if (rc->max_gf_interval == 0)
-      rc->max_gf_interval = av1_rc_get_default_max_gf_interval(
+      rc->max_gf_interval = svt_av1_rc_get_default_max_gf_interval(
           scs_ptr->double_frame_rate/*cpi->framerate*/, rc->min_gf_interval);
     /*
      * Extended max interval for genuinely static scenes like slide shows.
@@ -2800,10 +2583,10 @@ void av1_rc_set_gf_interval_range(SequenceControlSet *scs_ptr,
 #define MAX_MB_RATE 250
 #define MAXRATE_1080P 2025000
 #define FRAME_OVERHEAD_BITS 200
-void av1_rc_update_framerate(SequenceControlSet *scs_ptr/*, int width, int height*/) {
+static void av1_rc_update_framerate(SequenceControlSet *scs_ptr/*, int width, int height*/) {
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *const rc = &encode_context_ptr->rc;
-  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  FrameInfo *frame_info = &encode_context_ptr->frame_info;
   int vbr_max_bits;
   const int MBs = frame_info->num_mbs;//av1_get_MBs(width, height);
 
@@ -2831,16 +2614,16 @@ void av1_rc_update_framerate(SequenceControlSet *scs_ptr/*, int width, int heigh
 }
 
 // from aom encoder.c
-void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
+static void av1_new_framerate(SequenceControlSet *scs_ptr, double framerate) {
   //cpi->framerate = framerate < 0.1 ? 30 : framerate;
   scs_ptr->double_frame_rate = framerate < 0.1 ? 30 : framerate;
   av1_rc_update_framerate(scs_ptr/*, scs_ptr->seq_header.max_frame_width, scs_ptr->seq_header.max_frame_height*/);
 }
 
-void av1_init_second_pass(SequenceControlSet *scs_ptr) {
+void svt_av1_init_second_pass(SequenceControlSet *scs_ptr) {
   TWO_PASS *const twopass = &scs_ptr->twopass;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-  FRAME_INFO *frame_info = &encode_context_ptr->frame_info;
+  FrameInfo *frame_info = &encode_context_ptr->frame_info;
 
   double frame_rate;
   FIRSTPASS_STATS *stats;
@@ -2980,7 +2763,7 @@ int frame_is_kf_gf_arf(PictureParentControlSet *ppcs_ptr) {
 #define MINQ_ADJ_LIMIT 48
 #define MINQ_ADJ_LIMIT_CQ 20
 #define HIGH_UNDERSHOOT_RATIO 2
-void av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
+void svt_av1_twopass_postencode_update(PictureParentControlSet *ppcs_ptr) {
   SequenceControlSet *scs_ptr = ppcs_ptr->scs_ptr;
   EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
   RATE_CONTROL *const rc = &encode_context_ptr->rc;

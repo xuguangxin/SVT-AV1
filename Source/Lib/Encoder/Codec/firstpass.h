@@ -322,24 +322,16 @@ typedef struct {
   int *raw_motion_err_list;
 } FirstPassData;
 
-struct AV1_COMP;
 struct EncodeFrameParams;
 struct AV1EncoderConfig;
 struct TileDataEnc;
 
-//int av1_get_mb_rows_in_tile(TileInfo tile);
-//int av1_get_mb_cols_in_tile(TileInfo tile);
-
-//void av1_rc_get_first_pass_params(struct AV1_COMP *cpi);
-//void av1_first_pass_row(struct AV1_COMP *cpi, struct ThreadData *td,
-//                        struct TileDataEnc *tile_data, int mb_row);
-
-void av1_twopass_zero_stats(FIRSTPASS_STATS *section);
+void svt_av1_twopass_zero_stats(FIRSTPASS_STATS *section);
 void svt_av1_accumulate_stats(FIRSTPASS_STATS *section,
                           const FIRSTPASS_STATS *frame);
 #if FIRST_PASS_SETUP
 struct PictureParentControlSet;
-extern void av1_end_first_pass(struct PictureParentControlSet *pcs_ptr);
+extern void svt_av1_end_first_pass(struct PictureParentControlSet *pcs_ptr);
 extern void first_pass_frame_end(struct PictureParentControlSet *pcs_ptr, const int64_t ts_duration);
 extern void setup_firstpass_data(struct PictureParentControlSet *pcs_ptr);
 extern void average_non_16x16_stats(FRAME_STATS *mb_stats, int blk_num);

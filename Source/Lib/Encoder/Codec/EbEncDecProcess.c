@@ -11706,7 +11706,7 @@ void *mode_decision_kernel(void *input_ptr) {
             if (scs_ptr->use_output_stat_file) {
                 first_pass_frame_end(pcs_ptr->parent_pcs_ptr, pcs_ptr->parent_pcs_ptr->ts_duration);
                 if(pcs_ptr->parent_pcs_ptr->end_of_sequence_flag)
-                    av1_end_first_pass(pcs_ptr->parent_pcs_ptr);
+                    svt_av1_end_first_pass(pcs_ptr->parent_pcs_ptr);
             }
 #endif
 #if DECOUPLE_ME_RES

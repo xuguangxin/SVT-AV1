@@ -756,7 +756,7 @@ static void setup_two_pass(SequenceControlSet *scs_ptr) {
             scs_ptr->twopass.stats_in = scs_ptr->twopass.stats_buf_ctx->stats_in_start;
             scs_ptr->twopass.stats_buf_ctx->stats_in_end =
                 &scs_ptr->twopass.stats_buf_ctx->stats_in_start[packets - 1];
-            av1_init_second_pass(scs_ptr);
+            svt_av1_init_second_pass(scs_ptr);
         }
     }
 

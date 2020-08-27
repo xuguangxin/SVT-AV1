@@ -214,11 +214,6 @@ extern const CodedBlockStats* get_coded_blk_stats(const uint32_t cu_idx);
     (x) |= ((x) >> 16);             \
     (x) += 1;                       \
     MULTI_LINE_MACRO_END
-#if TWOPASS_RC
-// Calculates the Log2 floor of the integer 'x'
-//   Intended to only be used for macro definitions
-#define LOG2F Log2f_ASM
-#endif
 #define LOG2F_8(x)               \
     (((x) < 0x0002u)             \
          ? 0u                    \
