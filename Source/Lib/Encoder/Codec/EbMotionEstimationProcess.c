@@ -1966,7 +1966,7 @@ EbErrorType compute_decimated_zz_sad(MotionEstimationContext_t *context_ptr, Pic
 }
 #if FIRST_PASS_SETUP
 /***************************************************************************************************
-* ZZ Decimated SAD Computation
+* ZZ Decimated SSD Computation
 ***************************************************************************************************/
 EbErrorType compute_zz_ssd(/*MotionEstimationContext_t *context_ptr, */PictureParentControlSet *pcs_ptr,
     uint32_t x_sb_start_index, uint32_t x_sb_end_index,

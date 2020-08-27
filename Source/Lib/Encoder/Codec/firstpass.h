@@ -335,7 +335,7 @@ struct TileDataEnc;
 //                        struct TileDataEnc *tile_data, int mb_row);
 
 void av1_twopass_zero_stats(FIRSTPASS_STATS *section);
-void av1_accumulate_stats(FIRSTPASS_STATS *section,
+void svt_av1_accumulate_stats(FIRSTPASS_STATS *section,
                           const FIRSTPASS_STATS *frame);
 #if FIRST_PASS_SETUP
 struct PictureParentControlSet;

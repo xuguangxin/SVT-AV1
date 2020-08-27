@@ -110,7 +110,7 @@ void av1_twopass_zero_stats(FIRSTPASS_STATS *section) {
     section->duration                 = 1.0;
 }
 #endif
-void av1_accumulate_stats(FIRSTPASS_STATS *section, const FIRSTPASS_STATS *frame) {
+void svt_av1_accumulate_stats(FIRSTPASS_STATS *section, const FIRSTPASS_STATS *frame) {
     section->frame += frame->frame;
     section->weight += frame->weight;
     section->intra_error += frame->intra_error;
@@ -293,7 +293,7 @@ static void update_firstpass_stats(PictureParentControlSet *pcs_ptr, //AV1_COMP 
     *this_frame_stats = fps;
     output_stats(scs_ptr, this_frame_stats, pcs_ptr->picture_number);
     if (twopass->stats_buf_ctx->total_stats != NULL) {
-        av1_accumulate_stats(twopass->stats_buf_ctx->total_stats, &fps);
+        svt_av1_accumulate_stats(twopass->stats_buf_ctx->total_stats, &fps);
     }
     /*In the case of two pass, first pass uses it as a circular buffer,
    * when LAP is enabled it is used as a linear buffer*/

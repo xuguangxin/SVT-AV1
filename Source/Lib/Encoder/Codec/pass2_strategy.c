@@ -2146,7 +2146,7 @@ static int calc_avg_stats(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *avg
   // Accumulate total stat using available number of stats.
   for (num_frames = 0; num_frames < (rc->frames_to_key - 1); ++num_frames) {
     if (EOF == input_stats(twopass, &cur_frame)) break;
-    av1_accumulate_stats(avg_frame_stat, &cur_frame);
+    svt_av1_accumulate_stats(avg_frame_stat, &cur_frame);
   }
 
   if (num_frames < 2) {
