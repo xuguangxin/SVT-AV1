@@ -682,7 +682,7 @@ static int firstpass_intra_prediction(PictureControlSet *pcs_ptr, BlkStruct *blk
     }
 
     // aom_clear_system_state();
-    double log_intra = log(this_intra_error + 1.0);
+    double log_intra = log1p((double)this_intra_error);
     if (log_intra < 10.0)
         stats->intra_factor += 1.0 + ((10.0 - log_intra) * 0.05);
     else

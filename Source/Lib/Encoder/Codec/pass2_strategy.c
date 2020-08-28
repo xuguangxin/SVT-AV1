@@ -1178,7 +1178,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   TWO_PASS *const twopass = &scs_ptr->twopass;
   FIRSTPASS_STATS next_frame;
   const FIRSTPASS_STATS *const start_pos = twopass->stats_in;
-  GF_GROUP *gf_group = &encode_context_ptr->gf_group;
+  GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
   FrameInfo *frame_info = &encode_context_ptr->frame_info;
   const GFConfig *const gf_cfg = &encode_context_ptr->gf_cfg;
   const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
@@ -1193,7 +1193,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   // Reset the GF group data structures unless this is a key
   // frame in which case it will already have been done.
   if (!is_intra_only) {
-    av1_zero(*gf_group);
+    av1_zero(encode_context_ptr->gf_group);
     pcs_ptr->gf_group_index = 0;
   }
 
@@ -1984,7 +1984,7 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *const rc = &encode_context_ptr->rc;
     TWO_PASS *const twopass = &scs_ptr->twopass;
-    GF_GROUP *gf_group = &encode_context_ptr->gf_group;
+    GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
     //CurrentFrame *const current_frame = &pcs_ptr->av1_cm->current_frame;
     FrameInfo *frame_info = &encode_context_ptr->frame_info;
     const KeyFrameCfg *const kf_cfg = &encode_context_ptr->kf_cfg;
@@ -2000,7 +2000,7 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
         gf_cfg->lag_in_frames, gf_cfg->enable_auto_arf);
 
     // Reset the GF group data structures.
-    av1_zero(*gf_group);
+    av1_zero(encode_context_ptr->gf_group);
     pcs_ptr->gf_group_index = 0;
 
     // Clear the alt ref active flag and last group multi arf flags as they
@@ -2027,7 +2027,6 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
         return;
     }
 #endif
-    int i;
     const FIRSTPASS_STATS *const start_position = twopass->stats_in;
     int kf_bits = 0;
     double zero_motion_accumulator = 1.0;
@@ -2072,7 +2071,7 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
         kf_group_err = 0.0;
 
         // Rescan to get the correct error data for the forced kf group.
-        for (i = 0; i < rc->frames_to_key; ++i) {
+        for (int i = 0; i < rc->frames_to_key; ++i) {
             kf_group_err +=
                 calculate_modified_err(frame_info, twopass, &(encode_context_ptr->two_pass_cfg), &tmp_frame);
             if (EOF == input_stats(twopass, &tmp_frame)) break;
