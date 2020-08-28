@@ -176,11 +176,11 @@ typedef struct EbConfig {
     int           pass;
     const char*   stats;
     FILE *        input_stat_file;
+    SvtAv1FixedBuf rc_twopass_stats_in;
     FILE *        output_stat_file;
 
     FILE *        input_pred_struct_file;
     char *        input_pred_struct_filename;
-    EbBool        use_input_stat_file;
     EbBool        use_output_stat_file;
     EbBool        y4m_input;
     unsigned char y4m_buf[9];
