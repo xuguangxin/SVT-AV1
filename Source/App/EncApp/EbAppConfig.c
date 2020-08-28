@@ -2325,7 +2325,7 @@ static EbErrorType verify_settings(EbConfig *config, uint32_t channel_number) {
     if (pass != DEFAULT || config->input_stat_file || config->output_stat_file) {
         if (config->hierarchical_levels != 4) {
             fprintf(config->error_log_file,
-                "Error instance %u: 2 pass encode for hierarchical_levels %d is not supported\n",
+                "Error instance %u: 2 pass encode for hierarchical_levels %u is not supported\n",
                 channel_number + 1, config->hierarchical_levels);
             return EB_ErrorBadParameter;
         }
@@ -2337,7 +2337,7 @@ static EbErrorType verify_settings(EbConfig *config, uint32_t channel_number) {
         }
         if (config->intra_refresh_type != 2) {
             fprintf(config->error_log_file,
-                "Error instance %u: 2 pass encode for intra_refresh_type %d is not supported\n",
+                "Error instance %u: 2 pass encode for intra_refresh_type %u is not supported\n",
                 channel_number + 1,config->intra_refresh_type);
             return EB_ErrorBadParameter;
         }

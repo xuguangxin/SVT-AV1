@@ -910,51 +910,6 @@ static INLINE int is_almost_static(double gf_zero_motion, int kf_zero_motion,
   }
 }
 
-#define ARF_ABS_ZOOM_THRESH 4.4
-static INLINE int detect_gf_cut(PictureParentControlSet *pcs_ptr, int frame_index, int cur_start,
-                                int flash_detected, int active_max_gf_interval,
-                                int active_min_gf_interval,
-                                GF_GROUP_STATS *gf_stats) {
-  //InitialDimensions *const initial_dimensions = &cpi->initial_dimensions;
-  SequenceControlSet *scs_ptr = pcs_ptr->scs_ptr;
-  EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
-  RATE_CONTROL *const rc = &encode_context_ptr->rc;
-  TWO_PASS *const twopass = &scs_ptr->twopass;
-  // Motion breakout threshold for loop below depends on image size.
-  const double mv_ratio_accumulator_thresh =
-      (scs_ptr->static_config.source_height + scs_ptr->static_config.source_width) / 4.0;
-      //(initial_dimensions->height + initial_dimensions->width) / 4.0;
-
-  if (!flash_detected) {
-    // Break clause to detect very still sections after motion. For example,
-    // a static image after a fade or other transition.
-    if (detect_transition_to_still(
-            twopass, rc->min_gf_interval, frame_index - cur_start, 5,
-            gf_stats->loop_decay_rate, gf_stats->last_loop_decay_rate)) {
-      return 1;
-    }
-  }
-
-  // Some conditions to breakout after min interval.
-  if (frame_index - cur_start >= active_min_gf_interval &&
-      // If possible don't break very close to a kf
-      (rc->frames_to_key - frame_index >= rc->min_gf_interval) &&
-      ((frame_index - cur_start) & 0x01) && !flash_detected &&
-      (gf_stats->mv_ratio_accumulator > mv_ratio_accumulator_thresh ||
-       gf_stats->abs_mv_in_out_accumulator > ARF_ABS_ZOOM_THRESH)) {
-    return 1;
-  }
-
-  // If almost totally static, we will not use the the max GF length later,
-  // so we can continue for more frames.
-  if (((frame_index - cur_start) >= active_max_gf_interval + 1) &&
-      !is_almost_static(gf_stats->zero_motion_accumulator,
-                        twopass->kf_zeromotion_pct, scs_ptr->lap_enabled)) {
-    return 1;
-  }
-  return 0;
-}
-
 #if GROUP_ADAPTIVE_MAXQ
 #define RC_FACTOR_MIN 0.75
 #define RC_FACTOR_MAX 1.25
@@ -972,8 +927,8 @@ static void impose_gf_length(PictureParentControlSet *pcs_ptr, int max_intervals
     int cut_pos[MAX_NUM_GF_INTERVALS + 1]  = {0};
     int count_cuts                         = 1;
     int cur_last;
-    int cut_here;
     while (count_cuts < max_intervals + 1) {
+        int cut_here;
         ++i;
         // reaches next key frame, break here
         if (i >= rc->frames_to_key) {
@@ -1223,13 +1178,12 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
   TWO_PASS *const twopass = &scs_ptr->twopass;
   FIRSTPASS_STATS next_frame;
   const FIRSTPASS_STATS *const start_pos = twopass->stats_in;
-  GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
+  GF_GROUP *gf_group = &encode_context_ptr->gf_group;
   FrameInfo *frame_info = &encode_context_ptr->frame_info;
   const GFConfig *const gf_cfg = &encode_context_ptr->gf_cfg;
   const RateControlCfg *const rc_cfg = &encode_context_ptr->rc_cfg;
   int i;
 
-  int flash_detected;
   int64_t gf_group_bits;
   const int is_intra_only = frame_params->frame_type == KEY_FRAME ||
                             frame_params->frame_type == INTRA_ONLY_FRAME;
@@ -1293,6 +1247,7 @@ static void define_gf_group(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS *t
       i = 1;
   // get the determined gf group length from rc->gf_intervals
   while (i < rc->gf_intervals[rc->cur_gf_index]) {
+    int flash_detected;
     ++i;
     // Accumulate error score of frames in this gf group.
     mod_frame_err =
@@ -1614,10 +1569,10 @@ static int test_candidate_kf(TWO_PASS *twopass,
       get_second_ref_usage_thresh(frame_count_so_far);
   int total_frames_to_test = SCENE_CUT_KEY_TEST_INTERVAL;
   int count_for_tolerable_prediction = 3;
-  int num_future_frames = 0;
   FIRSTPASS_STATS curr_frame;
 
   if (scenecut_mode == ENABLE_SCENECUT_MODE_1) {
+    int num_future_frames = 0;
     curr_frame = *this_frame;
     const FIRSTPASS_STATS *const start_position = twopass->stats_in;
     for (num_future_frames = 0; num_future_frames < SCENE_CUT_KEY_TEST_INTERVAL;
@@ -1720,7 +1675,7 @@ static int detect_app_forced_key(PictureParentControlSet *pcs_ptr) {
   if (kf_cfg->fwd_kf_enabled) rc->next_is_fwd_key = 1;
   int num_frames_to_app_forced_key = -1;/*is_forced_keyframe_pending(
       cpi->lookahead, cpi->lookahead->max_sz, cpi->compressor_stage);*/
-  if (num_frames_to_app_forced_key != -1) rc->next_is_fwd_key = 0;
+  //if (num_frames_to_app_forced_key != -1) rc->next_is_fwd_key = 0;
   return num_frames_to_app_forced_key;
 }
 
@@ -1762,7 +1717,7 @@ static int define_kf_interval(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS 
   double recent_loop_decay[FRAMES_TO_CHECK_DECAY];
   FIRSTPASS_STATS last_frame;
   double decay_accumulator = 1.0;
-  int i = 0, j;
+  int j;
   int frames_to_key = 1;
   int frames_since_key = rc->frames_since_key + 1;
   FrameInfo *const frame_info = &encode_context_ptr->frame_info;
@@ -1785,9 +1740,9 @@ static int define_kf_interval(PictureParentControlSet *pcs_ptr, FIRSTPASS_STATS 
   // Initialize the decay rates for the recent frames to check
   for (j = 0; j < FRAMES_TO_CHECK_DECAY; ++j) recent_loop_decay[j] = 1.0;
 
-  i = 0;
   while (twopass->stats_in < twopass->stats_buf_ctx->stats_in_end &&
          frames_to_key < num_frames_to_detect_scenecut) {
+    int i = 0;
     // Accumulate total number of stats available till next key frame
     num_stats_used_for_kf_boost++;
 
@@ -2029,7 +1984,7 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
     EncodeContext *encode_context_ptr = scs_ptr->encode_context_ptr;
     RATE_CONTROL *const rc = &encode_context_ptr->rc;
     TWO_PASS *const twopass = &scs_ptr->twopass;
-    GF_GROUP *const gf_group = &encode_context_ptr->gf_group;
+    GF_GROUP *gf_group = &encode_context_ptr->gf_group;
     //CurrentFrame *const current_frame = &pcs_ptr->av1_cm->current_frame;
     FrameInfo *frame_info = &encode_context_ptr->frame_info;
     const KeyFrameCfg *const kf_cfg = &encode_context_ptr->kf_cfg;
@@ -2077,8 +2032,8 @@ static void find_next_key_frame(PictureParentControlSet *pcs_ptr, FIRSTPASS_STAT
     int kf_bits = 0;
     double zero_motion_accumulator = 1.0;
     double boost_score = 0.0;
-    double kf_raw_err = 0.0;
-    double kf_mod_err = 0.0;
+    double kf_raw_err;
+    double kf_mod_err;
     double kf_group_err = 0.0;
     double sr_accumulator = 0.0;
     //double kf_group_avg_error = 0.0;
@@ -2349,9 +2304,9 @@ static void process_first_pass_stats(PictureParentControlSet *pcs_ptr,
                         //    : cm->mi_params.MBs;
     // The multiplication by 256 reverses a scaling factor of (>> 8)
     // applied when combining MB error values for the frame.
-    twopass->mb_av_energy = log((this_frame->intra_error / num_mbs) + 1.0);
+    twopass->mb_av_energy = log1p(this_frame->intra_error / num_mbs);
     twopass->frame_avg_haar_energy =
-        log((this_frame->frame_avg_wavelet_energy / num_mbs) + 1.0);
+        log1p(this_frame->frame_avg_wavelet_energy / num_mbs);
   }
 
   // Update the total stats remaining structure.

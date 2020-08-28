@@ -4845,7 +4845,6 @@ static void adjust_active_best_and_worst_quality_org(PictureControlSet *pcs_ptr,
     TWO_PASS *const twopass                  = &scs_ptr->twopass;
     const enum aom_rc_mode rc_mode           = encode_context_ptr->rc_cfg.mode;
     GF_GROUP *gf_group                       = &encode_context_ptr->gf_group;
-    int is_src_frame_alt_ref  = 0;//rc->is_src_frame_alt_ref
     const RefreshFrameFlagsInfo *const refresh_frame_flags = &pcs_ptr->parent_pcs_ptr->refresh_frame;
     int is_intrl_arf_boost = gf_group->update_type[pcs_ptr->parent_pcs_ptr->gf_group_index] == INTNL_ARF_UPDATE;
     this_key_frame_forced = rc->this_key_frame_forced;
@@ -4853,7 +4852,7 @@ static void adjust_active_best_and_worst_quality_org(PictureControlSet *pcs_ptr,
     // the permitted range.
     if (rc_mode != AOM_Q) {
         if (frame_is_intra_only(pcs_ptr->parent_pcs_ptr) ||
-                (!is_src_frame_alt_ref &&
+                (1/*!rc->is_src_frame_alt_ref*/ &&
                  (refresh_frame_flags->golden_frame || is_intrl_arf_boost ||
                   refresh_frame_flags->alt_ref_frame))) {
             active_best_quality -=
@@ -5919,10 +5918,9 @@ static void av1_rc_init(SequenceControlSet *scs_ptr) {
   const RateControlCfg *const rc_cfg       = &encode_context_ptr->rc_cfg;
   const uint32_t width  = scs_ptr->seq_header.max_frame_width;
   const uint32_t height = scs_ptr->seq_header.max_frame_height;
-  int pass = 2;//hack always pass2
   int i;
 
-  if (pass == 0 && rc_cfg->mode == AOM_CBR) {
+  if (0/*pass == 0*/ && rc_cfg->mode == AOM_CBR) {
     rc->avg_frame_qindex[KEY_FRAME] = rc_cfg->worst_allowed_q;
     rc->avg_frame_qindex[INTER_FRAME] = rc_cfg->worst_allowed_q;
   } else {
