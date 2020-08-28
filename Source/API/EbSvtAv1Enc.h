@@ -85,7 +85,8 @@ typedef struct EbSvtAv1EncConfiguration {
 #if 0//REMOVE_MR_MACRO
     int8_t snd_pass_enc_mode;
 #else
-#if 1 //hack for gstreamer building //!TWOPASS_RC
+#if 1//!TWOPASS_RC
+    // hack for gstreamer building
     uint8_t snd_pass_enc_mode;
 #endif
 #endif
