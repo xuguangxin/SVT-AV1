@@ -5860,7 +5860,9 @@ static int av1_find_qindex(double desired_q, aom_bit_depth_t bit_depth,
     return low;
 }
 static int find_fp_qindex(aom_bit_depth_t bit_depth) {
+#ifdef ARCH_X86
     aom_clear_system_state();
+#endif
     return av1_find_qindex(FIRST_PASS_Q, bit_depth, 0, QINDEX_RANGE - 1);
 }
 int svt_av1_rc_get_default_min_gf_interval(int width, int height,
