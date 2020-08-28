@@ -456,9 +456,9 @@ extern EbErrorType av1_inter_full_cost(PictureControlSet *pcs_ptr, ModeDecisionC
                                        uint64_t lambda, uint64_t *y_coeff_bits,
                                        uint64_t *cb_coeff_bits, uint64_t *cr_coeff_bits,
                                        BlockSize bsize);
-const EbPredictionFunc svt_product_prediction_fun_table[3];
+extern const EbPredictionFunc svt_product_prediction_fun_table[3];
 
-const EbAv1FullCostFunc svt_av1_product_full_cost_func_table[3];
+extern const EbAv1FullCostFunc svt_av1_product_full_cost_func_table[3];
 
 void perform_tx_partitioning(ModeDecisionCandidateBuffer *candidate_buffer,
                              ModeDecisionContext *context_ptr, PictureControlSet *pcs_ptr,
