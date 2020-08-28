@@ -1165,6 +1165,7 @@ void tpl_mc_flow_dispenser(
 #endif
 #if FIX_TPL_POC128
                     uint64_t best_ref_poc = 0;
+                    int32_t best_rf_idx = -1;
 #else
                     int32_t best_rf_idx = -1;
 #endif
@@ -1265,9 +1266,8 @@ void tpl_mc_flow_dispenser(
                             memcpy(best_coeff, coeff, sizeof(best_coeff));
 #if FIX_TPL_POC128
                             best_ref_poc = ref_poc;
-#else
-                            best_rf_idx = rf_idx;
 #endif
+                            best_rf_idx = rf_idx;
                             best_inter_cost = inter_cost;
                             final_best_mv = best_mv;
 
@@ -1400,17 +1400,14 @@ void tpl_mc_flow_dispenser(
                     }
                     tpl_stats.recrf_dist = AOMMAX(tpl_stats.srcrf_dist, tpl_stats.recrf_dist);
                     tpl_stats.recrf_rate = AOMMAX(tpl_stats.srcrf_rate, tpl_stats.recrf_rate);
-#if FIX_TPL_POC128
-                    if (!frame_is_intra_only(pcs_ptr) && best_mode == NEWMV) {
-                        tpl_stats.mv = final_best_mv;
-                        tpl_stats.ref_frame_poc = best_ref_poc;
-                    }
-#else
                     if (!frame_is_intra_only(pcs_ptr) && best_rf_idx != -1) {
                         tpl_stats.mv = final_best_mv;
+#if FIX_TPL_POC128
+                        tpl_stats.ref_frame_poc = best_ref_poc;
+#else
                         tpl_stats.ref_frame_poc = pcs_ptr->ref_order_hint[best_rf_idx];
-                    }
 #endif
+                    }
                     // Motion flow dependency dispenser.
                     result_model_store(pcs_ptr, &tpl_stats, mb_origin_x, mb_origin_y);
                 }
