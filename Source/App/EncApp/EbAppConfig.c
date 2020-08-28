@@ -1995,6 +1995,8 @@ void eb_config_dtor(EbConfig *config_ptr) {
         config_ptr->stat_file = (FILE *)NULL;
     }
     if (config_ptr->input_stat_file) {
+        free(config_ptr->rc_twopass_stats_in.buf);
+        config_ptr->rc_twopass_stats_in.buf = NULL;
         unlock_and_fclose(config_ptr->input_stat_file);
         config_ptr->input_stat_file = (FILE *)NULL;
     }
@@ -2196,6 +2198,31 @@ static int32_t read_config_file(EbConfig *config, char *config_path, uint32_t in
     return return_error;
 }
 
+EbBool load_twopass_stats_in(EbConfig *config)
+{
+#ifdef _WIN32
+    int fd = _fileno(config->input_stat_file));
+    struct _stat file_stat;
+    int ret = _fstat(fd, &stat);
+#else
+    int fd = fileno(config->input_stat_file);
+    struct stat file_stat;
+    int ret = fstat(fd, &file_stat);
+#endif
+    if (ret) {
+        return EB_FALSE;
+    }
+    config->rc_twopass_stats_in.buf = malloc(file_stat.st_size);
+    if (config->rc_twopass_stats_in.buf) {
+        config->rc_twopass_stats_in.sz = (uint64_t)file_stat.st_size;
+        if (fread(config->rc_twopass_stats_in.buf, 1, file_stat.st_size,
+            config->input_stat_file) != (size_t)file_stat.st_size) {
+            return EB_FALSE;
+        }
+    }
+    return config->rc_twopass_stats_in.buf != NULL;
+}
+
 /******************************************
 * Verify Settings
 ******************************************/
@@ -2316,6 +2343,12 @@ static EbErrorType verify_settings(EbConfig *config, uint32_t channel_number) {
         if (!fopen_and_lock(&config->input_stat_file, stats, EB_FALSE)) {
             fprintf(config->error_log_file,
                 "Error instance %u: can't read stats file %s for read\n",
+                channel_number + 1, stats);
+            return EB_ErrorBadParameter;
+        }
+        if (!load_twopass_stats_in(config)) {
+            fprintf(config->error_log_file,
+                "Error instance %u: can't load file %s\n",
                 channel_number + 1, stats);
             return EB_ErrorBadParameter;
         }
