@@ -63,6 +63,15 @@ typedef enum {
     SUPERRES_MODES
 } SUPERRES_MODE;
 
+typedef enum {
+    SVT_AV1_STREAM_INFO_START = 1,
+
+    // SvtAv1FixedBuf
+    SVT_AV1_STREAM_INFO_FIRST_PASS_STATS_OUT = SVT_AV1_STREAM_INFO_START,
+
+    SVT_AV1_STREAM_INFO_END,
+} SVT_AV1_STREAM_INFO_ID;
+
 /*!\brief Generic fixed size buffer structure
  *
  * This structure is able to hold a reference to any fixed size buffer.
@@ -232,8 +241,7 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is 0.*/
     EbBool use_qp_file;
     SvtAv1FixedBuf rc_twopass_stats_in;
-    /* output stats file */
-    FILE *output_stat_file;
+    EbBool rc_firstpass_stats_out;
     /* Enable picture QP scaling between hierarchical levels
     *
     * Default is null.*/
@@ -849,6 +857,16 @@ EB_API void svt_av1_enc_release_out_buffer(EbBufferHeaderType **p_buffer);
      * @ *p_buffer           Output buffer. */
 EB_API EbErrorType svt_av1_get_recon(EbComponentType *   svt_enc_component,
                                     EbBufferHeaderType *p_buffer);
+
+/* OPTIONAL: get stream information
+     *
+     * Parameter:
+     * @ *svt_enc_component  Encoder handler.
+     * @ *stream_info_id SVT_AV1_STREAM_INFO_ID.
+     * @ *info         output, the type depends on id */
+EB_API EbErrorType svt_av1_enc_get_stream_info(EbComponentType *    svt_enc_component,
+                                    uint32_t stream_info_id, void* info);
+
 
 /* STEP 6: Deinitialize encoder library.
      *
