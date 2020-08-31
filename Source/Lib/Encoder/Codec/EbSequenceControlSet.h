@@ -241,12 +241,12 @@ extern EbErrorType derive_input_resolution(EbInputResolution *input_resolution,
 
 EbErrorType sb_geom_init(SequenceControlSet *scs_ptr);
 
-inline static int use_input_stat(const SequenceControlSet* scs_ptr)
+inline static EbBool use_input_stat(const SequenceControlSet* scs_ptr)
 {
-    return scs_ptr->static_config.rc_twopass_stats_in.sz;
+    return !!scs_ptr->static_config.rc_twopass_stats_in.sz;
 }
 
-inline static int use_output_stat(const SequenceControlSet* scs_ptr)
+inline static EbBool use_output_stat(const SequenceControlSet* scs_ptr)
 {
     return scs_ptr->static_config.rc_firstpass_stats_out;
 }
