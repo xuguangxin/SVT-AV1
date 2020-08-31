@@ -1185,6 +1185,18 @@ AppExitConditionType process_output_stream_buffer(EbConfig *config, EbAppContext
                             (double)(*frame_count) / config->performance_context.total_encode_time);
                 }
             }
+            if (header_ptr->flags & EB_BUFFERFLAG_EOS) {
+                if (config->output_stat_file) {
+                    SvtAv1FixedBuf first_pass_stat;
+                    EbErrorType ret = svt_av1_enc_get_stream_info(component_handle,
+                        SVT_AV1_STREAM_INFO_FIRST_PASS_STATS_OUT, &first_pass_stat);
+                    if (ret == EB_ErrorNone) {
+                        fwrite(first_pass_stat.buf,
+                            1, first_pass_stat.sz, config->output_stat_file);
+                    }
+                }
+
+            }
         }
     }
     return return_value;
