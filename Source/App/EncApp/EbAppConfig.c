@@ -2256,9 +2256,9 @@ static int32_t read_config_file(EbConfig *config, char *config_path, uint32_t in
 EbBool load_twopass_stats_in(EbConfig *config)
 {
 #ifdef _WIN32
-    int fd = _fileno(config->input_stat_file));
+    int fd = _fileno(config->input_stat_file);
     struct _stat file_stat;
-    int ret = _fstat(fd, &stat);
+    int ret = _fstat(fd, &file_stat);
 #else
     int fd = fileno(config->input_stat_file);
     struct stat file_stat;
