@@ -702,6 +702,7 @@ typedef struct config_entry_s {
     const char * token;
     const char * name;
     void (*scf)(const char *, EbConfig *);
+    EbBool valid;
 } ConfigEntry;
 
 /**********************************
@@ -1385,6 +1386,54 @@ ConfigEntry config_entry[] = {
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
 
+int get_entry( ConfigEntry* entry)
+{
+    for (int i = 0; config_entry[i].token; i++) {
+        ConfigEntry* e = config_entry + i;
+        if (!strcmp(entry->token, e->token)) {
+            return i;
+        }
+
+    }
+    return -1;
+}
+void test_config()
+{
+    ConfigEntry* entries[] = {
+        config_entry_options,
+        config_entry_global_options,
+        config_entry_rc,
+        config_entry_2p,
+        config_entry_intra_refresh,
+        config_entry_specific,
+        NULL,
+    };
+    for (int i = 0; config_entry[i].token; i++) {
+        config_entry[i].valid = 0;
+    }
+    for (int i = 0; entries[i]; i++) {
+        for (int j = 0; entries[i][j].token; j++) {
+            ConfigEntry* entry = &entries[i][j];
+            int e = get_entry(entry);
+            if (e != -1) {
+                config_entry[e].valid = 1;
+            } else {
+                printf("%s is not in config_entry\n", entry->token);
+            }
+        }
+    }
+    for (int i = 0; config_entry[i].token; i++) {
+        ConfigEntry* entry = config_entry + i;
+        if (!entry->valid) {
+            printf("%s is not in other config\n", entry->token);
+        }
+
+
+    }
+
+
+
+}
 /**********************************
  * Constructor
  **********************************/

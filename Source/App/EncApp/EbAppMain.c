@@ -464,6 +464,8 @@ void enc_app_dctor(EncApp* enc_app)
  * Encoder App Main
  ***************************************/
 int32_t main(int32_t argc, char *argv[]) {
+test_config();
+return 0;
 #ifdef _WIN32
     _setmode(_fileno(stdin), _O_BINARY);
     _setmode(_fileno(stdout), _O_BINARY);

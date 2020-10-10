@@ -244,6 +244,7 @@ typedef struct EncApp {
 
 EbConfig * eb_config_ctor(EncodePass pass);
 void eb_config_dtor(EbConfig *config_ptr);
+void test_config();
 
 EbErrorType enc_channel_ctor(EncChannel* c, EncodePass pass);
 void enc_channel_dctor(EncChannel* c, uint32_t inst_cnt);
